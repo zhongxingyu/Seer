@@ -1,0 +1,204 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "header",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "java.lang.String[]",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "NewArray",
+          "return_type": "java.lang.String[]",
+          "children": [
+            {
+              "label": "\"ID\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"Address\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"Name\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"Size\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"Organization\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"Description\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "\"Units\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            },
+            {
+              "label": "\"X Units\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_7",
+              "children": []
+            },
+            {
+              "label": "\"Y Units\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_8",
+              "children": []
+            },
+            {
+              "label": "\"Value MAX\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_9",
+              "children": []
+            },
+            {
+              "label": "\"Value Min\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_10",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"Organization\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Value Min\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"ID\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Description\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Name\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Size\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Units\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"X Units\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Address\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Value MAX\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Y Units\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "LocalVariable",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "Return",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

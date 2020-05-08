@@ -1,0 +1,73 @@
+{
+  "nr_root_ast_changes": 3,
+  "faulty_ast": [
+    {
+      "label": "m_JSONString",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "\"{  \\\"Shopzilla\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 7,         \\\"num_keyword\\\": 11      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Compare prices on TV in Electronics at Shopzilla\\\",         \\\"keyword_exists\\\": false      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 3,           \\\"num_h1tags\\\": 7        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 2,           \\\"num_h2tags\\\": 6        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 5,           \\\"num_h3tags\\\": 15        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 7,           \\\"num_h4tags\\\": 23        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 3,           \\\"num_h5tags\\\": 18        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 0,           \\\"num_h6tags\\\": 26        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": false,         \\\"title_string\\\": \\\"Shopzilla - TV\\\"      }    },  \\\"Samsung\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 4,         \\\"num_keyword\\\": 18      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Samsung LED HDTV\\\",         \\\"keyword_exists\\\": true      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 2,           \\\"num_h1tags\\\": 2        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 4,           \\\"num_h2tags\\\": 5        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 4,           \\\"num_h3tags\\\": 6        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 6,           \\\"num_h4tags\\\": 10        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 5,           \\\"num_h5tags\\\": 15        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 0,           \\\"num_h6tags\\\": 0        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": true,         \\\"title_string\\\": \\\"Samsung LED HDTV\\\"      }    },  \\\"BestBuy\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 14,         \\\"num_keyword\\\": 7      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Read the HDTV buying guide at BestBuy.com\\\",         \\\"keyword_exists\\\": true      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 2,           \\\"num_h1tags\\\": 4        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 4,           \\\"num_h2tags\\\": 7        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 4,           \\\"num_h3tags\\\": 10        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 3,           \\\"num_h4tags\\\": 8        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 6,           \\\"num_h5tags\\\": 18        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 5,           \\\"num_h6tags\\\": 16        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": true,         \\\"title_string\\\": \\\"HDTV buying guide - BestBuy\\\"      }    },   \\\"Vizio\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 12,         \\\"num_keyword\\\": 14      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Explore Vizio\u0026#39;s full line of HDTV products\\\",         \\\"keyword_exists\\\": true      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 3,           \\\"num_h1tags\\\": 5        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 5,           \\\"num_h2tags\\\": 8        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 8,           \\\"num_h3tags\\\": 11        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 6,           \\\"num_h4tags\\\": 17        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 2,           \\\"num_h5tags\\\": 13        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 7,           \\\"num_h6tags\\\": 20        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": true,         \\\"title_string\\\": \\\"Vizio - America\u0026#39;s best selling HDTV\\\"      }    }\\t\\\"domain\\\":[\\\"Shopzilla\\\",\\\"Samsung\\\",\\\"BestBuy\\\",\\\"Vizio\\\"]}\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"{  \\\"Shopzilla\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 7,         \\\"num_keyword\\\": 11      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Compare prices on TV in Electronics at Shopzilla\\\",         \\\"keyword_exists\\\": false      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 3,           \\\"num_h1tags\\\": 7        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 2,           \\\"num_h2tags\\\": 6        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 5,           \\\"num_h3tags\\\": 15        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 7,           \\\"num_h4tags\\\": 23        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 3,           \\\"num_h5tags\\\": 18        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 0,           \\\"num_h6tags\\\": 26        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": false,         \\\"title_string\\\": \\\"Shopzilla - TV\\\"      }    },  \\\"Samsung\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 4,         \\\"num_keyword\\\": 18      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Samsung LED HDTV\\\",         \\\"keyword_exists\\\": true      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 2,           \\\"num_h1tags\\\": 2        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 4,           \\\"num_h2tags\\\": 5        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 4,           \\\"num_h3tags\\\": 6        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 6,           \\\"num_h4tags\\\": 10        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 5,           \\\"num_h5tags\\\": 15        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 0,           \\\"num_h6tags\\\": 0        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": true,         \\\"title_string\\\": \\\"Samsung LED HDTV\\\"      }    },  \\\"BestBuy\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 14,         \\\"num_keyword\\\": 7      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Read the HDTV buying guide at BestBuy.com\\\",         \\\"keyword_exists\\\": true      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 2,           \\\"num_h1tags\\\": 4        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 4,           \\\"num_h2tags\\\": 7        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 4,           \\\"num_h3tags\\\": 10        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 3,           \\\"num_h4tags\\\": 8        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 6,           \\\"num_h5tags\\\": 18        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 5,           \\\"num_h6tags\\\": 16        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": true,         \\\"title_string\\\": \\\"HDTV buying guide - BestBuy\\\"      }    },   \\\"Vizio\\\":    {      \\\"content\\\": {        \\\"keyword_pos\\\": 12,         \\\"num_keyword\\\": 14      },       \\\"description\\\": {        \\\"desc_string\\\": \\\"Explore Vizio\u0026#39;s full line of HDTV products\\\",         \\\"keyword_exists\\\": true      },       \\\"heading\\\": {        \\\"h1\\\": {          \\\"keyword_in_h1tags\\\": 3,           \\\"num_h1tags\\\": 5        },         \\\"h2\\\": {          \\\"keyword_in_h2tags\\\": 5,           \\\"num_h2tags\\\": 8        },         \\\"h3\\\": {          \\\"keyword_in_h3tags\\\": 8,           \\\"num_h3tags\\\": 11        },         \\\"h4\\\": {          \\\"keyword_in_h4tags\\\": 6,           \\\"num_h4tags\\\": 17        },         \\\"h5\\\": {          \\\"keyword_in_h5tags\\\": 2,           \\\"num_h5tags\\\": 13        },         \\\"h6\\\": {          \\\"keyword_in_h6tags\\\": 7,           \\\"num_h6tags\\\": 20        }      },       \\\"title\\\": {        \\\"keyword_exists\\\": true,         \\\"title_string\\\": \\\"Vizio - America\u0026#39;s best selling HDTV\\\"      }    }\\t\\\"domain\\\":[\\\"Shopzilla\\\",\\\"Samsung\\\",\\\"BestBuy\\\",\\\"Vizio\\\"]}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

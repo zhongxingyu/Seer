@@ -1,0 +1,51 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "\"update dt_students set name\u003d#{name},pid\u003d#{pid},sex\u003d#{sex},policy\u003d#{policy},birthyear\u003d#{birthyear},birthmonth\u003d#{birthmonth},birthday\u003d#{birthday},healthy\u003d#{healthy},city\u003d#{city},address\u003d#{address},addcode\u003d#{addcode},phone\u003d#{phone},cell\u003d#{cell},gradeschool\u003d#{gradeschool},gradesection\u003d#{gradesection},number\u003d#{number},daddy\u003d#{daddy},daddyname\u003d#{daddyname},daddyjob\u003d#{daddyjob},daddyphone\u003d#{daddyphone},mummy\u003d#{mummy},mummyname\u003d#{mummyname},mummyjob\u003d#{mummyjob},mummyphone\u003d#{mummyphone},prices\u003d#{prices},history\u003d#{history},applyreason\u003d#{applyreason},yuwem1\u003d#{yuwem1},yuwem2\u003d#{yuwem2},shuxue1\u003d#{shuxue1},shuxue2\u003d#{shuxue2},yingyu1\u003d#{yingyu1},yingyu2\u003d#{yingyu2},wuli1\u003d#{wuli1},wuli2\u003d#{wuli2},huaxue1\u003d#{huaxue1},huaxue2\u003d#{huaxue2},zongfen1\u003d#{zongfen1},zongfen2\u003d#{zongfen2},paimin1\u003d#{paimin1},paimin2\u003d#{paimin2},honors\u003d#{honors} where id\u003d#{id}\"",
+      "type": "Literal",
+      "susp": [
+        "susp_constChange_literal"
+      ],
+      "return_type": "java.lang.String",
+      "index_of_exper": "expression_0",
+      "children": []
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Annotation",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"update dt_students set name\u003d#{name},pid\u003d#{pid},sex\u003d#{sex},policy\u003d#{policy},birthyear\u003d#{birthyear},birthmonth\u003d#{birthmonth},birthday\u003d#{birthday},healthy\u003d#{healthy},city\u003d#{city},address\u003d#{address},addcode\u003d#{addcode},phone\u003d#{phone},cell\u003d#{cell},gradeschool\u003d#{gradeschool},gradesection\u003d#{gradesection},number\u003d#{number},daddy\u003d#{daddy},daddyname\u003d#{daddyname},daddyjob\u003d#{daddyjob},daddyphone\u003d#{daddyphone},mummy\u003d#{mummy},mummyname\u003d#{mummyname},mummyjob\u003d#{mummyjob},mummyphone\u003d#{mummyphone},prices\u003d#{prices},history\u003d#{history},applyreason\u003d#{applyreason},yuwem1\u003d#{yuwem1},yuwem2\u003d#{yuwem2},shuxue1\u003d#{shuxue1},shuxue2\u003d#{shuxue2},yingyu1\u003d#{yingyu1},yingyu2\u003d#{yingyu2},wuli1\u003d#{wuli1},wuli2\u003d#{wuli2},huaxue1\u003d#{huaxue1},huaxue2\u003d#{huaxue2},zongfen1\u003d#{zongfen1},zongfen2\u003d#{zongfen2},paimin1\u003d#{paimin1},paimin2\u003d#{paimin2},honors\u003d#{honors} where id\u003d#{id}\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Literal",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

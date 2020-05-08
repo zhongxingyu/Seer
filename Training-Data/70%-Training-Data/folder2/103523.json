@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "eu.webtoolkit.jwt.WJavaScriptPreamble",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "ApplicationScope",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.StdGridLayoutImpl2",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "JavaScriptScope",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "JavaScriptObject",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.StdGridLayoutImpl2",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "JavaScriptObjectType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"layouts2\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"new (function(){var D\u003d[],B\u003dfalse,J\u003dthis,P\u003dfalse;this.find\u003dfunction(r){return jQuery.data(document.getElementById(r),\\\"layout\\\")};this.setDirty\u003dfunction(r){(r\u003djQuery.data(r,\\\"layout\\\"))\u0026\u0026r.setDirty()};this.setChildLayoutsDirty\u003dfunction(r,E){var y,w;y\u003d0;for(w\u003dr.descendants.length;y\u003cw;++y){var v\u003dr.descendants[y];if(E){var z\u003dr.WT.getElement(v.getId());if(z\u0026\u0026!r.WT.contains(E,z))continue}v.setDirty()}};this.add\u003dfunction(r){function E(y,w){var v,z;v\u003d0;for(z\u003d y.length;v\u003cz;++v){var u\u003dy[v];if(u.getId()\u003d\u003dw.getId()){y[v]\u003dw;w.descendants\u003du.descendants;return}else if(u.contains(w)){E(u.descendants,w);return}else if(w.contains(u)){w.descendants.push(u);y.splice(v,1);--v;--z}}y.push(w)}E(D,r);J.scheduleAdjust()};var Q\u003dfalse;this.scheduleAdjust\u003dfunction(){if(!Q){Q\u003dtrue;setTimeout(function(){J.adjust()},0)}};this.adjust\u003dfunction(r,E){function y(v,z){var u,I;u\u003d0;for(I\u003dv.length;u\u003cI;++u){var H\u003dv[u];y(H.descendants,z);z\u003d\u003d1\u0026\u0026P\u0026\u0026H.setDirty();H.measure(z)}}function w(v, z){var u,I;u\u003d0;for(I\u003dv.length;u\u003cI;++u){var H\u003dv[u];if(H.apply(z))w(H.descendants,z);else{v.splice(u,1);--u;--I}}}if(r){(r\u003dthis.find(r))\u0026\u0026r.setItemsDirty(E);J.scheduleAdjust()}else{Q\u003dfalse;if(!B){B\u003dtrue;y(D,0);w(D,0);y(D,1);w(D,1);P\u003dB\u003dfalse}}};this.updateConfig\u003dfunction(r,E){(r\u003dthis.find(r))\u0026\u0026r.setConfig(E)};window.onresize\u003dfunction(){P\u003dtrue;J.scheduleAdjust()}})\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "true",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "JavaScriptObject": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "ApplicationScope": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"layouts2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"new (function(){var D\u003d[],B\u003dfalse,J\u003dthis,P\u003dfalse;this.find\u003dfunction(r){return jQuery.data(document.getElementById(r),\\\"layout\\\")};this.setDirty\u003dfunction(r){(r\u003djQuery.data(r,\\\"layout\\\"))\u0026\u0026r.setDirty()};this.setChildLayoutsDirty\u003dfunction(r,E){var y,w;y\u003d0;for(w\u003dr.descendants.length;y\u003cw;++y){var v\u003dr.descendants[y];if(E){var z\u003dr.WT.getElement(v.getId());if(z\u0026\u0026!r.WT.contains(E,z))continue}v.setDirty()}};this.add\u003dfunction(r){function E(y,w){var v,z;v\u003d0;for(z\u003d y.length;v\u003cz;++v){var u\u003dy[v];if(u.getId()\u003d\u003dw.getId()){y[v]\u003dw;w.descendants\u003du.descendants;return}else if(u.contains(w)){E(u.descendants,w);return}else if(w.contains(u)){w.descendants.push(u);y.splice(v,1);--v;--z}}y.push(w)}E(D,r);J.scheduleAdjust()};var Q\u003dfalse;this.scheduleAdjust\u003dfunction(){if(!Q){Q\u003dtrue;setTimeout(function(){J.adjust()},0)}};this.adjust\u003dfunction(r,E){function y(v,z){var u,I;u\u003d0;for(I\u003dv.length;u\u003cI;++u){var H\u003dv[u];y(H.descendants,z);z\u003d\u003d1\u0026\u0026P\u0026\u0026H.setDirty();H.measure(z)}}function w(v, z){var u,I;u\u003d0;for(I\u003dv.length;u\u003cI;++u){var H\u003dv[u];if(H.apply(z))w(H.descendants,z);else{v.splice(u,1);--u;--I}}}if(r){(r\u003dthis.find(r))\u0026\u0026r.setItemsDirty(E);J.scheduleAdjust()}else{Q\u003dfalse;if(!B){B\u003dtrue;y(D,0);w(D,0);y(D,1);w(D,1);P\u003dB\u003dfalse}}};this.updateConfig\u003dfunction(r,E){(r\u003dthis.find(r))\u0026\u0026r.setConfig(E)};window.onresize\u003dfunction(){P\u003dtrue;J.scheduleAdjust()}})\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+      "S4_Field_NOT_ASSIGNED": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "JavaScriptObjectType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "JavaScriptScope": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

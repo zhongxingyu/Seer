@@ -1,0 +1,262 @@
+{
+  "nr_root_ast_changes": 9,
+  "faulty_ast": [
+    {
+      "label": "import_entity",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "com.sun.identity.cli.annotation.SubCommandInfo",
+          "children": [
+            {
+              "label": "\"Import entity.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"com.sun.identity.federation.cli.ImportMetaData\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"authentication\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.Object[]",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.Object[]",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"realm|e|s|Realm where entity resides.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_3",
+                  "children": []
+                },
+                {
+                  "label": "\"meta-data-file|m|s|t|Specify file name for the standard metadata to be imported.\u003cweb\u003eStandard metadata to be imported.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_4",
+                  "children": []
+                },
+                {
+                  "label": "\"extended-data-file|x|s|t|Specify file name for the extended entity configuration to be imported.\u003cweb\u003eExtended entity configuration to be imported.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_5",
+                  "children": []
+                },
+                {
+                  "label": "\"cot|t|s|Specify name of the Circle of Trust this entity belongs.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_6",
+                  "children": []
+                },
+                {
+                  "label": "\"spec|c|s|Specify metadata specification, either idff or saml2, defaults to saml2\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_7",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"import-entity-exception-cot-no-exist\u003dCircle of Trust did not exist.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_8",
+                  "children": []
+                },
+                {
+                  "label": "\"import-entity-exception-no-datafile\u003dmetadata or extended data file is required.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_9",
+                  "children": []
+                },
+                {
+                  "label": "\"import-entity-exception-invalid-descriptor-file\u003dEntity descriptor in file, {0} had invalid syntax.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_10",
+                  "children": []
+                },
+                {
+                  "label": "\"import-entity-succeeded\u003dImport file, {0}.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_11",
+                  "children": []
+                },
+                {
+                  "label": "\"import-entity-exception-invalid-config-file\u003dEntity config in file, {0} had invalid syntax.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_12",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"true\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_13",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"import-entity-exception-invalid-descriptor-file\u003dEntity descriptor in file, {0} had invalid syntax.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"import-entity-exception-no-datafile\u003dmetadata or extended data file is required.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"meta-data-file|m|s|t|Specify file name for the standard metadata to be imported.\u003cweb\u003eStandard metadata to be imported.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"import-entity-exception-invalid-config-file\u003dEntity config in file, {0} had invalid syntax.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"import-entity-exception-cot-no-exist\u003dCircle of Trust did not exist.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"extended-data-file|x|s|t|Specify file name for the extended entity configuration to be imported.\u003cweb\u003eExtended entity configuration to be imported.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"cot|t|s|Specify name of the Circle of Trust this entity belongs.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Import entity.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"true\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"realm|e|s|Realm where entity resides.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"spec|c|s|Specify metadata specification, either idff or saml2, defaults to saml2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"authentication\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"import-entity-succeeded\u003dImport file, {0}.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"com.sun.identity.federation.cli.ImportMetaData\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

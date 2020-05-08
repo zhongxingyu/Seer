@@ -1,0 +1,83 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "testMap",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "\"yxxxxxx16x16xxxxx5xxx36:37xyxx06xxx27x37:06xxxx12xxxxx78:16x27yxxxxx27x06xxxxxxx06xx58:16xyx06xxxxxxx32xx22xx4xxx38xyx06xxxxx27x07:26:06x1xxxxx06xx16xyx06xx26x26x27x06xx103x103x103x103x103x07xx18:16xyxxx16x16xxxx203x203x203x203x203xxx28:16xyxxxxxx16x07:06x1xxxxx06xxxyxxx06xxxxxxxxx14xxx48:16xyxxx06xxxx16xx16xxxx06xx68:16xyxxxxxxx17:16xx16:37xxxxxx88xyxxxxxxxxxxxx5xxx57x\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"yxxxxxx16x16xxxxx5xxx36:37xyxx06xxx27x37:06xxxx12xxxxx78:16x27yxxxxx27x06xxxxxxx06xx58:16xyx06xxxxxxx32xx22xx4xxx38xyx06xxxxx27x07:26:06x1xxxxx06xx16xyx06xx26x26x27x06xx103x103x103x103x103x07xx18:16xyxxx16x16xxxx203x203x203x203x203xxx28:16xyxxxxxx16x07:06x1xxxxx06xxxyxxx06xxxxxxxxx14xxx48:16xyxxx06xxxx16xx16xxxx06xx68:16xyxxxxxxx17:16xx16:37xxxxxx88xyxxxxxxxxxxxx5xxx57x\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

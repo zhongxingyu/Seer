@@ -1,0 +1,608 @@
+DEFAULT <_LABELEMPTY_> ix LE PREINC int <_LABELEMPTY_> 0 ix blockWidth ix
+DEFAULT assert EQ "Delegate<_LABELSPACE_>can<_LABELSPACE_>not<_LABELSPACE_>be<_LABELSPACE_>null" delegate null
+DEFAULT if LT y com.id.editor.Cursor#getY() cursor com.id.editor.Editor
+DEFAULT if EQ containProtected containPublic
+DEFAULT while AND GE EQ low first org.eclipse.jgit.revwalk.DateRevQueue when commitTime commit <_LABELEMPTY_> index low org.eclipse.jgit.revwalk.DateRevQueue
+DEFAULT if LT minHBaseVersion com.salesforce.phoenix.query.MetaDataUtil#decodeHBaseVersion(java.lang.Long) com.salesforce.phoenix.query.MetaDataUtil java.util.Map$Entry#getValue() result
+DEFAULT if NE math.matrices.Matrix#getValue(int,int) 1.0F echelonForm i i
+DEFAULT if GT index size doublesLibrary.DoublesList
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> 1 i length property this fr.nantes1900.view.isletprocess.ParametersView i
+DEFAULT if NE buildLoggerClassName null org.eclipse.ant.core.AntRunner
+DEFAULT if GE length net.sf.gogui.utils.Table#getNumberColumns() array net.sf.gogui.utils.Table
+DEFAULT while AND AND GT AND stuy.DESdroid#isEnabled() AND stuy.DESdroid#isAutonomous() NOT LT atCross stuy.DESdroid#getAvgDistance() distance des stuy.Autonomous des stuy.Autonomous des stuy.Autonomous MINUS 5 stuy.Timer#getFPGATimestamp() startTime stuy.Timer
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> start i distance i
+DEFAULT if OR EQ NOT disabledCommands null config net.md_5.bungee.BungeeCord net.md_5.bungee.BungeeCord#contains(java.lang.String) disabledCommands commandName config net.md_5.bungee.BungeeCord
+DEFAULT if AND NE NE org.bukkit.inventory.ItemStack#getType() INK_SACK item org.bukkit.Material #getData() DyeColor.GREEN#getData() org.bukkit.inventory.ItemStack#getData() item DyeColor.GREEN
+DEFAULT return OR NE GT keepIds null iec.IEC$KeepByPattern java.util.List#size() 0 keepIds iec.IEC$KeepByPattern
+DEFAULT return java.lang.Boolean#valueOf(boolean) java.lang.Boolean EQ java.lang.Float#floatValue() 0 i
+DEFAULT if GE photoSize PHOTO_SHOW_SIZE org.mdissjava.mdisscore.view.photo.PhotoDetailsBean
+DEFAULT while GT java.util.ArrayList#size() nMatches matches
+DEFAULT if LE expires 0
+DEFAULT <_LABELEMPTY_> k LT POSTINC int <_LABELEMPTY_> NEG 12 k 12 k
+DEFAULT temp com.jpii.navalbattle.pavo.grid.Tile <_LABELEMPTY_> com.jpii.navalbattle.pavo.grid.EntityManager#getTile(int,int) em PLUS col row c
+DEFAULT if EQ exception null
+DEFAULT assert GT time time this org.rice.crosby.historytree.storage.HashStore
+DEFAULT if EQ length 1 args
+DEFAULT if GT Config.DebugLevel#compareTo(uk.co.oliwali.HawkEye.util.Util$DebugLevel) 0 Config.DebugLevel level
+DEFAULT if OR forceSync GT this org.apache.hadoop.hbase.regionserver.wal.HLog java.util.concurrent.atomic.AtomicInteger#get() flushlogentries unflushedEntries this org.apache.hadoop.hbase.regionserver.wal.HLog this org.apache.hadoop.hbase.regionserver.wal.HLog
+DEFAULT if OR LT GT i 0 i length mikera.vectorz.ArraySubVector
+DEFAULT if LT a 0
+DEFAULT if GT b0 128
+DEFAULT if GT value value result next
+DEFAULT while NE ch 0
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> 0 i Client.Entities.PeriodInfo#getNumberOfActPeriod() Client.Entities.PeriodInfo i
+DEFAULT if AND LE LT minRange startingPoint temp maxRange startingPoint temp
+DEFAULT if EQ null status ini.trakem2.utils.Utils
+DEFAULT if LT MINUS y y scrollBarHeight preferedSize constraints
+DEFAULT if OR EQ LE org.eclipse.birt.data.engine.executor.cache.CacheRequest#getMaxRow() 0 cacheRequest length org.eclipse.birt.data.engine.executor.cache.CacheRequest#getMaxRow() cacheRequest
+DEFAULT if AND AND firstloop EQ EQ c '-' chardata ']' this org.apache.xerces.impl.xpath.regex.ParserForXMLSchema
+DEFAULT if NE #getSelectedItem() null java.util.Map$Entry#getValue() entry
+DEFAULT if GT numOverviews 1
+DEFAULT if EQ rW 0
+DEFAULT if EQ reader null com.github.kayak.core.LogFileReplay
+DEFAULT if AND LT LE pexp 0 pexp NEG sciLimit
+DEFAULT = mX MUL mX dist vector
+DEFAULT while GT sectionLevel newLevel this org.apache.maven.doxia.module.xdoc.XdocParser
+DEFAULT if EQ time arcTime
+DEFAULT if NE org.bukkit.configuration.file.YamlConfiguration#get(java.lang.String) null warpConfig "Warp<_LABELSPACE_>Sets"
+DEFAULT return LE cmpResult 0
+DEFAULT return AND AND EQ AND NE NE java.lang.String#startsWith(java.lang.String) pathname null org.coolreader.crengine.FileInfo pathname OPDS_DIR_PREFIX org.coolreader.crengine.FileInfo org.coolreader.crengine.FileInfo org.coolreader.crengine.FileInfo#getOPDSEntryInfo() null org.coolreader.crengine.FileInfo OPDSUtil.EntryInfo#getBestAcquisitionLink() null org.coolreader.crengine.FileInfo#getOPDSEntryInfo() org.coolreader.crengine.FileInfo
+DEFAULT if EQ rownum MINUS #getFetchedRowCount() 1 com.deepsky.database.exec.RowSetManager#getModel() rsModel com.deepsky.view.query_pane.DataGridPanel
+DEFAULT if GE version bestVersion
+DEFAULT if LE i loci.formats.tiff.IFDList#size() ifdList
+DEFAULT if EQ itsClosure null org.mozilla.javascript.InterpretedFunction
+DEFAULT if LT java.util.List#size() 1 _incompleteResults final_project.model.Pool
+DEFAULT if GT segment 0
+DEFAULT if NE length 2 splitString
+DEFAULT if NE m_swingStatusLabel null org.eclipse.scout.rt.ui.swing.form.fields.SwingScoutFieldComposite
+DEFAULT if OR EQ GE toRow NEG 1 toRow maxSize
+DEFAULT if AND NE GT <_LABELEMPTY_> null iS i #getAmount() com.github.kuben.realshopping.RSPlayerInventory#getAmount() <_LABELEMPTY_> iS i pinv <_LABELEMPTY_> iS i
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> firstIndexOfPage i lastIndexOfPage i
+DEFAULT headerComparator java.util.Comparator <_LABELEMPTY_> <_LABELEMPTY_> EQ comparator java.lang.Object() comparator null org.displaytag.tags.ColumnTag org.displaytag.tags.ColumnTag java.text.Collator#getInstance(java.util.Locale) java.text.Collator #getLocale() org.displaytag.tags.TableTag#getProperties() tableTag
+DEFAULT if OR EQ EQ com.jayway.maven.plugins.android.configuration.Test#getClasses() null test com.jayway.maven.plugins.android.AbstractInstrumentationMojo #size() 0 com.jayway.maven.plugins.android.configuration.Test#getClasses() test com.jayway.maven.plugins.android.AbstractInstrumentationMojo
+DEFAULT if EQ nodeLength 0
+DEFAULT if GT reservationCount rentableCopies
+DEFAULT org.apache.commons.lang.Validate#isTrue(java.lang.String) org.apache.commons.lang.Validate OR "Min<_LABELSPACE_>position<_LABELSPACE_>cannot<_LABELSPACE_>be<_LABELSPACE_>bigger<_LABELSPACE_>than<_LABELSPACE_>max<_LABELSPACE_>position<_LABELSPACE_>in<_LABELSPACE_>any<_LABELSPACE_>dimension" OR GT GT GT x x min max y y min max z z min max
+DEFAULT <_LABELEMPTY_> i LT PREINC int <_LABELEMPTY_> 1 i levelcount de.swagner.mgcube.Resources#getInstance() de.swagner.mgcube.Resources i
+DEFAULT <_LABELEMPTY_> n LT POSTINC int <_LABELEMPTY_> firstVertex who3d n lastVertex who3d n
+DEFAULT HAS_SURFACE_TEXTURE_RECORDING boolean <_LABELEMPTY_> GE final public static SDK_INT JELLY_BEAN Build.VERSION com.android.gallery3d.common.ApiHelper$VERSION_CODES
+DEFAULT if GT uidx java.util.ArrayList#size() mapping org.grouplens.lenskit.data.context.IndexManager
+DEFAULT if AND EQ java.lang.String#isEmpty() world null world
+DEFAULT if NE views null org.eclipse.dltk.javascript.core.JSBindings
+DEFAULT if OR NE EQ sig null java.lang.String#length() 1 sig
+DEFAULT if GT tracePos length se.sics.mspsim.core.MSP430 trace se.sics.mspsim.core.MSP430
+DEFAULT return LE distance2 distance
+DEFAULT if LT leftDepth rightDepth
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> MINUS java.util.List#size() 1 from i projectIndex i
+DEFAULT if AND AND NE NE GT current null net.minecraft.item.ItemStack#getMaxStackSize() 1 current itemID blockID current this assemblyline.common.block.BlockCrate
+DEFAULT if OR EQ NOT checkAccountId NEG 1 com.android.email.service.MailService#syncOneAccount(com.android.email.Controller,long,int) com.android.email.service.MailService controller checkAccountId startId
+DEFAULT if NE BITOR 0 edgeFlags EDGE_RIGHT this com.menny.android.anysoftkeyboard.keyboards.AnyKeyboard$LessSensitiveAnyKey android.inputmethodservice.Keyboard
+DEFAULT if OR EQ GT toRow NEG 1 toRow maxSize
+DEFAULT if GT #getFetchSize() 0 org.nutz.dao.sql.DaoStatement#getContext() st
+DEFAULT if GE java.lang.AbstractStringBuilder#length() 0 sb com.microsoft.windowsazure.services.blob.implementation.JerseyHelpers$EnumCommaStringBuilder
+DEFAULT if EQ #compareTo(java.lang.Comparable) 1 org.dancres.peers.ring.RingPosition#getPosition() aHashCode myPos
+DEFAULT if EQ txn null this TransactionLayer
+DEFAULT return AND NE java.lang.String#startsWith(java.lang.String) java.lang.String#length() 0 prefix java.lang.String#toLowerCase() java.lang.String#toLowerCase() identifier prefix
+DEFAULT if LT score 0 java.util.ArrayList#get(int) item position com.example.sea_game_testing.UserInfo$ListData
+DEFAULT if AND NOT NOT eu.esdihumboldt.hale.rcp.views.model.SchemaItem#isAttribute() target eu.esdihumboldt.hale.rcp.views.model.SchemaItem#isAttribute() source
+DEFAULT if EQ o null
+DEFAULT if NE f null
+DEFAULT if NE request null
+DEFAULT if NE t RAW this nl.giantit.minecraft.database.drivers.mysql.MySQLColumn DataType
+DEFAULT if AND NE NE value null java.lang.String#length() 0 value
+DEFAULT com.google.common.base.Preconditions#checkArgument(boolean,java.lang.String,java.lang.Object[]) com.google.common.base.Preconditions LE "Cannot<_LABELSPACE_>have<_LABELSPACE_>username<_LABELSPACE_>longer<_LABELSPACE_>than<_LABELSPACE_>16<_LABELSPACE_>characters" handshake.username#length() 16 username handshake
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> MINUS detectedFaces numFaces com.placella.socialconnections.Activity_TakeAttendance com.placella.socialconnections.Activity_TakeAttendance i detectedFaces com.placella.socialconnections.Activity_TakeAttendance i
+DEFAULT if GT column mechanics.Board#getMinColumn(int) mechanics.Cell mechanics.Board row mechanics.Cell
+DEFAULT if EQ lock null org.apache.kahadb.util.LockFile
+DEFAULT dpInRange boolean <_LABELEMPTY_> AND dpInXRange #inRange() org.dawb.workbench.plotting.system.swtxy.yAxis#getRange() org.csstudio.swt.xygraph.dataprovider.ISample#getYValue() yAxis dp
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> 0 i row_count edu.uci.ics.jung.algorithms.generators.Lattice2DGenerator i
+DEFAULT if OR includeInitialize EQ par1Packet51MapChunk var2 null
+DEFAULT if BITAND NOT NOT java.io.File#delete() config net.worldoftomorrow.noitem.Config java.io.File#createNewFile() config net.worldoftomorrow.noitem.Config
+DEFAULT <_LABELEMPTY_> i GE POSTDEC int <_LABELEMPTY_> limit i 0 i
+DEFAULT if LT newWeight 400
+DEFAULT if AND GT LT slot 0 slot chestSize
+DEFAULT if NE errorMessage null
+DEFAULT if NOT AND GE LE x hexX com.github.musikk.hex.HexPanel x PLUS hexX hexWidth com.github.musikk.hex.HexPanel com.github.musikk.hex.HexPanel
+DEFAULT if AND NE GT java.lang.StringBuffer#indexOf(java.lang.String) 0 line "#" equalPosition 1
+DEFAULT if AND NE NE 1 length periods length length periods eclipse
+DEFAULT if EQ result null edu.ualberta.med.scannerconfig.dialogs.DecodeImageDialog
+DEFAULT if GT n_fail 15
+DEFAULT if GT PREINC maximumNumberOfRuns currentRuns com.github.sebhoss.reguloj.LimitedRuleEngine
+DEFAULT if AND include_builds_in_progress NOT net.praqma.Baseline#BuildInProgess() blobj
+DEFAULT <_LABELEMPTY_> j LT <_LABELEMPTY_> int <_LABELEMPTY_> 0 j maxIndex j RECORDS_PER_CYCLE
+DEFAULT if GT value max com.googlecode.mgwt.ui.client.widget.MSlider
+DEFAULT = value MINUS v1 v2
+DEFAULT row org.eclipse.rmf.pror.reqif10.editor.agilegrid.ProrRow <_LABELEMPTY_> <_LABELEMPTY_> GT org.eclipse.rmf.pror.reqif10.editor.agilegrid.ProrAgileGridContentProvider#getProrRow() null row 0 cell contentProvider row org.eclipse.rmf.pror.reqif10.editor.agilegrid.ProrAgileGridViewer cell
+DEFAULT if AND java.lang.String#equalsIgnoreCase(java.lang.String) GT commandName "givemeremove" length 1 trimmedArgs
+DEFAULT if GT java.lang.Math#random() DIV java.lang.Math 2.0 number
+DEFAULT if LE PREDEC 0 clockDecrementerRegister v9t9.engine.hardware.BaseCruChip
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> 0 i #getMaxValueNumber() com.ibm.wala.ssa.IR#getSymbolTable() ir i
+DEFAULT if GT i secondHalf
+DEFAULT if NE difference 0
+DEFAULT if EQ <_LABELEMPTY_> null <_LABELEMPTY_> j tower i net.codegames.towerninja.Game
+DEFAULT if AND AND com.me.Roguish.Model.Entity#getAlive() AND NOT com.me.Roguish.Controller.LevelController#inRange(com.me.Roguish.Model.Entity,com.me.Roguish.Model.Entity,int) LE com.me.Roguish.Controller.LevelController hero ent ability com.me.Roguish.Controller.LevelController com.me.Roguish.Model.Entity#getY() com.me.Roguish.Model.HeroUnit#getY() ent hero com.me.Roguish.Controller.LevelController com.me.Roguish.Model.Entity#equals(com.me.Roguish.Model.HeroUnit) ent hero com.me.Roguish.Controller.LevelController ent
+DEFAULT if AND NE NOT splashDialog null this org.apache.cordova.DroidGap android.app.Dialog#isShowing() splashDialog this org.apache.cordova.DroidGap
+DEFAULT de.walware.statet.r.launching.RCodeLaunching#runRCodeDirect(java.lang.String,boolean) de.walware.statet.r.launching.RCodeLaunching <_LABELEMPTY_> AND lines i LT fGotoConsole i last de.walware.statet.r.internal.debug.ui.launcher.RScriptDirectLaunchShortcut
+DEFAULT if GT s endLocation
+DEFAULT data byte <_LABELEMPTY_> BITXOR #getData() 7 org.bukkit.material.Lever
+DEFAULT if NE #getCode() STATUS_CODE_SUCCESS com.gluster.storage.management.core.model.TaskInfo#getStatus() taskInfo com.gluster.storage.management.core.model.Status
+DEFAULT if LT sheep maxSheep gibstick.bukkit.discosheep.DiscoParty
+DEFAULT if LT totalK MUL 2 j
+DEFAULT if GE origin 0 node
+DEFAULT return MINUS priority priority this org.openscada.da.master.internal.MasterItemImpl$HandlerEntry o
+DEFAULT if GT net.sf.mpxj.Duration#getDuration() net.sf.mpxj.Duration#getDuration() totalWork assignmentWork
+DEFAULT if NE patientUser null
+DEFAULT if NE null org.apache.webdav.lib.WebdavResource#getResourceType() resource
+DEFAULT javax.swing.JComponent#putClientProperty(java.lang.Object,java.lang.Object) slider RangeSlider.CLIENT_PROPERTY_MOUSE_POSITION LT com.jidesoft.plaf.metal.MetalRangeSliderUI y minY
+DEFAULT if OR OR org.eclipse.swt.graphics.Cursor#isDisposed() EQ EQ org.eclipse.team.internal.ui.jobs.JobBusyCursor#getComposite() null org.eclipse.team.internal.ui.jobs.JobBusyCursor cursor null cursor
+DEFAULT <_LABELEMPTY_> iy LE PREINC int <_LABELEMPTY_> 0 iy blockHeight iy
+DEFAULT if GT enumc java.util.List#size() nu.dll.lyskom.TextMapping list nu.dll.lyskom.TextMapping
+DEFAULT if LE lamba 0
+DEFAULT if EQ text null org.senchalabs.gwt.gwtdriver.gxt.models.Field$FieldFinder
+DEFAULT radVd double <_LABELEMPTY_> MUL final NEG vD radius
+DEFAULT if AND NE NE android.graphics.Bitmap#getWidth() width _image org.glob3.mobile.specific.Image_Android android.graphics.Bitmap#getHeight() height _image org.glob3.mobile.specific.Image_Android
+DEFAULT if EQ handler null
+DEFAULT if NE externalDir null
+DEFAULT while LT left right
+DEFAULT if NE probabilities null
+DEFAULT <_LABELEMPTY_> index LT <_LABELEMPTY_> int <_LABELEMPTY_> 1 index ALL_EVENTS org.eclipse.ptp.services.core.IServiceModelEvent index 1
+DEFAULT SHOULD_WAIT boolean <_LABELEMPTY_> EQ final private static WAIT_NANOS 0L Helper
+DEFAULT if NE java.util.List#size() 2 parameters
+DEFAULT if LT height ballBelow FallingBall
+DEFAULT return PLUS java.util.List#get(int) DIV list middle java.util.List#get(int) 2.0 list PLUS middle 1
+DEFAULT while GT remaining 0
+DEFAULT return GT #angle3D() angle org.jcae.mesh.amibe.ds.AbstractHalfEdge#destination() org.jcae.mesh.amibe.ds.AbstractHalfEdge#origin() org.jcae.mesh.amibe.ds.AbstractHalfEdge#destination() edge edge next
+DEFAULT return java.lang.Boolean#valueOf(boolean) java.lang.Boolean EQ java.lang.Short#shortValue() 0 i
+DEFAULT if LE MINUS 0 usersCount position
+DEFAULT if AND EQ EQ ret 0 ret 16
+DEFAULT if EQ actionKey null
+DEFAULT if EQ au.gov.ga.worldwind.common.util.XMLUtil#getElement(org.w3c.dom.Element,java.lang.String,<unknown>) null au.gov.ga.worldwind.common.util.XMLUtil rootElement "//proxy" null
+DEFAULT if GT MINUS numLines topVis visLines myInfo javax.microedition.lcdui.TextBoxLFImpl myInfo javax.microedition.lcdui.TextBoxLFImpl myInfo javax.microedition.lcdui.TextBoxLFImpl
+DEFAULT return GT BITAND 0 #getData() OPEN_BIT org.bukkit.material.Gate org.bukkit.material.Gate
+DEFAULT return <_LABELEMPTY_> OR null java.util.List#get(int) LE GE index 0 index java.util.List#size() values org.jdesktop.swingx.JXRadioGroup values index org.jdesktop.swingx.JXRadioGroup
+DEFAULT <_LABELEMPTY_> i AND PREINC int <_LABELEMPTY_> 1 LT LE i limit i DIV n i i
+DEFAULT = <_LABELEMPTY_> MUL vertexData PLUS this javax.media.j3d.GeometryArrayRetained offset 1 MUL ByteToFloatScale y 255 color javax.media.j3d.GeometryArrayRetained
+DEFAULT if LT duration maxDuration gibstick.bukkit.discosheep.DiscoParty
+DEFAULT if GT pos org.ligi.fast.AppInfoList#getCount() org.ligi.fast.AppInfoList
+DEFAULT if GT BITAND 0 SL 1 value 11
+DEFAULT if AND AND LT AND LT GT GT x 0 y 0 x length myMap vooga.rts.map.NodeMap y length <_LABELEMPTY_> myMap 0 vooga.rts.map.NodeMap
+DEFAULT if OR LT GT PLUS 0 y dy position player PLUS height y dy position player map.size
+DEFAULT if GE position maxFileLength bitronix.tm.journal.TransactionLogHeader
+DEFAULT if NE length 0 textureCoordinates net.minecraftforge.client.model.obj.Face
+DEFAULT if NE com.github.kanafghan.welipse.webdsl.impl.ClassifierOperationImpl#getOperation() null com.github.kanafghan.welipse.webdsl.impl.ClassifierOperationImpl
+DEFAULT if EQ org.geometerplus.fbreader.widget.BookEvent#valueOf(java.lang.String) Updated org.geometerplus.fbreader.widget.BookEvent type BookEvent
+DEFAULT if NE n 1
+DEFAULT tFrom de.tuilmenau.ics.fog.routing.naming.hierarchical.HRMID <_LABELEMPTY_> <_LABELEMPTY_> GT #getClusterAddress(int) de.tuilmenau.ics.fog.routing.hierarchical.RoutingEntry#getSource() i 0 de.tuilmenau.ics.fog.routing.hierarchical.RoutingEntry#getSource() i tRoute tRoute
+DEFAULT if GT length java.lang.String#length() data field javax.microedition.lcdui.TextField
+DEFAULT if EQ user null
+DEFAULT <_LABELEMPTY_> i LT PREINC int <_LABELEMPTY_> 0 i MAX_POSITIONAL_ARITY clojure.lang.Compiler i
+DEFAULT return NE handlePointer handlePointer this de.ailis.usb4java.libusb.DeviceHandle other
+DEFAULT if GT java.lang.String#length() 2 act_param
+DEFAULT if LT configPartition partition
+DEFAULT return PLUS PLUS "<_LABELSPACE_>minutes!" "Closing<_LABELSPACE_>in<_LABELSPACE_>" MUL MINUS 60000 android.text.format.Time#toMillis(boolean) android.text.format.Time#toMillis(boolean) firstClose false cur false
+DEFAULT if EQ mTimeLapseLabel null com.android.camera.VideoCamera
+DEFAULT if GE mLevel INFO candis.common.CandisLog candis.common.CandisLog
+DEFAULT if GT minimumSimilarity 1.0F
+DEFAULT if EQ next_in next_out widgets.NodeEnableLabel widgets.NodeEnableLabel
+DEFAULT if NE t RAW this nl.giantit.minecraft.database.drivers.h2.H2Column DataType
+DEFAULT while AND GE java.lang.Character#isLetter(char) PLUS 0 pos l java.lang.Character c
+DEFAULT while AND LT GT currentPosition java.lang.String#length() greenrubber.scanner.StringReader input greenrubber.scanner.StringReader java.lang.String#indexOf(int) 0 theseCharacters java.lang.String#charAt(int) input currentPosition greenrubber.scanner.StringReader greenrubber.scanner.StringReader
+DEFAULT if NE ttype ';' t alchemy.nec.Parser
+DEFAULT if LT packPart <_LABELEMPTY_> mcuParts q
+DEFAULT <_LABELEMPTY_> i GT c int <_LABELEMPTY_> java.lang.String#length() indentation PREDEC 0 i char <_LABELEMPTY_> java.lang.String#charAt(int) indentation i
+DEFAULT assert LT "maxHitpoints<_LABELSPACE_>must<_LABELSPACE_>be<_LABELSPACE_>greater<_LABELSPACE_>than<_LABELSPACE_>initialHitpoints." initialHitpoints maxHitpoints
+DEFAULT if NE org.apache.mina.core.buffer.IoBuffer#remaining() PLUS in PLUS CHALLENGE COMMAND RESULT com.chinarewards.qqgbvpn.main.protocol.socket.ProtocolLengths com.chinarewards.qqgbvpn.main.protocol.socket.ProtocolLengths com.chinarewards.qqgbvpn.main.protocol.socket.ProtocolLengths
+DEFAULT if LE minimalReplicationCount nodeCount
+DEFAULT if OR GT GT arg0 0 arg1 0
+DEFAULT if AND AND AND OR OR EQ java.util.HashSet#contains(java.lang.Object) probesConfine null umcg.genetica.io.trityper.TriTyperExpressionData probesConfine probe umcg.genetica.io.trityper.TriTyperExpressionData NOT GE confineToProbesThatMapToAnyChromosome umcg.genetica.io.trityper.TriTyperExpressionData probeChr 1 NE java.lang.Integer#equals(java.lang.Object) confineToProbesMappingOnChromosome null umcg.genetica.io.trityper.TriTyperExpressionData confineToProbesMappingOnChromosome probeChr umcg.genetica.io.trityper.TriTyperExpressionData
+DEFAULT if EQ roi null
+DEFAULT if LE a_dizzle.weepingangels.common.rand#nextInt(int) teleportChance rand 100 WeepingAngelsMod
+DEFAULT if LE android.widget.ListView#getCheckedItemPosition() 0 listView de.chaosdorf.meteroid.PickUsername
+DEFAULT if OR NE NE org.apache.abdera.protocol.client.ClientResponse#getStatus() 200 res org.apache.abdera.protocol.client.ClientResponse#getStatus() 201 res
+DEFAULT if EQ java.util.List#size() 1 selectedNodes
+DEFAULT if OR NE EQ uri EMPTYSTRING Constants prefix EMPTYSTRING Constants
+DEFAULT if EQ i 1
+DEFAULT if AND java.lang.String#equals(java.lang.Object) NE "" registrationID it.mb.whatshare.GCMIntentService errorID NEG it.mb.whatshare.GCMIntentService 1
+DEFAULT while AND GT GT j 0 <_LABELEMPTY_> key input j
+DEFAULT if EQ hc null
+DEFAULT if GE java.util.List#size() 1 selectedNodes
+DEFAULT com.google.common.base.Preconditions#checkArgument(boolean) com.google.common.base.Preconditions AND GE LT x 0 PLUS width x w de.hswt.hrm.plant.ui.schemeeditor.SchemeGrid
+DEFAULT if BITAND LT NE k nct <_LABELEMPTY_> 0.0 singularValues k org.apache.commons.math.linear.SingularValueDecompositionImpl
+DEFAULT if OR EQ NE obj1 null obj2 null
+DEFAULT if GE iMaxPathwayCount org.geneview.core.view.opengl.canvas.pathway.JukeboxHierarchyLayer#getCapacity() pathwayLayeredLayer org.geneview.core.view.opengl.canvas.pathway.GLCanvasJukeboxPathway3D
+DEFAULT if LT minutes 9
+DEFAULT if LT length 0 closestunits
+DEFAULT if GT size 0
+DEFAULT if LT mpicbg.models.PointMatch#getDistance() t m
+DEFAULT if GT mResetFuel 0 org.harleydroid.HarleyData
+DEFAULT if GE maxLiveColumns count
+DEFAULT modifier java.lang.String <_LABELEMPTY_> <_LABELEMPTY_> GE <_LABELEMPTY_> "" length 1 args args 1
+DEFAULT if OR LT GT index 0 index #size() org.apache.directory.shared.kerberos.codec.options.Options
+DEFAULT if LT max startIndex
+DEFAULT if GE i offset
+DEFAULT if AND NOT NOT #hasItemMeta() #getItemStack() org.bukkit.event.player.PlayerDropItemEvent#getItemDrop() event #hasLore() #getItemMeta() #getItemStack() org.bukkit.event.player.PlayerDropItemEvent#getItemDrop() event
+DEFAULT <_LABELEMPTY_> i GT POSTDEC int <_LABELEMPTY_> MINUS java.util.Vector#size() 1 cleanupClients com.izforge.izpack.util.Housekeeper i 0 i
+DEFAULT return LE java.util.ArrayList#size() anonymousAttributes attributeNames this org.riotfamily.common.web.mapping.AttributePattern
+DEFAULT if EQ length 0 elements
+DEFAULT if NE layer null
+DEFAULT distanceDiff int <_LABELEMPTY_> MINUS <_LABELEMPTY_> <_LABELEMPTY_> distances PLUS i 1 distances i
+DEFAULT <_LABELEMPTY_> i LT PREINC int <_LABELEMPTY_> 0 i ntree i
+DEFAULT while NE depth 0
+DEFAULT if NE _timerTask null org.savara.sam.internal.collector.JMSActivityCollectorImpl
+DEFAULT if OR GT GT pX java.awt.image.BufferedImage#getWidth() image org.animotron.animi.cortex.CortexZoneComplex$ColumnRF_Image pY java.awt.image.BufferedImage#getHeight() image org.animotron.animi.cortex.CortexZoneComplex$ColumnRF_Image
+DEFAULT com.sun.tools.javac.util.ListBuffer#append() annotationArguments #Assign(com.sun.tools.javac.tree.JCTree.JCExpression) com.redhat.ceylon.compiler.java.codegen.AnnotationInvocationVisitor com.redhat.ceylon.compiler.java.codegen.ExpressionTransformer#make() com.redhat.ceylon.compiler.java.codegen.AnnotationInvocationVisitor#makeQuotedIdent() expr exprGen com.redhat.ceylon.compiler.java.codegen.AnnotationInvocationVisitor naming <_LABELEMPTY_> exprGen com.redhat.ceylon.compiler.java.codegen.AnnotationInvocationVisitor EQ null com.redhat.ceylon.compiler.typechecker.model.Parameter#getName() parameter null this com.redhat.ceylon.compiler.java.codegen.AnnotationInvocationVisitor parameter this com.redhat.ceylon.compiler.java.codegen.AnnotationInvocationVisitor
+DEFAULT if EQ BITAND BITAND x 1 y 1
+DEFAULT assert EQ target null
+DEFAULT if EQ reason 1 cache carnero.cgeo.cgeodetail
+DEFAULT if AND GT LT graceperiod NEG 1 graceperiod com.iplanet.am.sdk.AMStoreConnection#daysSinceModified(com.iplanet.sso.SSOToken,java.lang.String) com.iplanet.am.sdk.AMStoreConnection token entryDN com.iplanet.am.sdk.AMObjectImpl com.iplanet.am.sdk.AMObjectImpl
+DEFAULT = matches GT org.cinchapi.concourse.server.engine.Value#compareToLogically(org.cinchapi.concourse.server.engine.Value) 0 value writeValue
+DEFAULT if OR NE NE no.arcticdrakefox.wolfbot.model.WolfBotModel#getState() None data no.arcticdrakefox.wolfbot.WolfBot no.arcticdrakefox.wolfbot.model.State no.arcticdrakefox.wolfbot.model.WolfBotModel#getState() Starting data no.arcticdrakefox.wolfbot.WolfBot no.arcticdrakefox.wolfbot.model.State
+DEFAULT while OR GT LT pessoa 6 pessoa 0
+DEFAULT return MUL b_B scale dgu.bufsizing.BottleneckLink$Result
+DEFAULT if OR EQ GT bestSubjectCollection null this pl.edu.pw.elka.pszt.inteligraph.model.Model pl.edu.pw.elka.pszt.inteligraph.model.Model#calculateQuality(pl.edu.pw.elka.pszt.inteligraph.model.SubjectCollection) pl.edu.pw.elka.pszt.inteligraph.model.SubjectCollection#getQuality() this solution pl.edu.pw.elka.pszt.inteligraph.model.Model bestSubjectCollection this pl.edu.pw.elka.pszt.inteligraph.model.Model
+DEFAULT i int <_LABELEMPTY_> <_LABELEMPTY_> NE 1 0 BITOR 0 javassist.CtBehavior#getModifiers() STATIC methodOrCtor java.lang.reflect.Modifier
+DEFAULT if LE mSeconds 0 com.app.chessclock.models.TimeModel
+DEFAULT if OR LT GT y 0 y ydim
+DEFAULT if GE max 0
+DEFAULT if AND NE NE parent fStartContainer org.apache.xerces.dom.RangeImpl parent fEndContainer org.apache.xerces.dom.RangeImpl
+DEFAULT return LT unstar.GeneratorCodeProvider#decode(java.lang.String) unstar.GeneratorCodeProvider#decode(java.lang.String) unstar.GeneratorCodeProvider start unstar.GeneratorCodeProvider unstar.GeneratorCodeProvider end unstar.GeneratorCodeProvider
+DEFAULT return AND com.netflix.frigga.NameValidation#checkMatch(java.lang.String,java.util.regex.Pattern) com.netflix.frigga.NameValidation#checkMatch(java.lang.String,java.util.regex.Pattern) com.netflix.frigga.NameValidation name PUSH_FORMAT_PATTERN com.netflix.frigga.NameValidation com.netflix.frigga.NameValidation name LABELED_VARIABLE_PATTERN com.netflix.frigga.NameValidation
+DEFAULT if NE begLen null
+DEFAULT if NE null type
+DEFAULT if AND AND NOT NE NE runnable null BITAND 0 CONTENT org.eclipse.core.resources.IResourceDelta#getFlags() org.eclipse.core.resources.IResourceDelta delta isSynchronized
+DEFAULT if NE initialized null
+DEFAULT if LT java.lang.String#compareTo(java.lang.String) 0 captureDate lastCapture org.archive.wayback.resourceindex.filters.CaptureToUrlResultFilter
+DEFAULT <_LABELEMPTY_> n AND <_LABELEMPTY_> int <_LABELEMPTY_> startN LE LT n MUL 10 startN n java.util.List#size() data n startN
+DEFAULT if EQ position 0
+DEFAULT if NE keyboard null
+DEFAULT if EQ index 0
+DEFAULT if NE collection null
+DEFAULT if EQ xStep 0.0F
+DEFAULT if EQ currErrorHandler org.apache.xerces.impl.xs.dom.DOMParser#getProperty(java.lang.String) fSchemaParser ERROR_HANDLER org.apache.xerces.impl.xs.traversers.XSDHandler org.apache.xerces.impl.xs.traversers.XSDHandler
+DEFAULT return LT distanceSq ATTRACTION_DISTANCE_SQUARED com.mebigfatguy.classgraph.GraphDisplay
+DEFAULT if OR LT GT j 0 j size com.jme3.terrain.heightmap.AbstractHeightMap
+DEFAULT if GT android.support.v4.view.ViewPager#getCurrentItem() 0 viewPager com.ubergeek42.WeechatAndroid.WeechatActivity
+DEFAULT if EQ <_LABELEMPTY_> 0 index indexPos org.oscim.core.GeometryBuffer org.oscim.core.GeometryBuffer
+DEFAULT if AND LE GE dX DIV squareSize 2 riskyspace.view.swingImpl.RenderArea dY DIV squareSize 2 riskyspace.view.swingImpl.RenderArea
+DEFAULT if LT pos MINUS length 7
+DEFAULT if AND GE NOT version version superceded entry java.util.Vector#contains(org.joval.plugin.adapter.solaris.Patch54Adapter$PatchEntry) v by entry
+DEFAULT return GT httpStatusCode 400 org.apache.shindig.gadgets.http.HttpResponse
+DEFAULT org.springframework.util.Assert#isTrue(boolean,java.lang.String) org.springframework.util.Assert LT "Timeout<_LABELSPACE_>must<_LABELSPACE_>be<_LABELSPACE_>a<_LABELSPACE_>non-negative<_LABELSPACE_>value" timeout 0
+DEFAULT = decay MINUS 1 MUL DIV 0.5 dt lambda org.opentripplanner.routing.trippattern.DecayingDelayTripTimes
+DEFAULT if EQ caughtException null
+DEFAULT if AND NE EQ <_LABELEMPTY_> class stack i org.eclipse.core.runtime.adaptor.ContextFinder java.lang.Class#getClassLoader() null <_LABELEMPTY_> stack i
+DEFAULT if GT BITAND 0 org.eclipse.core.resources.IResourceDelta#getFlags() MOVED_TO delta org.eclipse.core.resources.IResourceDelta
+DEFAULT if AND LT GT <_LABELEMPTY_> java.text.CharacterIterator#getBeginIndex() info 2 iterator <_LABELEMPTY_> java.text.CharacterIterator#getEndIndex() info 2 iterator
+DEFAULT if EQ pointList null
+DEFAULT if LT java.lang.String#length() 8 passwort
+DEFAULT if GE azkaban.executor.ExecutableFlow#getUpdateTime() updateTime flow
+DEFAULT if OR EQ LT worldVertices null com.badlogic.gdx.math.Polygon length length worldVertices com.badlogic.gdx.math.Polygon localVertices
+DEFAULT return OR OR AND AND AND GE LE c 'a' c 'z' GE LE c 'A' c 'Z' GE GE c '0' c '9'
+DEFAULT if AND eof GT net.pms.io.BufferedOutputFile readCount writeCount net.pms.io.BufferedOutputFile
+DEFAULT if GE position length
+DEFAULT if GE found selectedIndex
+DEFAULT if AND NE LE last null MINUS grace java.lang.System#currentTimeMillis() last java.lang.System this edgruberman.bukkit.doorman.Doorman
+DEFAULT if AND GT GT line 0 this edu.wisc.ssec.mcidasv.data.GeoLatLonSelection element 0 this edu.wisc.ssec.mcidasv.data.GeoLatLonSelection
+DEFAULT if BITAND isStop NOT com.inmobi.databus.audit.services.AuditFeederService processLastBatch com.inmobi.databus.audit.services.AuditFeederService
+DEFAULT if AND EQ solver.search.strategy.decision.Decision#hasNext() jumpTo 0 decision solver.search.loop.BinarySearchLoop
+DEFAULT if AND EQ NE mbp null java.lang.String#indexOf(java.lang.String) NEG contType "plain/text" 1
+DEFAULT if GT fileLinesCount MAX_LINES_TO_DICTIONARY org.gitools.matrix.model.compressmatrix.AbstractCompressor org.gitools.matrix.model.compressmatrix.AbstractCompressor
+DEFAULT <_LABELEMPTY_> j LT <_LABELEMPTY_> float <_LABELEMPTY_> 0.0F j 1.0F j step
+DEFAULT if NE xssVectors null example.fuzzer.Fuzzer
+DEFAULT return EQ dataset null org.clueminer.dendrogram.gui.DendrogramComponent
+DEFAULT while GT i length path
+DEFAULT if OR NE EQ edu.pdx.cawhite.coordinates.Coordinate#getLength() numberOfRows p edu.pdx.cawhite.coordinates.Coordinate#getLength() numberOfRows d
+DEFAULT if LE oldVersion 12
+DEFAULT if EQ java.util.regex.Matcher#end() java.lang.String#length() matcher com.lab_programming.util.RegularTokenizer str com.lab_programming.util.RegularTokenizer
+DEFAULT <_LABELEMPTY_> a LT POSTINC int <_LABELEMPTY_> 0 a MINUS outputMaxSlot outputMinSlot a
+DEFAULT if NE length 2 vals
+DEFAULT if GT len 0
+DEFAULT if EQ version SLP_VERSION ch.ethz.iks.slp.impl.SLPMessage
+DEFAULT if NE = 1 affected java.sql.PreparedStatement#executeUpdate() ps
+DEFAULT if OR LE GT radius maxRadius gibstick.bukkit.discosheep.DiscoParty radius 0
+DEFAULT if GT diff 0 com.bergerkiller.bukkit.nolagg.monitor.PerformanceMonitor
+DEFAULT if EQ MINUS end start 1
+DEFAULT if AND AND GT AND GT LT LT x largura Mapa y altura Mapa y 0 x 0
+DEFAULT return OR EQ java.lang.Object#equals(java.lang.Object) pkey null pkey 0
+DEFAULT = changed OR EQ NE fOwnedMonitors null org.eclipse.jdt.internal.debug.ui.JavaMonitorThread length 0 fOwnedMonitors org.eclipse.jdt.internal.debug.ui.JavaMonitorThread
+DEFAULT if GT uk.ac.imperial.presage2.util.location.Location#getX() x target uk.ac.imperial.presage2.util.location.area.Area
+DEFAULT if NE collapseKey null com.notnoop.c2dm.C2DMNotificationBuilder
+DEFAULT if GT <_LABELEMPTY_> nextStaticIndex idx i supFt
+DEFAULT if AND NE NE goodsType HORSES Goods goodsType MUSKETS Goods
+DEFAULT if NE TributeData.Util#find(java.lang.String,org.bukkit.Material) null TributeData.Util category material
+DEFAULT end_x int <_LABELEMPTY_> <_LABELEMPTY_> GT width PLUS PLUS width <_LABELEMPTY_> len cent 0 naybur.grid.OIGrid$Rect naybur.grid.OIGrid$Rect <_LABELEMPTY_> len cent 0 naybur.grid.OIGrid$Rect naybur.grid.OIGrid$Rect
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> 0 i resources.objects.creature.CreatureObject#getLevel() creature i
+DEFAULT if NE inputTemplate null
+DEFAULT if EQ entities null
+DEFAULT if NE entryPad null no.runsafe.survivalchallenge.ChallengeHandler
+DEFAULT if GT Util.Move#getMoveValue() highestMoveValueSoFar aMove
+DEFAULT if GT scale ZOOM_IN_LIMIT fi.csc.microarray.client.dataview.GraphPanel
+DEFAULT if AND NE LT handicap 0 orego.mcts.DynamicKomiPlayer #getTurn() cutOff #getBoard() orego.mcts.DynamicKomiPlayer orego.mcts.DynamicKomiPlayer
+DEFAULT <_LABELEMPTY_> NE Room#openDoor() false room
+DEFAULT if NE files null
+DEFAULT return EQ com.qcadoo.model.api.Entity#getField() null order CostNormsForProductConstants.ORDER_OPERATION_PRODUCT_IN_COMPONENTS
+DEFAULT <_LABELEMPTY_> i NE POSTDEC int <_LABELEMPTY_> MINUS tabCount 1 i 0 i
+DEFAULT if GT java.lang.String#compareToIgnoreCase(java.lang.String) 0 outputFormatValue "doc"
+DEFAULT if LE oldVersion 4
+DEFAULT if AND GT NE org.spoofax.jsglr.ParserHistory#getIndexLastToken() 0 org.spoofax.jsglr.ParserHistory <_LABELEMPTY_> EOF recoverTokenStream org.spoofax.jsglr.ParserHistory#getIndexLastToken() org.spoofax.jsglr.ParserHistory org.spoofax.jsglr.ParserHistory SGLR
+DEFAULT if GT left savant.view.swing.Range#getFrom() savant.view.swing.GraphPane#getHorizontalPositionalRange() this savant.view.swing.GraphPane
+DEFAULT if EQ com.iBank.system.Loan#getInterval() com.iBank.system.Loan#getMinutesDone() a a
+DEFAULT if GT java.lang.Comparable#compareTo(T) 0 searchedKey key
+DEFAULT org.eclipse.birt.data.engine.olap.data.api.CubeQueryExecutorHelper#setBreakHierarchy() cubeQueryExcutorHelper NE org.eclipse.birt.data.engine.olap.query.view.QueryExecutor #getFilterOption() 0 org.eclipse.birt.data.engine.olap.impl.query.CubeQueryExecutor#getCubeQueryDefinition() executor
+DEFAULT if GE length clojure.lang.APersistentSet#count() a clojure.lang.APersistentSet
+DEFAULT return MINUS ca.idrc.tagin.model.Beacon#getRssi() ca.idrc.tagin.model.Beacon#getRssi() beacon ca.idrc.tagin.model.Beacon
+DEFAULT if BITOR EQ EQ #getX() x <_LABELEMPTY_> player counter2 Interface Interface #getY() y <_LABELEMPTY_> player counter2 Interface Interface
+DEFAULT return PLUS BITOR MASK_DELTA SR SL crc 15 crc 17 org.iq80.leveldb.util.PureJavaCrc32C
+DEFAULT while LT upperIndex n
+DEFAULT if GT #size() 1 syam.ThemeCreative.Theme.Theme#getPlayersByType() theme MemberType.MANAGER
+DEFAULT if LT holdDelay HOLD_DELAY_MAXIMUM com.android.emailsync.SyncManager$SyncError com.android.emailsync.SyncManager
+DEFAULT if NE java.util.List#size() 1 parameters
+DEFAULT if OR OR LT OR LT LT LT a_kind 0 a_identifier 0 a_kindLength 0 a_identifierLength 0
+DEFAULT if LT crawlingRetryCount 0
+DEFAULT if LT fNumElements length org.apache.xerces.validators.common.AllContentModel fAllElements org.apache.xerces.validators.common.AllContentModel
+DEFAULT assert EQ player null
+DEFAULT if LT remaining l
+DEFAULT if AND GT GT limit 0 count limit
+DEFAULT if AND NE NE startedDialogState null Modules.sceUtilityModule startedDialogState (this) Modules.sceUtilityModule jpcsp.HLE.modules150.sceUtility$UtilityDialogState
+DEFAULT return OR NOT LT keepUnchangedFiles net.sf.orcc.backends.CommonPrinter org.eclipse.core.resources.IFile#getLocalTimeStamp() java.io.File#lastModified() newFile oldFile
+DEFAULT if EQ home null
+DEFAULT if GT refIndex java.lang.String#length() ref
+DEFAULT if OR LT GT prevIndex 0 nextIndex length _componentSizes
+DEFAULT if NE indexCount 4
+DEFAULT if AND NE OR predictedType null OR java.lang.Class#isAssignableFrom(java.lang.Class) GT AND length 1 typesToMatch GT NOT length 0 typesToMatch java.lang.Object#equals(java.lang.Object) class <_LABELEMPTY_> org.springframework.beans.factory.FactoryBean typesToMatch 0 class predictedType org.springframework.beans.factory.FactoryBean
+DEFAULT if OR NE NOT osversion null edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo java.lang.String#isEmpty() osversion edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo
+DEFAULT return AND LT NE <_LABELEMPTY_> level restricts com.aionemu.gameserver.model.PlayerClass#ordinal() com.aionemu.gameserver.model.templates.item.ItemTemplate playerClass <_LABELEMPTY_> 0 restricts com.aionemu.gameserver.model.PlayerClass#ordinal() com.aionemu.gameserver.model.templates.item.ItemTemplate playerClass
+DEFAULT if OR OR GT OR LT LT GT x 0 x org.ligi.gobandroid_hd.logic.GoBoard#getSize() calc_board org.ligi.gobandroid_hd.logic.GoGame y 0 y org.ligi.gobandroid_hd.logic.GoBoard#getSize() calc_board org.ligi.gobandroid_hd.logic.GoGame
+DEFAULT if LE MINUS CONN_INVALIDATE_PERIOD java.lang.System#currentTimeMillis() org.jdiameter.client.api.io.IConnection#getCreatedTime() java.lang.System connection org.jdiameter.server.impl.MutablePeerTableImpl
+DEFAULT if NE position NEG ca.ualberta.cs.oneclick_cookbook.CreateRecipeActivity 1
+DEFAULT if OR EQ NOT java.lang.Enum#getTag() null e INSTANCEOF parent com.ochafik.lang.jnaerator.parser.StoredDeclarations.TypeDef
+DEFAULT if GE java.util.Collection#size() org.geppetto.core.simulation.ISimulation#getSimulatorCapacity() org.geppetto.frontend.GeppettoServletController#getConnections() this org.geppetto.frontend.GeppettoServletController simulationService org.geppetto.frontend.GeppettoServletController
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> MINUS gomoku.jeu.Coordonnees#abscisse() dist c i PLUS gomoku.jeu.Coordonnees#abscisse() dist c i
+DEFAULT if OR EQ NOT myorg.applicationTier.Authenticate.UserView#getCurrentUser() null myorg.applicationTier.Authenticate.UserView module.contacts.domain.PartyContact#isEditableBy(myorg.domain.User) module.contacts.domain.PartyContact myorg.applicationTier.Authenticate.UserView#getCurrentUser() myorg.applicationTier.Authenticate.UserView
+DEFAULT if GE net.floodlightcontroller.util.MACAddress#toLong() net.floodlightcontroller.util.MACAddress#toLong() hwAddress this net.floodlightcontroller.odinmaster.OdinClient hwAddress o
+DEFAULT if EQ style null
+DEFAULT return <_LABELEMPTY_> #toArray() PLUS org.esgi.java.grabbergui.models.ProjectGrabber#getHistory() project org.esgi.java.grabbergui.view.gui.items.ThreadsTabItem MINUS 1 #size() row org.esgi.java.grabbergui.models.ProjectGrabber#getHistory() project org.esgi.java.grabbergui.view.gui.items.ThreadsTabItem
+DEFAULT if GT departureRows 1
+DEFAULT if EQ crs null
+DEFAULT if NE queuedCloseReason null uk.org.cowgill.james.jircd.Client
+DEFAULT if GT startSample 0 nextEntry
+DEFAULT if EQ parentURL null
+DEFAULT if OR NOT NOT com.garbagemule.MobArena.framework.Arena#isRunning() arena com.garbagemule.MobArena.ArenaListener #contains() com.garbagemule.MobArena.framework.Arena#getRegion() com.garbagemule.MobArena.Entity#getLocation() arena com.garbagemule.MobArena.ArenaListener damagee
+DEFAULT if GT result 10000
+DEFAULT if AND AND NOT EQ NE <_LABELEMPTY_> null preValues i doo.bandera.ModelBinder <_LABELEMPTY_> null newValues i java.lang.Object#equals(java.lang.Object) <_LABELEMPTY_> <_LABELEMPTY_> preValues i doo.bandera.ModelBinder newValues i
+DEFAULT return EQ MINUS MINUS java.util.Calendar#getTimeInMillis() java.util.Calendar#getTimeInMillis() calEnd calStart MUL 1 DAY 7
+DEFAULT if GE #getAmount() amountLeft org.bukkit.inventory.PlayerInventory#getItem(int) inventory firstFound
+DEFAULT if AND NE EQ fieldsIn null widthsIn null
+DEFAULT if NE m_engineCall null org.apache.xalan.extensions.ExtensionHandlerGeneral
+DEFAULT return EQ length 0 #getOnlinePlayers() #getServer() com.timvisee.dungeonmaze.DungeonMaze
+DEFAULT if LE org.eclipse.jgit.diff.Edit#getEndA() org.eclipse.jgit.diff.Edit#getBeginA() oursEdit theirsEdit
+DEFAULT java.lang.System#arraycopy(java.lang.Object,int,java.lang.Object,int,int) java.lang.System l MUL f PLUS 4 i 4 PLUS 4 MUL j i left
+DEFAULT if GE javax.swing.DefaultListModel#size() listIndex offers
+DEFAULT if EQ #intValue() 1 #getValue() direction
+DEFAULT <_LABELEMPTY_> LT PLUS java.lang.System#currentTimeMillis() start duration java.lang.System
+DEFAULT if AND EQ LE nl.tuestudent.thermostaat.data.DayProgram$ProgramSwitch#getHour() hour ps nl.tuestudent.thermostaat.data.DayProgram$ProgramSwitch#getMin() min ps
+DEFAULT <_LABELEMPTY_> OR LT GT org.apache.hadoop.mapreduce.Counter#getValue() DIV converge org.apache.hadoop.mapreduce.Counter#getValue() org.apache.hadoop.mapreduce.Counter#getValue() total totalfile iterCounter maxIteraion
+DEFAULT if AND GT GT hStartPos 0 hEndPos hStartPos
+DEFAULT if GT positionX 10 se.chalmers.dryleafsoftware.androidrally.model.robots.Robot
+DEFAULT while OR LT GE choice startIndex choice java.util.AbstractCollection#size() list
+DEFAULT canUndo boolean <_LABELEMPTY_> OR EQ EQ docStamp UNKNOWN_MODIFICATION_STAMP org.eclipse.jface.text.IDocumentExtension4 docStamp org.eclipse.text.undo.DocumentUndoManager$UndoableTextChange#getRedoModificationStamp() org.eclipse.text.undo.DocumentUndoManager$UndoableTextChange
+DEFAULT if AND create_view LT cytoscape.CyNetwork#getNodeCount() java.lang.Integer#parseInt(java.lang.String) network java.lang.Integer #getProperty(java.lang.String) cytoscape.CytoscapeInit#getProperties() "viewThreshold" cytoscape.CytoscapeInit
+DEFAULT if AND EQ NE #getFirstValue(java.lang.String) null com.ning.http.client.Request#getHeaders() "User-Agent" request com.ning.http.client.AsyncHttpClientConfig#getUserAgent() null config com.ning.http.client.providers.apache.ApacheAsyncHttpProvider
+DEFAULT while GE POSTDEC 0 n
+DEFAULT if LT expectedArrival PLUS dispoOrder period actPeriod
+DEFAULT while OR LT LT npc_score 3 pc_score 3
+DEFAULT if OR NOT NOT java.util.regex.Pattern#matches(java.lang.String,java.lang.CharSequence) java.util.regex.Pattern match com.novel.odisp.common.Message#getDestination() msg java.util.regex.Pattern#matches(java.lang.String,java.lang.CharSequence) java.util.regex.Pattern com.novel.odisp.common.Message#getDestination() #getObjectName() msg com.novel.odisp.common.PollingODObject
+DEFAULT return LT java.lang.Math#sin(double) 0 java.lang.Math angle
+DEFAULT <_LABELEMPTY_> = LT <_LABELEMPTY_> x margin tileSet x stopWidth x PLUS tileWidth spacing tileSet tileSet
+DEFAULT if NE scoreboardTeam null this jk_5.nailed.players.Team
+DEFAULT return GT org.neo4j.graphdb.Path#length() 0 position org.neo4j.kernel.impl.traversal.OldTraverserWrapper$PositionImpl
+DEFAULT if GT value limit
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> 0 i attr edu.pitt.isp.sverchkov.data.ADTreeHelper$CountNode i
+DEFAULT if BITAND NE EQ transmitter null transmissionRemaining 0 transmitter
+DEFAULT if GT weight ZERO_WEIGHT_THRESHOLD io.airlift.stats.QuantileDigest
+DEFAULT if NE sessionRegistration null org.eclipse.osgi.framework.console.ConsoleSession
+DEFAULT while LT MUL MUL z zStep mmcorej.CMMCore#getPosition(java.lang.String) zStep mmc zStageLabel spim.SPIMAcquisition spim.SPIMAcquisition
+DEFAULT if LE length PLUS source offset 3
+DEFAULT <_LABELEMPTY_> i GT = int <_LABELEMPTY_> nNextKeyPrefix myParser uk.org.ownage.dmdirc.parser.ChannelClientInfo i 1 i DIV i 2
+DEFAULT if EQ #getDocumentElement() null nokogiri.XmlDocument#getDocument() doc
+DEFAULT if EQ message null
+DEFAULT <_LABELEMPTY_> z GE PREINC int <_LABELEMPTY_> no.runsafe.framework.minecraft.RunsafeLocation#getBlockZ() min z no.runsafe.framework.minecraft.RunsafeLocation#getBlockZ() max z
+DEFAULT return EQ java.util.Collection#size() MAX_ITEMS_ON_PAGE queryPageResponses com.abudko.reseller.huuto.query.service.list.html.huuto.HuutoHtmlQueryListServiceImpl
+DEFAULT if AND AND NOT isRunning GT curPeers 0 showPeers
+DEFAULT if EQ compilationUnit null
+DEFAULT if LE seconds 86400
+DEFAULT return PLUS x y
+DEFAULT return EQ currentConnection null com.dropoutdesign.ddf.Module
+DEFAULT if GT PLUS PLUS #getY() y coggame.Sprite collision coggame.Sprite y h
+DEFAULT if AND AND GT AND GT AND GT AND GT GT GT minValue 0 maxValue 0 expectedMaxLatency 0 expectedMinLatency 0 expectedMinLatency minValue expectedMaxLatency maxValue
+DEFAULT if OR OR #remove(java.lang.String) OR #remove(java.lang.String) #remove(java.lang.String) #remove(java.lang.String) #getValues() "USA" me.turnerha.infovis.data.Bicluster#getCol() bc #getValues() "USA" me.turnerha.infovis.data.Bicluster#getRow() bc #getValues() "FBI" me.turnerha.infovis.data.Bicluster#getCol() bc #getValues() "FBI" me.turnerha.infovis.data.Bicluster#getRow() bc
+DEFAULT if NE dungeonGenerator null dimHelper.dimList#get() dimHelper.dimList destDimID link
+DEFAULT if NE exporter null this org.openscada.da.server.exporter.NetExport
+DEFAULT if GT row length com.sf.jintn3270.TerminalModel$CursorPosition buffer com.sf.jintn3270.TerminalModel
+DEFAULT if GE length clojure.lang.ASeq#count() a clojure.lang.ASeq
+DEFAULT if GE length #count() a clojure.lang.APersistentVector
+DEFAULT while AND go LT fi.smaa.jsmaa.SimulationThread iteration currentTotalIters fi.smaa.jsmaa.SimulationThread
+DEFAULT if LE c PLUS PLUS r d p
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> l i h i
+DEFAULT return java.lang.Math#min(int,int) java.lang.Math length MUL PLUS MINIMUM_SIZE MOD 1 cardinality MINIMUM_SIZE org.la4j.vector.sparse.CompressedVector org.la4j.vector.sparse.CompressedVector
+DEFAULT return BITOR EQ EQ m_Successors null weka.classifiers.trees.Grupp3Labb1 length 0 m_Successors weka.classifiers.trees.Grupp3Labb1
+DEFAULT while GT sz 128
+DEFAULT if LT interval 0 org.bitrepository.service.workflow.JobTimerTask
+DEFAULT = code USR java.util.ArrayList#get(int) MINUS compressed index 32 MINUS MUL MUL PLUS currentByte 8 offset 2 startBit
+DEFAULT if OR INSTANCEOF NOT e ch9k.chat.event.RequestPluginContainerEvent ch9k.chat.Conversation#isClosed() conversation ch9k.chat.gui.ConversationWindow
+DEFAULT if NE BITAND 0 java.lang.reflect.Field#getModifiers() STATIC target java.lang.reflect.Modifier
+DEFAULT if AND uk.co.oliwali.HawkEye.util.BlockUtil#isItemAttached(int) OR uk.co.oliwali.HawkEye.util.BlockUtil type NE NE data 5 data 6
+DEFAULT if NE connectUpcall null ibis.impl.tcp.TcpSendPort
+DEFAULT #addStep(<unknown>,<unknown>) se2.e.utilities.path.LinearPathInterpolator <_LABELEMPTY_> <_LABELEMPTY_> positions MINUS i 1 positions i
+DEFAULT if LE i pos
+DEFAULT if GT java.util.Collection#size() 0 promptIds
+DEFAULT if EQ hashValues null
+DEFAULT = y MINUS lowerRight y de.uniluebeck.itm.spyglass.positions.PixelRectangle#getHeight() de.uniluebeck.itm.spyglass.positions.PixelRectangle#getUpperLeft() rect rect
+DEFAULT if EQ y MINUS loc java.awt.Dimension#getHeight() 1 java.awt.Toolkit#getScreenSize() java.awt.Toolkit#getDefaultToolkit() java.awt.Toolkit
+DEFAULT if LE radlab.rain.load.LoadDefinition#getNumberOfUsers() 0 load
+DEFAULT return MINUS startTime offsetFromStart
+DEFAULT if GT BITAND 0 quoteStyle ENT_HTML_QUOTE_SINGLE com.caucho.quercus.lib.HtmlModule
+DEFAULT if NE transactionObject null
+DEFAULT if AND AND com.me.Roguish.Model.Entity#getAlive() AND NOT com.me.Roguish.Controller.LevelController#inRange(com.me.Roguish.Model.Entity,com.me.Roguish.Model.Entity,int) GE com.me.Roguish.Controller.LevelController hero ent ability com.me.Roguish.Controller.LevelController com.me.Roguish.Model.Entity#getY() com.me.Roguish.Model.HeroUnit#getY() ent hero com.me.Roguish.Controller.LevelController com.me.Roguish.Model.Entity#equals(com.me.Roguish.Model.HeroUnit) ent hero com.me.Roguish.Controller.LevelController ent
+DEFAULT <_LABELEMPTY_> i LE POSTDEC int <_LABELEMPTY_> MINUS java.util.List#size() 1 encs i 0 i
+DEFAULT <_LABELEMPTY_> j LT PREINC int <_LABELEMPTY_> row0 j row1 j
+DEFAULT if NE metaData null
+DEFAULT if EQ java.lang.String#length() 0 textBoxContents
+DEFAULT while NE domMgr null
+DEFAULT if NE level level this com.aionemu.gameserver.model.gameobjects.player.PlayerCommonData
+DEFAULT assert GT java.lang.String#length() 40 siteName
+DEFAULT if AND NE NOT excludeItem null java.lang.Object#equals(java.lang.Object) excludeItem <_LABELEMPTY_> item 0
+DEFAULT if AND EQ EQ java.util.Set#size() 1 classifierNamesSet java.util.Set#size() 1 classifierPackagesSet
+DEFAULT if GT f 0.0
+DEFAULT if OR java.util.List#contains(java.lang.Object) GT banned name lastSeenDays #getPurgeAfterDays() net.sacredlabyrinth.Phaed.PreciousStones#getSettingsManager() plugin net.sacredlabyrinth.Phaed.PreciousStones.managers.StorageManager
+DEFAULT if NE java.util.Map#get(haven.error.HtmlReporter$ErrorIdentity) null groups id
+DEFAULT if EQ java.util.List#size() 0 result
+DEFAULT if LT length id _qClass com.caucho.quercus.env.Env
+DEFAULT return AND NE java.lang.String#equals(java.lang.Object) headerValue null "" java.lang.String#trim() headerValue
+DEFAULT if NE colour 15
+DEFAULT if NE available 0
+DEFAULT return AND AND LE LT GE Start_year End_year cz.opendata.linked.psp_cz.metadata.ExtractorConfig cz.opendata.linked.psp_cz.metadata.ExtractorConfig Start_year 1918 cz.opendata.linked.psp_cz.metadata.ExtractorConfig End_year java.util.Calendar#get(int) cz.opendata.linked.psp_cz.metadata.ExtractorConfig java.util.Calendar#getInstance() YEAR java.util.Calendar java.util.Calendar
+DEFAULT marginY float <_LABELEMPTY_> DIV depthHeight marginFraction
+DEFAULT if NE account null
+DEFAULT if AND NE EQ com.paypal.core.CertificateCredential#getSubject() null certCred #length() 0 com.paypal.core.CertificateCredential#getSubject() certCred
+DEFAULT return MINUS hashCode hashCode this webit.script.util.bean.FieldInfo o
+DEFAULT if NE min min ru.alepar.minesweeper.Limit limit
+DEFAULT if NE helpWindow null jAudioFeatureExtractor.OuterFrame
+DEFAULT if NE OBJECT_MAPPER null ch.hsr.bieridee.config.Config
+DEFAULT return GT com.voc4u.controller.DictionaryOpenHelper#numUnknownWord() 0 com.voc4u.controller.DictionaryOpenHelper
+DEFAULT = obstacleAvoidance #unit() <_LABELEMPTY_> GT mostLeft mostRight java.lang.Math#abs(double) java.lang.Math#abs(double) java.lang.Math mostLeftAngle java.lang.Math mostRightAngle
+DEFAULT javax.swing.JComponent#putClientProperty(java.lang.Object,java.lang.Object) slider RangeSlider.CLIENT_PROPERTY_MOUSE_POSITION LT com.jidesoft.plaf.basic.BasicRangeSliderUI y minY
+DEFAULT = i MINUS PLUS i org.agilewiki.jid.collection.vlenc.ListJidC#size() 1 org.agilewiki.jid.collection.vlenc.ListJidC
+DEFAULT styleClass java.lang.String <_LABELEMPTY_> <_LABELEMPTY_> NE PLUS PANEL_CLASS org.primefaces.component.panel.Panel#getStyleClass() null panel PLUS org.primefaces.component.panel.Panel#getStyleClass() PANEL_CLASS "<_LABELSPACE_>" Panel panel Panel
+DEFAULT if AND EQ EQ dayOfWeek SATURDAY java.util.Calendar dayOfWeek SUNDAY java.util.Calendar
+DEFAULT return <_LABELEMPTY_> NE readDelegates java.util.Collections#emptyMap() readDelegates null com.psddev.dari.db.AggregateDatabase com.psddev.dari.db.AggregateDatabase java.util.Collections
+DEFAULT return MINUS c cnt
+DEFAULT if LT focusDate md.frolov.legume.client.ui.components.LogEventComponent#getTimestamp() logEvent
+DEFAULT <_LABELEMPTY_> j LT POSTINC int <_LABELEMPTY_> 0 j i j
+DEFAULT if OR LT GT storageType 0 storageType length storageLabels org.apache.cassandra.db.engine.EngineMeta
+DEFAULT if AND INSTANCEOF EQ latestDoneMarker org.intellij.grammar.parser.PsiBuilder$Marker offset org.intellij.grammar.parser.LighterASTNode#getStartOffset() frame latestDoneMarker
+DEFAULT if LT java.util.Date#compareTo(java.util.Date) 0 fromDate #getActionDate() java.util.List#get(int) accountTrxnList i
+DEFAULT rShift java.lang.Long <_LABELEMPTY_> SR position 1
+DEFAULT if LE startId endId
+DEFAULT if EQ length 2 args
+DEFAULT if NE handle 0
+DEFAULT if LT #getChildCount() mCurrentScreen com.android.launcher.Workspace
+DEFAULT if BITAND VOICE_INSTALLED mRecognizing com.android.inputmethod.latin.LatinIME com.android.inputmethod.latin.LatinIME
+DEFAULT if GT #compareTo() 0 riskyspace.logic.data.FleetData#getFlagships() riskyspace.model.Fleet#getFlagship() fleetData fleet
+DEFAULT if AND EQ EQ next ':' next '='
+DEFAULT if OR NE GT quality null org.geopublishing.atlasViewer.dp.DpEntry MINUS 500 java.lang.System#currentTimeMillis() qualityLastTimeCalculated java.lang.System org.geopublishing.atlasViewer.dp.DpEntry
+DEFAULT if OR EQ EQ org.cagrid.cql2.AssociationPopulationSpecification#getNamedAssociationList() null pop org.cagrid.cql2.AssociationPopulationSpecification#getPopulationDepth() null pop
+DEFAULT if AND NE GT errorUrl null java.lang.String#indexOf(java.lang.String) NEG errorUrl "@errorUrl@" 1
+DEFAULT = indexPath fr.days.android.uitableview.model.IndexPath(int,int,int,int,int) position group MINUS numberOfGroups numberOfRows MOD 1 position numberOfRowsBefore
+DEFAULT if AND NE NE minZ 0.0F org.gephi.io.exporter.plugin.ExporterGraphML maxZ 0.0F org.gephi.io.exporter.plugin.ExporterGraphML
+DEFAULT if NE accessLog null pt.go2.application.Server
+DEFAULT if GT originVersion v
+DEFAULT if OR EQ com.kdcloud.lib.domain.DataSpecification#matchingSpecification(weka.core.Instances) outSpec null outSpec output com.kdcloud.lib.client.BaseClient
+DEFAULT if AND NE NOT mDb null com.commonsensenet.realfarm.dataaccess.RealFarmDatabase android.database.sqlite.SQLiteDatabase#isOpen() mDb com.commonsensenet.realfarm.dataaccess.RealFarmDatabase
+DEFAULT if AND EQ NOT #size() 0 org.mifos.framework.util.helpers.DoubleConversionResult#getErrors() conversionResult GT org.mifos.framework.util.helpers.DoubleConversionResult#getDoubleValue() 0.0 conversionResult
+DEFAULT if OR NE NE this_Attribute other_Attribute this_Attribute 100
+DEFAULT = operand1 MUL se.chalmers.dat255.sleepfighter.challenge.math.SimpleProblem result operand2 se.chalmers.dat255.sleepfighter.challenge.math.SimpleProblem se.chalmers.dat255.sleepfighter.challenge.math.SimpleProblem
+DEFAULT if GT idx 0
+DEFAULT <_LABELEMPTY_> i LT PREINC int <_LABELEMPTY_> col0 i col1 i
+DEFAULT if AND GT model.Inventoried#canGetItem(model.item.ItemType,int) money cost model.Party buyer itemType numberOf
+DEFAULT if OR OR GE OR LT LT GE r 0 r MUL com.jpii.navalbattle.pavo.PavoHelper#getGameHeight() 2 com.jpii.navalbattle.pavo.PavoHelper com.jpii.navalbattle.pavo.World#getWorldSize() w com.jpii.navalbattle.pavo.grid.EntityManager c 0 c MUL com.jpii.navalbattle.pavo.PavoHelper#getGameWidth() 2 com.jpii.navalbattle.pavo.PavoHelper com.jpii.navalbattle.pavo.World#getWorldSize() w com.jpii.navalbattle.pavo.grid.EntityManager
+DEFAULT if NE itemType SHORT org.apache.pig.data.DataType
+DEFAULT if NE lombok.val#getCallType() Virtual insnInvoke uk.ac.cam.db538.dexter.dex.code.insn.Opcode_Invoke
+DEFAULT return GE count java.util.Vector#size() stack this Calculator
+DEFAULT if OR NE java.lang.String#isEmpty() s null s
+DEFAULT if AND NE #after(java.util.Date) null lastEntry de.ronnyfriedland.time.entity.Entry#getLastModifiedDate() previousFireTime lastEntry
+DEFAULT if EQ api null
+DEFAULT if OR EQ EQ fieldTypes null org.apache.solr.client.solrj.request.FieldAnalysisRequest fieldNames null org.apache.solr.client.solrj.request.FieldAnalysisRequest
+DEFAULT assert LT porcion 0
+DEFAULT if BITAND useInternalPlayer NE gui.Gui_StreamRipStar audioPanel null gui.Gui_StreamRipStar
+DEFAULT if AND GT LT _valid 0 net.i2p.client.streaming.MessageOutputStream flushTime #now() net.i2p.I2PAppContext#clock() _context net.i2p.client.streaming.MessageOutputStream
+DEFAULT data java.lang.String <_LABELEMPTY_> java.lang.String#valueOf(char) java.lang.String PLUS charValue 1
+DEFAULT if OR LT GT x 0 x xdim
+DEFAULT assert EQ "Delegate<_LABELSPACE_>method<_LABELSPACE_>name<_LABELSPACE_>can<_LABELSPACE_>not<_LABELSPACE_>be<_LABELSPACE_>null" delegateMethodNames null
+DEFAULT if EQ readFile null org.utgenome.weaver.align.BWAlign
+DEFAULT <_LABELEMPTY_> i AND POSTINC int <_LABELEMPTY_> 0 LT LT i 96 nextNode nodeCount metadata this com.maxmind.maxminddb.MaxMindDbReader i
+DEFAULT if NE org.mobicents.servlet.sip.core.session.SipSessionImpl#getProxy() null org.mobicents.servlet.sip.core.session.SipSessionImpl
+DEFAULT if LE i java.util.ArrayList#size() people scene.PartyCreationScene
+DEFAULT if LT lastReinitalized lastDatabaseChangeTimeStamp collector.desktop.database.AlbumItemStore
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> java.util.List#size() dims i realdims i
+DEFAULT return OR NOT NOT #hasPlayer() #getLocation() item.Teleporter#getDestination() item.Teleporter #hasObstacle() #getLocation() item.Teleporter#getDestination() item.Teleporter
+DEFAULT if NE savedQuery null
+DEFAULT if NE is null
+DEFAULT if OR EQ NE data null length size data
+DEFAULT return DIV sum 6
+DEFAULT if LE cleanupPeriod 0 com.forgenz.mobmanager.limiter.util.AnimalProtection
+DEFAULT if AND NE EQ templates null java.util.List#size() 0 templates
+DEFAULT while GT numberA numberB
+DEFAULT if BITAND EQ NOT status SC_UNAUTHORIZED HttpStatus davmail.http.DavGatewayHttpClientFacade#hasNTLM(davmail.http.HttpClient) davmail.http.DavGatewayHttpClientFacade httpClient
+DEFAULT deltaX2 double <_LABELEMPTY_> MINUS MINUS deltaX1 DIV x cellWidth 2 g
+DEFAULT if AND GT LT verb 0 verb 3
+DEFAULT if LT a b
+DEFAULT if LT java.util.Date#compareTo(java.util.Date) 0 end st
+DEFAULT if NE alertDialogMessage null fr.gcastel.freeboxV6GeekIncDownloader.services.FreeboxDownloaderService
+DEFAULT return <_LABELEMPTY_> GT 1 NEG ed.net.httpserver.HttpHandler#priority() ed.net.httpserver.HttpHandler#priority() a b 1
+DEFAULT = m20 PLUS rotationMatrix MUL MUL MUL MINUS z x util.math.Plane#getNormal() rotationPlane util.math.Plane#getNormal() rotationPlane 1 java.lang.Math#cos(double) java.lang.Math tempDegree y java.lang.Math#cos(double) util.math.Plane#getNormal() rotationPlane java.lang.Math tempDegree
+DEFAULT <_LABELEMPTY_> i LE POSTINC int <_LABELEMPTY_> 0 i max_buffers LRUBufferPool i
+DEFAULT if LE uid 0
+DEFAULT if OR NE NOT TPcooldown 0 com.ForgeEssentials.core.PlayerInfo#getPlayerInfo(net.minecraft.entity.player.EntityPlayer) com.ForgeEssentials.core.PlayerInfo player com.ForgeEssentials.permission.PermissionsAPI#checkPermAllowed(com.ForgeEssentials.permission.query.PermQueryPlayer) com.ForgeEssentials.permission.PermissionsAPI java.lang.Object() player BYPASS_COOLDOWN com.ForgeEssentials.util.TeleportCenter
+DEFAULT if AND NE GT _locator null org.apache.ode.bpel.compiler.bom.DOMBuilderContentHandler _suppressLineNo 0 org.apache.ode.bpel.compiler.bom.DOMBuilderContentHandler
+DEFAULT if OR NOT NOT java.lang.String#equalsIgnoreCase(java.lang.String) <_LABELEMPTY_> "creative" args 1 java.lang.String#equalsIgnoreCase(java.lang.String) <_LABELEMPTY_> "survival" args 1
+DEFAULT if EQ childId null
+DEFAULT if AND AND AND LE GE MINUS 7 a 2 MINUS 0 a 2 LE GE PLUS 7 b 1 PLUS 0 b 1
+DEFAULT indexMax int <_LABELEMPTY_> <_LABELEMPTY_> GT MINUS 0 java.util.ArrayList#size() 0 mSectionsPositions org.projectvoodoo.gstandroid.utils.GstPluginsAdapter java.util.ArrayList#size() 1 mSectionsPositions org.projectvoodoo.gstandroid.utils.GstPluginsAdapter
+DEFAULT if EQ resultCode RESULT_OK
+DEFAULT if GE #getNbRounds() game.Bet#getNbRounds() #getOriginalBet() <_LABELEMPTY_> players i this game.Game bet
+DEFAULT if AND NE LT Configuration.Entry.MaxAccountsPerUser#getInteger() NEG Configuration.Entry.MaxAccountsPerUser 1 java.util.List#size() Configuration.Entry.MaxAccountsPerUser#getInteger() tmp Configuration.Entry.MaxAccountsPerUser
+DEFAULT <_LABELEMPTY_> j LT POSTINC int <_LABELEMPTY_> y1 j y2 j
+DEFAULT if AND NOT OR ignoreSize EQ EQ maxWidth 0 maxHeight 0
+DEFAULT while AND NE NE px rx py ry
+DEFAULT return AND GT LE java.util.ArrayList#size() 0 mMemes com.jamtwo.randommeme.MemeStack PLUS java.util.ArrayList#size() mCurrentIndex 1 com.jamtwo.randommeme.MemeStack mMemes com.jamtwo.randommeme.MemeStack
+DEFAULT if LT PLUS v2 v1 MIN_VALUE java.lang.Double
+DEFAULT if GE #compareTo(java.math.BigDecimal) 0 com.mustangexchange.polymeal.MoneyTime#calcTotalMoney() java.math.BigDecimal(char[]) com.mustangexchange.polymeal.MoneyTime #get(int) #getPrices() j MainActivity.sandItems#get(int) MainActivity.sandItems i
+DEFAULT if GT java.awt.event.MouseWheelEvent#getWheelRotation() 0 e
+DEFAULT if LT passedWay length de._13ducks.cor.game.Path
+DEFAULT <_LABELEMPTY_> i GE POSTDEC int <_LABELEMPTY_> USR numFields 3 i 0 i
+DEFAULT if GE PREINC _limit _node org.apache.xalan.xsltc.dom.DOMImpl$DescendantIterator org.apache.xalan.xsltc.dom.DOMImpl$DescendantIterator
+DEFAULT return AND GE LE character 0 character com.eclipsesource.jshint.Text#getLineLength(int) code MINUS com.eclipsesource.jshint.ui.internal.builder.MarkerHandler line 1
+DEFAULT if AND #isPresent() GE org.apache.cassandra.io.sstable.SSTableReader#getBloomFilter() key sstable key org.apache.cassandra.io.sstable.SSTableReader#getMinTimestamp() maxDeletionTimestamp sstable
+DEFAULT if NE org.bukkit.inventory.ItemStack#getAmount() 0 output
+DEFAULT if GT BITAND 0 <_LABELEMPTY_> blackKingMask PAWN_SHIELD_KING_SIDE_KING BLACK
+DEFAULT myAdjustedLength float <_LABELEMPTY_> MINUS MINUS 1 edu.uci.ics.genomix.type.VKmer#getKmerLetterLength() edu.uci.ics.genomix.type.Kmer#getKmerLength() internalKmer edu.uci.ics.genomix.type.Node edu.uci.ics.genomix.type.Kmer
+DEFAULT return LT key1 key2
+DEFAULT return OR EQ GT listeners null this org.logicalcobwebs.proxool.util.AbstractListenerContainer java.util.List#size() 1 listeners this org.logicalcobwebs.proxool.util.AbstractListenerContainer
+DEFAULT if GT java.util.List#size() 1 _incompleteResults final_project.model.Pool
+DEFAULT if LT java.util.List#size() answerIndex choicesAuthored
+DEFAULT = stylesheetDefinition <_LABELEMPTY_> de.escidoc.core.common.util.xml.XmlUtility AND PLUS "" NE GT xslt null java.lang.String#length() 0 xslt PLUS "\"?>\n" PLUS xslt PLUS de.escidoc.core.common.util.xml.XmlUtility#getEscidocBaseUrl() "<?xml-stylesheet<_LABELSPACE_>type=\"text/xsl\"<_LABELSPACE_>" "href=\"" de.escidoc.core.common.util.xml.XmlUtility
+DEFAULT if LE java.util.List#size() 1 moSameModelDataSet
+DEFAULT if OR AND AND org.biojava3.protmod.Component#isNTerminal() EQ comp iRes 0 org.biojava3.protmod.Component#isCTerminal() EQ comp iRes MINUS sizeRes 1
+DEFAULT if AND NE NE #getPriority() null de.tuilmenau.ics.fog.routing.hierarchical.management.ClusterMember #getValue() pNewHierarchyNodePriority #getPriority() de.tuilmenau.ics.fog.routing.hierarchical.management.ClusterMember
+DEFAULT if OR LT GE lossExp 0 raw lossExp 100 raw
+DEFAULT <_LABELEMPTY_> ii GT POSTINC int <_LABELEMPTY_> 0 ii java.util.List#size() artifacts ii
+DEFAULT if EQ java.util.List#size() 0 actions
+DEFAULT if NE dv null
+DEFAULT if GE authority org.waterforpeople.mapping.app.web.rest.security.AppRole#getLevel() r
+DEFAULT return MUL x y
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> NEG 12 i 12 i
+DEFAULT if EQ templateId null
+DEFAULT if LT java.lang.Math#round(float) dy java.lang.Math PLUS MUL tilehei slopeY dx model model
+DEFAULT if OR EQ EQ rightResult FALSE cz.cuni.mff.d3s.spl.core.Result leftResult FALSE cz.cuni.mff.d3s.spl.core.Result
+DEFAULT <_LABELEMPTY_> GE choix 0
+DEFAULT if NE params null
+DEFAULT if EQ writtenBytes 0
+DEFAULT if LT maxLevel levelFloor
+DEFAULT return AND ciSonoIngredienti NE esercitazione10.TavoloSync MOD i PLUS NUM_INGREDIENTI <_LABELEMPTY_> 1 ingredienti MINUS length 1 ingredienti
+DEFAULT java.util.Map#put(K,V) results <_LABELEMPTY_> <_LABELEMPTY_> EQ "" <_LABELEMPTY_> <_LABELEMPTY_> null values i values i EQ "" <_LABELEMPTY_> <_LABELEMPTY_> null values i values i
+DEFAULT return GE mTTL 0 de.tuilmenau.ics.fog.packets.hierarchical.topology.AnnounceCoordinator
+DEFAULT if LE org.apache.maven.artifact.versioning.ArtifactVersion#compareTo(org.apache.maven.artifact.versioning.ArtifactVersion) 0 maxUsageVersion currentVersion
+DEFAULT return OR EQ EQ v null java.lang.String#length() 0 v
+DEFAULT while LT bt com.feup.sfs.block.BlockType#getNumberBlockTypes() com.feup.sfs.block.BlockType
+DEFAULT if EQ artist null
+DEFAULT if LT slashIndex 0
+DEFAULT if GT xTwoByte MUL 4 charWidth com.github.musikk.hex.HexPanel
+DEFAULT if GE SDK_INT 8 android.os.Build.VERSION
+DEFAULT if OR org.eclipse.jst.jsf.common.internal.types.TypeCoercer#typeIsNull() org.eclipse.jst.jsf.common.internal.types.TypeCoercer#typeIsNull() org.eclipse.jst.jsf.common.internal.types.TypeCoercer org.eclipse.jst.jsf.common.internal.types.ValueType#getSignature() firstArg org.eclipse.jst.jsf.common.internal.types.TypeCoercer org.eclipse.jst.jsf.common.internal.types.ValueType#getSignature() secondArg
+DEFAULT if EQ rep null
+DEFAULT if BITOR java.lang.String#equals(java.lang.Object) java.lang.String#equals(java.lang.Object) value "<_LABELSPACE_>" value ""
+DEFAULT while GT sequenceIndex java.util.List#size() rar.EightToCarRobustnessBatch randomSequence rar.EightToCarRobustnessBatch
+DEFAULT return AND NE GE end null this org.openregistry.core.domain.jpa.JpaRoleImpl java.util.Date#compareTo(java.util.Date) 0 end java.util.Date() this org.openregistry.core.domain.jpa.JpaRoleImpl
+DEFAULT bin int[] <_LABELEMPTY_> <_LABELEMPTY_> final SR intNameLen 2
+DEFAULT if NE user null

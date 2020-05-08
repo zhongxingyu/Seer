@@ -1,0 +1,138 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "errors",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "java.lang.String[]",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "NewArray",
+          "return_type": "java.lang.String[]",
+          "children": [
+            {
+              "label": "\"Oh dear, I\u0027m out of tea and crumpets again. I\u0027ll have to go make some more.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"I\u0027m sorry, where you looking for something here? I couldn\u0027t find it.\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"This isn\u0027t the tumbler news feed you are looking for. Move along now.\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"What do you mean the website is down...Hey! What\u0027s that over there!\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"Looks like the %mob%s got into the servers again...\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"Oh Noes! Our Tumblr Feed is Down!\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"This isn\u0027t the tumbler news feed you are looking for. Move along now.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"I\u0027m sorry, where you looking for something here? I couldn\u0027t find it.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"What do you mean the website is down...Hey! What\u0027s that over there!\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Oh Noes! Our Tumblr Feed is Down!\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Oh dear, I\u0027m out of tea and crumpets again. I\u0027ll have to go make some more.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Looks like the %mob%s got into the servers again...\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Return",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

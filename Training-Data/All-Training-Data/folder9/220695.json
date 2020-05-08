@@ -1,0 +1,243 @@
+{
+  "nr_root_ast_changes": 4,
+  "faulty_ast": [
+    {
+      "label": "intros",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String[]",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "NewArray",
+          "return_type": "java.lang.String[]",
+          "children": [
+            {
+              "label": "\"You will need to press the \u003cimg src\u003d\\\u0027/images/arrowkeys.gif\\\u0027/\u003e keys to navigate the area below.\u003cbr/\u003e  We have also equipped you with a basic defense mechanism.  You can direct it using the \u003cimg src\u003d\\\u0027/images/wasdkeys.gif\\\u0027 /\u003e keys.  Please \\\"defend\\\" yourself from the \u003cimg src\u003d\\\u0027images/bug.gif\\\u0027 /\u003e.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"Well done.  You are catching on.  Let\\\u0027s practice some more \\\"self defense.\\\"\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"Good job, you may notice these are getting a bit trickier.  This is entirely intended.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"Excellent.  You might have questions about what it is you are doing right now.  For legal reasons we have chosen not to tell you.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"In this next area, keep in mind some obsticals in the \\\"simulation\\\" may take more time to overcome.\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"Please note: as a side effect of these \\\"simulations\\\" you may come under the suspicion that someone else is in here with you.  We assure you that nothing this individual may say is of any importance to you.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "\"You got through that last one in less than optimal time.  We suggest you try harder.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            },
+            {
+              "label": "\"...I am not sure there is a nice way to say this.  That was the poorest performance I have ever seen.  Let\u0027s try an easier one.\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_7",
+              "children": []
+            },
+            {
+              "label": "\"Maybe it is my fault your doing so badly.  Lets try one more.\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_8",
+              "children": []
+            },
+            {
+              "label": "\"At this point I would like to remind you that any psychological damage you may receive during these \\\"simulations\\\" is, although not required, expected.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_9",
+              "children": []
+            },
+            {
+              "label": "\"Your lack of ability astounds me.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_10",
+              "children": []
+            },
+            {
+              "label": "\"Are you still here?\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_11",
+              "children": []
+            },
+            {
+              "label": "\"Feel free to give up at any time as I am sure you will.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_12",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"Excellent.  You might have questions about what it is you are doing right now.  For legal reasons we have chosen not to tell you.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"In this next area, keep in mind some obsticals in the \\\"simulation\\\" may take more time to overcome.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Your lack of ability astounds me.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Well done.  You are catching on.  Let\\\u0027s practice some more \\\"self defense.\\\"\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Are you still here?\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Maybe it is my fault your doing so badly.  Lets try one more.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"...I am not sure there is a nice way to say this.  That was the poorest performance I have ever seen.  Let\u0027s try an easier one.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"You will need to press the \u003cimg src\u003d\\\u0027/images/arrowkeys.gif\\\u0027/\u003e keys to navigate the area below.\u003cbr/\u003e  We have also equipped you with a basic defense mechanism.  You can direct it using the \u003cimg src\u003d\\\u0027/images/wasdkeys.gif\\\u0027 /\u003e keys.  Please \\\"defend\\\" yourself from the \u003cimg src\u003d\\\u0027images/bug.gif\\\u0027 /\u003e.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"You got through that last one in less than optimal time.  We suggest you try harder.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Good job, you may notice these are getting a bit trickier.  This is entirely intended.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Feel free to give up at any time as I am sure you will.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"At this point I would like to remind you that any psychological damage you may receive during these \\\"simulations\\\" is, although not required, expected.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Please note: as a side effect of these \\\"simulations\\\" you may come under the suspicion that someone else is in here with you.  We assure you that nothing this individual may say is of any importance to you.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

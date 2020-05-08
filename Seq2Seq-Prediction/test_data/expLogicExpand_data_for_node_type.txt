@@ -1,0 +1,2139 @@
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator ArrayRead UnaryOperator FieldRead VariableRead TypeAccess Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess TypeAccess Invocation VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator FieldRead VariableRead Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation Invocation TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess Invocation BinaryOperator VariableRead Literal Invocation Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator BinaryOperator VariableRead TypeAccess Invocation Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator Literal Invocation TypeAccess Literal BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal Invocation Literal VariableRead Invocation Literal Invocation Literal VariableRead
+VIRTUALROOT Do BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess FieldRead ThisAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation BinaryOperator Invocation Invocation VariableRead BinaryOperator Invocation FieldRead Literal TypeAccess Invocation Invocation Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator BinaryOperator Invocation Invocation Invocation SuperAccess VariableRead TypeAccess VariableRead Invocation VariableRead TypeAccess Invocation UnaryOperator TypeAccess VariableRead Invocation VariableRead TypeAccess Invocation VariableRead
+VIRTUALROOT While UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal TypeAccess Invocation Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator BinaryOperator Invocation FieldRead FieldRead TypeAccess ArrayRead FieldRead FieldRead
+VIRTUALROOT If BinaryOperator VariableRead Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Invocation TypeAccess VariableRead BinaryOperator Invocation Invocation Invocation VariableRead Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead ThisAccess TypeAccess
+VIRTUALROOT If Invocation TypeAccess Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator FieldRead TypeAccess BinaryOperator Invocation BinaryOperator BinaryOperator BinaryOperator Literal Invocation Literal VariableRead BinaryOperator Literal Invocation Literal VariableRead FieldRead VariableRead
+VIRTUALROOT If Invocation Literal Invocation Invocation VariableRead
+VIRTUALROOT While Invocation VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead TypeAccess FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation VariableRead VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT Return Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator UnaryOperator FieldRead FieldRead TypeAccess Invocation FieldRead FieldRead TypeAccess TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator Invocation Invocation Invocation TypeAccess FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead Invocation Invocation TypeAccess FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess BinaryOperator Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation ArrayRead VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead BinaryOperator Literal FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead
+VIRTUALROOT While BinaryOperator Invocation BinaryOperator FieldRead TypeAccess Invocation Literal VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead VariableRead UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation Literal FieldRead TypeAccess Invocation Literal Invocation FieldRead TypeAccess Invocation Invocation Invocation FieldRead TypeAccess Invocation TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Literal TypeAccess TypeAccess Invocation Invocation TypeAccess TypeAccess
+VIRTUALROOT While Invocation VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess Invocation VariableRead Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation Literal VariableRead Literal VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Invocation VariableRead VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT Do BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead UnaryOperator TypeAccess Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator VariableRead Literal BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead TypeAccess Invocation UnaryOperator VariableRead TypeAccess Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator Invocation TypeAccess VariableRead Invocation Invocation VariableRead Invocation VariableRead TypeAccess VariableRead Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead VariableRead Literal TypeAccess
+VIRTUALROOT If ArrayRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Literal Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead BinaryOperator BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Literal BinaryOperator Invocation VariableRead BinaryOperator VariableRead Literal VariableRead Literal VariableRead BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess FieldRead Invocation VariableRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead VariableRead Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation Invocation Literal VariableRead
+VIRTUALROOT While UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator Invocation Literal Invocation Invocation TypeAccess Invocation Literal Invocation VariableRead Invocation Invocation Invocation Invocation Invocation Literal VariableRead Invocation Invocation Literal Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT Return Conditional Invocation Literal VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal Invocation FieldRead TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation VariableRead Invocation TypeAccess FieldRead TypeAccess VariableRead Invocation TypeAccess FieldRead TypeAccess VariableRead Invocation TypeAccess FieldRead TypeAccess VariableRead Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead ThisAccess TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT Return BinaryOperator ArrayRead FieldRead ArrayRead VariableRead FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess VariableRead Literal VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator VariableRead BinaryOperator VariableRead BinaryOperator VariableRead VariableRead VariableRead
+VIRTUALROOT Do UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead Literal TypeAccess VariableRead Invocation Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess Invocation FieldRead Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation VariableRead FieldRead Literal Literal TypeAccess Invocation VariableRead FieldRead Literal Literal TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator VariableRead FieldRead TypeAccess Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator FieldRead VariableRead
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT While BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT Return Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator UnaryOperator Invocation UnaryOperator Invocation VariableRead Invocation VariableRead TypeAccess Invocation VariableRead TypeAccess UnaryOperator Invocation Invocation VariableRead TypeAccess TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Invocation FieldRead TypeAccess FieldRead TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead UnaryOperator Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT Return UnaryOperator Invocation TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation BinaryOperator Invocation Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation TypeAccess TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation VariableRead VariableRead ArrayRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Invocation VariableRead VariableRead BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator FieldRead VariableRead
+VIRTUALROOT While Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead TypeAccess ArrayRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation UnaryOperator BinaryOperator FieldRead TypeAccess FieldRead Literal VariableRead TypeAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator FieldRead VariableRead TypeAccess VariableRead Literal FieldRead Literal VariableRead Invocation Literal ArrayRead VariableRead Literal Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If FieldRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess VariableRead TypeAccess VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead VariableRead VariableRead UnaryOperator BinaryOperator VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator TypeAccess FieldRead Literal
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Literal Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead BinaryOperator VariableRead Literal Invocation Literal VariableRead BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator VariableRead Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation Invocation VariableRead VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead BinaryOperator Invocation VariableRead Literal VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator Invocation VariableRead Literal VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT While BinaryOperator UnaryOperator UnaryOperator Invocation FieldRead Literal TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead TypeAccess Invocation VariableRead Invocation FieldRead BinaryOperator TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead VariableRead TypeAccess FieldRead Literal VariableRead FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If FieldRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead TypeAccess VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess Invocation BinaryOperator ConstructorCall FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator Invocation TypeAccess VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead FieldRead TypeAccess TypeAccess Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation Literal VariableRead Literal Literal Invocation Literal VariableRead Literal Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation TypeAccess Invocation TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT Return Invocation VariableRead Invocation TypeAccess BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator Invocation FieldRead VariableRead ThisAccess TypeAccess Invocation FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If Invocation Literal Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation VariableRead TypeAccess VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Literal Invocation Literal Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT While BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT Return Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead TypeAccess VariableRead Invocation Literal VariableRead Invocation VariableRead Invocation TypeAccess Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator FieldRead FieldRead TypeAccess TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return Invocation FieldRead Invocation TypeAccess TypeAccess VariableRead
+VIRTUALROOT Return Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead Literal Invocation Invocation FieldRead VariableRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess VariableRead Literal FieldRead Literal VariableRead FieldRead Invocation TypeAccess ArrayRead VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal ArrayRead VariableRead VariableRead Invocation FieldRead Literal ArrayRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead BinaryOperator FieldRead FieldRead Literal TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal VariableRead ArrayRead TypeAccess VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Literal Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Literal Invocation Literal VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Modifier BinaryOperator BinaryOperator VariableRead Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation Invocation VariableRead FieldRead VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT Return Conditional BinaryOperator FieldRead FieldRead BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Invocation VariableRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Conditional Literal BinaryOperator Assignment FieldRead FieldRead Literal TypeAccess FieldWrite Invocation TypeAccess TypeAccess TypeAccess TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Invocation TypeAccess VariableRead Invocation TypeAccess
+VIRTUALROOT Return Invocation SuperAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation ArrayRead FieldRead FieldRead FieldRead FieldRead FieldRead VariableRead TypeAccess VariableRead VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator VariableRead Literal Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT While BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess VariableRead Invocation VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Conditional BinaryOperator VariableRead VariableRead FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation VariableRead VariableRead Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal VariableRead TypeAccess FieldRead VariableRead
+VIRTUALROOT While UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Literal VariableRead Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead Invocation FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator BinaryOperator Invocation UnaryOperator FieldRead VariableRead FieldRead TypeAccess BinaryOperator Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead VariableRead Invocation UnaryOperator VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Literal TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead Invocation Invocation VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator TypeAccess Literal Invocation TypeAccess Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator TypeAccess Invocation Literal Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess Invocation Invocation FieldRead VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead Invocation VariableRead BinaryOperator BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess Invocation Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead Invocation Invocation Literal VariableRead VariableRead VariableRead UnaryOperator Invocation Invocation Invocation VariableRead VariableRead BinaryOperator Literal VariableRead
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal BinaryOperator Invocation Invocation Invocation VariableRead VariableRead VariableRead VariableRead Invocation Invocation VariableRead VariableRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead UnaryOperator TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess Literal
+VIRTUALROOT If BinaryOperator VariableRead UnaryOperator Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal UnaryOperator UnaryOperator Invocation Invocation VariableRead VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation FieldRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation FieldRead TypeAccess Literal FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation Literal Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator Invocation VariableRead Literal Invocation VariableRead Literal Invocation VariableRead Literal BinaryOperator Invocation BinaryOperator VariableRead Literal FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead VariableRead TypeAccess
+VIRTUALROOT If FieldRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation ThisAccess VariableRead TypeAccess BinaryOperator UnaryOperator Invocation Literal VariableRead Invocation Invocation Literal VariableRead
+VIRTUALROOT If Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator Invocation FieldRead Literal FieldRead VariableRead
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Return BinaryOperator Invocation UnaryOperator VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator VariableRead FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead VariableRead VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator FieldRead VariableRead TypeAccess VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead VariableRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Literal FieldRead FieldRead FieldRead TypeAccess FieldRead FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation TypeAccess TypeAccess VariableRead Invocation TypeAccess TypeAccess VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal VariableRead FieldRead Literal FieldRead VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal BinaryOperator Literal FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT Assert BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation ArrayRead Literal ArrayRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal ArrayRead Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Literal Invocation Invocation FieldRead VariableRead Literal TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator FieldRead TypeAccess VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT While BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead VariableRead Invocation BinaryOperator TypeAccess ArrayRead VariableRead VariableRead ArrayRead Literal VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation VariableRead Literal Invocation Invocation VariableRead TypeAccess Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation UnaryOperator VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator FieldRead FieldRead VariableRead TypeAccess FieldRead Literal VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation UnaryOperator FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return Conditional BinaryOperator Invocation Literal FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation BinaryOperator UnaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Literal VariableRead Invocation TypeAccess VariableRead TypeAccess VariableRead Invocation TypeAccess Literal TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal Invocation VariableRead BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess FieldRead Literal TypeAccess VariableRead FieldRead FieldRead TypeAccess
+VIRTUALROOT Return Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead UnaryOperator TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Invocation Invocation Literal TypeAccess FieldRead Invocation TypeAccess TypeAccess FieldRead Invocation TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Invocation VariableRead VariableRead Invocation VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal TypeAccess Invocation Literal FieldRead VariableRead
+VIRTUALROOT If BinaryOperator ArrayRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation Literal FieldRead FieldRead ThisAccess TypeAccess Invocation Literal FieldRead FieldRead ThisAccess TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation Invocation Literal FieldRead VariableRead Invocation FieldRead FieldRead VariableRead VariableRead Invocation Invocation FieldRead Literal VariableRead FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead VariableRead Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return UnaryOperator FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator FieldRead FieldRead FieldRead VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead VariableRead FieldRead ThisAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead Literal Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT Assignment FieldWrite Conditional ThisAccess TypeAccess BinaryOperator Invocation Literal VariableRead Literal VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead UnaryOperator TypeAccess Literal FieldRead UnaryOperator TypeAccess Literal FieldRead UnaryOperator TypeAccess Literal FieldRead UnaryOperator TypeAccess Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Invocation TypeAccess VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator FieldRead TypeAccess Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal Invocation VariableRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Literal Invocation Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Return BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT Do Invocation TypeAccess VariableRead VariableRead FieldRead FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator BinaryOperator VariableRead TypeAccess BinaryOperator VariableRead TypeAccess BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal FieldRead TypeAccess FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator FieldRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator BinaryOperator VariableRead TypeAccess BinaryOperator VariableRead TypeAccess BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation ArrayRead VariableRead Invocation TypeAccess TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Literal Literal Invocation VariableRead VariableRead
+VIRTUALROOT Return Conditional BinaryOperator ArrayRead Literal FieldRead VariableRead FieldRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead Invocation TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT Invocation VariableRead BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT While BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator ArrayRead Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation Invocation VariableRead Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal BinaryOperator UnaryOperator BinaryOperator VariableRead BinaryOperator VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal VariableRead VariableRead Invocation Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation Invocation VariableRead FieldRead TypeAccess Invocation Invocation VariableRead FieldRead TypeAccess Invocation Invocation VariableRead FieldRead TypeAccess Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator UnaryOperator BinaryOperator Invocation Invocation VariableRead UnaryOperator UnaryOperator Invocation Invocation VariableRead Invocation TypeAccess Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation UnaryOperator BinaryOperator VariableRead FieldRead Literal TypeAccess FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead Literal Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead FieldRead TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal Invocation Invocation VariableRead VariableRead FieldRead Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal FieldRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal FieldRead TypeAccess Invocation Literal Invocation FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation BinaryOperator FieldRead FieldRead TypeAccess VariableRead BinaryOperator Invocation BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal VariableRead FieldRead FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation UnaryOperator TypeAccess VariableRead Invocation VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation Invocation VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Literal VariableRead TypeAccess Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead Invocation FieldRead FieldRead TypeAccess TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT While BinaryOperator VariableRead FieldRead FieldRead FieldRead TypeAccess
+VIRTUALROOT If Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT While BinaryOperator Assignment Literal VariableWrite Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT Return Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation ThisAccess Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead Literal Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT Return FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation UnaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator TypeAccess Invocation Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation FieldRead Invocation VariableRead TypeAccess Invocation VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator BinaryOperator BinaryOperator Invocation VariableRead Literal TypeAccess VariableRead
+VIRTUALROOT If Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Invocation TypeAccess Invocation TypeAccess Invocation Invocation Invocation TypeAccess Invocation Invocation FieldRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator UnaryOperator Invocation Invocation Invocation Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Invocation TypeAccess VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Invocation VariableRead TypeAccess Invocation VariableRead BinaryOperator VariableRead VariableRead Literal
+VIRTUALROOT Return Invocation TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal FieldRead TypeAccess Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead BinaryOperator TypeAccess FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation Literal FieldRead VariableRead TypeAccess Invocation Literal FieldRead VariableRead TypeAccess Invocation Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation Invocation FieldRead VariableRead FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator VariableRead Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation VariableRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation Invocation Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess Invocation VariableRead TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator VariableRead BinaryOperator UnaryOperator VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT Return Invocation FieldRead VariableRead VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation UnaryOperator VariableRead VariableRead Literal Invocation UnaryOperator VariableRead VariableRead Literal Invocation UnaryOperator VariableRead VariableRead Literal Invocation UnaryOperator VariableRead VariableRead Literal
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation Invocation Literal TypeAccess Invocation TypeAccess Invocation Literal TypeAccess
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT Return BinaryOperator FieldRead BinaryOperator TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT Return BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead VariableRead BinaryOperator VariableRead VariableRead TypeAccess BinaryOperator Literal Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead TypeAccess TypeAccess VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If Invocation ThisAccess VariableRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT Return Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead Literal Invocation FieldRead VariableRead TypeAccess VariableRead TypeAccess Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation ThisAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation Literal Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead FieldRead VariableRead
+VIRTUALROOT Return UnaryOperator Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead VariableRead TypeAccess VariableRead FieldRead TypeAccess VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator Invocation BinaryOperator Invocation TypeAccess BinaryOperator Invocation Literal TypeAccess FieldRead FieldRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT While Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess Invocation Literal VariableRead VariableRead TypeAccess Invocation Literal VariableRead VariableRead TypeAccess Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator ThisAccess FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation Literal VariableRead
+VIRTUALROOT While FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator BinaryOperator BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess BinaryOperator ThisAccess TypeAccess TypeAccess ThisAccess Invocation TypeAccess Invocation TypeAccess ThisAccess Invocation TypeAccess Invocation Literal TypeAccess TypeAccess
+VIRTUALROOT If Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation TypeAccess ConstructorCall FieldRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation TypeAccess Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Invocation ThisAccess TypeAccess FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal FieldRead TypeAccess
+VIRTUALROOT Invocation VariableRead Conditional BinaryOperator Invocation Literal Invocation Literal VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT Invocation FieldRead BinaryOperator TypeAccess BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead UnaryOperator VariableRead FieldRead FieldRead TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead TypeAccess Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator Invocation VariableRead Literal TypeAccess Invocation VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Invocation FieldRead TypeAccess VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal UnaryOperator UnaryOperator Invocation Invocation Invocation VariableRead ConstructorCall Invocation VariableRead Invocation Invocation ConstructorCall VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess VariableRead Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead Invocation TypeAccess Invocation VariableRead Invocation TypeAccess VariableRead Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead Literal TypeAccess TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT Return Invocation Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Invocation Invocation VariableRead Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead FieldRead FieldRead ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation Invocation TypeAccess VariableRead FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Literal FieldRead FieldRead VariableRead TypeAccess FieldRead Literal TypeAccess Invocation FieldRead FieldRead TypeAccess VariableRead FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Literal VariableRead VariableRead
+VIRTUALROOT If FieldRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead Invocation VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT Return UnaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead Invocation Invocation Literal VariableRead VariableRead Invocation Invocation FieldRead Invocation Literal VariableRead VariableRead VariableRead Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator VariableRead UnaryOperator Literal
+VIRTUALROOT While Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead FieldRead Literal TypeAccess
+VIRTUALROOT While BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator VariableRead Invocation VariableRead TypeAccess VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead TypeAccess Invocation Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT Invocation VariableRead BinaryOperator BinaryOperator BinaryOperator Invocation Literal TypeAccess BinaryOperator UnaryOperator FieldRead Invocation TypeAccess TypeAccess Invocation VariableRead Invocation TypeAccess
+VIRTUALROOT While BinaryOperator Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator FieldRead TypeAccess Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator FieldRead TypeAccess BinaryOperator Literal VariableRead FieldRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator BinaryOperator VariableRead BinaryOperator VariableRead VariableRead Invocation Literal TypeAccess FieldRead FieldRead VariableRead VariableRead BinaryOperator VariableRead VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead VariableRead Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Return BinaryOperator Invocation Invocation TypeAccess Literal TypeAccess Literal
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead Invocation Literal VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation FieldRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess BinaryOperator BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess Invocation FieldRead Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead TypeAccess Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Invocation FieldRead TypeAccess TypeAccess FieldRead TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT While BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator FieldRead ThisAccess TypeAccess Invocation Literal FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT While BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Conditional Invocation FieldRead Invocation FieldRead FieldRead TypeAccess Invocation VariableRead Invocation VariableRead FieldRead FieldRead TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead VariableRead TypeAccess Invocation TypeAccess VariableRead
+VIRTUALROOT Return UnaryOperator BinaryOperator Invocation Invocation Literal VariableRead Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation FieldRead SuperAccess TypeAccess ConstructorCall Invocation SuperAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Invocation Literal TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation Literal Invocation VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Invocation FieldRead VariableRead Literal TypeAccess FieldRead VariableRead Invocation TypeAccess VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess VariableRead
+VIRTUALROOT While BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead Literal
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation Literal VariableRead Invocation Invocation Literal Invocation Literal Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator VariableRead Invocation Invocation Literal FieldRead Invocation Literal Invocation TypeAccess TypeAccess TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT Return BinaryOperator Invocation BinaryOperator SuperAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead TypeAccess TypeAccess FieldRead TypeAccess TypeAccess Invocation Literal VariableRead VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Assignment FieldWrite Conditional TypeAccess BinaryOperator Invocation Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT While BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Invocation TypeAccess VariableRead FieldRead Invocation TypeAccess VariableRead BinaryOperator FieldRead VariableRead FieldRead TypeAccess TypeAccess TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator ArrayRead Literal VariableRead Literal Invocation ArrayRead VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead VariableRead BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Invocation Literal FieldRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead Invocation TypeAccess TypeAccess TypeAccess Invocation ArrayRead VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation ArrayRead ArrayRead VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead FieldRead Invocation TypeAccess FieldRead FieldRead TypeAccess
+VIRTUALROOT Return Conditional BinaryOperator Invocation Literal VariableRead Invocation FieldRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator UnaryOperator Invocation Invocation FieldRead VariableRead TypeAccess TypeAccess VariableRead BinaryOperator Invocation TypeAccess VariableRead BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead VariableRead TypeAccess Invocation VariableRead FieldRead VariableRead TypeAccess
+VIRTUALROOT Return Invocation TypeAccess VariableRead VariableRead Literal NewClass Class Modifiers Method RETURN_TYPE Modifiers Parameter Return Modifier VARIABLE_TYPE Modifiers Modifier Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead ArrayRead FieldRead VariableRead BinaryOperator Literal VariableRead FieldRead ArrayRead FieldRead VariableRead BinaryOperator Literal FieldRead VariableRead ArrayRead FieldRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Literal Invocation FieldRead VariableRead ThisAccess TypeAccess FieldRead FieldRead ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator VariableRead UnaryOperator Literal
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation Literal Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Literal Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Invocation FieldRead FieldRead VariableRead TypeAccess Invocation Invocation VariableRead TypeAccess FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT Return BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Assert BinaryOperator Literal BinaryOperator FieldRead Literal FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead VariableRead FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation FieldRead TypeAccess TypeAccess Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation FieldRead Invocation Invocation TypeAccess Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead Invocation Invocation VariableRead TypeAccess Invocation FieldRead Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation UnaryOperator FieldRead Invocation VariableRead Invocation VariableRead Invocation Invocation TypeAccess Invocation FieldRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation FieldRead VariableRead TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation VariableRead FieldRead FieldRead FieldRead VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator FieldRead VariableRead TypeAccess VariableRead Literal FieldRead Literal VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator BinaryOperator VariableRead TypeAccess BinaryOperator VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead VariableRead FieldRead VariableRead FieldRead VariableRead FieldRead VariableRead FieldRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead ArrayRead FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator TypeAccess Invocation FieldRead TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT Assignment VariableWrite Conditional BinaryOperator Literal VariableRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation FieldRead FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator VariableRead Invocation Literal VariableRead BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess ArrayRead VariableRead Literal Invocation TypeAccess ArrayRead VariableRead BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT While BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Literal Invocation Literal Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Invocation TypeAccess TypeAccess
+VIRTUALROOT Return Invocation TypeAccess Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead Literal VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation VariableRead VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT While BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Conditional FieldRead Invocation Literal VariableRead FieldRead BinaryOperator TypeAccess FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess BinaryOperator BinaryOperator VariableRead Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation UnaryOperator Invocation Literal VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator Invocation FieldRead VariableRead TypeAccess VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Invocation FieldRead BinaryOperator TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator Invocation ThisAccess Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Assignment FieldWrite BinaryOperator TypeAccess UnaryOperator FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Invocation TypeAccess Invocation Invocation FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation UnaryOperator VariableRead Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation FieldRead Invocation VariableRead TypeAccess TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator ArrayRead Literal VariableRead BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator Invocation BinaryOperator TypeAccess VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator UnaryOperator Invocation Literal VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal Literal VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation FieldRead UnaryOperator TypeAccess FieldRead TypeAccess FieldRead VariableRead TypeAccess Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal BinaryOperator UnaryOperator VariableRead Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers ConstructorCall FieldRead VariableRead VariableRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead Invocation VariableRead VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead VariableRead VariableRead
+VIRTUALROOT OperatorAssignment VariableWrite Conditional Invocation FieldRead Literal TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead BinaryOperator VariableRead BinaryOperator Invocation BinaryOperator FieldRead ThisAccess TypeAccess Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal VariableRead Invocation Invocation VariableRead Literal Invocation Literal FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead ArrayRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess VariableRead Literal
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT For LocalVariable BinaryOperator UnaryOperator VARIABLE_TYPE Modifiers Literal VariableRead VariableRead VariableWrite
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT Return Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Literal FieldRead Literal VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead TypeAccess
+VIRTUALROOT Assignment FieldWrite BinaryOperator TypeAccess FieldRead UnaryOperator TypeAccess Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation Invocation TypeAccess VariableRead TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation UnaryOperator Invocation VariableRead Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator TypeAccess ThisAccess TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator VariableRead BinaryOperator Invocation BinaryOperator TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead
+VIRTUALROOT Return BinaryOperator Invocation BinaryOperator TypeAccess Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation TypeAccess Invocation VariableRead TypeAccess VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead BinaryOperator Conditional VariableRead BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Modifier BinaryOperator Invocation BinaryOperator Invocation Invocation BinaryOperator TypeAccess FieldRead FieldRead TypeAccess TypeAccess TypeAccess Invocation FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator VariableRead ArrayRead ArrayRead FieldRead VariableRead TypeAccess FieldRead BinaryOperator TypeAccess VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess VariableRead Invocation Literal VariableRead VariableRead Literal
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT While Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead FieldRead TypeAccess TypeAccess BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation UnaryOperator BinaryOperator Invocation Invocation Literal Invocation VariableRead Invocation BinaryOperator Literal Invocation VariableRead FieldRead Literal Invocation VariableRead TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Literal VariableRead Literal VariableRead
+VIRTUALROOT Return BinaryOperator Invocation Invocation Invocation Invocation ArrayRead VariableRead Literal ArrayRead VariableRead Literal Invocation Invocation ArrayRead VariableRead Literal ArrayRead VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal VariableRead ArrayRead Literal FieldRead FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead ArrayRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT While Invocation VariableRead
+VIRTUALROOT If Invocation ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal TypeAccess VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator VariableRead VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead TypeAccess VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT Return Invocation Invocation TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT Return Invocation TypeAccess VariableRead
+VIRTUALROOT Return Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead VariableRead FieldRead TypeAccess VariableRead BinaryOperator BinaryOperator Invocation FieldRead Invocation Invocation VariableRead TypeAccess Invocation FieldRead Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT Return Invocation FieldRead Invocation FieldRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator Invocation Literal VariableRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation Literal Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Invocation FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead VariableRead FieldRead TypeAccess TypeAccess BinaryOperator FieldRead VariableRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead FieldRead VariableRead
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation TypeAccess VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT Return BinaryOperator Invocation BinaryOperator Invocation VariableRead VariableRead Invocation Invocation VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation VariableRead
+VIRTUALROOT While BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator Invocation Literal FieldRead TypeAccess Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess VariableRead BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal FieldRead VariableRead TypeAccess Invocation FieldRead Invocation FieldRead VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Return Conditional BinaryOperator Literal Invocation VariableRead FieldRead TypeAccess Invocation Invocation Invocation Invocation FieldRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation TypeAccess Invocation TypeAccess Invocation TypeAccess Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator ArrayRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal FieldRead VariableRead FieldRead FieldRead VariableRead FieldRead VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead ThisAccess TypeAccess TypeAccess FieldRead ThisAccess TypeAccess TypeAccess FieldRead ThisAccess TypeAccess TypeAccess FieldRead ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation Invocation Literal Invocation VariableRead Invocation Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation ConstructorCall BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator UnaryOperator UnaryOperator Invocation Invocation FieldRead TypeAccess FieldRead TypeAccess FieldRead TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation Invocation FieldRead VariableRead TypeAccess Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator BinaryOperator ArrayRead TypeAccess ArrayRead FieldRead FieldRead BinaryOperator TypeAccess FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator Invocation Invocation TypeAccess FieldRead FieldRead ThisAccess TypeAccess VariableRead FieldRead FieldRead ThisAccess TypeAccess VariableRead FieldRead FieldRead ThisAccess TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead UnaryOperator Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation TypeAccess Invocation Invocation FieldRead TypeAccess Invocation TypeAccess Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal ArrayRead ArrayRead VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead Invocation Invocation Invocation TypeAccess VariableRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Invocation TypeAccess FieldRead TypeAccess Invocation TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator ArrayRead Literal VariableRead Literal Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal FieldRead Literal TypeAccess BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess Invocation Invocation FieldRead TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator Invocation VariableRead VariableRead Invocation ArrayRead VariableRead FieldRead Literal TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Literal ArrayRead VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator UnaryOperator UnaryOperator BinaryOperator VariableRead VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead Literal Invocation Literal Invocation Invocation VariableRead Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal Invocation FieldRead TypeAccess Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead UnaryOperator TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation Invocation FieldRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead VariableRead Invocation Literal VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Literal FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If Invocation Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator TypeAccess VariableRead VariableRead Invocation Invocation VariableRead VariableRead Invocation Invocation VariableRead VariableRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT Return FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Literal VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess FieldRead
+VIRTUALROOT Return BinaryOperator FieldRead FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead UnaryOperator FieldRead VariableRead Literal
+VIRTUALROOT If BinaryOperator Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator VariableRead FieldRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator ArrayRead ArrayRead FieldRead Literal VariableRead FieldRead Literal VariableRead ArrayRead ArrayRead FieldRead Literal VariableRead FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator Invocation Literal TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator Invocation Literal VariableRead VariableRead Literal Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Literal VariableRead Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess Invocation Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess ArrayRead VariableRead VariableRead
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal ArrayRead FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT Assignment FieldWrite Conditional TypeAccess BinaryOperator Literal Invocation VariableRead FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Invocation Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation Literal TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation VariableRead Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator BinaryOperator Invocation Invocation FieldRead TypeAccess Invocation Literal Invocation FieldRead TypeAccess Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator FieldRead VariableRead VariableRead Invocation Literal TypeAccess FieldRead TypeAccess FieldRead VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal ArrayRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation Invocation Literal Invocation VariableRead Invocation Literal Invocation VariableRead Invocation Literal Invocation VariableRead Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator ArrayRead Literal FieldRead VariableRead VariableRead ArrayRead Literal FieldRead VariableRead VariableRead
+VIRTUALROOT Return UnaryOperator Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Literal VariableRead Invocation TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation Invocation BinaryOperator FieldRead VariableRead TypeAccess VariableRead FieldRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator ThisAccess TypeAccess TypeAccess VariableRead TypeAccess FieldRead Literal VariableRead FieldRead FieldRead TypeAccess VariableRead FieldRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead VariableRead Invocation Literal VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT While Invocation TypeAccess Invocation Invocation Literal VariableRead Literal
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead VariableRead VariableRead FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator FieldRead VariableRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation UnaryOperator VariableRead Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal Invocation BinaryOperator VariableRead VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator ArrayRead Literal FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Invocation Invocation Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead FieldRead VariableRead TypeAccess
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Invocation Modifier TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator FieldRead FieldRead FieldRead TypeAccess TypeAccess FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Invocation Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess Invocation FieldRead Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead UnaryOperator Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator VariableRead Invocation Literal VariableRead
+VIRTUALROOT Return BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead Invocation Literal VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator Invocation VariableRead FieldRead TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation ArrayRead FieldRead VariableRead VariableRead TypeAccess ArrayRead FieldRead VariableRead VariableRead TypeAccess
+VIRTUALROOT While BinaryOperator BinaryOperator UnaryOperator FieldRead Literal Invocation FieldRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT Return Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead TypeAccess TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation VariableRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead Invocation Invocation Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal VariableRead BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation UnaryOperator Invocation Literal VariableRead Literal BinaryOperator Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator VariableRead Literal Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator FieldRead ThisAccess TypeAccess FieldRead Invocation FieldRead Literal Invocation TypeAccess Invocation FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator Invocation Invocation Literal ArrayRead VariableRead VariableRead ArrayRead Invocation VariableRead VariableRead ArrayRead VariableRead VariableRead Invocation TypeAccess ArrayRead VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator Invocation Invocation VariableRead Literal VariableRead Literal Invocation VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Literal VariableRead FieldRead Literal VariableRead FieldRead Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead FieldRead VariableRead TypeAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation TypeAccess FieldRead TypeAccess Invocation TypeAccess Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator VariableRead Invocation Literal Invocation VariableRead
+VIRTUALROOT If Invocation TypeAccess Invocation Invocation Invocation Invocation Invocation Invocation Invocation Invocation VariableRead VariableRead VariableRead VariableRead VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess Invocation Literal FieldRead TypeAccess Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT While BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess BinaryOperator BinaryOperator ArrayRead Literal FieldRead FieldRead TypeAccess TypeAccess ArrayRead Literal FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal TypeAccess Invocation TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess Invocation VariableRead BinaryOperator VariableRead VariableRead
+VIRTUALROOT Return Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT Return UnaryOperator Invocation TypeAccess FieldRead TypeAccess
+VIRTUALROOT While Invocation TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead FieldRead FieldRead VariableRead TypeAccess TypeAccess FieldRead Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal TypeAccess Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT Invocation TypeAccess BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator UnaryOperator Invocation Invocation TypeAccess TypeAccess FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator VariableRead BinaryOperator BinaryOperator VariableRead Literal Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation TypeAccess Invocation VariableRead TypeAccess Invocation VariableRead FieldRead VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead UnaryOperator Literal
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT Return FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead UnaryOperator Literal
+VIRTUALROOT If BinaryOperator ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator VariableRead Literal Invocation Invocation VariableRead FieldRead TypeAccess Invocation VariableRead
+VIRTUALROOT While BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead TypeAccess VariableRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation FieldRead Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead UnaryOperator VariableRead FieldRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator ArrayRead Literal FieldRead BinaryOperator TypeAccess VariableRead Literal
+VIRTUALROOT If Invocation Invocation VariableRead
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal VariableRead FieldRead Literal FieldRead VariableRead
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Invocation VariableRead BinaryOperator Invocation Invocation Literal VariableRead Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation Literal Invocation Literal Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead FieldRead Literal VariableRead VariableRead
+VIRTUALROOT Return BinaryOperator Invocation Invocation VariableRead FieldRead TypeAccess TypeAccess BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead BinaryOperator TypeAccess FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation VariableRead TypeAccess BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If UnaryOperator FieldRead VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT Assignment VariableWrite BinaryOperator BinaryOperator VariableRead Invocation Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation VariableRead VariableRead Literal Invocation VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead FieldRead FieldRead TypeAccess TypeAccess TypeAccess
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator Invocation TypeAccess Invocation Literal TypeAccess
+VIRTUALROOT If Invocation ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead Literal
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT Return Conditional BinaryOperator Literal Literal BinaryOperator BinaryOperator Invocation FieldRead TypeAccess VariableRead TypeAccess BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead VariableRead TypeAccess BinaryOperator BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation TypeAccess VariableRead ThisAccess TypeAccess FieldRead Literal Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation Invocation Literal VariableRead Invocation TypeAccess TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation Invocation Invocation VariableRead
+VIRTUALROOT While BinaryOperator Invocation Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator FieldRead Literal TypeAccess Invocation Literal FieldRead TypeAccess Literal Invocation TypeAccess Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation TypeAccess ConstructorCall VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator UnaryOperator Invocation Invocation VariableRead Invocation Literal VariableRead Invocation Literal VariableRead Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead VariableRead VariableRead FieldRead VariableRead VariableRead FieldRead VariableRead VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If FieldRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Invocation TypeAccess
+VIRTUALROOT If Invocation FieldRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal VariableRead FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Invocation VariableRead VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator Invocation BinaryOperator VariableRead BinaryOperator BinaryOperator VariableRead TypeAccess BinaryOperator BinaryOperator VariableRead TypeAccess Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Assignment Literal VariableWrite Invocation VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Invocation FieldRead TypeAccess
+VIRTUALROOT Assert Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator Invocation Literal FieldRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator ArrayRead Literal VariableRead BinaryOperator VariableRead Literal ArrayRead Literal VariableRead BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation FieldRead Invocation Invocation TypeAccess Invocation VariableRead TypeAccess Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead UnaryOperator Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation FieldRead TypeAccess Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator ArrayRead Literal FieldRead BinaryOperator TypeAccess VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal FieldRead TypeAccess Invocation Invocation FieldRead TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation VariableRead VariableRead VariableRead VariableRead Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation Literal ArrayRead VariableRead VariableRead
+VIRTUALROOT If Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator FieldRead FieldRead TypeAccess TypeAccess VariableRead Literal Invocation VariableRead
+VIRTUALROOT If Invocation FieldRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation TypeAccess Invocation BinaryOperator VariableRead Invocation Literal Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT Return Invocation TypeAccess Invocation VariableRead FieldRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Invocation TypeAccess TypeAccess
+VIRTUALROOT If Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If Invocation ArrayRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT Return Conditional BinaryOperator Invocation Invocation FieldRead Literal TypeAccess FieldRead Invocation TypeAccess TypeAccess ArrayRead VariableRead FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead TypeAccess VariableRead Invocation VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead VariableRead VariableRead FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation Invocation VariableRead VariableRead Invocation Invocation VariableRead VariableRead BinaryOperator BinaryOperator Invocation Invocation VariableRead VariableRead Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Literal FieldRead VariableRead TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead TypeAccess TypeAccess Literal Invocation FieldRead TypeAccess
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead FieldRead TypeAccess VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT Invocation TypeAccess BinaryOperator VariableRead Literal
+VIRTUALROOT For LocalVariable BinaryOperator UnaryOperator VARIABLE_TYPE Modifiers Literal BinaryOperator VariableRead VariableRead VariableRead VariableWrite
+VIRTUALROOT Return BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Literal FieldRead Invocation FieldRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal Invocation VariableRead Invocation Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead VariableRead FieldRead TypeAccess TypeAccess BinaryOperator Invocation VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Return BinaryOperator Invocation Invocation TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT While BinaryOperator FieldRead ArrayRead TypeAccess FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator FieldRead Literal VariableRead FieldRead Literal FieldRead VariableRead FieldRead FieldRead FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation TypeAccess VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT Invocation TypeAccess BinaryOperator Literal Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Invocation Literal VariableRead Literal VariableRead Literal VariableRead
+VIRTUALROOT If Invocation FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Invocation TypeAccess
+VIRTUALROOT If BinaryOperator Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead UnaryOperator Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation UnaryOperator TypeAccess Invocation Invocation VariableRead VariableRead Invocation TypeAccess Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess ArrayRead ArrayRead FieldRead FieldRead BinaryOperator TypeAccess FieldRead Literal TypeAccess TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation Literal VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator Invocation FieldRead Literal FieldRead TypeAccess FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator VariableRead BinaryOperator BinaryOperator Invocation Invocation FieldRead TypeAccess TypeAccess Invocation Invocation TypeAccess Invocation Invocation FieldRead TypeAccess TypeAccess Invocation Invocation TypeAccess
+VIRTUALROOT If Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead FieldRead TypeAccess Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation TypeAccess VariableRead Invocation Literal TypeAccess Invocation Literal VariableRead
+VIRTUALROOT Return Conditional BinaryOperator ArrayRead Literal VariableRead Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead TypeAccess FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator Invocation VariableRead Literal Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal Invocation TypeAccess Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead Invocation FieldRead VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator VariableRead VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess ArrayRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation FieldRead Invocation TypeAccess TypeAccess FieldRead TypeAccess FieldRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator UnaryOperator UnaryOperator FieldRead TypeAccess VariableRead Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator ArrayRead Literal VariableRead Literal ArrayRead Literal VariableRead Literal ArrayRead Literal VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead FieldRead Invocation FieldRead TypeAccess TypeAccess FieldRead FieldRead Invocation FieldRead TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead BinaryOperator Invocation FieldRead Literal TypeAccess ArrayRead ArrayRead FieldRead Literal VariableRead FieldRead Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead TypeAccess VariableRead TypeAccess VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead UnaryOperator Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation UnaryOperator BinaryOperator Invocation TypeAccess FieldRead Literal TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation TypeAccess ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT Assert BinaryOperator Literal VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation Literal VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT While BinaryOperator Invocation UnaryOperator VariableRead VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation TypeAccess VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT LocalVariable VARIABLE_TYPE Modifiers BinaryOperator BinaryOperator FieldRead BinaryOperator Literal FieldRead Literal TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator UnaryOperator UnaryOperator Invocation VariableRead Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT Assignment FieldWrite BinaryOperator BinaryOperator Conditional BinaryOperator FieldRead BinaryOperator Literal BinaryOperator Invocation FieldRead Literal TypeAccess TypeAccess TypeAccess BinaryOperator Literal BinaryOperator FieldRead Literal TypeAccess Literal FieldRead TypeAccess
+VIRTUALROOT Return UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation VariableRead FieldRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT While BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Invocation VariableRead Invocation Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator VariableRead Literal Invocation Invocation VariableRead Invocation TypeAccess ArrayRead VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator Invocation Invocation TypeAccess Invocation FieldRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead Literal
+VIRTUALROOT If Invocation TypeAccess Invocation Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation Invocation Invocation VariableRead TypeAccess Invocation Invocation VariableRead TypeAccess Invocation Invocation VariableRead TypeAccess Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation UnaryOperator VariableRead Invocation VariableRead VariableRead TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT While BinaryOperator Invocation Literal FieldRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation Literal VariableRead Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator FieldRead Literal TypeAccess VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation BinaryOperator BinaryOperator Invocation UnaryOperator VariableRead Literal Invocation UnaryOperator VariableRead Literal TypeAccess VariableRead Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT Return Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT Return BinaryOperator BinaryOperator UnaryOperator Invocation BinaryOperator TypeAccess FieldRead Literal Invocation Invocation TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation Invocation FieldRead FieldRead TypeAccess TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead FieldRead FieldRead TypeAccess Invocation Literal FieldRead TypeAccess
+VIRTUALROOT For LocalVariable BinaryOperator UnaryOperator VARIABLE_TYPE Modifiers Literal VariableRead FieldRead VariableRead VariableWrite
+VIRTUALROOT If BinaryOperator VariableRead Invocation VariableRead
+VIRTUALROOT If Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator FieldRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If Invocation FieldRead Invocation TypeAccess VariableRead
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation TypeAccess VariableRead
+VIRTUALROOT If Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator Invocation Invocation VariableRead Invocation VariableRead Invocation Invocation VariableRead Invocation VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead Literal
+VIRTUALROOT Return Invocation VariableRead
+VIRTUALROOT If Invocation Invocation Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation Literal FieldRead
+VIRTUALROOT If BinaryOperator Invocation VariableRead VariableRead
+VIRTUALROOT If UnaryOperator Invocation Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation TypeAccess FieldRead VariableRead
+VIRTUALROOT If BinaryOperator UnaryOperator BinaryOperator VariableRead Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Invocation Literal FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator UnaryOperator Invocation Literal VariableRead Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator FieldRead FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation FieldRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead UnaryOperator ThisAccess TypeAccess Literal
+VIRTUALROOT While BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Literal VariableRead
+VIRTUALROOT If Invocation Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator BinaryOperator FieldRead FieldRead Literal ThisAccess TypeAccess TypeAccess
+VIRTUALROOT If BinaryOperator Invocation BinaryOperator FieldRead TypeAccess BinaryOperator Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If Invocation TypeAccess VariableRead VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation VariableRead Invocation TypeAccess VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If UnaryOperator Invocation Invocation TypeAccess Invocation FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Invocation Literal Invocation VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator ArrayRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation Invocation VariableRead Invocation VariableRead Invocation Invocation VariableRead Invocation Invocation VariableRead VariableRead VariableRead
+VIRTUALROOT While Invocation VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation VariableRead VariableRead TypeAccess
+VIRTUALROOT If Invocation Invocation VariableRead
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If UnaryOperator Invocation FieldRead VariableRead ThisAccess TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator Literal FieldRead FieldRead FieldRead FieldRead TypeAccess TypeAccess
+VIRTUALROOT While BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If Invocation FieldRead Literal VariableRead
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator BinaryOperator Invocation BinaryOperator UnaryOperator BinaryOperator UnaryOperator FieldRead Literal TypeAccess Invocation Invocation FieldRead TypeAccess Invocation FieldRead Invocation TypeAccess VariableRead TypeAccess FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If UnaryOperator BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator BinaryOperator BinaryOperator Invocation FieldRead Invocation VariableRead TypeAccess Invocation Literal Invocation VariableRead VariableRead FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal VariableRead
+VIRTUALROOT If BinaryOperator FieldRead Literal TypeAccess
+VIRTUALROOT If Invocation Invocation Invocation TypeAccess Invocation TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation FieldRead VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator Invocation Literal Invocation VariableRead VariableRead
+VIRTUALROOT If Invocation Invocation Invocation VariableRead TypeAccess
+VIRTUALROOT If FieldRead TypeAccess
+VIRTUALROOT If BinaryOperator BinaryOperator BinaryOperator VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If BinaryOperator VariableRead TypeAccess
+VIRTUALROOT If BinaryOperator VariableRead Literal
+VIRTUALROOT If BinaryOperator Invocation UnaryOperator VariableRead TypeAccess Literal
+VIRTUALROOT If BinaryOperator VariableRead FieldRead TypeAccess
+VIRTUALROOT Return BinaryOperator BinaryOperator Invocation BinaryOperator Invocation BinaryOperator Invocation Invocation Invocation FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess FieldRead VariableRead TypeAccess
+VIRTUALROOT If UnaryOperator Invocation VariableRead
+VIRTUALROOT If UnaryOperator Invocation TypeAccess Invocation VariableRead
+VIRTUALROOT Return Invocation FieldRead TypeAccess
+VIRTUALROOT If Invocation VariableRead
+VIRTUALROOT If UnaryOperator BinaryOperator BinaryOperator Invocation VariableRead Literal VariableRead VariableRead
+VIRTUALROOT If Invocation VariableRead Invocation FieldRead TypeAccess

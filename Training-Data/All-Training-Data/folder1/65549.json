@@ -1,0 +1,147 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "args",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "java.lang.String[]",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "NewArray",
+          "return_type": "java.lang.String[]",
+          "children": [
+            {
+              "label": "\"--setuid\u003d1000\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"--setgid\u003d1000\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"--setgroups\u003d1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1018,3001,3002,3003,3004,3006,3007,3009\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"--capabilities\u003d130104352,130104352\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"--runtime-init\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"--nice-name\u003dsystem_server\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "\"com.android.server.SystemServer\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"--capabilities\u003d130104352,130104352\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"--setgroups\u003d1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1018,3001,3002,3003,3004,3006,3007,3009\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"--setgid\u003d1000\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"--runtime-init\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"com.android.server.SystemServer\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"--nice-name\u003dsystem_server\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"--setuid\u003d1000\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "LocalVariable",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "Try",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "LocalVariable",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

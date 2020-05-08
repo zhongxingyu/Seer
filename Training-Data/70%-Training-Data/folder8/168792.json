@@ -1,0 +1,67 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "s2",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "\"Their honour precarious, their liberty provisional, lasting only until the discovery of their crime; their position unstable, like that of the poet who one day was feasted at every table, applauded in every theatre in London, and on the next was driven from every lodging, unable to find a pillow upon which to lay his head, turning the mill like Samson and saying like him: The two sexes shall die, each in a place apart!; excluded even, save on the days of general disaster when the majority rally round the victim as the Jews rallied round Dreyfus, from the sympathyat times from the societyof their fellows, in whom they inspire only disgust at seeing themselves as they are, portrayed in a mirror which, ceasing to flatter them, accentuates every blemish that they have refused to observe in themselves, and makes them understand that what they have been calling their love (a thing to which, playing upon the word, they have by association annexed all that poetry, painting, music, chivalry, asceticism have contrived to add to love) springs not from an ideal of beauty which they have chosen but from an incurable malady; like the Jews again (save some who will associate only with others of their race and have always on their lips ritual words and consecrated pleasantries), shunning one another, seeking out those who are most directly their opposite, who do not desire their company, pardoning their rebuffs, moved to ecstasy by their condescension; but also brought into the company of their own kind by the ostracism that strikes them, the opprobrium under which they have fallen, having finally been invested, by a persecution similar to that of Israel, with the physical and moral characteristics of a race, sometimes beautiful, often hideous, finding (in spite of all the mockery with which he who, more closely blended with, better assimilated to the opposing race, is relatively, in appearance, the least inverted, heaps upon him who has remained more so) a relief in frequenting the society of their kind, and even some corroboration of their own life, so much so that, while steadfastly denying that they are a race (the name of which is the vilest of insults), those who succeed in concealing the fact that they belong to it they readily unmask, with a view less to injuring them, though they have no scruple about that, than to excusing themselves; and, going in search (as a doctor seeks cases of appendicitis) of cases of inversion in history, taking pleasure in recalling that Socrates was one of themselves, as the Israelites claim that Jesus was one of them, without reflecting that there were no abnormals when homosexuality was the norm, no anti-Christians before Christ, that the disgrace alone makes the crime because it has allowed to survive only those who remained obdurate to every warning, to every example, to every punishment, by virtue of an innate disposition so peculiar that it is more repugnant to other men (even though it may be accompanied by exalted moral qualities) than certain other vices which exclude those qualities, such as theft, cruelty, breach of faith, vices better understood and so more readily excused by the generality of men; forming a freemasonry far more extensive, more powerful and less suspected than that of the Lodges, for it rests upon an identity of tastes, needs, habits, dangers, apprenticeship, knowledge, traffic, glossary, and one in which the members themselves, who intend not to know one another, recognise one another immediately by natural or conventional, involuntary or deliberate signs which indicate one of his congeners to the beggar in the street, in the great nobleman whose carriage door he is shutting, to the father in the suitor for his daughters hand, to him who has sought healing, absolution, defence, in the doctor, the priest, the barrister to whom he has had recourse; all of them obliged to protect their own secret but having their part in a secret shared with the others, which the rest of humanity does not suspect and which means that to them the most wildly improbable tales of adventure seem true, for in this romantic, anachronistic life the ambassador is a bosom friend of the felon, the prince, with a certain independence of action with which his aristocratic breeding has furnished him, and which the trembling little cit would lack, on leaving the duchesss party goes off to confer in private with the hooligan; a reprobate part of the human whole, but an important part, suspected where it does not exist, flaunting itself, insolent and unpunished, where its existence is never guessed; numbering its adherents everywhere, among the people, in the army, in the church, in the prison, on the throne; living, in short, at least to a great extent, in a playful and perilous intimacy with the men of the other race, provoking them, playing with them by speaking of its vice as of something alien to it; a game that is rendered easy by the blindness or duplicity of the others, a game that may be kept up for years until the day of the scandal, on which these lion-tamers are devoured; until then, obliged to make a secret of their lives, to turn away their eyes from the things on which they would naturally fasten them, to fasten them upon those from which they would naturally turn away, to change the gender of many of the words in their vocabulary, a social constraint, slight in comparison with the inward constraint which their vice, or what is improperly so called, imposes upon them with regard not so much now to others as to themselves, and in such a way that to themselves it does not appear a vice.\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"Their honour precarious, their liberty provisional, lasting only until the discovery of their crime; their position unstable, like that of the poet who one day was feasted at every table, applauded in every theatre in London, and on the next was driven from every lodging, unable to find a pillow upon which to lay his head, turning the mill like Samson and saying like him: The two sexes shall die, each in a place apart!; excluded even, save on the days of general disaster when the majority rally round the victim as the Jews rallied round Dreyfus, from the sympathyat times from the societyof their fellows, in whom they inspire only disgust at seeing themselves as they are, portrayed in a mirror which, ceasing to flatter them, accentuates every blemish that they have refused to observe in themselves, and makes them understand that what they have been calling their love (a thing to which, playing upon the word, they have by association annexed all that poetry, painting, music, chivalry, asceticism have contrived to add to love) springs not from an ideal of beauty which they have chosen but from an incurable malady; like the Jews again (save some who will associate only with others of their race and have always on their lips ritual words and consecrated pleasantries), shunning one another, seeking out those who are most directly their opposite, who do not desire their company, pardoning their rebuffs, moved to ecstasy by their condescension; but also brought into the company of their own kind by the ostracism that strikes them, the opprobrium under which they have fallen, having finally been invested, by a persecution similar to that of Israel, with the physical and moral characteristics of a race, sometimes beautiful, often hideous, finding (in spite of all the mockery with which he who, more closely blended with, better assimilated to the opposing race, is relatively, in appearance, the least inverted, heaps upon him who has remained more so) a relief in frequenting the society of their kind, and even some corroboration of their own life, so much so that, while steadfastly denying that they are a race (the name of which is the vilest of insults), those who succeed in concealing the fact that they belong to it they readily unmask, with a view less to injuring them, though they have no scruple about that, than to excusing themselves; and, going in search (as a doctor seeks cases of appendicitis) of cases of inversion in history, taking pleasure in recalling that Socrates was one of themselves, as the Israelites claim that Jesus was one of them, without reflecting that there were no abnormals when homosexuality was the norm, no anti-Christians before Christ, that the disgrace alone makes the crime because it has allowed to survive only those who remained obdurate to every warning, to every example, to every punishment, by virtue of an innate disposition so peculiar that it is more repugnant to other men (even though it may be accompanied by exalted moral qualities) than certain other vices which exclude those qualities, such as theft, cruelty, breach of faith, vices better understood and so more readily excused by the generality of men; forming a freemasonry far more extensive, more powerful and less suspected than that of the Lodges, for it rests upon an identity of tastes, needs, habits, dangers, apprenticeship, knowledge, traffic, glossary, and one in which the members themselves, who intend not to know one another, recognise one another immediately by natural or conventional, involuntary or deliberate signs which indicate one of his congeners to the beggar in the street, in the great nobleman whose carriage door he is shutting, to the father in the suitor for his daughters hand, to him who has sought healing, absolution, defence, in the doctor, the priest, the barrister to whom he has had recourse; all of them obliged to protect their own secret but having their part in a secret shared with the others, which the rest of humanity does not suspect and which means that to them the most wildly improbable tales of adventure seem true, for in this romantic, anachronistic life the ambassador is a bosom friend of the felon, the prince, with a certain independence of action with which his aristocratic breeding has furnished him, and which the trembling little cit would lack, on leaving the duchesss party goes off to confer in private with the hooligan; a reprobate part of the human whole, but an important part, suspected where it does not exist, flaunting itself, insolent and unpunished, where its existence is never guessed; numbering its adherents everywhere, among the people, in the army, in the church, in the prison, on the throne; living, in short, at least to a great extent, in a playful and perilous intimacy with the men of the other race, provoking them, playing with them by speaking of its vice as of something alien to it; a game that is rendered easy by the blindness or duplicity of the others, a game that may be kept up for years until the day of the scandal, on which these lion-tamers are devoured; until then, obliged to make a secret of their lives, to turn away their eyes from the things on which they would naturally fasten them, to fasten them upon those from which they would naturally turn away, to change the gender of many of the words in their vocabulary, a social constraint, slight in comparison with the inward constraint which their vice, or what is improperly so called, imposes upon them with regard not so much now to others as to themselves, and in such a way that to themselves it does not appear a vice.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

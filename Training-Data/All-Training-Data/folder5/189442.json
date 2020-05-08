@@ -1,0 +1,83 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "T_INRO_INFO_UPDATE_FLG_INSER",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "public",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "\"UPDATE ironinfo SET flag \u003d \u00271\u0027 WHERE `riqi` \u003c\u003e \u0027\u0027 AND `qihao` \u003c\u003e \u0027\u0027 AND `luci` \u003c\u003e \u0027\u0027 AND `guige` \u003c\u003e \u0027\u0027 AND `shengchanluhao` \u003c\u003e \u0027\u0027 AND `fanyingqihao` \u003c\u003e \u0027\u0027 AND `shiyongcishu` \u003c\u003e \u0027\u0027 AND `jingzhong` \u003c\u003e \u0027\u0027 AND `chengpinlv` \u003c\u003e \u0027\u0027 AND `fe` \u003c\u003e \u0027\u0027 AND `si` \u003c\u003e \u0027\u0027 AND `cl` \u003c\u003e \u0027\u0027 AND `c` \u003c\u003e \u0027\u0027 AND `n` \u003c\u003e \u0027\u0027 AND `o` \u003c\u003e \u0027\u0027 AND `h` \u003c\u003e \u0027\u0027 AND `mn` \u003c\u003e \u0027\u0027 AND `hb` \u003c\u003e \u0027\u0027 AND `dengji_hanmeng` \u003c\u003e \u0027\u0027 AND `kaohedengji_chumeng` \u003c\u003e \u0027\u0027 AND id \u003d ?\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"UPDATE ironinfo SET flag \u003d \u00271\u0027 WHERE `riqi` \u003c\u003e \u0027\u0027 AND `qihao` \u003c\u003e \u0027\u0027 AND `luci` \u003c\u003e \u0027\u0027 AND `guige` \u003c\u003e \u0027\u0027 AND `shengchanluhao` \u003c\u003e \u0027\u0027 AND `fanyingqihao` \u003c\u003e \u0027\u0027 AND `shiyongcishu` \u003c\u003e \u0027\u0027 AND `jingzhong` \u003c\u003e \u0027\u0027 AND `chengpinlv` \u003c\u003e \u0027\u0027 AND `fe` \u003c\u003e \u0027\u0027 AND `si` \u003c\u003e \u0027\u0027 AND `cl` \u003c\u003e \u0027\u0027 AND `c` \u003c\u003e \u0027\u0027 AND `n` \u003c\u003e \u0027\u0027 AND `o` \u003c\u003e \u0027\u0027 AND `h` \u003c\u003e \u0027\u0027 AND `mn` \u003c\u003e \u0027\u0027 AND `hb` \u003c\u003e \u0027\u0027 AND `dengji_hanmeng` \u003c\u003e \u0027\u0027 AND `kaohedengji_chumeng` \u003c\u003e \u0027\u0027 AND id \u003d ?\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

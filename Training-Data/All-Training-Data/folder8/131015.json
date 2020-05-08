@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "eu.webtoolkit.jwt.WJavaScriptPreamble",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "WtClassScope",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.WTableView",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "JavaScriptScope",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "JavaScriptConstructor",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.WTableView",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "JavaScriptObjectType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"WTableView\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"function(p,h,d,q,n){function u(a){var b\u003d-1,c\u003dfalse,e\u003dfalse,k\u003dnull;for(a\u003df.target(a);a;){var g\u003d$(a);if(g.hasClass(\\\"Wt-tv-contents\\\"))break;else if(g.hasClass(\\\"Wt-tv-c\\\")){if(a.getAttribute(\\\"drop\\\")\u003d\u003d\u003d\\\"true\\\")e\u003dtrue;if(g.hasClass(\\\"Wt-selected\\\"))c\u003dtrue;k\u003da;a\u003da.parentNode;b\u003da.className.split(\\\" \\\")[0].substring(7)*1;break}a\u003da.parentNode}return{columnId:b,rowIdx:-1,selected:c,drop:e,el:k}}function x(){return f.pxself(d.firstChild,\\\"lineHeight\\\")}function v(a){var b, c,e\u003da.parentNode.childNodes;b\u003d0;for(c\u003de.length;b\u003cc;++b)if(e[b]\u003d\u003da)return b;return-1}function D(a,b){var c\u003d$(document.body).hasClass(\\\"Wt-rtl\\\");if(c)b\u003d-b;var e\u003da.className.split(\\\" \\\")[0],k\u003de.substring(7)*1,g\u003da.parentNode,j\u003dg.parentNode!\u003d\u003dq,i\u003dj?n.firstChild:d.firstChild,l\u003di.firstChild;e\u003d$(i).find(\\\".\\\"+e).get(0);var m\u003da.nextSibling,r\u003de.nextSibling,w\u003df.pxself(a,\\\"width\\\")-1+b,y\u003df.pxself(g,\\\"width\\\")+b+\\\"px\\\";g.style.width\u003di.style.width\u003dl.style.width\u003dy;if(j)n.style.width\u003dy;a.style.width\u003dw+1+\\\"px\\\";for(e.style.width\u003d w+7+\\\"px\\\";m;m\u003dm.nextSibling)if(r){if(c)r.style.right\u003df.pxself(r,\\\"right\\\")+b+\\\"px\\\";else r.style.left\u003df.pxself(r,\\\"left\\\")+b+\\\"px\\\";r\u003dr.nextSibling}p.emit(h,\\\"columnResized\\\",k,parseInt(w));E.autoJavaScript()}jQuery.data(h,\\\"obj\\\",this);var E\u003dthis,f\u003dp.WT,z\u003d0,A\u003d0,B\u003d0,C\u003d0,s\u003d0,t\u003d0;d.onscroll\u003dfunction(){t\u003dq.scrollLeft\u003dd.scrollLeft;s\u003dn.scrollTop\u003dd.scrollTop;if(d.clientWidth\u0026\u0026d.clientHeight\u0026\u0026(d.scrollTop\u003cB||d.scrollTop\u003eC||d.scrollLeft\u003cz||d.scrollLeft\u003eA))p.emit(h,\\\"scrolled\\\",d.scrollLeft,d.scrollTop,d.clientWidth,d.clientHeight)}; this.mouseDown\u003dfunction(a,b){f.capture(null);a\u003du(b);h.getAttribute(\\\"drag\\\")\u003d\u003d\u003d\\\"true\\\"\u0026\u0026a.selected\u0026\u0026p._p_.dragStart(h,b)};this.resizeHandleMDown\u003dfunction(a,b){var c\u003da.parentNode,e\u003d-(f.pxself(c,\\\"width\\\")-1),k\u003d1E4;if($(document.body).hasClass(\\\"Wt-rtl\\\")){var g\u003de;e\u003d-k;k\u003d-g}new f.SizeHandle(f,\\\"h\\\",a.offsetWidth,h.offsetHeight,e,k,\\\"Wt-hsh\\\",function(j){D(c,j)},a,h,b,-2,-1)};this.scrolled\u003dfunction(a,b,c,e){z\u003da;A\u003db;B\u003dc;C\u003de};this.resetScroll\u003dfunction(){q.scrollLeft\u003dt;d.scrollLeft\u003dt;d.scrollTop\u003ds;n.scrollTop\u003ds}; this.scrollTo\u003dfunction(a,b,c){if(b!\u003d-1){a\u003dd.scrollTop;var e\u003dd.clientHeight;if(c\u003d\u003d0)if(a+e\u003cb)c\u003d1;else if(b\u003ca)c\u003d2;switch(c){case 1:d.scrollTop\u003db;break;case 2:d.scrollTop\u003db-(e-x());break;case 3:d.scrollTop\u003db-(e-x())/2;break}d.onscroll()}};var o\u003dnull;h.handleDragDrop\u003dfunction(a,b,c,e,k){if(o){o.className\u003do.classNameOrig;o\u003dnull}if(a!\u003d\\\"end\\\"){var g\u003du(c);if(!g.selected\u0026\u0026g.drop)if(a\u003d\u003d\\\"drop\\\")p.emit(h,{name:\\\"dropEvent\\\",eventObject:b,event:c},g.rowIdx,g.columnId,e,k);else{b.className\u003d\\\"Wt-valid-drop\\\";o\u003dg.el;o.classNameOrig\u003d o.className;o.className+\u003d\\\" Wt-drop-site\\\"}else b.className\u003d\\\"\\\"}};h.onkeydown\u003dfunction(a){var b\u003da||window.event;if(b.keyCode\u003d\u003d9){f.cancelEvent(b);var c\u003du(b);if(c.el){a\u003dc.el.parentNode;c\u003dv(c.el);var e\u003dv(a),k\u003da.parentNode.childNodes.length,g\u003da.childNodes.length;b\u003db.shiftKey;for(var j\u003dfalse,i\u003dc,l;;){for(;b?i\u003e\u003d0:i\u003cg;i\u003db?i-1:i+1)for(l\u003di\u003d\u003dc\u0026\u0026!j?b?e-1:e+1:b?k-1:0;b?l\u003e\u003d0:l\u003ck;l\u003db?l-1:l+1){if(i\u003d\u003dc\u0026\u0026l\u003d\u003de)return;a\u003da.parentNode.childNodes[l];var m\u003d$(a.childNodes[i]).find(\\\":input\\\");if(m.size()\u003e0){setTimeout(function(){m.focus()}, 0);return}}i\u003db?g-1:0;j\u003dtrue}}}else if(b.keyCode\u003e\u003d37\u0026\u0026b.keyCode\u003c\u003d40){j\u003df.target(b);if(j.nodeName!\u003d\\\"select\\\"){c\u003du(b);if(c.el){a\u003dc.el.parentNode;c\u003dv(c.el);e\u003dv(a);k\u003da.parentNode.childNodes.length;g\u003da.childNodes.length;switch(b.keyCode){case 39:if(f.hasTag(j,\\\"INPUT\\\")\u0026\u0026j.type\u003d\u003d\\\"text\\\"){i\u003df.getSelectionRange(j);if(i.start!\u003dj.value.length)return}e++;break;case 38:c--;break;case 37:if(f.hasTag(j,\\\"INPUT\\\")\u0026\u0026j.type\u003d\u003d\\\"text\\\"){i\u003df.getSelectionRange(j);if(i.start!\u003d0)return}e--;break;case 40:c++;break;default:return}f.cancelEvent(b); if(c\u003e-1\u0026\u0026c\u003cg\u0026\u0026e\u003e-1\u0026\u0026e\u003ck){a\u003da.parentNode.childNodes[e];m\u003d$(a.childNodes[c]).find(\\\":input\\\");m.size()\u003e0\u0026\u0026setTimeout(function(){m.focus()},0)}}}}};this.autoJavaScript\u003dfunction(){if(h.parentNode\u003d\u003dnull){h\u003dd\u003dq\u003dnull;this.autoJavaScript\u003dfunction(){}}else if(!f.isHidden(h)){if(!f.isIE\u0026\u0026(s!\u003dd.scrollTop||t!\u003dd.scrollLeft)){q.scrollLeft\u003dd.scrollLeft\u003dt;n.scrollTop\u003dd.scrollTop\u003ds}var a\u003dh.offsetWidth-f.px(h,\\\"borderLeftWidth\\\")-f.px(h,\\\"borderRightWidth\\\"),b\u003dd.offsetWidth-d.clientWidth;a-\u003db;a-\u003dn.clientWidth;if(a\u003e200\u0026\u0026 a!\u003dd.tw){d.tw\u003da;d.style.width\u003da+b+\\\"px\\\";q.style.width\u003da+\\\"px\\\";if(!f.isIE)q.style.marginRight\u003db+\\\"px\\\"}a\u003dd.offsetHeight-d.clientHeight;if(n.parentNode)if((b\u003dn.parentNode.style)\u0026\u0026b.paddingBottom!\u003d\u003da+\\\"px\\\"){b.paddingBottom\u003da+\\\"px\\\";p.layouts.adjust(h.children[0].id);p.layouts.adjust()}}}}\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "true",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "WtClassScope": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "JavaScriptConstructor": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"WTableView\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"function(p,h,d,q,n){function u(a){var b\u003d-1,c\u003dfalse,e\u003dfalse,k\u003dnull;for(a\u003df.target(a);a;){var g\u003d$(a);if(g.hasClass(\\\"Wt-tv-contents\\\"))break;else if(g.hasClass(\\\"Wt-tv-c\\\")){if(a.getAttribute(\\\"drop\\\")\u003d\u003d\u003d\\\"true\\\")e\u003dtrue;if(g.hasClass(\\\"Wt-selected\\\"))c\u003dtrue;k\u003da;a\u003da.parentNode;b\u003da.className.split(\\\" \\\")[0].substring(7)*1;break}a\u003da.parentNode}return{columnId:b,rowIdx:-1,selected:c,drop:e,el:k}}function x(){return f.pxself(d.firstChild,\\\"lineHeight\\\")}function v(a){var b, c,e\u003da.parentNode.childNodes;b\u003d0;for(c\u003de.length;b\u003cc;++b)if(e[b]\u003d\u003da)return b;return-1}function D(a,b){var c\u003d$(document.body).hasClass(\\\"Wt-rtl\\\");if(c)b\u003d-b;var e\u003da.className.split(\\\" \\\")[0],k\u003de.substring(7)*1,g\u003da.parentNode,j\u003dg.parentNode!\u003d\u003dq,i\u003dj?n.firstChild:d.firstChild,l\u003di.firstChild;e\u003d$(i).find(\\\".\\\"+e).get(0);var m\u003da.nextSibling,r\u003de.nextSibling,w\u003df.pxself(a,\\\"width\\\")-1+b,y\u003df.pxself(g,\\\"width\\\")+b+\\\"px\\\";g.style.width\u003di.style.width\u003dl.style.width\u003dy;if(j)n.style.width\u003dy;a.style.width\u003dw+1+\\\"px\\\";for(e.style.width\u003d w+7+\\\"px\\\";m;m\u003dm.nextSibling)if(r){if(c)r.style.right\u003df.pxself(r,\\\"right\\\")+b+\\\"px\\\";else r.style.left\u003df.pxself(r,\\\"left\\\")+b+\\\"px\\\";r\u003dr.nextSibling}p.emit(h,\\\"columnResized\\\",k,parseInt(w));E.autoJavaScript()}jQuery.data(h,\\\"obj\\\",this);var E\u003dthis,f\u003dp.WT,z\u003d0,A\u003d0,B\u003d0,C\u003d0,s\u003d0,t\u003d0;d.onscroll\u003dfunction(){t\u003dq.scrollLeft\u003dd.scrollLeft;s\u003dn.scrollTop\u003dd.scrollTop;if(d.clientWidth\u0026\u0026d.clientHeight\u0026\u0026(d.scrollTop\u003cB||d.scrollTop\u003eC||d.scrollLeft\u003cz||d.scrollLeft\u003eA))p.emit(h,\\\"scrolled\\\",d.scrollLeft,d.scrollTop,d.clientWidth,d.clientHeight)}; this.mouseDown\u003dfunction(a,b){f.capture(null);a\u003du(b);h.getAttribute(\\\"drag\\\")\u003d\u003d\u003d\\\"true\\\"\u0026\u0026a.selected\u0026\u0026p._p_.dragStart(h,b)};this.resizeHandleMDown\u003dfunction(a,b){var c\u003da.parentNode,e\u003d-(f.pxself(c,\\\"width\\\")-1),k\u003d1E4;if($(document.body).hasClass(\\\"Wt-rtl\\\")){var g\u003de;e\u003d-k;k\u003d-g}new f.SizeHandle(f,\\\"h\\\",a.offsetWidth,h.offsetHeight,e,k,\\\"Wt-hsh\\\",function(j){D(c,j)},a,h,b,-2,-1)};this.scrolled\u003dfunction(a,b,c,e){z\u003da;A\u003db;B\u003dc;C\u003de};this.resetScroll\u003dfunction(){q.scrollLeft\u003dt;d.scrollLeft\u003dt;d.scrollTop\u003ds;n.scrollTop\u003ds}; this.scrollTo\u003dfunction(a,b,c){if(b!\u003d-1){a\u003dd.scrollTop;var e\u003dd.clientHeight;if(c\u003d\u003d0)if(a+e\u003cb)c\u003d1;else if(b\u003ca)c\u003d2;switch(c){case 1:d.scrollTop\u003db;break;case 2:d.scrollTop\u003db-(e-x());break;case 3:d.scrollTop\u003db-(e-x())/2;break}d.onscroll()}};var o\u003dnull;h.handleDragDrop\u003dfunction(a,b,c,e,k){if(o){o.className\u003do.classNameOrig;o\u003dnull}if(a!\u003d\\\"end\\\"){var g\u003du(c);if(!g.selected\u0026\u0026g.drop)if(a\u003d\u003d\\\"drop\\\")p.emit(h,{name:\\\"dropEvent\\\",eventObject:b,event:c},g.rowIdx,g.columnId,e,k);else{b.className\u003d\\\"Wt-valid-drop\\\";o\u003dg.el;o.classNameOrig\u003d o.className;o.className+\u003d\\\" Wt-drop-site\\\"}else b.className\u003d\\\"\\\"}};h.onkeydown\u003dfunction(a){var b\u003da||window.event;if(b.keyCode\u003d\u003d9){f.cancelEvent(b);var c\u003du(b);if(c.el){a\u003dc.el.parentNode;c\u003dv(c.el);var e\u003dv(a),k\u003da.parentNode.childNodes.length,g\u003da.childNodes.length;b\u003db.shiftKey;for(var j\u003dfalse,i\u003dc,l;;){for(;b?i\u003e\u003d0:i\u003cg;i\u003db?i-1:i+1)for(l\u003di\u003d\u003dc\u0026\u0026!j?b?e-1:e+1:b?k-1:0;b?l\u003e\u003d0:l\u003ck;l\u003db?l-1:l+1){if(i\u003d\u003dc\u0026\u0026l\u003d\u003de)return;a\u003da.parentNode.childNodes[l];var m\u003d$(a.childNodes[i]).find(\\\":input\\\");if(m.size()\u003e0){setTimeout(function(){m.focus()}, 0);return}}i\u003db?g-1:0;j\u003dtrue}}}else if(b.keyCode\u003e\u003d37\u0026\u0026b.keyCode\u003c\u003d40){j\u003df.target(b);if(j.nodeName!\u003d\\\"select\\\"){c\u003du(b);if(c.el){a\u003dc.el.parentNode;c\u003dv(c.el);e\u003dv(a);k\u003da.parentNode.childNodes.length;g\u003da.childNodes.length;switch(b.keyCode){case 39:if(f.hasTag(j,\\\"INPUT\\\")\u0026\u0026j.type\u003d\u003d\\\"text\\\"){i\u003df.getSelectionRange(j);if(i.start!\u003dj.value.length)return}e++;break;case 38:c--;break;case 37:if(f.hasTag(j,\\\"INPUT\\\")\u0026\u0026j.type\u003d\u003d\\\"text\\\"){i\u003df.getSelectionRange(j);if(i.start!\u003d0)return}e--;break;case 40:c++;break;default:return}f.cancelEvent(b); if(c\u003e-1\u0026\u0026c\u003cg\u0026\u0026e\u003e-1\u0026\u0026e\u003ck){a\u003da.parentNode.childNodes[e];m\u003d$(a.childNodes[c]).find(\\\":input\\\");m.size()\u003e0\u0026\u0026setTimeout(function(){m.focus()},0)}}}}};this.autoJavaScript\u003dfunction(){if(h.parentNode\u003d\u003dnull){h\u003dd\u003dq\u003dnull;this.autoJavaScript\u003dfunction(){}}else if(!f.isHidden(h)){if(!f.isIE\u0026\u0026(s!\u003dd.scrollTop||t!\u003dd.scrollLeft)){q.scrollLeft\u003dd.scrollLeft\u003dt;n.scrollTop\u003dd.scrollTop\u003ds}var a\u003dh.offsetWidth-f.px(h,\\\"borderLeftWidth\\\")-f.px(h,\\\"borderRightWidth\\\"),b\u003dd.offsetWidth-d.clientWidth;a-\u003db;a-\u003dn.clientWidth;if(a\u003e200\u0026\u0026 a!\u003dd.tw){d.tw\u003da;d.style.width\u003da+b+\\\"px\\\";q.style.width\u003da+\\\"px\\\";if(!f.isIE)q.style.marginRight\u003db+\\\"px\\\"}a\u003dd.offsetHeight-d.clientHeight;if(n.parentNode)if((b\u003dn.parentNode.style)\u0026\u0026b.paddingBottom!\u003d\u003da+\\\"px\\\"){b.paddingBottom\u003da+\\\"px\\\";p.layouts.adjust(h.children[0].id);p.layouts.adjust()}}}}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+      "S4_Field_NOT_ASSIGNED": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "JavaScriptObjectType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "JavaScriptScope": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

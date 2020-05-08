@@ -1,0 +1,51 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "\"SELECT CASE WHEN SUM(c.credits) IS NULL THEN 0 ELSE SUM(c.credits) END FROM Course c, Enrolment e LEFT JOIN FETCH e.section LEFT JOIN FETCH e.student LEFT JOIN FETCH e.gradeId LEFT JOIN FETCH e.resultId WHERE c.coursePK.courseNumber \u003d e.enrolmentPK.courseNumber AND c.coursePK.departmentId \u003d e.enrolmentPK.departmentId AND e.enrolmentPK.studentId \u003d :studentId AND e.resultId.resultId \u003d 100 AND e.enrolmentPK.sectionTypeId \u003d 100 AND e.isActive \u003d 1 \"",
+      "type": "Literal",
+      "susp": [
+        "susp_constChange_literal"
+      ],
+      "return_type": "java.lang.String",
+      "index_of_exper": "expression_0",
+      "children": []
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Annotation",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"SELECT CASE WHEN SUM(c.credits) IS NULL THEN 0 ELSE SUM(c.credits) END FROM Course c, Enrolment e LEFT JOIN FETCH e.section LEFT JOIN FETCH e.student LEFT JOIN FETCH e.gradeId LEFT JOIN FETCH e.resultId WHERE c.coursePK.courseNumber \u003d e.enrolmentPK.courseNumber AND c.coursePK.departmentId \u003d e.enrolmentPK.departmentId AND e.enrolmentPK.studentId \u003d :studentId AND e.resultId.resultId \u003d 100 AND e.enrolmentPK.sectionTypeId \u003d 100 AND e.isActive \u003d 1 \"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Literal",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

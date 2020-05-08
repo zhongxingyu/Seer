@@ -1,0 +1,190 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "HTTPS_PORT",
+      "type": "Field",
+      "children": [
+        {
+          "label": "brooklyn.event.basic.PortAttributeSensorAndConfigKey",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "public",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "brooklyn.event.basic.PortAttributeSensorAndConfigKey(java.lang.String,java.lang.String,java.lang.Object)",
+          "type": "ConstructorCall",
+          "return_type": "brooklyn.event.basic.PortAttributeSensorAndConfigKey",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "\"https.port\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"HTTP port (with SSL/TLS)\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "com.google.common.collect.ImmutableList#of(E,E,E)",
+              "type": "Invocation",
+              "susp": [
+                "susp_wrongMethodRef_SameNamedifferentArgument"
+              ],
+              "return_type": "com.google.common.collect.ImmutableList",
+              "index_of_exper": "expression_3",
+              "children": [
+                {
+                  "label": "com.google.common.collect.ImmutableList",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                },
+                {
+                  "label": "443",
+                  "type": "Literal",
+                  "return_type": "int",
+                  "index_of_exper": "expression_4",
+                  "children": []
+                },
+                {
+                  "label": "8443",
+                  "type": "Literal",
+                  "return_type": "int",
+                  "index_of_exper": "expression_5",
+                  "children": []
+                },
+                {
+                  "label": "\"18443+\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_6",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Interface",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_METHODS": {
+        "com.google.common.collect.ImmutableList#of(E,E,E)": {
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "true",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "false"
+        }
+      },
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "brooklyn.event.basic.PortAttributeSensorAndConfigKey(java.lang.String,java.lang.String,java.lang.Object)": {
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "8443": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"HTTP port (with SSL/TLS)\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "443": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"https.port\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"18443+\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "com.google.common.collect.ImmutableList": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "true"
+    }
+  }
+}

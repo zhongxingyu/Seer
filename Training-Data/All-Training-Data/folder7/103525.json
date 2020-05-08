@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "eu.webtoolkit.jwt.WJavaScriptPreamble",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "WtClassScope",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.WWebWidget",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "JavaScriptScope",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "JavaScriptFunction",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.WWebWidget",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "JavaScriptObjectType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"animateDisplay\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"function(y,l,q,n,m){var z\u003d[\\\"ease\\\",\\\"linear\\\",\\\"ease-in\\\",\\\"ease-out\\\",\\\"ease-in-out\\\"],A\u003d[0,1,3,2,4,5],p\u003dthis,h\u003d$(\\\"#\\\"+y),a\u003dh.get(0),r\u003dp.cssPrefix(\\\"Transition\\\"),B\u003dr\u003d\u003d\\\"Moz\\\"?\\\"animationend\\\":\\\"webkitAnimationEnd\\\",u\u003dr\u003d\u003d\\\"Moz\\\"?\\\"transitionend\\\":\\\"webkitTransitionEnd\\\";if(h.css(\\\"display\\\")!\u003d\u003dm){var o\u003dh.get(0).parentNode;if(o.wtAnimateChild)o.wtAnimateChild(h.get(0),l,q,n,{display:m});else{function v(){b(a,{animationDuration:n+\\\"ms\\\"},f);var c\u003d(k\u003d\u003d5?\\\"pop \\\":\\\"\\\")+(g? \\\"out\\\":\\\"in\\\");if(l\u0026256)c+\u003d\\\" fade\\\";g||s();h.addClass(c);h.one(B,function(){h.removeClass(c);if(g)a.style.display\u003dm;b(a,f)})}function C(){w(\\\"width\\\",k\u003d\u003d1?\\\"left\\\":\\\"right\\\",k\u003d\u003d1,\\\"X\\\")}function D(){w(\\\"height\\\",k\u003d\u003d4?\\\"top\\\":\\\"bottom\\\",k\u003d\u003d4,\\\"Y\\\")}function w(c,i,j,d){g||s();c\u003dp.px(a,c);i\u003d(p.px(a,i)+c)*(j?-1:1);var e;if(g){b(a,{transform:\\\"translate\\\"+d+\\\"(0px)\\\"},f);e\u003di}else{b(a,{transform:\\\"translate\\\"+d+\\\"(\\\"+i+\\\"px)\\\"},f);e\u003d0}if(l\u0026256)b(a,{opacity:g?1:0},f);setTimeout(function(){b(a,{transition:\\\"all \\\"+n+\\\"ms \\\"+t,transform:\\\"translate\\\"+ d+\\\"(\\\"+e+\\\"px)\\\"},f);if(l\u0026256)b(a,{opacity:g?0:1});h.one(u,function(){if(g)a.style.display\u003dm;b(a,f)})},0)}function E(){var c,i,j\u003d{},d;if(g){i\u003dh.height()+\\\"px\\\";b(a,{height:i,overflow:\\\"hidden\\\"},f);if(k\u003d\u003d4\u0026\u0026a.childNodes.length\u003d\u003d1){d\u003da.firstChild;b(d,{transform:\\\"translateY(0)\\\"},j);p.hasTag(d,\\\"TABLE\\\")||b(d,{display:\\\"block\\\"},j)}c\u003d\\\"0px\\\"}else{var e\u003d$(o),x\u003d{};b(o,{height:e.height()+\\\"px\\\",overflow:\\\"hidden\\\"},x);s();c\u003dh.height()+\\\"px\\\";b(a,{height:\\\"0px\\\",overflow:\\\"hidden\\\"},f);b(o,x);if(k\u003d\u003d4){b(a,{WebkitBackfaceVisibility:\\\"visible\\\"}, f);a.scrollTop\u003d1E3}}if(l\u0026256)b(a,{opacity:g?1:0},f);setTimeout(function(){b(a,{transition:\\\"all \\\"+n+\\\"ms \\\"+t,height:c},f);if(l\u0026256)b(a,{opacity:g?0:1});d\u0026\u0026b(d,{transition:\\\"all \\\"+n+\\\"ms \\\"+t,transform:\\\"translateY(-\\\"+i+\\\")\\\"},j);h.one(u,function(){if(g)a.style.display\u003dm;b(a,f);if(k\u003d\u003d4){a.scrollTop\u003d0;d\u0026\u0026b(d,j)}})},0)}function s(){a.style.display\u003dm;a.wtPosition\u0026\u0026a.wtPosition()}function b(c,i,j){var d;for(d in i){var e\u003dd;if(e\u003d\u003d\\\"transform\\\"||e\u003d\u003d\\\"transition\\\"||e\u003d\u003d\\\"animationDuration\\\")e\u003dr+e.substring(0,1).toUpperCase()+ e.substring(1);if(j\u0026\u0026typeof j[e]\u003d\u003d\u003d\\\"undefined\\\")j[e]\u003dc.style[e];c.style[e]\u003di[d]}}var k\u003dl\u0026255,g\u003dm\u003d\u003d\u003d\\\"none\\\",t\u003dz[g?A[q]:q],f\u003d{};setTimeout(function(){var c\u003dh.css(\\\"position\\\");c\u003dc\u003d\u003d\u003d\\\"absolute\\\"||c\u003d\u003d\u003d\\\"fixed\\\";switch(k){case 4:case 3:c?D():E();break;case 1:case 2:c?C():v();break;case 0:case 5:v();break}},0)}}}\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "JavaScriptFunction": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "WtClassScope": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"animateDisplay\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"function(y,l,q,n,m){var z\u003d[\\\"ease\\\",\\\"linear\\\",\\\"ease-in\\\",\\\"ease-out\\\",\\\"ease-in-out\\\"],A\u003d[0,1,3,2,4,5],p\u003dthis,h\u003d$(\\\"#\\\"+y),a\u003dh.get(0),r\u003dp.cssPrefix(\\\"Transition\\\"),B\u003dr\u003d\u003d\\\"Moz\\\"?\\\"animationend\\\":\\\"webkitAnimationEnd\\\",u\u003dr\u003d\u003d\\\"Moz\\\"?\\\"transitionend\\\":\\\"webkitTransitionEnd\\\";if(h.css(\\\"display\\\")!\u003d\u003dm){var o\u003dh.get(0).parentNode;if(o.wtAnimateChild)o.wtAnimateChild(h.get(0),l,q,n,{display:m});else{function v(){b(a,{animationDuration:n+\\\"ms\\\"},f);var c\u003d(k\u003d\u003d5?\\\"pop \\\":\\\"\\\")+(g? \\\"out\\\":\\\"in\\\");if(l\u0026256)c+\u003d\\\" fade\\\";g||s();h.addClass(c);h.one(B,function(){h.removeClass(c);if(g)a.style.display\u003dm;b(a,f)})}function C(){w(\\\"width\\\",k\u003d\u003d1?\\\"left\\\":\\\"right\\\",k\u003d\u003d1,\\\"X\\\")}function D(){w(\\\"height\\\",k\u003d\u003d4?\\\"top\\\":\\\"bottom\\\",k\u003d\u003d4,\\\"Y\\\")}function w(c,i,j,d){g||s();c\u003dp.px(a,c);i\u003d(p.px(a,i)+c)*(j?-1:1);var e;if(g){b(a,{transform:\\\"translate\\\"+d+\\\"(0px)\\\"},f);e\u003di}else{b(a,{transform:\\\"translate\\\"+d+\\\"(\\\"+i+\\\"px)\\\"},f);e\u003d0}if(l\u0026256)b(a,{opacity:g?1:0},f);setTimeout(function(){b(a,{transition:\\\"all \\\"+n+\\\"ms \\\"+t,transform:\\\"translate\\\"+ d+\\\"(\\\"+e+\\\"px)\\\"},f);if(l\u0026256)b(a,{opacity:g?0:1});h.one(u,function(){if(g)a.style.display\u003dm;b(a,f)})},0)}function E(){var c,i,j\u003d{},d;if(g){i\u003dh.height()+\\\"px\\\";b(a,{height:i,overflow:\\\"hidden\\\"},f);if(k\u003d\u003d4\u0026\u0026a.childNodes.length\u003d\u003d1){d\u003da.firstChild;b(d,{transform:\\\"translateY(0)\\\"},j);p.hasTag(d,\\\"TABLE\\\")||b(d,{display:\\\"block\\\"},j)}c\u003d\\\"0px\\\"}else{var e\u003d$(o),x\u003d{};b(o,{height:e.height()+\\\"px\\\",overflow:\\\"hidden\\\"},x);s();c\u003dh.height()+\\\"px\\\";b(a,{height:\\\"0px\\\",overflow:\\\"hidden\\\"},f);b(o,x);if(k\u003d\u003d4){b(a,{WebkitBackfaceVisibility:\\\"visible\\\"}, f);a.scrollTop\u003d1E3}}if(l\u0026256)b(a,{opacity:g?1:0},f);setTimeout(function(){b(a,{transition:\\\"all \\\"+n+\\\"ms \\\"+t,height:c},f);if(l\u0026256)b(a,{opacity:g?0:1});d\u0026\u0026b(d,{transition:\\\"all \\\"+n+\\\"ms \\\"+t,transform:\\\"translateY(-\\\"+i+\\\")\\\"},j);h.one(u,function(){if(g)a.style.display\u003dm;b(a,f);if(k\u003d\u003d4){a.scrollTop\u003d0;d\u0026\u0026b(d,j)}})},0)}function s(){a.style.display\u003dm;a.wtPosition\u0026\u0026a.wtPosition()}function b(c,i,j){var d;for(d in i){var e\u003dd;if(e\u003d\u003d\\\"transform\\\"||e\u003d\u003d\\\"transition\\\"||e\u003d\u003d\\\"animationDuration\\\")e\u003dr+e.substring(0,1).toUpperCase()+ e.substring(1);if(j\u0026\u0026typeof j[e]\u003d\u003d\u003d\\\"undefined\\\")j[e]\u003dc.style[e];c.style[e]\u003di[d]}}var k\u003dl\u0026255,g\u003dm\u003d\u003d\u003d\\\"none\\\",t\u003dz[g?A[q]:q],f\u003d{};setTimeout(function(){var c\u003dh.css(\\\"position\\\");c\u003dc\u003d\u003d\u003d\\\"absolute\\\"||c\u003d\u003d\u003d\\\"fixed\\\";switch(k){case 4:case 3:c?D():E();break;case 1:case 2:c?C():v();break;case 0:case 5:v();break}},0)}}}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+      "S4_Field_NOT_ASSIGNED": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "JavaScriptObjectType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "JavaScriptScope": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

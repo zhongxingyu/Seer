@@ -1,0 +1,94 @@
+{
+  "nr_root_ast_changes": 8,
+  "faulty_ast": [
+    {
+      "label": "builder",
+      "type": "LocalVariable",
+      "susp": [
+        "susp_wrapsTryCatch"
+      ],
+      "children": [
+        {
+          "label": "com.codingspezis.android.metalonly.player.AlertDialog$Builder",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "com.codingspezis.android.metalonly.player.AlertDialog$Builder(com.codingspezis.android.metalonly.player.PlanActivity)",
+          "type": "ConstructorCall",
+          "return_type": "com.codingspezis.android.metalonly.player.AlertDialog$Builder",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "this",
+              "type": "ThisAccess",
+              "return_type": "com.codingspezis.android.metalonly.player.PlanActivity",
+              "children": [
+                {
+                  "label": "com.codingspezis.android.metalonly.player.PlanActivity",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "com.codingspezis.android.metalonly.player.AlertDialog$Builder(com.codingspezis.android.metalonly.player.PlanActivity)": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "LocalVariable",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Invocation",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "com.codingspezis.android.metalonly.player.PlanActivity": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "Invocation",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "nr_root_ast_changes": 4,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "\"\u003cdiv class\u003d\\\"username\\\"\u003e\\n\u003cform name\u003d\\\"loginForm\\\"  action\u003d\\\"http://apps-swe432.vse.gmu.edu:8080/swe432/servlet/jdressel.Derporia64.ProcessLogin\\\" method\u003d\\\"post\\\"\u003e\\nLog In: \u003cinput type\u003d\\\"text\\\" name\u003d\\\"username\\\" placeholder\u003d\\\"Username\\\" onkeypress\u003d\\\"checkEnter(event)\\\"\u003e\\n\\t\u003cinput class\u003d\\\"regular\\\" type\u003d\\\"submit\\\" value\u003d\\\"Login\\\" name\u003d\\\"Log In\\\"/\u003e\\n\u003c/form\u003e\u003c/div\u003e\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "If",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"\u003cdiv class\u003d\\\"username\\\"\u003e\\n\u003cform name\u003d\\\"loginForm\\\"  action\u003d\\\"http://apps-swe432.vse.gmu.edu:8080/swe432/servlet/jdressel.Derporia64.ProcessLogin\\\" method\u003d\\\"post\\\"\u003e\\nLog In: \u003cinput type\u003d\\\"text\\\" name\u003d\\\"username\\\" placeholder\u003d\\\"Username\\\" onkeypress\u003d\\\"checkEnter(event)\\\"\u003e\\n\\t\u003cinput class\u003d\\\"regular\\\" type\u003d\\\"submit\\\" value\u003d\\\"Login\\\" name\u003d\\\"Log In\\\"/\u003e\\n\u003c/form\u003e\u003c/div\u003e\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

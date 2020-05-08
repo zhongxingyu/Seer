@@ -1,0 +1,180 @@
+{
+  "nr_root_ast_changes": 7,
+  "faulty_ast": [
+    {
+      "label": "CONDITIONS",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String[]",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "public",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "NewArray",
+          "return_type": "java.lang.String[]",
+          "children": [
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook player\u003dLgrf2Pattern heuristics\u003dEscape@20:Pattern@20:Capture@20 patternWeight\u003d20\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:DynamicPattern@20:Pattern@20:Capture@20\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:ManhattanPattern1@20:Capture@20\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:ManhattanPattern2@20:Capture@20\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:ManhattanPattern3@20:Capture@20\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@21:Pattern@233:Capture@207\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@49:Pattern@32:Capture@63\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:ManhattanPattern3@20:Capture@20\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@21:Pattern@233:Capture@207\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:DynamicPattern@20:Pattern@20:Capture@20\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook player\u003dLgrf2Pattern heuristics\u003dEscape@20:Pattern@20:Capture@20 patternWeight\u003d20\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:ManhattanPattern1@20:Capture@20\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@20:ManhattanPattern2@20:Capture@20\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"threads\u003d1 msec\u003d4000 book\u003dFusekiBook heuristics\u003dEscape@49:Pattern@32:Capture@63\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

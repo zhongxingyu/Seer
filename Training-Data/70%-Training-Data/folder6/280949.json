@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 7,
+  "faulty_ast": [
+    {
+      "label": "leftVolume",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "int",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "leftVolume",
+          "type": "FieldRead",
+          "susp": [
+            "susp_wrapsIfElse_elsenotnull"
+          ],
+          "return_type": "int",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "",
+              "type": "ArrayRead",
+              "return_type": "jpcsp.HLE.modules150.sceAudio$pspChannelInfo",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "pspchannels",
+                  "type": "FieldRead",
+                  "return_type": "jpcsp.HLE.modules150.sceAudio$pspChannelInfo[]",
+                  "index_of_exper": "expression_2",
+                  "children": [
+                    {
+                      "label": "jpcsp.HLE.modules150.sceAudio",
+                      "type": "TypeAccess",
+                      "return_type": "void",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "label": "channel",
+                  "type": "VariableRead",
+                  "return_type": "int",
+                  "index_of_exper": "expression_3",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "If",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "true",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "LocalVariable",
+      "FEATURES_VARS": {
+        "leftVolume": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "true",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "true",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "false",
+          "V8_VAR_PRIMITIVE": "true",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "false",
+          "V14_VAR_INSTANCE_OF_CLASS": "false",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "true",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "true",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "true",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "channel": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "true",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "true",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "false",
+          "V8_VAR_PRIMITIVE": "true",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "false",
+          "V14_VAR_INSTANCE_OF_CLASS": "false",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "true",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "true",
+          "V2_HAS_VAR_SIM_NAME": "true",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "true",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "true",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "true",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "true",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "pspchannels": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "false",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "false",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "true",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "true",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "LocalVariable",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "true",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "LocalVariable",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "If",
+      "FEATURES_TYPEACCESS": {
+        "jpcsp.HLE.modules150.sceAudio": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "LocalVariable",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

@@ -1,0 +1,303 @@
+{
+  "nr_root_ast_changes": 6,
+  "faulty_ast": [
+    {
+      "label": "#debug(java.lang.String)",
+      "type": "Invocation",
+      "return_type": "java.lang.Object",
+      "index_of_exper": "expression_0",
+      "children": [
+        {
+          "label": "#getLog()",
+          "type": "Invocation",
+          "return_type": "java.lang.Object",
+          "index_of_exper": "expression_1",
+          "children": [
+            {
+              "label": "org.apache.maven.plugin.AbstractCompilerMojo",
+              "type": "TypeAccess",
+              "return_type": "void",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "PLUS",
+          "type": "BinaryOperator",
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_2",
+          "index_of_binary_operator": "BinOperator_0",
+          "children": [
+            {
+              "label": "\"Classpath: \"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "java.lang.String#replace(java.lang.CharSequence,java.lang.CharSequence)",
+              "type": "Invocation",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": [
+                {
+                  "label": "java.lang.Object#toString()",
+                  "type": "Invocation",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_5",
+                  "children": [
+                    {
+                      "label": "org.apache.maven.plugin.AbstractCompilerMojo#getClasspathElements()",
+                      "type": "Invocation",
+                      "return_type": "java.util.List",
+                      "index_of_exper": "expression_6",
+                      "children": [
+                        {
+                          "label": "org.apache.maven.plugin.AbstractCompilerMojo",
+                          "type": "TypeAccess",
+                          "return_type": "void",
+                          "children": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "\",\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_7",
+                  "children": []
+                },
+                {
+                  "label": "\"\\n\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_8",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "If",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "true",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_METHODS": {
+        "org.apache.maven.plugin.AbstractCompilerMojo#getClasspathElements()": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "true",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "false",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "true",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "true",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        },
+        "#debug(java.lang.String)": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "false",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "true",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "false",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "true",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        },
+        "#getLog()": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "false",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        },
+        "java.lang.String#replace(java.lang.CharSequence,java.lang.CharSequence)": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "true",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "false",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "true",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "false",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "true",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "true",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "true"
+        },
+        "java.lang.Object#toString()": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "true",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "false",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "false",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "true",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "true",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "true"
+        }
+      },
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "FEATURES_BINARYOPERATOR": {
+        "binaryoperator_0": {
+          "O1_IS_BIT": "false",
+          "O1_IS_LOGICAL": "false",
+          "O3_CONTAIN_01": "false",
+          "O1_IS_OTHERS": "false",
+          "O2_LOGICAL_CONTAIN_NOT": "false",
+          "O4_COMPARE_IN_CONDITION": "false",
+          "O5_IS_MATH_ROOT": "true",
+          "O1_IS_MATH": "true",
+          "O3_CONTAIN_NULL": "false",
+          "O1_IS_SHIFT": "false",
+          "O1_IS_COMPARE": "false"
+        }
+      },
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "Invocation",
+      "S6_METHOD_THROWS_EXCEPTION": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\",\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Classpath: \"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"\\n\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Invocation",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Invocation",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "org.apache.maven.plugin.AbstractCompilerMojo": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "true"
+    }
+  }
+}

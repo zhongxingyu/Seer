@@ -1,0 +1,704 @@
+DEFAULT if Constants.SYSTEM_BUNDLE_SYMBOLICNAME#equals(java.lang.String) Constants.SYSTEM_BUNDLE_SYMBOLICNAME name org.eclipse.osgi.internal.resolver.VersionConstraintImpl
+DEFAULT if <_LABELEMPTY_> NE NOT NE collectionsToIgnore null org.codinjutsu.tools.mongo.ServerConfiguration java.util.List#equals(java.lang.Object) collectionsToIgnore collectionsToIgnore org.codinjutsu.tools.mongo.ServerConfiguration that collectionsToIgnore null that
+DEFAULT if java.lang.String#startsWith(java.lang.String) function "Main"
+DEFAULT if INSTANCEOF node de.be4.classicalb.core.parser.node.AGreaterPredicate
+DEFAULT if NOT cytoscape.visual.ui.VizMapperMainPanel#findVSName(java.lang.String) cytoscape.visual.ui.VizMapperMainPanel currentName
+DEFAULT if NOT org.geosdi.geoplatform.gui.client.action.toolbar.mapWidget#isModifyFeatureEnable() mapWidget
+DEFAULT if Util#isLogicalAndTerm(PlanRecord) Util p
+DEFAULT if EQ coords null battlechallenge.Ship
+DEFAULT if EQ 0 com.parc.ccn.library.io._blockReadStream#available() _blockReadStream
+DEFAULT if com.sk89q.worldedit.blocks.BlockType#isContainerBlock() com.sk89q.worldedit.blocks.BlockType com.sk89q.worldedit.blocks.BaseBlock#getType() bb
+DEFAULT if android.content.SharedPreferences#contains(java.lang.String) sharedPrefs key
+DEFAULT if INSTANCEOF net.minecraft.src.DamageSource#getEntity() net.minecraft.src.EntityLiving damageSource
+DEFAULT if EQ returnedTag null
+DEFAULT if NE topentry null
+DEFAULT if status400 edu.uml.cs.isense.amusement.AmusementPark
+DEFAULT if net.sf.sveditor.core.parser.fLexer#peekOperator(java.lang.String) fLexer "("
+DEFAULT if android.util.Log#isLoggable() android.util.Log LogTag.APP Log.VERBOSE
+DEFAULT if INSTANCEOF entity org.bukkit.entity.Player net.aufdemrand.denizen.objects.dEntity
+DEFAULT if java.lang.String#equals(java.lang.Object) action "list"
+DEFAULT if EQ i java.util.LinkedList#size() ll
+DEFAULT if org.springframework.social.twitter.TwitterApi#isAuthorizedForUser() twitterApi com.springsource.greenhouse.invite.TwitterInviteController
+DEFAULT if client
+DEFAULT if java.sql.ResultSet#next() tabla
+DEFAULT if #equals(java.lang.String) org.jdom.Element#getName() "dataset" elt
+DEFAULT if INSTANCEOF context org.eclipse.dltk.ti.BasicContext
+DEFAULT if #equals() ru.tsu.inf.atexant.nlp.Synset#getPOS() ru.tsu.inf.atexant.nlp.Synset#getPOS() a b
+DEFAULT if INSTANCEOF classifier org.eclipse.ocl.ecore.OrderedSetType
+DEFAULT if NOT pressed scripting.ButtonBehavior
+DEFAULT if moreAvailable
+DEFAULT if #equals(java.lang.String) android.net.Uri#getScheme() "file" uri
+DEFAULT if java.util.Iterator#hasNext() iosParameters
+DEFAULT if #equals(java.lang.String) cz.cvut.fel.reposapi.assembla.client.Space#getName() name space
+DEFAULT if com.sun.tools.javafx.code.JavafxSymtab#isRunMethod() syms owner com.sun.tools.javafx.code.JavafxTypes sym
+DEFAULT if NE genExt null
+DEFAULT if glLineBufferInitialized com.metsci.glimpse.painter.shape.PolygonPainter$LoadedGroup
+DEFAULT if useAll
+DEFAULT if DEBUG ca.idi.tekla.TeclaApp
+DEFAULT if EQ chgs adds
+DEFAULT if EQ ex null
+DEFAULT if com.oresomecraft.OresomeBattles.api.events.BattleEndEvent#get(java.lang.String) event name com.oresomecraft.BattleMaps.maps.Mayhem
+DEFAULT if EQ aRoot null
+DEFAULT if java.lang.String#endsWith(java.lang.String) java.lang.String#toLowerCase(java.util.Locale) #toLowerCase() projectNameSpace ENGLISH java.util.Locale ApplicationMetadata.INSTANCE#getName() ApplicationMetadata.INSTANCE
+DEFAULT if org.eigenbase.sql.validate.Util#match(boolean,java.lang.String) org.eigenbase.sql.validate.Util caseSensitive columnName org.eigenbase.sql.validate.RelDataTypeField#getName() field
+DEFAULT if hasCritError org.sleuthkit.autopsy.casemodule.AddImageWizardPanel2$AddImgTask
+DEFAULT if EQ values null
+DEFAULT if EQ i 9
+DEFAULT if cpw.mods.fml.relauncher.Side#isClient() side
+DEFAULT if #getUnicodeNormalization() #getGlobalConfig() org.logicprobe.LogicMail.conf.MailSettings#getInstance() org.logicprobe.LogicMail.conf.MailSettings
+DEFAULT if #equals() agai.unit.AGUnit#getDef() #getUnit() unit agai.manager.list#get(int) list i
+DEFAULT if INSTANCEOF petEntity de.Keyle.MyPet.entity.types.zombie.EntityMyZombie this de.Keyle.MyPet.entity.ai.attack.MyPetAIMeleeAttack
+DEFAULT if #willEraseToObject(<unknown>) com.redhat.ceylon.compiler.codegen.ExpressionTransformer com.redhat.ceylon.compiler.typechecker.tree.Tree.Primary#getTypeModel() primary
+DEFAULT if skip
+DEFAULT if GT page 0
+DEFAULT if #equals(java.lang.String) #getText() "" java.util.LinkedList#get(int) textList i de.uniluebeck.itm.icontrol.gui.view.Gui
+DEFAULT if java.util.List#isEmpty() actionList
+DEFAULT if request.method#equals(java.lang.String) method "HEAD" request
+DEFAULT if starter.ContextApp$EnvSettings#isHSQL() starter.ContextApp$EnvSettings
+DEFAULT if java.lang.String#equals(java.lang.Object) "user" javax.swing.text.html.HTML$Tag#toString() tag
+DEFAULT if railo.transformer.library.tag.TagLibTag#getHasBody() tlt
+DEFAULT imagePre android.graphics.Bitmap <_LABELEMPTY_> <_LABELEMPTY_> onlySave null cgeo.geocaching.network.HtmlImage#loadImageFromStorage(java.lang.String) cgeo.geocaching.network.HtmlImage cgeo.geocaching.network.HtmlImage url
+DEFAULT if NE wd null
+DEFAULT if NE bitmap null
+DEFAULT if NE newEffect NEG 1
+DEFAULT if OR NE EQ currFreq plottedFreqType edu.brown.cs32.atian.crassus.gui.mainwindow.plot.CrassusPlotPane currFreq MINUTELY edu.brown.cs32.atian.crassus.backend.StockFreqType
+DEFAULT if #isEmpty(<unknown>) eu.comexis.napoleon.shared.validation.PartyValidator #getFirstName() party
+DEFAULT if AND EQ java.lang.String#equals(java.lang.Object) index 36 "back" option
+DEFAULT if isShowSummary
+DEFAULT if org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget#isAvailable() jdiTarget
+DEFAULT if NE newConfig null
+DEFAULT if org.archive.wayback.webapp.AccessPoint#isEnableMemento() this org.archive.wayback.webapp.AccessPoint
+DEFAULT if java.lang.Enum#equals(java.lang.Object) CONFLICTS org.eclipse.jgit.api.CheckoutResult#getStatus() org.eclipse.jgit.api.CheckoutResult$Status org.eclipse.jgit.api.CheckoutCommand#getResult() co
+DEFAULT font org.eclipse.swt.graphics.Font <_LABELEMPTY_> <_LABELEMPTY_> EQ org.eclipse.jface.resource.JFaceResources#getDialogFont() org.eclipse.jface.resource.JFaceResources#getFont(java.lang.String) fSymbolicFontName null org.eclipse.xtext.xtend2.ui.hover.XtendInformationControl org.eclipse.jface.resource.JFaceResources org.eclipse.jface.resource.JFaceResources fSymbolicFontName org.eclipse.xtext.xtend2.ui.hover.XtendInformationControl
+DEFAULT if NE jsProperty null
+DEFAULT if NE java.lang.String#indexOf(int) NEG binary '<_LABELSPACE_>' 1
+DEFAULT if java.nio.channels.SelectionKey#isReadable() key
+DEFAULT if org.geppetto.simulation.SessionContext#isRunning() _sessionContext org.geppetto.simulation.SimulationService
+DEFAULT if NE id IDENTIFIER org.netbeans.api.javafx.lexer.JFXTokenId
+DEFAULT if #getBoolean(java.lang.String) #getConfig() "Enable-Enchantments" net.lordsofcode.zephyrus.Zephyrus
+DEFAULT if AND NOT NOT java.lang.Double#isInfinite(double) java.lang.Double real java.lang.Double#isInfinite(double) java.lang.Double imag
+DEFAULT if charsetSet io.undertow.servlet.spec.HttpServletResponseImpl
+DEFAULT if mOpened org.coolreader.crengine.ReaderView
+DEFAULT if NE org.patientview.model.Patient#getRadarNo() null patient
+DEFAULT if NE configFileName null org.hornetq.jms.server.impl.JMSServerManagerImpl
+DEFAULT if EQ java.util.List#size() maxGlass glasses engine.agent.TruckAgent engine.agent.TruckAgent
+DEFAULT if NOT org.eclipse.equinox.internal.p2.ui.sdk.externalFiles.FILE_PROTOCOL#equalsIgnoreCase(java.lang.String) org.eclipse.equinox.internal.p2.ui.sdk.externalFiles.FILE_PROTOCOL java.net.URL#getProtocol() location
+DEFAULT if #equals() com.ggvaidya.TaxonDNA.DNA.Sequence#getGenusName() com.ggvaidya.TaxonDNA.DNA.Sequence#getGenusName() query seq
+DEFAULT if syncAutomatically
+DEFAULT if EQ hasTitle 0
+DEFAULT if NE resolver null
+DEFAULT if params.sid#isEmbedded() sid params
+DEFAULT if AND NE jason.asSyntax.Term#isInternalAction() value null jason.asSyntax.VarTerm jason.asSyntax.VarTerm#getValue() jason.asSyntax.VarTerm
+DEFAULT if java.lang.String#equals(java.lang.Object) attribute "#"
+DEFAULT text java.lang.String <_LABELEMPTY_> <_LABELEMPTY_> NE com.sun.javadoc.SeeTag#label() com.sun.javadoc.SeeTag#text() com.sun.javadoc.SeeTag#label() null tag tag tag
+DEFAULT if EQ java.util.List#size() 0 cell
+DEFAULT if java.util.Map#containsKey(java.lang.Object) _dict _classes org.lispin.jlispin.core.Lobject org.lispin.jlispin.core.Lobject
+DEFAULT if EQ org.eclipse.jgit.revwalk.RevCommit#getTree() null parent
+DEFAULT <_LABELEMPTY_> BITAND android.view.MotionEvent#getAction() ACTION_MASK e android.view.MotionEvent
+DEFAULT if #equals() android.content.Intent#getAction() ConnectivityManager.CONNECTIVITY_ACTION intent
+DEFAULT if com.android.internal.policy.impl.keyguard.KeyguardHostView#dispatchKeyEvent(android.view.KeyEvent) mKeyguardView event com.android.internal.policy.impl.keyguard.KeyguardViewManager
+DEFAULT if java.lang.String#equals(java.lang.Object) changeModeTo "Classic" SettingsFrame
+DEFAULT if org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPTemplates#isDependentType(org.eclipse.cdt.core.dom.ast.IType) org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPTemplates implicitType
+DEFAULT if #equalsIgnoreCase(java.lang.String) org.eclipse.core.resources.IResource#getFileExtension() "isa" resource
+DEFAULT if NE constructor null
+DEFAULT if #equals(java.lang.String) com.vainolo.phd.opm.model.OPMProcess#getName() "Sleep" process
+DEFAULT if java.lang.String#equals(java.lang.Object) comp "{com.whatsapp/com.whatsapp.Conversation}"
+DEFAULT if com.cdm.SString#equals() buttonName SString.SIZE_BUTTON
+DEFAULT if NOT java.util.Stack#empty() IfElseStack com.rfo.basic.Run
+DEFAULT if org.eclipse.core.resources.IProject#hasNature(java.lang.String) project NATURE_ID org.eclipse.jdt.core.JavaCore
+DEFAULT if com.subquantum.game.Circle#checkColision() com.subquantum.game.Circle
+DEFAULT if android.widget.CheckBox#isChecked() has_final_due_date edu.worcester.cs499summer2012.activity.AddTaskActivity
+DEFAULT if org.slf4j.Logger#isDebugEnabled() log pt.com.broker.net.BrokerProtocolHandler
+DEFAULT if INSTANCEOF o brooklyn.entity.basic.EntityLocal
+DEFAULT if ENABLE_224364 org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.SemanticUtil
+DEFAULT <_LABELEMPTY_> type entry
+DEFAULT if org.eclipse.birt.report.engine.layout.pdf.util.PropertyUtil#isInlineElement() org.eclipse.birt.report.engine.layout.pdf.util.PropertyUtil content
+DEFAULT if AND isStor org.drftpd.master.BaseFtpConnection#isAborted() conn
+DEFAULT if com.andrada.sitracker.db.beans.Publication#getLoading() publication
+DEFAULT if de.peeeq.wurstscript.translation.imtranslation.ClassTranslator#hasOwnDestroy(de.peeeq.wurstscript.ast.ClassDef,de.peeeq.wurstscript.ast.ClassDef) de.peeeq.wurstscript.translation.imtranslation.ClassTranslator sc classDef de.peeeq.wurstscript.translation.imtranslation.ClassTranslator
+DEFAULT if edu.osu.cse.meisam.interpreter.Lexer#isDot(char) edu.osu.cse.meisam.interpreter.Lexer nextChar
+DEFAULT if #equals() MissionAllowanceType.ZONE#name() allowanceType MissionAllowanceType.ZONE affectedMission
+DEFAULT if isiConomy plugin com.craftyn.casinoslots.slot.TypeData
+DEFAULT if com.android.systemui.statusbar.halo.ExtendedPropertiesUtils#isTablet() com.android.systemui.statusbar.halo.ExtendedPropertiesUtils
+DEFAULT <_LABELEMPTY_> operator com
+DEFAULT if EQ difficultyID 3 TitleMenu.difficulty
+DEFAULT if NE lead NEG poker.Hand 1
+DEFAULT if <_LABELEMPTY_> org.wikipedia.Wiki#exists(java.lang.String) 0 wiki title
+DEFAULT <_LABELEMPTY_> java.lang.String#charAt(int) token 0
+DEFAULT if NE response null
+DEFAULT if EQ _schoolID pendingSchoolId this se.idega.idegaweb.commune.school.presentation.SchoolAdminOverview
+DEFAULT if AND required exists
+DEFAULT if #isConnected() erki.xpeter.con.irc.IrcConnection
+DEFAULT if EQ COMMENT type com.google.caja.lexer.HtmlTokenType t
+DEFAULT if net.sf.freecol.common.model.Building#canAutoProduce() net.sf.freecol.common.model.Building
+DEFAULT if INSTANCEOF org.obiba.magma.MagmaRuntimeException#getCause() org.obiba.magma.support.DatasourceParsingException e
+DEFAULT if AND org.eclipse.core.resources.IFolder#exists() org.eclipse.core.resources.IFolder#isAccessible() folder folder
+DEFAULT if NE state null this edu.brown.hstore.txns.LocalTransaction
+DEFAULT if regenerateChunk
+DEFAULT if NOT mHasNext com.android.gallery3d.ui.PositionController
+DEFAULT if GL_INTEL_map_texture caps
+DEFAULT if java.lang.String#equals(java.lang.Object) path "php://output"
+DEFAULT if showSecondRow
+DEFAULT if NOT com.tuenti.voice.example.ui.connection.ConnectionActivity#isVoiceClientServiceRunning() com.tuenti.voice.example.ui.connection.ConnectionActivity
+DEFAULT if filesystem.SDFS#isAvailable(filesystem.FileIdentifier) filesystem.SDFS fileIdentifier
+DEFAULT if uk.me.parabola.imgfmt.app.net.RouteArc#isInternal() uk.me.parabola.imgfmt.app.net.RouteArc
+DEFAULT if java.lang.String#equals(java.lang.Object) eventName STEP StaXParser
+DEFAULT <_LABELEMPTY_> eventType
+DEFAULT if java.lang.String#startsWith(java.lang.String) applicationConfigLocation "classpath:"
+DEFAULT if NE pingKeepAliveTimeoutTask null gov.nist.javax.sip.stack.ConnectionOrientedMessageChannel
+DEFAULT if java.util.TreeMap#containsKey(int) idToNode startId es.eucm.eadventure.editor.control.vignette.VignetteConversation
+DEFAULT if org.springframework.data.simpledb.reflection.FieldTypeIdentifier#isOfType(java.lang.reflect.Field) org.springframework.data.simpledb.reflection.FieldTypeIdentifier propertyField FieldType.PRIMITIVE FieldType.CORE_TYPE
+DEFAULT if #contains(java.lang.String) org.mulgara.server.ServerInfo#getHostnameAliases() host org.mulgara.server.ServerInfo
+DEFAULT if #equals() org.montrealtransit.android.provider.StmStore.BusLine#getNumber() org.montrealtransit.android.provider.StmStore.BusLine#getNumber() busLine busLine this org.montrealtransit.android.activity.BusStopInfo
+DEFAULT if NOT java.lang.String#equals(java.lang.Object) keyString searchText this DateQuerySearch
+DEFAULT if LE PLUS fullStop start fullLen
+DEFAULT if <_LABELEMPTY_> NE NOT NE serverUrls null org.codinjutsu.tools.mongo.ServerConfiguration java.util.List#equals(java.lang.Object) serverUrls serverUrls org.codinjutsu.tools.mongo.ServerConfiguration that serverUrls null that
+DEFAULT return <_LABELEMPTY_> EQ 0 java.util.ArrayList#size() array null array
+DEFAULT if entranceSuccessful
+DEFAULT if NOT isAdded com.leggo.ManageActivity
+DEFAULT if NE vecContent null
+DEFAULT if cpw.mods.fml.common.Loader#isModLoaded(java.lang.String) cpw.mods.fml.common.Loader "gregtech_addon"
+DEFAULT if java.lang.String#startsWith(java.lang.String) java.io.File#getPath() java.io.File#getPath() exactPath exactBase
+DEFAULT if quickfix.SessionSettings$Tokenizer#isValueCharacter(char) quickfix.SessionSettings$Tokenizer ch quickfix.SessionSettings$Tokenizer
+DEFAULT if GT java.util.List#size() 0 rightToolBarItems org.jboss.tools.jsf.vpe.richfaces.template.RichFacesToolBarTemplate$SourceToolBarItems
+DEFAULT = gestureDetector <_LABELEMPTY_> universe.constellation.orion.viewer.selection.TouchAutomata GE java.lang.Object() <_LABELEMPTY_> sdkVersion 8 activity this universe.constellation.orion.viewer.selection.TouchAutomata GE java.lang.Object() null sdkVersion 5 activity this universe.constellation.orion.viewer.selection.TouchAutomata
+DEFAULT if org.apache.fop.pdf.PDFState#setColor(java.awt.Color) graphicsState c org.apache.fop.svg.PDFGraphics2D
+DEFAULT org.apache.commons.logging.Log#error(java.lang.Object,java.lang.Throwable) LOG PLUS org.apache.hadoop.hbase.RemoteExceptionHandler#checkIOException(java.io.IOException) org.apache.hadoop.hbase.regionserver.MemStoreFlusher "Cache<_LABELSPACE_>flush<_LABELSPACE_>failed" <_LABELEMPTY_> NE PLUS "" region null "<_LABELSPACE_>for<_LABELSPACE_>region<_LABELSPACE_>" org.apache.hadoop.hbase.util.Bytes#toStringBinary() org.apache.hadoop.hbase.util.Bytes org.apache.hadoop.hbase.regionserver.HRegion#getRegionName() region org.apache.hadoop.hbase.RemoteExceptionHandler e
+DEFAULT if AND vararg1 NOT vararg2
+DEFAULT if org.json.JSONObject#has(java.lang.String) rule "ip_protocol"
+DEFAULT if AND EQ NOT #getPath() null resource ch.entwine.weblounge.common.content.ResourceUtils#equalsByIdOrPath(ch.entwine.weblounge.common.content.ResourceURI) ch.entwine.weblounge.common.content.ResourceUtils uri #getURI() this ch.entwine.weblounge.contentrepository.impl.operation.MoveOperationImpl resource
+DEFAULT <_LABELEMPTY_> <_LABELEMPTY_> vertexCodes j
+DEFAULT if #get(<unknown>) com.dumptruckman.chestrestock.DefaultCRChest com.dumptruckman.chestrestock.UNIQUE
+DEFAULT if cz.incad.kramerius.processes.States#one(java.util.List) cz.incad.kramerius.processes.States childStates States.FAILED States.WARNING
+DEFAULT if EQ <_LABELEMPTY_> HOARD playerStage j skittles.g2.KnowledgeBase skittles.g2.KnowledgeBase$STAGE
+DEFAULT return <_LABELEMPTY_> GT java.lang.Object() null java.util.List#size() 0 enrollmentRecords org.motechproject.server.messagecampaign.service.CampaignEnrollmentRecord#getExternalId() org.motechproject.server.messagecampaign.service.CampaignEnrollmentRecord#getCampaignName() org.motechproject.server.messagecampaign.service.CampaignEnrollmentRecord#getStartDate() org.motechproject.server.messagecampaign.service.CampaignEnrollmentRecord#getStatus() campaignEnrollmentRecord campaignEnrollmentRecord campaignEnrollmentRecord campaignEnrollmentRecord
+DEFAULT if edu.smcm.gamedev.butterseal.BSTile#hasProperty(java.lang.String,java.lang.String) adj playerLevel "wall" "true" currentMap state edu.smcm.gamedev.butterseal.BSPlayer
+DEFAULT if #isSubDirMode() org.primefaces.extensions.optimizerplugin.ResourcesSetAdapter#getAggregation() rsa
+DEFAULT if mEditFlag org.g_okuyama.log.RegisterActivity
+DEFAULT return <_LABELEMPTY_> contentAssistMode java.lang.Object() null org.eclipse.cdt.internal.core.parser.scanner2.BaseScanner tCOMPLETION MAX_VALUE null MAX_VALUE org.eclipse.cdt.core.parser.IToken java.lang.Integer java.lang.Integer
+DEFAULT if NE method null
+DEFAULT if NOT #isEmpty() org.eclipse.swt.widgets.Text#getText() description de.opalproject.vespucci.navigator.wizards.NewEnsembleWizardPage
+DEFAULT if NE org.melati.poem.Persistent#getTable() null org.melati.poem.Persistent
+DEFAULT de.anomic.yacy.yacyPeerActions#put() mySeed yacySeed.ISPEED <_LABELEMPTY_> seedDB de.anomic.yacy.yacyPeerActions OR "unknown" java.lang.Long#toString(long) EQ EQ indexedcdiff 0 uptimediff 0 java.lang.Long DIV indexedcdiff uptimediff
+DEFAULT if org.icepdf.core.pobjects.graphics.OptionalContentState#isVisible() optionalContentState
+DEFAULT if java.lang.String#equals(java.lang.Object) pluginName "DstIndex"
+DEFAULT if NOT STO#isModLValue() thisArg
+DEFAULT if INSTANCEOF element org.eclipse.mylyn.tasks.core.ITask
+DEFAULT if org.eclipse.mylar.provisional.tasklist.AbstractRepositoryConnector#retrieveContext(org.eclipse.mylar.provisional.tasklist.TaskRepository,org.eclipse.mylar.provisional.tasklist.AbstractRepositoryTask,org.eclipse.mylar.provisional.tasklist.IRemoteContextDelegate) connector repository task delegate org.eclipse.mylar.internal.tasklist.ui.wizards.ContextRetrieveWizard org.eclipse.mylar.internal.tasklist.ui.wizards.ContextRetrieveWizard
+DEFAULT if com.sun.faces.taglib.jsf_core.IdTagParserImpl#isJstlTag(com.sun.faces.taglib.FacesValidator,java.lang.String,java.lang.String) com.sun.faces.taglib.jsf_core.IdTagParserImpl validator ns ln
+DEFAULT if IrisActive com.wormhole_xtreme.model.Stargate
+DEFAULT if EQ ch.hsr.objectCaching.action.result.TimeRecord#getActionTyp() TOTAL_ACTION_TIME records ch.hsr.objectCaching.action.result.Result.BasicAction
+DEFAULT if LE #compareTo(java.math.BigDecimal) 0 org.mifos.dto.domain.AccountPaymentParametersDto#getPaymentAmount() ZERO cumulativePayment java.math.BigDecimal
+DEFAULT if NE prev null
+DEFAULT if EQ delay 0 this name.richardson.james.bukkit.timedmessages.management.StartCommand
+DEFAULT if org.glowacki.core.dungen.MapNode#isWall() org.glowacki.core.dungen.MapNode
+DEFAULT if java.util.Set#remove(org.dcache.pool.repository.StickyRecord) _sticky org.dcache.pool.repository.StickyRecord(java.lang.String,long) org.dcache.pool.repository.meta.db.CacheRepositoryEntryState owner expire
+DEFAULT if EQ javax.naming.directory.SearchControls#getReturningAttributes() null controls
+DEFAULT if EQ edu.ch.unifr.diuf.testing_tool.Server#getUseZookeeper() NEG server 1
+DEFAULT if EQ text null groovy.lang.GString
+DEFAULT if NE rootNode null org.openspotlight.graph.persistence.SLPersistentTreeSessionImpl
+DEFAULT stateCount int <_LABELEMPTY_> <_LABELEMPTY_> NE org.jtrim.swing.component.MultiAsyncDataState#getSubStateCount() 0 dataStates null dataStates
+DEFAULT if org.eclipse.birt.report.engine.emitter.wpml.context#isFirstInline() context
+DEFAULT if java.lang.String#equals(java.lang.Object) WILDCARD <_LABELEMPTY_> org.mobicents.servlet.management.client.router.RequestColumnsContainer COLUMNS col org.mobicents.servlet.management.client.router.RequestColumnsContainer
+DEFAULT if java.lang.String#equals(java.lang.Object) arg PREVIOUS_DAY_BEGIN edu.sc.seis.sod.tools.TimeParser
+DEFAULT if #equals(java.lang.String) com.punchline.javalib.entities.Entity#getType() "Player" e
+DEFAULT if EQ i index
+DEFAULT if java.lang.String#equals(java.lang.Object) qname TAG_SECTION org.ini4j.IniParser$1XML2Ini
+DEFAULT if java.lang.String#equals(java.lang.Object) idAnonymat ""
+DEFAULT if EQ input null
+DEFAULT if #contains(java.lang.String) com.google.gwt.dom.client.Element#getId() CLU_GERONLY occurrenceE org.werti.enhancements.client.GerundsCloze
+DEFAULT if NOT java.net.ServerSocket#isClosed() fServerSocket org.eclipse.jdi.internal.connect.SocketTransportService
+DEFAULT if NOT java.util.Hashtable#containsKey(java.lang.Object) properties key
+DEFAULT if EQ num roundNum
+DEFAULT if NOT first
+DEFAULT if java.lang.String#equals(java.lang.Object) key DataStorageConfig.LOCAL_STORAGE_ROOT_DIRECTORY_NAME
+DEFAULT if #equals(java.lang.String) #getName() "datype" java.util.Map.Entry#getEStructuralFeature() entry
+DEFAULT if org.eclipse.bpmn2.modeler.core.merrimac.dialogs.AbstractObjectEditingDialog#isAbortOnCancel() org.eclipse.bpmn2.modeler.core.merrimac.dialogs.AbstractObjectEditingDialog
+DEFAULT if EQ rowContents null
+DEFAULT if java.lang.String#equals(java.lang.Object) mode "update" com.amca.android.replace.UserForm
+DEFAULT if INSTANCEOF p org.basex.query.up.primitives.Add
+DEFAULT if EQ #getRowCount() 0 org.icefaces.ace.component.datatable.DataTable
+DEFAULT if #intersect(se.llbit.math.Ray) <_LABELEMPTY_> ray boxes i se.llbit.chunky.model.BeaconModel
+DEFAULT if LT PLUS java.util.List#size() java.util.Queue#size() 1 idleThreads this au.edu.csu.bofsa.Scheduler threads this au.edu.csu.bofsa.Scheduler
+DEFAULT if EQ stateValue null
+DEFAULT = y <_LABELEMPTY_> java.util.Scanner#hasNextInt() java.util.Scanner#nextInt() NEG sc sc 1
+DEFAULT if com.runwaysdk.constants.LocalProperties#isRunwayEnvironment() com.runwaysdk.constants.LocalProperties
+DEFAULT if com.itmill.toolkit.terminal.gwt.client.UIDL#getBooleanAttribute(java.lang.String) uidl "selected"
+DEFAULT if checkable
+DEFAULT if NOT java.util.List#isEmpty() org.eclipse.jst.j2ee.internal.webservice.helper.WebServicesManager#getWorkspace14ServiceRefs(java.util.List) org.eclipse.jst.j2ee.internal.webservice.helper.WebServicesManager wsClientEdits
+DEFAULT if NOT org.eclipse.jface.text.source.projection.ProjectionViewer#isSegmented() org.eclipse.jface.text.source.projection.ProjectionViewer
+DEFAULT if java.lang.String#equals(java.lang.Object) info "group"
+DEFAULT if java.lang.String#equals(java.lang.Object) value RubyCore.WARNING
+DEFAULT if AND NE EQ autoBuildJob null org.eclipse.core.runtime.jobs.Job#getState() RUNNING autoBuildJob org.eclipse.core.runtime.jobs.Job
+DEFAULT if fix com.inmobi.databus.validator.MergedStreamValidator
+DEFAULT if NOT isAPIM
+DEFAULT if NOT java.util.List#isEmpty() productFamilyChildrens
+DEFAULT if NOT net.floodlightcontroller.util.TimedCache#update() swConnectCache net.floodlightcontroller.core.IOFSwitch#getId() net.floodlightcontroller.core.internal.Controller sw
+DEFAULT if NOT java.util.List#isEmpty() autobidList
+DEFAULT if EQ p JAVA Media.Player
+DEFAULT if singletonConnected org.elasticsearch.discovery.fabric.FabricDiscovery
+DEFAULT if actual org.apache.commons.jxpath.ri.model.VariablePointer
+DEFAULT if java.lang.String#equals(java.lang.Object) clientDomain cookieDomain com.sun.identity.qatest.clientsamples.AMSamples
+DEFAULT if EQ currentChar EOL frontend.Source
+DEFAULT if org.lwjgl.input.Mouse#isButtonDown(int) org.lwjgl.input.Mouse 1
+DEFAULT return <_LABELEMPTY_> EQ SC_OK status status null javax.servlet.http.HttpServletResponse
+DEFAULT if LT contentLength 0
+DEFAULT if addItem
+DEFAULT if debug com.github.rnewson.couchdb.lucene.SearchRequest
+DEFAULT if <_LABELEMPTY_> NE NOT NOT index traverseIndexCopy javax.microedition.lcdui.FormLFImpl#itemCompletelyVisible(javax.microedition.lcdui.ItemLFImpl) javax.microedition.lcdui.FormLFImpl itemLF javax.microedition.lcdui.FormLFImpl#itemPartiallyVisible(javax.microedition.lcdui.ItemLFImpl) javax.microedition.lcdui.FormLFImpl itemLF
+DEFAULT <_LABELEMPTY_> stream <_LABELEMPTY_> java.nio.file.DirectoryStream <_LABELEMPTY_> java.nio.file.Files#newDirectoryStream(java.nio.file.Path) final java.nio.file.Files path child stream if java.nio.file.Path <_LABELEMPTY_> java.nio.file.Files#isDirectory(java.nio.file.Path,java.nio.file.LinkOption[]) THEN ELSE java.nio.file.Files child org.mosaic.launcher.logging.LoggingResolver#deletePath(java.nio.file.Path) org.mosaic.launcher.logging.LoggingResolver child java.nio.file.Files#delete(java.nio.file.Path) java.nio.file.Files child
+DEFAULT if NE rowSets null
+DEFAULT if NOT #equals(java.lang.String) org.amanzi.neo.loader.ams.commands.AbstractAMSCommand#getName() UNSOLICITED command org.amanzi.neo.loader.AMSLoader
+DEFAULT if EQ position null org.xmlvm.test.iphone.ifireworks.Spark
+DEFAULT if GT distance 0
+DEFAULT if java.lang.String#contains(java.lang.CharSequence) java.lang.String#toLowerCase() java.lang.String#toLowerCase() msg identifyMsg
+DEFAULT if AND NE GE currentFocused null android.view.View#getLeft() android.view.View#getLeft() nextFocused currentFocused
+DEFAULT if java.io.File#exists() imageFile
+DEFAULT if #isVirtual() org.cytoscape.model.CyColumn#getVirtualColumnInfo() column
+DEFAULT if NE edu.cs319.client.WindowClient#getPrivLevel() OBSERVER edu.cs319.client.WindowClient$30 edu.cs319.server.CoLabPrivilegeLevel
+DEFAULT if de.tuilmenau.ics.fog.routing.hierarchical.management.Cluster#hasLocalCoordinator() tLocallyKnownNeighborCluster
+DEFAULT if NOT OR INSTANCEOF INSTANCEOF element org.eclipse.mylar.tasks.core.AbstractRepositoryQuery element org.eclipse.mylar.tasks.core.TaskCategory
+DEFAULT if NOT PowerManager.WakeLock#isHeld() pwl org.sipdroid.sipua.ui.Receiver
+DEFAULT if isRemote worldObj
+DEFAULT if #equals(org.eclipse.compare.CompareEditorInput) org.eclipse.team.internal.ui.synchronize.actions.IEditorPart#getEditorInput() input part
+DEFAULT if #equals() org.eclipse.ui.IViewReference#getId() DeviceInspectorView.ID ivr
+DEFAULT if LE <_LABELEMPTY_> 0 data i
+DEFAULT if AND NOT GT gui.GUI_Lane#checkLane() guiLane agents.LaneAgent holding 0
+DEFAULT if showLoaded this nl.lolmen.sortal.Main
+DEFAULT if org.rascalmpl.interpreter.result.AbstractFunction#match(org.eclipse.imp.pdb.facts.type.Type) candidate tuple
+DEFAULT str org.jruby.runtime.builtin.IRubyObject <_LABELEMPTY_> <_LABELEMPTY_> EQ <_LABELEMPTY_> #newString(java.lang.String) length 2 args args 1 #getRuntime() "" org.jruby.ext.openssl.SSLSocket
+DEFAULT if com.csipsimple.service.UAStateReceiver#handleHeadsetButton() com.csipsimple.service.UAStateReceiver$HeadsetButtonReceiver
+DEFAULT if java.util.Map#containsKey(long) dupReconMap reconID com.metaweb.gridworks.operations.ReconMarkNewTopicsOperation$1
+DEFAULT if org.codinjutsu.tools.jenkins.JenkinsConfiguration#isServerUrlSet() configuration org.codinjutsu.tools.jenkins.logic.JenkinsBrowserLogic
+DEFAULT if isImmediate
+DEFAULT if java.lang.String#matches(java.lang.String) id "^Zeitronix.*"
+DEFAULT if android.view.View#isEnabled() mAccountSpinner com.android.email.activity.ActionBarController
+DEFAULT if java.lang.String#equals(java.lang.Object) <_LABELEMPTY_> "-size" args i
+DEFAULT if EQ burst length lengthOfIObursts activeProcess
+DEFAULT if com.redhat.ceylon.compiler.java.codegen.AbstractTransformer#isCeylonCallable(com.redhat.ceylon.compiler.typechecker.model.ProducedType) com.redhat.ceylon.compiler.java.codegen.AbstractTransformer com.redhat.ceylon.compiler.typechecker.model.TypedDeclaration#getType() typeDecl
+DEFAULT if kick_unregistered net.netmanagers.community.Main
+DEFAULT if #containsEnchantment() org.bukkit.entity.Player#getItemInHand() Enchantment.DIG_SPEED player
+DEFAULT if org.eclipse.core.internal.resources.IProject#equals(org.eclipse.core.internal.resources.IProject) project context
+DEFAULT if #equals() org.mobicents.servlet.sip.testsuite.proxy.CSeqHeader#getMethod() Request.CANCEL cseq
+DEFAULT sDuration java.lang.String <_LABELEMPTY_> <_LABELEMPTY_> org.clapper.util.logging.Logger#isDebugEnabled() org.clapper.util.text.Duration#format() null log org.clapper.curn.plugins.IgnoreOldArticlesPlugIn duration
+DEFAULT if INSTANCEOF runningReasoner org.protege.editor.owl.model.inference.NoOpReasoner org.protege.editor.owl.model.inference.OWLReasonerManagerImpl
+DEFAULT if INSTANCEOF s org.napile.compiler.lang.psi.NapileDelegatorToSuperCall
+DEFAULT if de.ueller.gps.data.Configuration#getCfgBitState() de.ueller.gps.data.Configuration Configuration.CFGBIT_BACKLIGHT_ANDROID_WAKELOCK
+DEFAULT <_LABELEMPTY_> previewFormat com.google.zxing.client.android.CameraManager
+DEFAULT if java.lang.String#isEmpty() category
+DEFAULT if OR EQ restricted methodName null
+DEFAULT if isPrompting cc.warlock.client.internal.Stream
+DEFAULT if _ncConnected org.ccnx.ccn.impl.CCNNetworkChannel
+DEFAULT if EQ orientation ORIENTATION_LANDSCAPE #getConfiguration() #getResources() com.pavlukhin.acropanda.PandaBaseActivity android.content.res.Configuration
+DEFAULT if INSTANCEOF authorizationTemplate org.springframework.security.oauth2.client.OAuth2RestTemplate org.cloudfoundry.identity.uaa.login.RemoteUaaController
+DEFAULT if appletFocusWorkaround org.iplantc.de.client.views.windows.IDropLiteAppletWindow
+DEFAULT if NE bc null
+DEFAULT if #isTypeParameter(<unknown>) com.redhat.ceylon.compiler.codegen.ExpressionTransformer$NamedArgumentCallBuilder #determineExpressionType(<unknown>) com.redhat.ceylon.compiler.codegen.ExpressionTransformer$NamedArgumentCallBuilder ce com.redhat.ceylon.compiler.codegen.ExpressionTransformer$NamedArgumentCallBuilder
+DEFAULT if AND NE GT paths null length 0 paths
+DEFAULT if java.lang.String#equals(java.lang.Object) java.lang.Object#toString() "Shape" <_LABELEMPTY_> nameArray cec
+DEFAULT if native_mode org.lwjgl.opengl.MacOSXDisplay
+DEFAULT if GT java.net.URLConnection#getContentLength() 0 java.net.URL#openConnection() rVal
+DEFAULT if firstCov
+DEFAULT <_LABELEMPTY_> type
+DEFAULT if java.lang.String#equals(java.lang.Object) permission ""
+DEFAULT if org.apache.commons.logging.Log#isErrorEnabled() LOGGER com.linuxbox.enkive.web.StatsServlet
+DEFAULT if #equals() org.obiba.opal.web.model.client.magma.TableDto#getLink() org.obiba.opal.web.model.client.magma.TableDto#getLink() table org.obiba.opal.web.gwt.app.client.magma.presenter.ValuesTablePresenter$ValueSetsResourceCallback table this org.obiba.opal.web.gwt.app.client.magma.presenter.ValuesTablePresenter
+DEFAULT if EQ calculationMethod NATIVE org.openscada.hd.server.storage.calculation.CalculationMethod
+DEFAULT javax.swing.JLabel#setText(java.lang.String) titleLabel <_LABELEMPTY_> org.jdesktop.swingx.plaf.basic.BasicHeaderUI EQ "Title<_LABELSPACE_>For<_LABELSPACE_>Header<_LABELSPACE_>Goes<_LABELSPACE_>Here" org.jdesktop.swingx.JXHeader#getTitle() org.jdesktop.swingx.JXHeader#getTitle() null h h
+DEFAULT if java.util.List#contains(java.lang.Object) entries key org.jivesoftware.smack.Roster
+DEFAULT if EQ android.view.MenuItem#getItemId() logout item R.id
+DEFAULT if info.bytecraft.api.BytecraftPlayer#hasFlag() other Flag.INVISIBLE
+DEFAULT if shift
+DEFAULT if com.clockworkmod.billing.CheckPurchaseResult#isNotPurchased() result
+DEFAULT if EQ NONE action
+DEFAULT if java.lang.String#equals(java.lang.Object) token ""
+DEFAULT if NE c null
+DEFAULT if EQ declSpec null
+DEFAULT if com.android.gallery3d.filtershow.HistoryAdapter#canAddHistoryItem(com.android.gallery3d.filtershow.presets.ImagePreset) com.android.gallery3d.filtershow.HistoryAdapter preset
+DEFAULT if NOT sendMode
+DEFAULT if LE len pos
+DEFAULT timestamp long <_LABELEMPTY_> <_LABELEMPTY_> final org.thoughtcrime.securesms.database.model.MessageRecord#isOutgoing() org.thoughtcrime.securesms.database.model.MessageRecord#getDateSent() org.thoughtcrime.securesms.database.model.MessageRecord#getDateReceived() messageRecord messageRecord messageRecord
+DEFAULT status org.mariotaku.twidere.model.ParcelableStatus <_LABELEMPTY_> <_LABELEMPTY_> final NE android.os.Bundle#getParcelable() null extras null org.mariotaku.twidere.fragment.StatusFragment$StatusLoader extras org.mariotaku.twidere.fragment.INTENT_KEY_STATUS org.mariotaku.twidere.fragment.StatusFragment$StatusLoader
+DEFAULT if NOT java.lang.String#equals(java.lang.Object) value ""
+DEFAULT if #equalsIgnoreCase(java.lang.String) org.bukkit.command.Command#getName() "listkits" cmd
+DEFAULT if isStartBeforeMonday views.gui.components.JEventDisplay$EventRectangle
+DEFAULT if net.java.sip.communicator.impl.media.VideoFormat#matches(net.java.sip.communicator.impl.media.Format) sourceFormat h263Fmt
+DEFAULT if NE defaultValue null
+DEFAULT if modified who
+DEFAULT if NOT #contains(java.lang.String) org.openqa.selenium.WebDriver#getCurrentUrl() "contact.ebay.com/ws/eBayISAPI.dll?" driver com.titanium.ebaybottom.controller.PrivateMessage
+DEFAULT if com.coordinates.MiniGameCoordinate#inRange(com.coordinates.SpriteCoordinate) MATH_MINI_GAME coordinate com.gradugation.Event
+DEFAULT if java.lang.String#contains(java.lang.CharSequence) arch "Windows"
+DEFAULT if com.redhat.ceylon.compiler.java.codegen.AbstractTransformer#isOptional(com.redhat.ceylon.compiler.typechecker.model.ProducedType) com.redhat.ceylon.compiler.java.codegen.AbstractTransformer type
+DEFAULT if NOT org.jruby.runtime.builtin.IRubyObject#respondsTo(java.lang.String) io "write"
+DEFAULT if com.vaadin.terminal.gwt.client.UIDL#hasAttribute(java.lang.String) uidl "reversed"
+DEFAULT if de.fu_berlin.inf.dpp.project.ISarosSession#isStopped() sarosSession de.fu_berlin.inf.dpp.invitation.IncomingProjectNegotiation
+DEFAULT if #usesMipMapLevels() com.jme.image.Texture#getMinificationFilter() texture
+DEFAULT if java.lang.String#equals(java.lang.Object) Sirius.navigator.types.treenode.DefaultMetaTreeNode#toString() Sirius.navigator.types.treenode.DefaultMetaTreeNode#toString() thisChildNode childNode
+DEFAULT if EQ dbImage null com.utilis.game.gui.Canvas
+DEFAULT if NOT useGlReadPixels jpcsp.HLE.pspdisplay
+DEFAULT if EQ ob null
+DEFAULT if OR EQ EQ part (this) br.org.archimedes.gui.rca.editor.DrawingEditor br.org.archimedes.gui.rca.editor.DrawingEditor#getDrawing() activeDrawing br.org.archimedes.gui.rca.editor.DrawingEditor$1
+DEFAULT if NOT fixedOrder
+DEFAULT if java.lang.Double#isNaN(double) java.lang.Double v
+DEFAULT if OR AND AND EQ LE px 0 com.jpii.navalbattle.pavo.World#getScreenX() 200 w EQ LE py 0 com.jpii.navalbattle.pavo.World#getScreenY() 200 w
+DEFAULT if java.nio.Buffer#hasRemaining() unmaskedpayload org.java_websocket.framing.FramedataImpl1
+DEFAULT if org.apache.xerces.xni.parser.XMLComponentManager#getFeature(java.lang.String) componentManager SCHEMA_VALIDATION org.apache.xerces.xinclude.XIncludeHandler
+DEFAULT if net.sf.freecol.common.model.TradeRoute$Stop#isValid() stop
+DEFAULT if initialized
+DEFAULT if java.util.Iterator#hasNext() iter
+DEFAULT if org.tinyuml.ui.AppFrame#canCreateNewModel() org.tinyuml.ui.AppFrame
+DEFAULT if TARDISConstants.SCHEMATIC#equals() schm TARDISConstants.SCHEMATIC.CUSTOM
+DEFAULT if org.objenesis.JVM_NAME#startsWith() org.objenesis.JVM_NAME org.objenesis.SUN
+DEFAULT if EQ convertView null
+DEFAULT if deleteWhitelists
+DEFAULT if EQ projectFragment null
+DEFAULT if com.todoroo.astrid.actfm.sync.ActFmPreferenceService#isPremiumUser() com.todoroo.astrid.actfm.sync.ActFmPreferenceService
+DEFAULT if Main#allocateMemory(Main$Proc,int) Main$Proc this processSize Main$Proc Main$Proc
+DEFAULT if NE eventAdminTracker null org.eclipse.equinox.internal.event.mapper.EventRedeliverer
+DEFAULT if storyMode ch.bfh.ti.projekt1.sokoban.view.GameWindowView
+DEFAULT if eu.stratosphere.nephele.instance.ec2.FloatingInstance#isFromThisOwner(java.lang.String,java.lang.String) i awsAccessId awsSecretKey
+DEFAULT if org.codehaus.groovy.grails.commons.DomainClassArtefactHandler#isDomainClass(java.lang.Class) org.codehaus.groovy.grails.commons.DomainClassArtefactHandler relatedClassPropertyType
+DEFAULT if NOT com.googlecode.flyway.core.dbsupport.postgresql.PostgreSQLDbSupport#isChildTable(java.lang.String,java.lang.String) com.googlecode.flyway.core.dbsupport.postgresql.PostgreSQLDbSupport schema tableName
+DEFAULT if netscape.ldap.util.DN#isDN(java.lang.String) netscape.ldap.util.DN dn
+DEFAULT if firstTime com.google.sampling.experiential.client.InputExecutorPanel
+DEFAULT if EQ #getClass() class java.util.ListIterator#next() it sequenceplanner.model.SOP.SopNodeOperation
+DEFAULT <_LABELEMPTY_> org.xmlpull.v1.XmlPullParser#getEventType() xpp
+DEFAULT if #contains(int,int) #getSelectedArea() x y l tile tile
+DEFAULT if org.eclipse.swt.widgets.Text#isFocusControl() fTextWidth org.eclipse.gmf.runtime.diagram.ui.internal.dialogs.PageSetupConfigBlock
+DEFAULT if regenerateId lp
+DEFAULT if ProfileManager.SILENT_RINGTONE_URI#equals(android.net.Uri) ProfileManager.SILENT_RINGTONE_URI notificationRingtoneUri
+DEFAULT if java.lang.String#equals(java.lang.Object) typeName "blob"
+DEFAULT if EQ null mAudioInfoView com.android.mms.ui.SlideView
+DEFAULT if EQ item album com.gallery.GalleryRemote.MainFrame
+DEFAULT if NE entry null
+DEFAULT if INSTANCEOF targetFragment org.eclipse.uml2.uml.ExecutionSpecification
+DEFAULT if NE currentView null
+DEFAULT if #isNil() #getCurrentDirection() #getElevator() com.bzn.codestory.elevator.OneDirectionElevatorAlgorithm
+DEFAULT if LOGV Constants
+DEFAULT if screen.tools.sbs.utils.FieldString#isValid() output
+DEFAULT if org.joval.io.AbstractFilesystem$DefaultFile#isDirectory() org.joval.io.AbstractFilesystem$DefaultFile
+DEFAULT if good
+DEFAULT if it.giacomos.android.osmer.pro.locationUtils.LocationComparer#isBetterLocation(android.location.Location,android.location.Location) locationComparer location mCurrentLocation it.giacomos.android.osmer.pro.locationUtils.LocationService
+DEFAULT if GE ix java.lang.String#length() sql
+DEFAULT if JainSipUtils.singletonHeadersNames#contains(java.lang.String) JainSipUtils.singletonHeadersNames name
+DEFAULT if EQ nom nomBot
+DEFAULT if INSTANCEOF cause java.lang.RuntimeException
+DEFAULT if EQ mCdmaSubscriptionSource CDMA_SUBSCRIPTION_NV com.android.internal.telephony.cdma.CDMAPhone
+DEFAULT if NOT createdXML
+DEFAULT if java.lang.String#contains(java.lang.CharSequence) filePath "resources/custom"
+DEFAULT if com.itmill.toolkit.terminal.gwt.client.Util#isIE() com.itmill.toolkit.terminal.gwt.client.Util
+DEFAULT if NE qt null
+DEFAULT if NE localMap null com.paxxis.cornerstone.common.CornerstoneConfiguration
+DEFAULT if java.lang.String#equalsIgnoreCase(java.lang.String) "SUSP" state
+DEFAULT if chain eighteen.Board
+DEFAULT if com.android.settings.bluetooth.SettingsBtStatus#isConnectionStatusConnected(int) com.android.settings.bluetooth.SettingsBtStatus status
+DEFAULT java.lang.StringBuffer#append(java.lang.Object) sqlBuf <_LABELEMPTY_> AND org.apache.oodt.xmlps.mapping.DatabaseTable#getDefaultTableJoin() org.apache.oodt.xmlps.mapping.Mapping#getDefaultTable() NE NOT org.apache.oodt.xmlps.mapping.DatabaseTable#getDefaultTableJoin() null tbl #equals(java.lang.String) org.apache.oodt.xmlps.mapping.DatabaseTable#getDefaultTableJoin() "" tbl tbl mapping org.apache.oodt.xmlps.product.XMLPSProductHandler
+DEFAULT = startIndex <_LABELEMPTY_> LE 0 MUL is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean#getPage() 0 criteriaBean MINUS count is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean#getPage() 1 criteriaBean
+DEFAULT if com.pms.service.util.ApiUtil#isEmpty(java.lang.String) com.pms.service.util.ApiUtil signBy
+DEFAULT if NE net.pms.configuration.RendererConfiguration#getRendererName() null renderer
+DEFAULT if LT d pos org.spearce.jgit.lib.XInputStream
+DEFAULT if INSTANCEOF res javax.faces.FacesWrapper
+DEFAULT if NOT accessible
+DEFAULT if INSTANCEOF o com.android.calendar.agenda.AgendaByDayAdapter$ViewHolder
+DEFAULT if prepared com.calcprogrammer1.calctunes.MediaPlayerHandler
+DEFAULT if java.lang.Character#isJavaIdentifierStart(char) java.lang.Character java.lang.String#charAt(int) name 0
+DEFAULT compat java.lang.Boolean <_LABELEMPTY_> <_LABELEMPTY_> java.util.Map#containsKey(java.lang.Object) java.lang.Boolean#valueOf(java.lang.String) false params "compat" java.lang.Boolean java.util.Map#get(java.lang.Object) params "compat"
+DEFAULT if java.lang.Enum#equals(java.lang.Object) _state POOLS final_project.control.EventController final_project.control.EventController$State
+DEFAULT if org.javascool.gui.JVSFileEditorTabs#saveFile(java.lang.String) this fileId org.javascool.gui.JVSFileEditorTabs
+DEFAULT if NE org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext#getPluginConfigurations() null context
+DEFAULT if de.enough.polish.ui.Item#isLayoutCenter() de.enough.polish.ui.Item
+DEFAULT if NOT held
+DEFAULT if NE termWeight 0
+DEFAULT if org.eclipse.jdt.core.IMethod#isResolved() method
+DEFAULT if NE #getId() 25 java.util.ArrayList#get(int) cuisines i com.cellcity.citiguide.screen.CuisineListing
+DEFAULT if INSTANCEOF e org.tmatesoft.svn.core.internal.wc.IOExceptionWrapper
+DEFAULT if NOT #mkdirs() #getDataFolder() tk.kirlian.SignTraderWithDucks.SignTraderPlugin
+DEFAULT if NOT #equals(org.bukkit.World) org.bukkit.Location#getWorld() keepcalm.mods.bukkit.bukkitAPI.entity.BukkitEntity#getWorld() location keepcalm.mods.bukkit.bukkitAPI.entity.BukkitEntity
+DEFAULT if java.lang.String#equals(java.lang.Object) ANONYMOUS authenticationMode org.teiid.transport.SSLConfiguration org.teiid.transport.SSLConfiguration
+DEFAULT if com.android.email.SecurityPolicy.PolicySet#writeAccount(<unknown>,boolean) ps mAccount null true mContext
+DEFAULT if org.eclipse.emf.mwe.ui.internal.editor.elements.AbstractWorkflowElement#isFileProperty() element
+DEFAULT if #equals(java.lang.String) org.antlr.runtime.tree.CommonTree#getText() "" t
+DEFAULT tblIdf java.lang.String <_LABELEMPTY_> <_LABELEMPTY_> elmObjType "" eionet.meta.exports.codelist.DataElement#getTblIdentifier() elm
+DEFAULT if isWindows
+DEFAULT if AND NE java.util.regex.Matcher#matches() line null java.util.regex.Pattern#matcher(java.lang.CharSequence) GIT_PATCH_PATTERN line org.eclipse.compare.internal.core.patch.PatchReader
+DEFAULT if com.photon.phresco.framework.actions.applications.CONFIG_TYPE#equals(java.util.List) com.photon.phresco.framework.actions.applications.CONFIG_TYPE key com.photon.phresco.framework.actions.applications.Configurations
+DEFAULT if EQ res null
+DEFAULT if EQ block redstone_torch net.minecraft.init.Blocks
+DEFAULT if #isSupportedType() com.rohanclan.cfml.editors.dnd.TextTransfer#getInstance() dataType com.rohanclan.cfml.editors.dnd.TextTransfer event
+DEFAULT if hasPlatinum mPrefs com.ferg.awful.ForumsIndexFragment
+DEFAULT if #getBoolean(java.lang.String) #getConfig() "Assassin.teleport_on_deactivate" me.TfT02.Assassin.Assassin#getInstance() me.TfT02.Assassin.Assassin
+DEFAULT if EQ #getWidget() paintable com.vaadin.terminal.gwt.client.ui.VAbsoluteLayout$AbsoluteWrapper com.vaadin.terminal.gwt.client.ui.VAbsoluteLayout$AbsoluteWrapper
+DEFAULT if clearExistingMarkersBeforeApplying net.sourceforge.pmd.eclipse.runtime.cmd.ReviewCodeCmd
+DEFAULT if net.krinsoft.chat.events.WhisperMessage#isWhisperAllowed() event
+DEFAULT if NE page null
+DEFAULT if LT 0 java.util.List#size() downloads
+DEFAULT if NE scalingRule null
+DEFAULT if gameOver gm edu.brandeis.tjhickey.fireflies.GameView
+DEFAULT if EQ #indexOf(java.lang.Comparable) NEG org.jfree.data.category.DefaultCategoryDataset#getColumnKeys() columnKey dataset this org.bh.gui.chart.BHstackedBarChart 1
+DEFAULT if java.lang.String#startsWith(java.lang.String) release "yacy_emb_v"
+DEFAULT if Button.RIGHT#isDown() Button.RIGHT
+DEFAULT if AND LT NE deltaIndex 1 mGesture NONE com.android.systemui.statusbar.halo.Halo com.android.systemui.statusbar.halo.Halo$Gesture
+DEFAULT if EQ oldIndex null
+DEFAULT if GT MINUS maxItems total maxItems
+DEFAULT if NE tester null
+DEFAULT if #equals(java.lang.String) #toString() "Like" android.widget.Button#getText() b
+DEFAULT if NOT propagateKeys org.eclipse.jface.fieldassist.ContentProposalAdapter
+DEFAULT if addSecurityConstraint
+DEFAULT if org.eclipse.swt.widgets.Button#getSelection() button1 jp.hishidama.xtext.dmdl_editor.ui.wizard.page.operator.SetBranchEnumPage
+DEFAULT if java.lang.String#equals(java.lang.Object) "new-pre-tags" option
+DEFAULT if NOT writeMode this eu.stratosphere.nephele.io.channels.MemoryBuffer
+DEFAULT if NE uri null
+DEFAULT if NE lines null
+DEFAULT if NOT org.eclipse.swt.graphics.Color#equals(org.eclipse.swt.graphics.Color) fgColor origFgColor org.eclipse.nebula.widgets.nattable.style.editor.CellStyleEditorPanel
+DEFAULT if INSTANCEOF e java.lang.RuntimeException
+DEFAULT if NOT mIsSubtitleShown com.dbstar.DbstarDVB.VideoPlayer.PlayerMenu
+DEFAULT if java.lang.String#equals(java.lang.Object) "H" <_LABELEMPTY_> tokens 0
+DEFAULT if LT remainingWidth leaderLengthOptimum
+DEFAULT if NE java.lang.Object#getClass() class elementData edu.first.util.list.ArrayList java.lang.Object[]
+DEFAULT if EQ fDoctypeSystemId null org.apache.xerces.impl.XMLDocumentScannerImpl
+DEFAULT if java.lang.String#equals(java.lang.Object) org.json.JSONArray#getString(int) "error" s 0
+DEFAULT if condition
+DEFAULT if GT java.util.Set#size() 1 selectedNodes nodebox.client.NetworkView
+DEFAULT if #contains() #getType() KeyType.KEYPAIR#getType() org.jcryptool.crypto.keystore.backend.KeyStoreAlias#getKeyStoreEntryType() localKeyStoreAlias KeyType.KEYPAIR
+DEFAULT if EQ name null
+DEFAULT if EQ #getNamespace() BIOPAX c org.pathvisio.model.GpmlFormat
+DEFAULT if org.openforis.collect.model.CollectSurvey#isPublished() survey
+DEFAULT if java.util.HashMap#containsKey(java.lang.Object) mKeyLabelMap label com.android.inputmethod.accessibility.KeyCodeDescriptionMapper
+DEFAULT if NE #getExcludeAging() 0 com.sapienter.jbilling.server.user.UserDTOEx#getCustomer() dto
+DEFAULT if NE attributes null
+DEFAULT if NE nodeID null
+DEFAULT if OR EQ java.lang.String#equals(java.lang.Object) album null album org.nekocode.itunes.remote.ITunesRemoteTrack#getAlbum() remoteTrack
+DEFAULT if NE oldTopic null
+DEFAULT if java.util.Arrays#equals(byte[],byte[]) java.util.Arrays credentials storedPassword
+DEFAULT if #getBoolean() #getResources() R.bool.disable_all_security_features_for_markets org.linphone.setup.SetupActivity
+DEFAULT if <_LABELEMPTY_> isStatic i supFt
+DEFAULT if bottom
+DEFAULT if staleCache com.dmdirc.addons.ui_swing.textpane.TextPaneCanvas
+DEFAULT if sizeKnown org.openstreetmap.josm.io.ProgressInputStream
+DEFAULT if NOT #endsWith(java.lang.String) ch.o2it.weblounge.taglib.resource.request#getRequestURI() ".jsp" request
+DEFAULT if OR OR EQ OR EQ EQ EQ xx 0 xx 15 zz 0 zz 15
+DEFAULT if NOT INSTANCEOF figure org.eclipse.graphiti.platform.ga.IGraphicsAlgorithmRenderer
+DEFAULT if java.lang.String#equals(java.lang.Object) "base64" myEncoding org.tmatesoft.svn.core.internal.io.dav.handlers.DAVPropertiesHandler
+DEFAULT if org.eclipse.text.edits.TextEditProcessor#considerEdit(org.eclipse.text.edits.CopySourceEdit) processor this org.eclipse.text.edits.CopySourceEdit
+DEFAULT if com.google.common.collect.Multimap#containsEntry(cpw.mods.fml.common.network.Player,java.lang.String) activeChannels player channel cpw.mods.fml.common.network.NetworkRegistry
+DEFAULT if java.lang.String#endsWith(java.lang.String) filename "loader.xml"
+DEFAULT received java.math.BigDecimal <_LABELEMPTY_> <_LABELEMPTY_> cash payCashAmt org.compiere.pos.PosOrderModel#getPaidAmt() org.compiere.pos.PosPayment p_order org.compiere.pos.PosPayment
+DEFAULT if #isExportingSnapshot() org.broad.igv.ui.IGVMainFrame#getInstance() org.broad.igv.ui.IGVMainFrame
+DEFAULT if net.sf.gogui.gogui.GoGui#isOutOfSync() net.sf.gogui.gogui.GoGui
+DEFAULT if NE 0 org.openengsb.labs.endtoend.util.TimeoutableProcess#waitFor() process this org.openengsb.labs.endtoend.karaf.shell.KarafClientShell
+DEFAULT if com.google.gerrit.server.project.ProjectControl#isOwner() pc com.google.gerrit.httpd.rpc.project.ProjectAccessFactory
+DEFAULT if INSTANCEOF child com.vaadin.terminal.gwt.client.UIDL$XML
+DEFAULT if NE org.sola.clients.beans.digitalarchive.FileInfoListBean#getSelectedFileInfoBean() null serverFiles org.sola.clients.swing.ui.source.FileBrowserForm
+DEFAULT if NE topControl null
+DEFAULT if #equals() org.buddycloud.channelserver.pubsub.accessmodel.AccessModels#toString() AccessModels.open#toString() accessModel AccessModels.open
+DEFAULT if java.nio.ByteBuffer#hasArray() buffer org.apache.activeio.packet.ByteBufferPacket
+DEFAULT if EQ jobType STAGE_IN_JOB org.griphyn.cPlanner.classes.SubInfo
+DEFAULT if isClient tdwp_ftw.biomesop.items.projectiles.EntityMudball
+DEFAULT if NE org.sakaiproject.evaluation.logic.EvalEvaluationsLogic#getEvaluationById(java.lang.Long) null evaluationsLogic evalId org.sakaiproject.evaluation.logic.impl.entity.EvalCategoryEntityProviderImpl
+DEFAULT if NOT java.lang.String#equals(java.lang.Object) pkgName #getQualifiedNameString() pkg
+DEFAULT if java.lang.String#equals(java.lang.Object) "pre" java.lang.String#toLowerCase() JS_ENTORNO services.platino.PlatinoFirmaServiceImpl
+DEFAULT if NOT #isEmpty() org.eclipse.swt.widgets.Text#getText() query de.opalproject.vespucci.navigator.wizards.NewEnsembleWizardQueryPage
+DEFAULT if #contains(net.sf.orcc.df.Port) net.sf.orcc.df.Actor#getInputs() port actor
+DEFAULT if java.lang.String#equals(java.lang.Object) os org.eclipse.osgi.service.environment.Constants.OS_MACOSX
+DEFAULT if edu.berkeley.cs.cs162.ChatGroup#leaveGroup() group edu.berkeley.cs.cs162.User#getName() user
+DEFAULT if leader
+DEFAULT if java.io.File#exists() tools
+DEFAULT if NE serviceState null
+DEFAULT if StringConstants.GIFT#equals(java.lang.String) StringConstants.GIFT batchType
+DEFAULT if #PurchaseCommand(java.lang.String) sql <_LABELEMPTY_> org.bukkit.entity.Player#getName() plugin this net.loadingchunks.plugins.Leeroy.LeeroyCommands args 0 p
+DEFAULT if correctUserId
+DEFAULT if org.mobicents.servlet.sip.proxy.ProxyImpl#getParallel() this org.mobicents.servlet.sip.proxy.ProxyImpl
+DEFAULT if NE matcher null
+DEFAULT if needsLogging LogWriter
+DEFAULT if EQ java.util.Map#get(java.lang.Object) null settings java.lang.String#substring(int,int) p 0 java.lang.String#lastIndexOf(java.lang.String) p "/"
+DEFAULT if INSTANCEOF eContainer org.eclipse.ocl.examples.xtext.essentialocl.essentialOCLCST.ContextCS
+DEFAULT if java.util.ArrayList#contains(Models.User) activeCalendars otheruser
+DEFAULT if net.minecraft.item.ItemStack#isItemStackDamageable() itemStack
+DEFAULT if axiom.scripting.rhino.AxiomObject#areNodesEqual(axiom.objectmodel.INode,axiom.objectmodel.INode) axiom.scripting.rhino.AxiomObject newparent currparent
+DEFAULT if OR GT org.eclipse.rwt.lifecycle.IWidgetAdapter#isInitialized() tabIndex NEG 1 adapter
+DEFAULT if Constants.ACTIVITY_STATUS_REJECT#equals() Constants.ACTIVITY_STATUS_REJECT edu.wustl.catissuecore.domain.User#getActivityStatus() oldUser
+DEFAULT if org.ligi.gobandroid_hd.logic.GoMove#didCaptures() move
+DEFAULT if org.hamcrest.Matcher#matches(java.lang.Object) matcher org.eclipse.jface.action.ActionContributionItem#getAction() actionContribution
+DEFAULT if DEBUG com.anysoftkeyboard.AnySoftKeyboard
+DEFAULT if java.lang.String#equals(java.lang.Object) java.lang.Object#toString() "true" value
+DEFAULT if NOT exist
+DEFAULT if NE #getErrorMessage() null org.eclipse.mylyn.internal.bugzilla.ui.search.BugzillaSearchPage
+DEFAULT if mVisibilityGained
+DEFAULT if EQ session null
+DEFAULT if NE searchResult null
+DEFAULT if STO#isVar() stoValue
+DEFAULT if java.lang.String#contains(java.lang.CharSequence) taskId HANDLE_DELIM org.eclipse.mylar.internal.tasks.core.RepositoryTaskHandleUtil
+DEFAULT if NOT lastEsc
+DEFAULT if INSTANCEOF obj java.lang.Double
+DEFAULT if java.lang.String#startsWith(java.lang.String) number defPrefix
+DEFAULT if #isHighest() #getHierarchyLevel() de.tuilmenau.ics.fog.packets.hierarchical.clustering.RequestClusterMembership#getDestination() tRequestClusterMembership
+DEFAULT if NE org.caesarj.util.PositionedError#getTokenReference() NO_REF trouble org.caesarj.util.TokenReference
+DEFAULT if EQ j3dModel null
+DEFAULT if NE com.timsu.astrid.data.task.TaskModelForList#getCachedLabel(int) null task KEY_HIDDEN com.timsu.astrid.activities.TaskListAdapter
+DEFAULT if EQ URI_MATCHER null com.nicstrong.android.provider.GoogleDriveContentProvider
+DEFAULT if org.keycloak.forms.RealmBean#isSaas() realm org.keycloak.forms.UrlBean
+DEFAULT if java.lang.String#startsWith(java.lang.String) channelName "/service/bot"
+DEFAULT if NE world null
+DEFAULT if LE java.util.List#size() 0 listOfStorageItems
+DEFAULT if OR OR EQ OR EQ EQ EQ Lihad.Conflict.Perk#getNode() null Blacksmith Lihad.Conflict.Conflict Lihad.Conflict.Perk#getNode() null Potions Lihad.Conflict.Conflict Lihad.Conflict.Perk#getNode() null Enchantments Lihad.Conflict.Conflict Lihad.Conflict.Perk#getNode() null MystPortal Lihad.Conflict.Conflict
+DEFAULT if android.net.ConnectivityManager#getMobileDataEnabled() cm
+DEFAULT if java.util.Collection#isEmpty() instances
+DEFAULT if NOT agree
+DEFAULT if NE null selection
+DEFAULT if EQ android.view.MotionEvent#getAction() ACTION_UP ev android.view.MotionEvent
+DEFAULT if com.geored.servicios.impl.auth.GestionTokens#validarToken(java.lang.String) gestionTokens userToken com.geored.servicios.impl.ImplServicioUsuarios
+DEFAULT if EQ timestampInMilliseconds 0
+DEFAULT if java.lang.Class#isAssignableFrom(java.lang.Class) class componentType br.com.caelum.vraptor.ioc.ComponentFactory
+DEFAULT if EQ chunksCount 1
+DEFAULT if NE activePerspective null
+DEFAULT if java.lang.String#equalsIgnoreCase(java.lang.String) <_LABELEMPTY_> "acceptleave" args 0
+DEFAULT if wrapSearch
+DEFAULT if wint.lang.utils.StringUtil#isEmpty(java.lang.String) wint.lang.utils.StringUtil fieldValue
+DEFAULT if EQ suffix null org.xbill.DNS.A6Record
+DEFAULT if NOT java.lang.String#endsWith(java.lang.String) name ext ij.io.SaveDialog ij.io.SaveDialog
+DEFAULT if innerBoundaryToAdd org.geotools.gml.SubHandlerPolygon
+DEFAULT if EQ org.bukkit.Location#getBlock() null loc
+DEFAULT if NE org.blojsom.plugin.admin.event.ProcessEntryEvent#getEntry() null processBlogEntryEvent
+DEFAULT if EQ idSpecEnum null
+DEFAULT symbolContainer org.eclipse.cdt.internal.core.parser.pst.IContainerSymbol <_LABELEMPTY_> <_LABELEMPTY_> NE qualifyingSymbol org.eclipse.cdt.internal.core.parser.pst.ISymbol#getContainingSymbol() qualifyingSymbol null symbol
+DEFAULT if IS_WINDOWS pl.pronux.sokker.handlers.SettingsHandler
+DEFAULT if #isActive() com.mucommander.ui.table.FileTable#getQuickSearch() fileTable com.mucommander.ui.FolderPanel
+DEFAULT if isMissing
+DEFAULT if NOT keepAlive
+DEFAULT if NE t null
+DEFAULT if com.socialcomputing.wps.server.planDictionnary.connectors.datastore.PropertyDefinition#isSimple() property
+DEFAULT if EQ num 1
+DEFAULT if waitingForBreakpointInject_ org.rstudio.studio.client.common.debugging.DebugCommander
+DEFAULT if EQ type USER backup org.ebookdroid.common.backup.BackupInfo.Type
+DEFAULT if net.sf.freecol.common.model.UnitTypeChange#asResultOf(net.sf.freecol.common.model.UnitTypeChange.ChangeType) change changeType
+DEFAULT if forcelayout DemoBase
+DEFAULT if iamMaster
+DEFAULT if net.sf.orcc.df.Actor#hasFsm() actor
+DEFAULT if #isNil() <_LABELEMPTY_> args i
+DEFAULT if org.apache.http.impl.nio.reactor.SessionOutputBufferImpl#hasData() outbuf this org.apache.http.impl.nio.NHttpConnectionBase
+DEFAULT if java.lang.String#endsWith(java.lang.String) <_LABELEMPTY_> "output" args arg
+DEFAULT if #isAutoSave() org.apache.directory.studio.ldapbrowser.ui.editors.entry.EntryEditor
+DEFAULT if AND NE com.google.gwt.dev.javac.JSORestrictionsChecker#isJsoSubclass(org.eclipse.jdt.internal.compiler.lookup.TypeBinding) type null exp com.google.gwt.dev.javac.JSORestrictionsChecker$JSORestrictionsVisitor org.eclipse.jdt.internal.compiler.ast.TypeReference#resolveType(org.eclipse.jdt.internal.compiler.lookup.BlockScope) type scope exp
+DEFAULT if GT MINUS priceToPlay currentFoodReserve percentDecrease ise.gameoflife.groups.LoansGroup
+DEFAULT <_LABELEMPTY_> thirdLetter
+DEFAULT if org.apache.commons.cli.CommandLine#hasOption() commandLine CLIManager.NON_RECURSIVE
+DEFAULT if EQ totalPages 1 org.iplantc.de.client.viewer.views.TextViewPagingToolBar
+DEFAULT if INSTANCEOF e java.io.IOException
+DEFAULT if doExitPoints org.netbeans.modules.javafx.editor.semantic.MethodExitDetector
+DEFAULT if NE msg null
+DEFAULT if stdinInherit
+DEFAULT if com.google.gerrit.reviewdb.client.AccountDiffPreference#isSyntaxHighlighting() diffPrefs com.google.gerrit.httpd.rpc.patch.PatchScriptBuilder
+DEFAULT if ar.noxit.ehockey.model.PlanillaPublicable#checkPublicable() publicable
+DEFAULT if NE org.eclipse.orion.server.git.servlets.GitUtils#getGitDir(org.eclipse.orion.server.git.IPath) null org.eclipse.orion.server.git.servlets.GitUtils path
+DEFAULT if NE error null
+DEFAULT if NOT java.lang.String#startsWith(java.lang.String) url "help:"
+DEFAULT if org.exist.dom.QName#needsNamespaceDecl() qn
+DEFAULT if showBizarro org.spacebar.escape.EscapeLevelView
+DEFAULT if com.android.phone.PhoneApp#showBluetoothIndication() mApp com.android.phone.NotificationMgr
+DEFAULT if OR EQ NOT lastTimestampInCache null org.sonar.core.persistence.DryRunDatabaseFactory#isValid(java.lang.Long,long) org.sonar.core.persistence.DryRunDatabaseFactory projectId lastTimestampInCache
+DEFAULT if EQ property null
+DEFAULT if EQ null cache
+DEFAULT if #equals() org.eclipse.core.runtime.Preferences.PropertyChangeEvent#getProperty() ContextPreferenceContstants.PREF_DATA_DIR event
+DEFAULT if EQ org.antstudio.rbac.domain.Menu#getParentId() NEG menu 1
+DEFAULT if NE edu.illinois.cs.mr.util.ImmutableStatus#getState() null phase
+DEFAULT if rinor.Events_manager#equals(java.lang.String) owner owner father rinor.Events_manager rinor.Events_manager
+DEFAULT if GT mobileAgent 0
+DEFAULT if NE tmp null
+DEFAULT if NOT java.io.File#exists() fSource om.devservlet.QuestionDefinition
+DEFAULT if #equals() prj.turnstile.StateMachine#getCurrentState() HTTPRequestState.START _stateMachine prj.httpparser.httpparser.HTTPParser
+DEFAULT if #inherits() #getDeclaration() metaClass #getTypeModel() Tree.InvocationExpression#getPrimary() that com.redhat.ceylon.compiler.js.GenerateJsVisitor#getTypeUtils() gen com.redhat.ceylon.compiler.js.InvocationGenerator
+DEFAULT if java.util.Iterator#hasNext() i
+DEFAULT if #hasChannel(java.lang.String) com.dmdirc.FrameContainer#getServer() channel parent com.dmdirc.ui.swing.components.TextFrame
+DEFAULT if driHackNeeded com.sun.opengl.impl.x11.DRIHack
+DEFAULT if NE i 0
+DEFAULT if com.android.nfc.NfcService$NfcServiceHandler#filterMatch(java.lang.String[],java.lang.String[]) com.android.nfc.NfcService$NfcServiceHandler tagTechs techs info
+DEFAULT if #isValid() session
+DEFAULT if OR EQ EQ vSRows null java.util.Vector#size() 0 vSRows
+DEFAULT if EQ org.mifos.application.fees.struts.actionforms.FeeActionForm#getCurrencyId() null actionForm
+DEFAULT if android.text.TextUtils#isEmpty(java.lang.String) android.text.TextUtils name
+DEFAULT if NE valueSetObject null org.obiba.magma.datasource.mongodb.MongoDBValueTable$MongoDBValueSetWriter
+DEFAULT if GT points 0
+DEFAULT if #equals(java.lang.String) mMsg#trim() "WAITING:" mMsg
+DEFAULT if NOT org.sakaiproject.assignment.api.AssignmentSubmission#getReturned() submission
+DEFAULT if #equals() org.bukkit.craftbukkit.CraftWorld#getName() org.bukkit.craftbukkit.CraftWorld#getName() fromWorld toWorld
+DEFAULT if java.lang.String#equals(java.lang.Object) "Edit<_LABELSPACE_>syntax<_LABELSPACE_>highlighting" cmd
+DEFAULT if java.util.List#contains(java.lang.Object) addedValues object
+DEFAULT if isDigit com.csipsimple.ui.dialpad.DialerFragment
+DEFAULT if EQ android.widget.ListView#getHeaderViewsCount() 0 newsFeed se.chalmers.h_sektionen.MainActivity
+DEFAULT if org.auraframework.http.MANIFEST_ERROR#equals() org.auraframework.http.MANIFEST_ERROR javax.servlet.http.Cookie#getValue() cookie
+DEFAULT if org.concord.otrunk.applet.OTAppletViewer#isMaster() org.concord.otrunk.applet.OTAppletViewer
+DEFAULT if NOT #contains(java.lang.String) org.bukkit.inventory.meta.BookMeta#getTitle() "Diablo<_LABELSPACE_>Tome" b
+DEFAULT if EQ nTry nTryMax org.jcae.mesh.amibe.algos2d.Initial
+DEFAULT if EQ resultCode SERVER_FAILURE au.org.intersect.faims.android.net.FAIMSClientResultCode
+DEFAULT if NE maxIndex 0
+DEFAULT if java.lang.String#equals(java.lang.Object) "new-inline-tags" option
+DEFAULT if java.util.AbstractCollection#isEmpty() mTasks net.redgeek.android.eventrend.util.TaskQueue
+DEFAULT if isNestedFeature
+DEFAULT if NE key null java.nio.channels.SelectableChannel
+DEFAULT if EQ transformedTerm null
+DEFAULT if isIdClass com.impetus.kundera.metadata.model.type.AbstractIdentifiableType
+DEFAULT if #equals() android.location.Location#getProvider() android.location.Location#getProvider() bestLocation edu.ucla.raddet.collector.DataCollector loc
+DEFAULT if isShowVerseNumbers net.bible.service.format.OsisToHtmlSaxHandler
+DEFAULT if java.lang.String#equals(java.lang.Object) fileName DOT_GIT org.eclipse.jgit.lib.Constants
+DEFAULT if NOT net.citizensnpcs.resources.npclib.HumanNPC#isPaused() npc
+DEFAULT if java.util.List#contains(org.emftext.sdk.concretesyntax.OptionTypes) BOOLEAN_OPTIONS type org.emftext.sdk.syntax_analysis.OptionsAnalyser
+DEFAULT if NE mPlayer null com.android.mms.ui.SlideshowActivity$SmilPlayerController
+DEFAULT if java.lang.String#equals(java.lang.Object) old current
+DEFAULT if com.VSSBudgetBoss.budget.InputValidator#menuChoiceIsInvalid(java.lang.String,com.VSSBudgetBoss.budget.BudgetEditor) validator userInput this com.VSSBudgetBoss.budget.BudgetEditor
+DEFAULT if java.lang.String#equals(java.lang.Object) "compoundId" name
+DEFAULT contentStatus org.tmatesoft.svn.core.wc.SVNStatusType <_LABELEMPTY_> <_LABELEMPTY_> final NE nodeStatus textStatus nodeStatus STATUS_NORMAL org.tmatesoft.svn.core.internal.wc17.SVNStatus17 org.tmatesoft.svn.core.wc.SVNStatusType org.tmatesoft.svn.core.internal.wc17.SVNStatus17 org.tmatesoft.svn.core.internal.wc17.SVNStatus17
+DEFAULT if NE messageUri null
+DEFAULT if NE dnsName null org.infoglue.cms.entities.management.RepositoryVO
+DEFAULT if org.mifos.ui.core.controller.SavingsProductFormBean#isMandatory() savingsProductFormBean
+DEFAULT if EQ creationDate null org.xezz.timeregistration.model.Project
+DEFAULT if INSTANCEOF v org.openrdf.model.Resource
+DEFAULT if useBuffer
+DEFAULT if jetbrains.buildServer.buildTriggers.vcs.git.PluginConfigImpl#isSeparateProcessForFetch() jetbrains.buildServer.buildTriggers.vcs.git.PluginConfigImpl
+DEFAULT if com.herocraftonline.dev.heroes.classes.HeroClass#hasSkill() heroClass com.herocraftonline.dev.heroes.skill.OutsourcedSkill#getName() skill
+DEFAULT if AND AND EQ EQ EQ length 2 parameterTypes <_LABELEMPTY_> class parameterTypes 0 org.eol.globi.data.ParserFactory <_LABELEMPTY_> class parameterTypes 1 org.eol.globi.data.NodeFactory
+DEFAULT if runToggle net.minecraft.src.EntityPlayer
+DEFAULT if GT dx dy
+DEFAULT if hostPageBaseURL
+DEFAULT <_LABELEMPTY_> newState
+DEFAULT return <_LABELEMPTY_> EQ class type type null org.openspotlight.graph.SLNode
+DEFAULT if NE length 0 splitName
+DEFAULT if NE superclass class java.lang.Object
+DEFAULT if NE user null
+DEFAULT if LT java.lang.String#length() java.lang.String#length() o1 o2
+DEFAULT if org.eclipse.birt.report.model.api.PropertyHandle#isLocal() handle
+DEFAULT if EQ TreeNode#getRight() null head
+DEFAULT if net.sacredlabyrinth.Phaed.PreciousStones.vectors.Field#hasFlag() field FieldFlag.HIDABLE
+DEFAULT if NE org.exoplatform.acceptance.frontend.model.CurrentUser#getCurrentUser() null org.exoplatform.acceptance.frontend.model.CurrentUser
+DEFAULT if isContacts
+DEFAULT if EQ #size() #size() java.util.Map$Entry#getValue() o1 java.util.Map$Entry#getValue() o2
+DEFAULT if EQ read length buf
+DEFAULT = m_agentIdentity java.lang.Object() this net.grinder.AgentController org.ngrinder.infra.AgentConfig#getAgentHostID() <_LABELEMPTY_> agentConfig EQ DEFAULT_LOCAL_HOST_ADDRESS java.net.InetAddress#getHostAddress() addressWithSocket null net.grinder.util.NetworkUtils addressWithSocket
+DEFAULT if AND NE OR status null org.springsource.ide.eclipse.commons.quicksearch.ui.QuickSearchDialog org.eclipse.core.runtime.IStatus#isOK() EQ status org.springsource.ide.eclipse.commons.quicksearch.ui.QuickSearchDialog org.eclipse.core.runtime.IStatus#getCode() INFO status org.springsource.ide.eclipse.commons.quicksearch.ui.QuickSearchDialog org.eclipse.core.runtime.IStatus
+DEFAULT if org.train.entity.Level#isOver() level this org.train.state.GameState
+DEFAULT if #equalsIgnoreCase(java.lang.String) com.kangaroo.calendar.CalendarEvent#getId() "" temp
+DEFAULT if com.earth2me.essentials.ISettings#getNetherPortalsEnabled() com.earth2me.essentials.Essentials#getSettings() com.earth2me.essentials.Essentials
+DEFAULT if EQ outstandingFrags 0 ibis.ipl.impl.messagePassing.ByteOutputStream
+DEFAULT if INSTANCEOF entity com.spaceinvaders.Monster
+DEFAULT if NE ij.IJ#getImage() null ij.IJ
+DEFAULT if EQ com.midlandroid.apps.android.timerwithsetcounter.TimerService#getDelayTimerUIListner() null srvc
+DEFAULT if EQ java.lang.String#length() 9 REGNO com.karthikb351.vitacad.MainActivity
+DEFAULT if EQ label null
+DEFAULT if EQ Gdx.app#getType() Desktop Gdx.app com.badlogic.gdx.Application.ApplicationType
+DEFAULT if EQ = null mutation java.util.concurrent.BlockingQueue#poll() queue org.apache.cassandra.hadoop.ColumnFamilyRecordWriter$RangeClient
+DEFAULT if java.io.File#exists() java.io.File(java.io.File,java.lang.String) fi.csc.microarray.config.DirectoryLayout#getBaseDir() SECURITY_DIR fi.csc.microarray.config.DirectoryLayout fi.csc.microarray.config.DirectoryLayout
+DEFAULT if EQ size 1
+DEFAULT if NE info null
+DEFAULT if org.eclipse.birt.report.engine.executor.context#isInFactory() context
+DEFAULT if net.sf.orcc.interpreter.ActorInterpreter#isSchedulable(net.sf.orcc.ir.Action) net.sf.orcc.interpreter.ActorInterpreter action
+DEFAULT if <_LABELEMPTY_> typedKeys P1_BOMB bomberman.gui.StdDraw Settings
+DEFAULT if INSTANCEOF propValue java.lang.String
+DEFAULT if android.database.Cursor#moveToFirst() c
+DEFAULT if java.io.File#exists() decrypted
+DEFAULT if GT length position
+DEFAULT startY int <_LABELEMPTY_> <_LABELEMPTY_> EQ NEG 0 system BOTTOM_UP com.scriptographer.sg.CoordinateSystem height
+DEFAULT if java.lang.String#isEmpty() title
+DEFAULT if org.aspectj.weaver.patterns.TypePattern#equals(org.aspectj.weaver.patterns.TypePattern) MAYBE negated org.aspectj.weaver.patterns.PerThisOrTargetPointcutVisitor
+DEFAULT beforeRevision jp.ac.osaka_u.ist.sdl.mpanalyzer.data.Revision <_LABELEMPTY_> <_LABELEMPTY_> final EQ jp.ac.osaka_u.ist.sdl.mpanalyzer.data.Revision(int,java.lang.String,java.lang.String) <_LABELEMPTY_> 0 targetIndex 0 "" "" revisions MINUS this jp.ac.osaka_u.ist.sdl.mpanalyzer.ModificationExtractionThread targetIndex 1
+DEFAULT if EQ statusCode Downloading org.transdroid.daemon.Torrent TorrentStatus
+DEFAULT if hudson.maven.MojoInfo#is(java.lang.String,java.lang.String,java.lang.String) mojo "org.sonatype.tycho" "maven-osgi-test-plugin" "test"
+DEFAULT return <_LABELEMPTY_> NE java.security.AccessController#doPrivileged(java.security.PrivilegedExceptionAction,java.security.AccessControlContext) java.security.AccessController#doPrivileged(java.security.PrivilegedExceptionAction) context null java.security.AccessController runner context java.security.AccessController runner

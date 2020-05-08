@@ -1,0 +1,1051 @@
+DEFAULT return #getOntologyObjectProperty(java.lang.String) #getViewPoint() org.openflexo.technologyadapter.owl.viewpoint.editionaction.AddRestrictionStatement#_getPropertyURI() org.openflexo.technologyadapter.owl.viewpoint.editionaction.AddRestrictionStatement org.openflexo.technologyadapter.owl.viewpoint.editionaction.AddRestrictionStatement
+DEFAULT org.eclipse.ant.internal.core.ant.Project#setUserProperty(java.lang.String,java.lang.String) org.eclipse.ant.internal.core.ant.InternalAntRunner#getCurrentProject() "ant.file" buildFileLocation org.eclipse.ant.internal.core.ant.InternalAntRunner
+DEFAULT com.irccloud.android.fragment.BuffersListFragment$BufferListAdapter#updateBuffer(BuffersDataSource.Buffer) adapter b com.irccloud.android.fragment.BuffersListFragment
+DEFAULT java.util.Hashtable#put(K,V) env SECURITY_CREDENTIALS password javax.naming.Context
+DEFAULT #setText(java.lang.String) #getForm() PLUS #getHeaderForm() org.eclipse.mylyn.tasks.ui.editors.TaskEditor PLUS idLabel kindLabel "<_LABELSPACE_>"
+DEFAULT java.util.HashMap#put(K,V) mappingPattern iconName lt lt
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> 0 i length children i
+DEFAULT retType com.sun.tools.javac.code.Type <_LABELEMPTY_> com.sun.tools.javac.code.Symbol.MethodSymbol#getReturnType() methodSymbol com.redhat.ceylon.compiler.java.loader.mirror.JavacMethod
+DEFAULT net.blockscape.frame#setTitle(java.lang.String) frame "BlockScape"
+DEFAULT java.io.RandomAccessFile#close() randomAccessDataFile
+DEFAULT java.lang.StringBuffer#append(java.lang.Object) html java.text.DateFormat#format(java.util.Date) formatter fedora.server.search.ObjectFields#getDCMDate() f
+DEFAULT return #getAddress() org.spout.engine.protocol.SpoutSession#getAddress() session org.spout.engine.player.SpoutPlayer
+DEFAULT com.nebula2d.editor.framework.Component#load(com.nebula2d.editor.util.FullBufferedReader) component fr
+DEFAULT org.bukkit.inventory.Inventory#clear() inventory
+DEFAULT org.grammaticalframework.ui.android.TranslatorKeyboardView#invalidateAllKeys() mInputView org.grammaticalframework.ui.android.TranslatorInputMethodService
+DEFAULT org.eclipse.draw2d.UpdateManager#addDirtyRegion(org.eclipse.draw2d.Figure,org.eclipse.draw2d.geometry.Rectangle) updateMgr connection out org.dawb.workbench.plotting.system.swtxy.selection.RingSelection
+DEFAULT ptgs org.zkoss.poi.ss.formula.ptg.Ptg[] <_LABELEMPTY_> org.zkoss.poi.ss.formula.FormulaParser#parse(java.lang.String,org.zkoss.poi.xssf.usermodel.XSSFEvaluationWorkbook,int) org.zkoss.poi.ss.formula.FormulaParser formula fpb FormulaType.NAMEDRANGE sheetIndex
+DEFAULT <_LABELEMPTY_> assembly assemblies java.io.File <_LABELEMPTY_> hudson.maven.reporters.MavenArtifactArchiver
+DEFAULT edu.cmu.sphinx.frontend.DataProcessor#setPredecessor(edu.cmu.sphinx.frontend.DataProcessor) dp last edu.cmu.sphinx.frontend.FrontEnd
+DEFAULT org.slf4j.Logger#debug(java.lang.String,java.lang.Object) LOGGER "JPEG<_LABELSPACE_>2000<_LABELSPACE_>resolution<_LABELSPACE_>levels:<_LABELSPACE_>{}" resolutionLevels loci.formats.in.MinimalTiffReader loci.formats.in.MinimalTiffReader
+DEFAULT #addAll(java.util.List) org.apache.wicket.ajax.attributes.AjaxRequestAttributes#getDynamicExtraParameters() extraDynParams attributes org.odlabs.wiquery.ui.tabs.Tabs$TabsAjaxBehavior
+DEFAULT org.eclipse.riena.navigation.INavigationProcessor#historyBack() org.eclipse.riena.navigation.model.NavigationNode#getNavigationProcessor() org.eclipse.riena.navigation.model.NavigationNode
+DEFAULT = variableIDs java.util.Map#keySet() beforeImage
+DEFAULT if LT java.lang.String#indexOf(int) 0 filename separatorChar java.io.File
+DEFAULT org.eclipse.mylyn.internal.context.ui.FocusedViewerManager#contextDeactivated(org.eclipse.mylyn.context.core.IInteractionContext) org.eclipse.mylyn.internal.context.ui.FocusedViewerManager context
+DEFAULT com.android.launcher2.CustomizePagedView#update() mCustomizePagedView com.android.launcher2.Launcher
+DEFAULT = positionTag chameleon.core.element.Element#metadata() element PositionMetadata.ALL
+DEFAULT #setFeatureDrawableResource() #getDialog() Window.FEATURE_LEFT_ICON R.drawable.ic_alfresco org.alfresco.mobile.android.application.fragments.browser.local.LocalFileBrowserFragment
+DEFAULT quickfix.Field#toString(java.lang.StringBuffer) field buffer
+DEFAULT <_LABELEMPTY_> i LT PREINC int <_LABELEMPTY_> 0 i length selectedPaths i
+DEFAULT <_LABELEMPTY_> qualifiers java.util.Map#get(java.lang.Object) java.lang.annotation.Annotation[] <_LABELEMPTY_> observedEvents name org.jboss.errai.cdi.server.EventSubscriptionListener
+DEFAULT = key java.lang.Long(java.lang.String) toolId
+DEFAULT android.media.AudioRecord#release() mAudioRecord com.morlunk.jumble.audio.AudioInput
+DEFAULT <_LABELEMPTY_> if <_LABELEMPTY_> android.media.MediaRecorder#release() stopIt THEN android.media.MediaRecorder#stop() mr e android.util.Log#w(java.lang.String,java.lang.String,java.lang.Exception) java.lang.Exception <_LABELEMPTY_> android.util.Log TAG "Failed<_LABELSPACE_>to<_LABELSPACE_>stop<_LABELSPACE_>media<_LABELSPACE_>recorder" e me.guillaumin.android.osmtracker.view.VoiceRecDialog mr
+DEFAULT java.awt.Window#dispose() ss
+DEFAULT org.bukkit.plugin.PluginManager#registerEvents(com.palmergames.bukkit.TownyChat.event.TownyPlayerHighestListener,com.palmergames.bukkit.TownyChat.Chat) pm TownyPlayerListener this com.palmergames.bukkit.TownyChat.Chat com.palmergames.bukkit.TownyChat.Chat com.palmergames.bukkit.TownyChat.Chat
+DEFAULT io.searchbox.client.config.discovery.NodeChecker#stop() nodeChecker io.searchbox.client.AbstractJestClient
+DEFAULT = context org.springframework.context.event.ContextRefreshedEvent#getApplicationContext() this org.springframework.xd.dirt.server.ContainerRegistrar event
+DEFAULT android.database.Cursor#close() cursor
+DEFAULT timePerRequest double <_LABELEMPTY_> com.atex.LoadGeneratorBuildAction#getTimePerRequest() action
+DEFAULT org.python.core.ParserFacade#close(java.io.BufferedReader) org.python.core.ParserFacade bufReader
+DEFAULT resolverScheme java.lang.String <_LABELEMPTY_> org.fusesource.fabric.api.PlaceholderResolver#getScheme() resolver
+DEFAULT if block.blockMaterial#isLiquid() blockMaterial block
+DEFAULT vcfWriter#writeIndividualDatum(java.sql.ResultSet,java.lang.String) writer genotypeData java.util.ArrayList#get(int) genotypes k
+DEFAULT vibe.ParserWorker#cancel(boolean) mWorker true vibe.VibeController
+DEFAULT javax.xml.transform.Transformer#setParameter(java.lang.String,java.lang.Object) transformer "keywords" #getKeywords() org.apache.maven.doxia.docrenderer.document.DocumentModel#getMeta() documentModel
+DEFAULT = set org.caleydo.core.manager.datadomain.ASetBasedDataDomain#getSet() org.caleydo.core.view.opengl.canvas.AStorageBasedView dataDomain org.caleydo.core.view.opengl.canvas.AStorageBasedView
+DEFAULT = subMenu org.eclipse.jface.action.IMenuCreator#getMenu(org.eclipse.swt.widgets.Menu) mc parent
+DEFAULT = assemblies java.util.ArrayList() hudson.maven.reporters.MavenArtifactArchiver
+DEFAULT <_LABELEMPTY_> cookie javax.servlet.http.HttpServletRequest#getCookies() javax.servlet.http.Cookie <_LABELEMPTY_> final request com.ctlok.web.session.StatelessSessionFilter$RequestWrapper
+DEFAULT org.json.JSONObject#put(java.lang.String,java.util.Collection) jscategory "term" org.apache.abdera.model.Category#getTerm() category
+DEFAULT org.springframework.jms.listener.logger#debug(java.lang.String) logger "Closing<_LABELSPACE_>JMS<_LABELSPACE_>MessageConsumers"
+DEFAULT java.lang.ThreadGroup#printLine(java.lang.String,int) java.lang.ThreadGroup java.lang.Thread#toString() tabulation <_LABELEMPTY_> threads i java.lang.ThreadGroup
+DEFAULT newAttrib org.zaproxy.zap.extension.saml.Attribute <_LABELEMPTY_> org.zaproxy.zap.extension.saml.Attribute#clone() attribute
+DEFAULT java.util.Map#put(K,V) data "supplierName" java.util.Map#get(java.lang.Object) supplier "supplierName"
+DEFAULT rnd java.util.Random <_LABELEMPTY_> java.util.Random()
+DEFAULT org.societies.api.context.model.CtxAssociation#setParentEntity(org.societies.api.context.model.CtxEntityIdentifier) assoc org.societies.api.context.model.CtxModelBeanTranslator#fromCtxIdentifierBean(org.societies.api.schema.context.model.CtxIdentifierBean) org.societies.api.context.model.CtxModelBeanTranslator org.societies.api.schema.context.model.CtxAssociationBean#getParentEntity() assocBean
+DEFAULT java.lang.StringBuilder#append(java.lang.Object) result #toString() java.lang.reflect.Field#get(java.lang.Object) f conf
+DEFAULT = config net.sf.cpsolver.coursett.model.Configuration(java.lang.Long,java.lang.Long,int) offeringId configId 0
+DEFAULT java.lang.StringBuffer#append(java.lang.String) message java.lang.Class#getName() java.lang.Object#getClass() o
+DEFAULT if EQ bitmap null
+DEFAULT tag org.eclipse.team.ccvs.core.CVSTag <_LABELEMPTY_> #getTag() org.eclipse.team.ccvs.core.ICVSFolder#getFolderSyncInfo() cvsFolder
+DEFAULT crazypants.enderio.gui.ToggleButtonEIO#detach() useNbtB crazypants.enderio.conduit.gui.ItemSettings
+DEFAULT javax.mail.internet.MimeMessage#setText(java.lang.String) mimeMessage propertyValue
+DEFAULT transformation eu.esdihumboldt.goml.oml.ext.Transformation <_LABELEMPTY_> eu.esdihumboldt.goml.oml.io.OmlRdfReader#getTransformation(eu.esdihumboldt.goml.generated.FunctionType) eu.esdihumboldt.goml.oml.io.OmlRdfReader eu.esdihumboldt.goml.generated.EntityType#getTransf() entityType
+DEFAULT = is com.earth2me.essentials.ItemDb#get(java.lang.String) com.earth2me.essentials.ItemDb <_LABELEMPTY_> args 0
+DEFAULT org.sirix.cache.Cache#toSecondCache() mPathLog org.sirix.access.PageWriteTrxImpl
+DEFAULT com.android.camera.mCameraScreenNail#releaseSurfaceTexture() mCameraScreenNail
+DEFAULT org.dspace.app.xmlui.wing.element.Data#toSAX(org.xml.sax.ContentHandler,org.xml.sax.helpers.NamespaceSupport,java.lang.Object) org.dspace.app.xmlui.wing.element.Data contentHandler namespaces dictionaryParameter
+DEFAULT = includeJRE NOT org.eclipse.jdt.launching.IVMInstall#equals(org.eclipse.jdt.launching.IVMInstall) buildVM runVM
+DEFAULT java.util.List#clear() artikelList de.shop.artikelverwaltung.controller.ArtikelController
+DEFAULT jo.sm.ui.act.plugin.DescribedBeanInfo#setAsValue(java.lang.String,java.lang.Object) info java.beans.FeatureDescriptor#getName() value prop
+DEFAULT <_LABELEMPTY_> position layer.lightPositions#get(int) java.lang.Integer[] <_LABELEMPTY_> lightPositions i layer
+DEFAULT java.awt.Container#remove(java.awt.Component) mainPanel rejectButton net.sourceforge.peers.gui.CallFrame net.sourceforge.peers.gui.CallFrame
+DEFAULT <_LABELEMPTY_> hub hubs ibis.smartsockets.direct.DirectSocketAddress <_LABELEMPTY_>
+DEFAULT = latitude android.location.Location#getLatitude() com.vanderbilt.people.finder.StartupActivity l
+DEFAULT org.jdesktop.wonderland.modules.sas.server.ProviderProxy#appStop(org.jdesktop.wonderland.common.cell.CellID) provider cellID sasLaunchInfo
+DEFAULT jing.rxnSys.ReactionTemplate#removeFromReactionDictionaryByStructure() rt jing.rxnSys.Reaction#getStructure() reaction
+DEFAULT value java.lang.String <_LABELEMPTY_> java.lang.String#valueOf(int) java.lang.String buildNumber
+DEFAULT curPos javaclient3.structures.PlayerPose <_LABELEMPTY_> #getMean() <_LABELEMPTY_> hypList 0
+DEFAULT = resolvedEntity edu.mayo.cts2.framework.model.entity.EntityDescription#getChoiceValue() ed
+DEFAULT java.util.List#add(org.eclipse.core.resources.IResource) result resource
+DEFAULT com.badlogic.gdx.backends.android.AndroidAudio#pause() audio com.badlogic.gdx.backends.android.AndroidApplication
+DEFAULT org.eclipse.jdt.debug.core.JDIDebugModel#newDebugTarget(org.eclipse.debug.core.ILaunch,com.sun.jdi.VirtualMachine,org.eclipse.debug.core.model.IProcess,boolean,boolean) org.eclipse.jdt.debug.core.JDIDebugModel launch vm #renderDebugTarget(<unknown>,int) process true false org.eclipse.jdt.internal.launching.StandardVMDebugger org.eclipse.jdt.launching.VMRunnerConfiguration#getClassToLaunch() port config
+DEFAULT = length length ambience this org.racenet.racesow.Map
+DEFAULT groupKey1 java.lang.StringBuilder <_LABELEMPTY_> java.lang.StringBuilder#append(java.lang.Object) java.lang.StringBuilder(java.lang.String) org.infoglue.cms.entities.structure.SiteNodeVersionVO#getId() "siteNodeVersion_" siteNodeVersionVO
+DEFAULT propsEnum java.util.Enumeration <_LABELEMPTY_> java.util.Dictionary#keys() newProperties
+DEFAULT #show() android.widget.Toast#makeText(java.lang.String) android.widget.Toast #getActivity() result Toast.LENGTH_SHORT de.saschahlusiak.hrw.dienststatus.dienste.DienststatusFragment$RefreshTask
+DEFAULT java.util.List#add(javax.faces.model.SelectItem) items selectItem
+DEFAULT #show() #getActionBar() net.robotmedia.acv.ui.ExtendedActivity$ActionBarHelper
+DEFAULT org.vertx.mods.Mongo#close() mongo org.vertx.mods.MongoPersistor
+DEFAULT org.esa.beam.framework.datamodel.MetadataElement#addAttribute(org.esa.beam.framework.datamodel.MetadataAttribute) geoKeyDirMetadata attribute
+DEFAULT matcher java.util.regex.Matcher <_LABELEMPTY_> java.util.regex.Pattern#matcher(java.lang.CharSequence) configShortNamePattern config com.proofpoint.galaxy.coordinator.HttpRepository
+DEFAULT if EQ costingLevel null
+DEFAULT #initializeModel() gx.realtime.RealtimeOptions#getInitializeModel() gx.realtime.Document#getModel() options gx.realtime.RealtimeLoader doc
+DEFAULT = ex #get() status AdministrationDao.ImportStats#getExceptions() MINUS importStats #size() 1 AdministrationDao.ImportStats#getExceptions() importStats
+DEFAULT <_LABELEMPTY_> key keys java.lang.String <_LABELEMPTY_>
+DEFAULT <_LABELEMPTY_> uri uris java.lang.String <_LABELEMPTY_>
+DEFAULT com.sun.identity.idm.plugins.ldapv3.Request#setStopStatus(boolean) myRequest true
+DEFAULT copiedFile java.io.File <_LABELEMPTY_> net.ccaper.LandscapePortraitImageSort.service.CopyImage#copyImageToOrientationDirectory(java.io.File,net.ccaper.LandscapePortraitImageSort.enums.ImageOrientation) copyImage file orientation
+DEFAULT return MINUS org.mobicents.servlet.sip.core.session.MobicentsSipApplicationSession#getExpirationTimeInternal() java.lang.System#currentTimeMillis() sipApplicationSession org.mobicents.servlet.sip.core.timers.DefaultSasTimerTask java.lang.System
+DEFAULT de.uniluebeck.itm.tr.runtime.portalapp.protobuf.Channel#close() channel de.uniluebeck.itm.tr.runtime.portalapp.protobuf.ProtobufControllerServerHandler
+DEFAULT = s1 #toString() org.openrdf.model.Literal#getDatatype() l1
+DEFAULT <_LABELEMPTY_> p params n3phele.service.model.core.NameValue <_LABELEMPTY_>
+DEFAULT return PLUS com.intellij.openapi.vfs.VfsUtil#urlToPath() "/bundles" com.intellij.openapi.vfs.VfsUtil #getUrl() com.intellij.openapi.roots.CompilerProjectExtension#getCompilerOutputPointer() instance
+DEFAULT org.apache.cordova.GPSListener#destroy() gpsListener this org.apache.cordova.GeoBroker
+DEFAULT io.undertow.io.IoCallback#onComplete(io.undertow.server.HttpServerExchange,io.undertow.io.AsyncSenderImpl) callback exchange this io.undertow.io.AsyncSenderImpl io.undertow.io.AsyncSenderImpl
+DEFAULT javax.swing.Timer#stop() busy org.jdesktop.swingx.JXBusyLabel
+DEFAULT <_LABELEMPTY_> classFile classFiles java.io.File <_LABELEMPTY_>
+DEFAULT rootClass java.lang.Class <_LABELEMPTY_> #getBeanClass() #next() java.util.Set#iterator() beans
+DEFAULT #add(<unknown>) entities.projectiles.Projectile renderer
+DEFAULT org.eclipse.dltk.core.mixin.MixinModel#notifyInitializeListener(org.eclipse.dltk.core.mixin.IMixinElement,org.eclipse.dltk.core.ISourceModule,java.lang.Object) org.eclipse.dltk.core.mixin.MixinModel$MixinElement this module o org.eclipse.dltk.core.mixin.MixinModel$MixinElement
+DEFAULT java.util.List#add(E) scopes org.eclipse.equinox.internal.p2.metadata.repository.io.MetadataParser$RequiredCapabilitiesHandler#getRequiredCapabilities() org.eclipse.equinox.internal.p2.metadata.repository.io.MetadataParser$ApplicabilityScopeHandler children org.eclipse.equinox.internal.p2.metadata.repository.io.MetadataParser$ApplicabilityScopeHandler
+DEFAULT org.bonitasoft.studio.expression.editor.viewer.ExpressionViewer#refresh() defaultValueViewer org.bonitasoft.studio.data.ui.wizard.DataWizardPage
+DEFAULT u com.gemantic.killer.model.User <_LABELEMPTY_> com.gemantic.labs.killer.service.UsersService#getObjectById(java.lang.Long) userSevice uid this com.gemantic.killer.controller.RecordController
+DEFAULT org.gephi.graph.api.GraphModel#removeGraphListener(org.gephi.desktop.preview.PreviewUIController) graphModel this org.gephi.desktop.preview.PreviewUIController org.gephi.desktop.preview.PreviewUIController
+DEFAULT itemstack logisticspipes.utils.ItemIdentifierStack <_LABELEMPTY_> logisticspipes.utils.ItemIdentifierStack#getFromStack() logisticspipes.utils.ItemIdentifierStack net.minecraft.item.ItemStack#loadItemStackFromNBT(net.minecraft.nbt.NBTTagCompound) net.minecraft.item.ItemStack nbttagcompound2
+DEFAULT java.lang.Throwable#printStackTrace() e
+DEFAULT <_LABELEMPTY_> #store(com.brotherlogic.booser.atom.Beer) <_LABELEMPTY_> com.brotherlogic.booser.storage.AssetManager#getManager() this com.brotherlogic.booser.storage.AssetManager com.brotherlogic.booser.atom.Beer e java.lang.Throwable#printStackTrace() java.io.IOException <_LABELEMPTY_> e
+DEFAULT outdirName java.lang.String <_LABELEMPTY_> PLUS #toString() separator org.eclipse.core.resources.IFolder#getProjectRelativePath() outdir java.io.File
+DEFAULT if org.apache.commons.logging.Log#isDebugEnabled() log org.appfuse.webapp.filter.LoginFilter
+DEFAULT com.ginsberg.gowalla.dto.Id#setId() object #toId(<unknown>) com.ginsberg.gowalla.request.translate.GsonResponseTranslator com.ginsberg.gowalla.dto.Id#getUrl() object
+DEFAULT org.eclipse.team.internal.ui.synchronize.actions.WorkingSetFilterActionGroup#updateMruContribution(org.eclipse.team.internal.ui.synchronize.actions.IMenuManager) org.eclipse.team.internal.ui.synchronize.actions.WorkingSetFilterActionGroup org.eclipse.team.internal.ui.synchronize.actions.IActionBars#getMenuManager() bars org.eclipse.team.internal.ui.synchronize.actions.WorkingSetFilterActionGroup
+DEFAULT = qualifiedImageID org.eclipse.mylyn.docs.intent.exporter.services.CopyImageUtils#copyImageIfNeeded(org.eclipse.emf.ecore.EClassifier,java.io.File,java.net.URL,java.io.InputStream) org.eclipse.mylyn.docs.intent.exporter.services.CopyImageUtils classifier outputFolder resolvedURL java.net.URL#openStream() resolvedURL
+DEFAULT java.util.List#add(E) options org.jenkinsci.plugins.rundeck.OptionProvider$Option(java.lang.String,java.lang.String) hudson.model.Run.Artifact#getFileName() org.jenkinsci.plugins.rundeck.OptionProvider#buildArtifactUrl(hudson.model.Run,hudson.model.Run.Artifact) artifact org.jenkinsci.plugins.rundeck.OptionProvider build artifact
+DEFAULT = maxCyclomaticComplexity java.util.Map#get(java.lang.Object) classMetrics "ccn"
+DEFAULT com.petpet.collpro.datamodel.Element#setCollection(com.petpet.collpro.datamodel.DigitalCollection) element collection this com.petpet.collpro.tools.SimpleGatherer
+DEFAULT #shutdown() eventHandler org.eclipse.team.internal.ui.mapping.CompareInputChangeNotifier
+DEFAULT #executeSetValueCommand(<unknown>,<unknown>) org.wso2.developerstudio.eclipse.gmf.esb.diagram.custom.deserializer.HTTPEndpointDeserializer org.wso2.developerstudio.eclipse.gmf.esb.diagram.custom.deserializer.HTTP_ENDPOINT__URI_TEMPLATE #getTemplate() org.apache.synapse.endpoints.HTTPEndpoint#getUriTemplate() httpEndpoint
+DEFAULT android.app.ProgressDialog#dismiss() progressDlg net.osmand.plus.activities.search.GeoIntentActivity
+DEFAULT file org.eclipse.core.resources.IFile <_LABELEMPTY_> #getFile(java.lang.String) org.eclipse.xtext.util.Wrapper#get() "toc.xml" folder
+DEFAULT ru.sawim.view.MucUsersView#update() mucUsersView ru.sawim.view.ChatView
+DEFAULT = wolves java.lang.Math#abs(int) java.lang.Math java.lang.Integer#parseInt(java.lang.String) java.lang.Integer <_LABELEMPTY_> args 0
+DEFAULT <_LABELEMPTY_> item mItems T <_LABELEMPTY_> com.google.maps.android.quadtree.PointQuadTree
+DEFAULT nextIntent android.content.Intent <_LABELEMPTY_> java.lang.Object() ACTION_ADD_ACCOUNT android.provider.Settings
+DEFAULT if java.lang.String#equals(java.lang.Object) ACTION_START_TRACKING android.content.Intent#getAction() com.android.launcher3.MemoryTracker intent
+DEFAULT org.apache.maven.artifact.ant.util.AntBuildWriter#writeProperty(java.lang.String,java.lang.String) antBuildWriter versionsId versionsList org.apache.maven.artifact.ant.DependenciesTask
+DEFAULT if NOT net.jforum.JForumExecutionContext#isCustomContent() net.jforum.JForumExecutionContext
+DEFAULT java.lang.ThreadLocal#set() projectThreadLocal #getActiveProject() controllers.TMTreeController controllers.TMTreeController
+DEFAULT if AND java.lang.String#equals(java.lang.Object) java.lang.String#equals(java.lang.Object) <_LABELEMPTY_> "1" Array 2 <_LABELEMPTY_> "CategoryID" Array 1
+DEFAULT <_LABELEMPTY_> spawnListEntry spawnListEntries net.minecraft.world.biome.SpawnListEntry <_LABELEMPTY_>
+DEFAULT #println() hudson.model.BuildListener#getLogger() PLUS listener "[HUDSON]<_LABELSPACE_>Archiving<_LABELSPACE_>" org.apache.maven.project.MavenProject#getFile() pom
+DEFAULT org.apache.fop.layoutmgr.KnuthElement#setPosition() oldElement #getPosition() org.apache.fop.layoutmgr.KnuthElement#getPosition() oldElement
+DEFAULT java.util.List#add(com.opensymphony.user.Group) groupList group
+DEFAULT java.util.Vector#add(E) allObservers se.sics.cooja.plugins.EventListener$InterfaceEventObserver(se.sics.cooja.plugins.EventListener,se.sics.cooja.plugins.Mote,java.util.Observable) se.sics.cooja.plugins.EventListener myPlugin se.sics.cooja.plugins.Simulation#getMote(int) moteInterface se.sics.cooja.plugins.EventListener mySimulation i se.sics.cooja.plugins.EventListener
+DEFAULT org.eclipse.team.internal.ui.synchronize.IChangeSetChangeListener#nameChanged(org.eclipse.team.internal.ui.synchronize.ChangeSet) listener set org.eclipse.team.internal.ui.synchronize.ActiveChangeSetCollector
+DEFAULT org.red5.server.api.stream.IClientStream#close() stream
+DEFAULT <_LABELEMPTY_> string params2 java.lang.String <_LABELEMPTY_>
+DEFAULT if EQ protocol null com.hifiremote.jp1.DeviceUpgrade
+DEFAULT if NOT com.yuniclient.controlAPI#HasSeparatedSpeed() controlAPI #GetAPIType() com.yuniclient.controlAPI#GetInst() controlAPI
+DEFAULT return org.eclipse.core.resources.ResourceAttributes#isReadOnly() attributes
+DEFAULT gov.nih.nci.ncicb.cadsr.domain.ValueDomain#setLongName() vd gov.nih.nci.ncicb.cadsr.domain.ValueDomain#getLongName() gov.nih.nci.ncicb.cadsr.loader.ui.VDPanel tempVD gov.nih.nci.ncicb.cadsr.loader.ui.VDPanel
+DEFAULT java.util.List#add(E) items item
+DEFAULT org.apache.oodt.opendapps.DatasetCrawler#addIfNotNull(org.apache.oodt.cas.metadata.Metadata,java.lang.String,java.lang.String) this met "DataFormatType" #toString() org.apache.oodt.opendapps.DatasetCrawler thredds.catalog.InvDataset#getDataFormatType() dataset
+DEFAULT java.util.Properties#setProperty(java.lang.String,java.lang.String) properties "ElevationAttribute" org.geotools.gce.imagemosaic.MosaicConfigurationBean#getElevationAttribute() mosaicConfiguration org.geotools.gce.imagemosaic.indexbuilder.IndexBuilder
+DEFAULT evolutions java.io.File <_LABELEMPTY_> play.db.ebean.Application#getFile(java.lang.String) application PLUS play.db.ebean.EbeanPlugin PLUS "/1.sql" "db/evolutions/" key
+DEFAULT javax.servlet.http.HttpServletResponse#addHeader() response Template.Header.STYLE org.apache.commons.lang.StringUtils#defaultString(java.lang.String) org.gwtapp.template.server.Header org.apache.commons.lang.StringUtils style
+DEFAULT <_LABELEMPTY_> invite invites com.bingo.eatime.core.Person <_LABELEMPTY_>
+DEFAULT <_LABELEMPTY_> java.lang.Object#wait(long) <_LABELEMPTY_> android.app.Instrumentation$ActivityMonitor timeOut e java.lang.InterruptedException <_LABELEMPTY_>
+DEFAULT <_LABELEMPTY_> work org.orcid.jaxb.model.message.OrcidWorks#getOrcidWork() org.orcid.jaxb.model.message.OrcidWork <_LABELEMPTY_> orcidWorks
+DEFAULT com.xtremelabs.imageutils.MappedQueue#removeFromList(com.xtremelabs.imageutils.MappedQueue$Node) com.xtremelabs.imageutils.MappedQueue node
+DEFAULT <_LABELEMPTY_> info com.google.doclava.ClassInfo#annotations() com.google.doclava.AnnotationInstanceInfo <_LABELEMPTY_> cl
+DEFAULT android.widget.TextView#setText() title android.text.Html#fromHtml() android.text.Html mTitle
+DEFAULT java.awt.Graphics#setColor(java.awt.Color) g java.awt.Component#getForeground() c
+DEFAULT hrider.io.Log#info(java.lang.String) logger message hrider.ui.MessageHandler
+DEFAULT org.eclipse.core.runtime.jobs.Job#cancel() j
+DEFAULT layoutFile java.io.File <_LABELEMPTY_> java.io.File(java.lang.String) graphLayoutFilename de.uni_koblenz.jgralab.utilities.tg2dot.Tg2Dot
+DEFAULT #addReference(java.lang.Object) #getProject() org.eclipse.m2m.atl.core.ant.tasks.RESULT_REFERENCE transformationResult org.eclipse.m2m.atl.core.ant.tasks.ATLModelTransformationTask
+DEFAULT if NE org.jaudiotagger.tag.mp4.field.Mp4DiscNoField#getDiscNo() null discField
+DEFAULT com.google.gwt.user.client.Element#insertFirst(com.google.gwt.user.client.Element) fieldSet desc com.vaadin.terminal.gwt.client.ui.VForm com.vaadin.terminal.gwt.client.ui.VForm
+DEFAULT ibis.impl.messagePassing.ReceivePortIdentifier#makeSerialForm() ibis.impl.messagePassing.ReceivePortIdentifier
+DEFAULT java.util.HashMap#put(org.getspout.spoutapi.player.SpoutPlayer,org.getspout.spoutapi.gui.Widget) chatbar player bar mmo.Chat.MMOChat
+DEFAULT #addPlayer(org.bukkit.entity.Player) #getTeam(java.lang.String) me.libraryaddict.Hungergames.Types.Gamer#getPlayer() org.bukkit.entity.Player#getScoreboard() "Spectators" player me.libraryaddict.Hungergames.Types.Gamer me.libraryaddict.Hungergames.Types.Gamer
+DEFAULT activeFrame com.dmdirc.FrameContainer <_LABELEMPTY_> #getContainer() active
+DEFAULT <_LABELEMPTY_> situationBean org.onebusaway.transit_data.model.ArrivalAndDepartureBean#getSituations() org.onebusaway.transit_data.model.service_alerts.SituationBean <_LABELEMPTY_> arrivalAndDepartureBean
+DEFAULT list eu.esdihumboldt.hale.common.core.io.ValueList <_LABELEMPTY_> eu.esdihumboldt.hale.common.core.io.Value#as(java.lang.Class) types class eu.esdihumboldt.hale.common.core.io.ValueList
+DEFAULT java.util.List#add(net.sf.freecol.common.model.FoundingFather) randomFathers f
+DEFAULT #done() mView t
+DEFAULT = acceleratorText org.eclipse.jface.action.Action#convertAccelerator(int) org.eclipse.jface.action.Action accelerator
+DEFAULT com.jitlogic.zico.client.panel.TraceListFilterExpression#setTimeStart() filter com.jitlogic.zico.client.ClientUtil#parseTimestamp() com.jitlogic.zico.client.panel.TraceListPanel com.jitlogic.zico.client.ClientUtil com.jitlogic.zico.client.panel.TextField#getValue() txtClockBegin com.jitlogic.zico.client.panel.TraceListPanel
+DEFAULT arguments java.util.ArrayList <_LABELEMPTY_> java.util.ArrayList()
+DEFAULT <_LABELEMPTY_> node nodes com.android.traceview.ProfileNode <_LABELEMPTY_>
+DEFAULT = permission com.dumptruckman.chunky.object.ChunkyPermissibleObject#hasPerm(ChunkyPermissions.Flags) permObject com.dumptruckman.chunky.object.ChunkyObject#getOwner() flag object
+DEFAULT aQute.lib.deployer.Reporter#progress(int,java.lang.String) reporter NEG PLUS aQute.lib.deployer.FileRepo 1 "updated<_LABELSPACE_>" java.io.File#getAbsolutePath() file
+DEFAULT ti.map.TiUIMapView#fireClickEvent(com.google.android.gms.maps.model.Marker,ti.map.AnnotationProxy,java.lang.Object) ti.map.TiUIMapView #getMarker() selectedAnnotation null ti.map.AnnotationProxy#getTiMarker() selectedAnnotation ti.map.TiUIMapView ti.map.TiUIMapView
+DEFAULT = rectangle org.achartengine.chart.ClickableArea#getRect() area
+DEFAULT java.util.List#addAll(java.util.Collection) classAttributeMapForGroups gov.nih.nci.security.authorization.attributeLevel.ClassAttributeMap#getAttributes() gcam
+DEFAULT java.lang.StringBuilder#append(java.lang.String) ret <_LABELEMPTY_> strings i
+DEFAULT com.ferg.awfulapp.mP2RAttacher#setPullFromBottom(boolean) mP2RAttacher true
+DEFAULT <_LABELEMPTY_> team org.mctourney.autoreferee.regions.AutoRefRegion#getOwners() org.mctourney.autoreferee.AutoRefTeam <_LABELEMPTY_> org.mctourney.autoreferee.regions.AutoRefRegion
+DEFAULT java.io.BufferedWriter#flush() currentWriter org.cloudname.timber.server.handler.archiver.MetadataHandler
+DEFAULT es.ugr.swad.swadroid.modules.downloads.DownloadsManager#updateView(java.util.ArrayList) es.ugr.swad.swadroid.modules.downloads.DownloadsManager$3 es.ugr.swad.swadroid.modules.downloads.DirectoryNavigator#goToParentDirectory() navigator es.ugr.swad.swadroid.modules.downloads.DownloadsManager
+DEFAULT java.io.InputStream#close() out com.redhat.qe.tools.SSHCommandRunner
+DEFAULT keyBindingService org.eclipse.ui.IKeyBindingService <_LABELEMPTY_> org.eclipse.team.ui.synchronize.ISynchronizePageSite#getKeyBindingService() site
+DEFAULT gt.general.world.ObservableCustomBlock$BlockEvent#printWarning(java.lang.String) gt.general.world.ObservableCustomBlock$BlockEvent "player"
+DEFAULT de.uniluebeck.itm.spyglass.plugin.simplenodepainter.plugin#refreshConfigurationParameters() plugin
+DEFAULT #append(java.lang.String) java.lang.StringBuilder#append(java.lang.Object) "_" stringBuilder com.jetbrains.php.lang.psi.elements.Method#getFQN() method
+DEFAULT <_LABELEMPTY_> java.lang.Object() failedResult
+DEFAULT com.google.gson.JsonObject#addProperty(java.lang.String,java.lang.String) object "end_time" org.joda.time.DateTime#toString() endTime
+DEFAULT #add(java.lang.String) nl.nn.adapterframework.core.IAdapter#getMessageKeeper() msg adapter nl.nn.adapterframework.receivers.ReceiverBase
+DEFAULT <_LABELEMPTY_> i GE POSTDEC int <_LABELEMPTY_> MINUS length 1 args i 0 i
+DEFAULT org.esa.beam.dataio.obpg.ObpgUtils#handleMetadataGroup(ucar.nc2.Group,org.esa.beam.framework.datamodel.MetadataElement) org.esa.beam.dataio.obpg.ObpgUtils group scanLineAttrib
+DEFAULT if java.lang.String#equals(java.lang.Object) name ""
+DEFAULT <_LABELEMPTY_> org.codehaus.groovy.grails.plugins.GrailsPluginManager#shutdown() <_LABELEMPTY_> pluginManager e grails.util.GrailsUtil#sanitize(java.lang.Exception) org.apache.commons.logging.Log#error(java.lang.Object,java.lang.Throwable) java.lang.Exception <_LABELEMPTY_> grails.util.GrailsUtil e LOG PLUS e org.codehaus.groovy.grails.web.context.GrailsContextLoader "Error<_LABELSPACE_>occurred<_LABELSPACE_>shutting<_LABELSPACE_>down<_LABELSPACE_>plug-in<_LABELSPACE_>manager:<_LABELSPACE_>" java.lang.Throwable#getMessage() e
+DEFAULT <_LABELEMPTY_> step publishers hudson.maven.BuildStep <_LABELEMPTY_> hudson.maven.MavenModuleSet
+DEFAULT org.cubictest.recorder.selenium.SeleniumRecorder#stop() seleniumRecorder org.cubictest.recorder.ui.RecordEditorAction
+DEFAULT com.sf.jintn3270.swing.TerminalRenderer#setFont(java.awt.Font) renderer f com.sf.jintn3270.swing.JTerminal
+DEFAULT <_LABELEMPTY_> key parameterKeys java.lang.String <_LABELEMPTY_>
+DEFAULT #addPotionEffect(net.minecraft.potion.PotionEffect) target java.lang.Object() id #getEffectDuration(int) 0 lycanite.lycanitesmobs.ObjectManager#getPotionEffect(java.lang.String) lycanite.lycanitesmobs.ObjectManager "Paralysis" this 2 lycanite.lycanitesmobs.forestmobs.entity.EntityTrent
+DEFAULT <_LABELEMPTY_> listener org.jboss.metadata.web.spec.TldMetaData#getListeners() org.jboss.metadata.web.spec.ListenerMetaData <_LABELEMPTY_> final metaData
+DEFAULT org.apache.lucene.search.BooleanQuery#add(org.apache.lucene.search.Query,boolean,boolean) query data true false
+DEFAULT = paramName org.eclipse.cdt.core.dom.ast.IASTDeclarator#getName() knrParamDtor
+DEFAULT java.lang.ref.WeakReference#clear() readerRef ch.o2it.weblounge.common.impl.content.page.LazyPageImpl
+DEFAULT pspsystemver java.lang.String <_LABELEMPTY_> jpcsp.format.PSF#getString(java.lang.String) psf "PSP_SYSTEM_VER"
+DEFAULT edgruberman.bukkit.playeractivity.Main#clear() tracker idleKick edgruberman.bukkit.playeractivity.Main
+DEFAULT <_LABELEMPTY_> frame java.util.Map#values() net.rptools.maptool.client.ui.htmlframe.HTMLFrame <_LABELEMPTY_> frames net.rptools.maptool.client.ui.htmlframe.HTMLFrame
+DEFAULT org.soulspace.template.datasource.impl.BeanDataSource#insert(org.soulspace.template.symbols.ISymbolTable,java.lang.String,java.lang.Object) org.soulspace.template.datasource.impl.BeanDataSource st java.lang.Object#toString() java.util.Map#get(java.lang.Object) key result key
+DEFAULT java.lang.String#getBytes(java.lang.String) "" charset
+DEFAULT org.basex.core.cmd.DropDB#drop(org.basex.core.MainProp) org.basex.core.cmd.DropDB meta.name mprop org.basex.build.DiskBuilder
+DEFAULT <_LABELEMPTY_> org.eclipse.cdt.core.dom.ast.IScope#flushCache() <_LABELEMPTY_> scope e org.eclipse.cdt.core.dom.ast.DOMException <_LABELEMPTY_>
+DEFAULT java.util.List#add(org.jboss.tools.jst.web.kb.validation.IValidator) validators validator org.jboss.tools.jst.web.kb.internal.validation.ValidationContext
+DEFAULT holding org.bukkit.inventory.ItemStack <_LABELEMPTY_> org.bukkit.entity.Player#getItemInHand() player
+DEFAULT universe.constellation.orion.viewer.Device#onDestroy() device universe.constellation.orion.viewer.OrionBaseActivity
+DEFAULT = waypoints_ waypoints net.cyclestreets.api.Journey
+DEFAULT prevAlloc org.jvnet.hudson.plugins.port_allocator.AllocatedPortAction <_LABELEMPTY_> #getAction(java.lang.Class) hudson.model.Build#getPreviousBuild() class build org.jvnet.hudson.plugins.port_allocator.AllocatedPortAction
+DEFAULT java.io.PipedInputStream#connect(java.io.PipedOutputStream) sink this java.io.PipedOutputStream java.io.PipedOutputStream
+DEFAULT org.openflexo.foundation.rm.FlexoProjectBuilder#notifyResourceLoading(org.openflexo.technologyadapter.emf.rm.EMFModelResource) builder this org.openflexo.technologyadapter.emf.rm.EMFModelResource
+DEFAULT return value entry
+DEFAULT #requestFocusInWindow() #getComponent() #getPresenter(java.lang.Class) kkckkc.jsourcepad.model.DocList#getActiveDoc() class docList kkckkc.jsourcepad.ui.DocListPresenter kkckkc.jsourcepad.ui.DocPresenter
+DEFAULT controllers.LocationController#updateFullNames(models.Location) controllers.LocationController c
+DEFAULT org.wso2.developerstudio.eclipse.esb.ProxyOutSequenceConfiguration#save(org.w3c.dom.Element) org.wso2.developerstudio.eclipse.esb.impl.ProxyServiceImpl#getOutSequenceConfiguration() targetElem org.wso2.developerstudio.eclipse.esb.impl.ProxyServiceImpl
+DEFAULT org.codehaus.groovy.classgen.AsmClassGenerator#addInnerClass(org.codehaus.groovy.classgen.ClassNode) org.codehaus.groovy.classgen.AsmClassGenerator innerClass
+DEFAULT params org.apache.wicket.request.mapper.parameter.PageParameters <_LABELEMPTY_> org.apache.wicket.request.mapper.parameter.PageParameters()
+DEFAULT tracks java.util.ArrayList <_LABELEMPTY_> java.util.ArrayList()
+DEFAULT com.jitlogic.zico.client.panel.TraceListFilterExpression#setTraceId() filter com.jitlogic.zico.client.panel.SimpleComboBox#getCurrentValue() com.jitlogic.zico.client.panel.TraceListPanel cmbTraceType com.jitlogic.zico.client.panel.TraceListPanel
+DEFAULT org.bukkit.entity.Player#sendMessage() player net.tgxn.bukkit.backup.config.Strings#getString(java.lang.String) strings "reloadedok" #getVersion() net.tgxn.bukkit.backup.events.CommandHandler org.bukkit.plugin.Plugin#getDescription() plugin
+DEFAULT java.lang.StringBuffer#append(java.lang.String) buf prefix org.thera_pi.nebraska.crypto.NebraskaPrincipal$DistinguishedNameBuffer
+DEFAULT name java.lang.String <_LABELEMPTY_> java.lang.String#toLowerCase() org.xml.sax.InputSource#getSystemId() java.util.List#get(int) grammars 0 com.sun.tools.xjc.Options
+DEFAULT return java.lang.Object() org.activiti.engine.impl.persistence.entity.ByteArrayRef#getBytes() org.activiti.engine.impl.persistence.entity.ByteArrayRef#getName() pictureByteArrayRef org.activiti.engine.impl.persistence.entity.UserEntity pictureByteArrayRef org.activiti.engine.impl.persistence.entity.UserEntity
+DEFAULT org.eclipse.ui.internal.cheatsheets.actions.CheatSheetMenu#createMenuItem(org.eclipse.ui.internal.cheatsheets.actions.Menu,int,org.eclipse.ui.internal.cheatsheets.actions.CheatSheetElement,boolean) org.eclipse.ui.internal.cheatsheets.actions.CheatSheetMenu menu POSTINC element #equals(java.lang.String) index org.eclipse.ui.internal.cheatsheets.actions.CheatSheetElement#getID() checkID element
+DEFAULT cc.warlock.rcp.stormfront.ui.views.HandsView#setActiveClient(cc.warlock.core.stormfront.client.IStormFrontClient) cc.warlock.rcp.stormfront.ui.views.HandsView cc.warlock.rcp.stormfront.ui.views.StormFrontGameView#getStormFrontClient() gameView
+DEFAULT content org.eclipse.acceleo.internal.ide.ui.editors.template.AcceleoSourceContent <_LABELEMPTY_> org.eclipse.acceleo.internal.ide.ui.editors.template.AcceleoSourceContent()
+DEFAULT fisica.FPrismaticJoint#getLocalPointToOut(fisica.Vec2,fisica.Vec2) m_body m_anchor m_localAnchor2 m_body2 fisica.FPrismaticJoint fisica.FPrismaticJoint fisica.FPrismaticJoint
+DEFAULT org.eclipse.jface.viewers.Viewer#refresh() viewer com.google.dart.tools.ui.internal.filesview.ResourceContentProvider
+DEFAULT org.apache.hadoop.hdfs.DFSUtil#login(org.apache.hadoop.hdfs.server.namenode.Configuration) org.apache.hadoop.hdfs.DFSUtil conf DFSConfigKeys.DFS_NAMENODE_KEYTAB_FILE_KEY DFSConfigKeys.DFS_NAMENODE_USER_NAME_KEY
+DEFAULT return org.eclipse.team.internal.ui.mapping.ISynchronizationScope#getTraversals(org.eclipse.team.internal.ui.mapping.ResourceMapping) scope mapping
+DEFAULT org.broad.tribble.util.LittleEndianOutputStream#close() fos org.broad.igv.hic.tools.Preprocessor
+DEFAULT android.text.ClipboardManager#setText(java.lang.CharSequence) mClipboard text com.ichi2.anki.Reviewer
+DEFAULT org.geometerplus.android.fbreader.BookInfoActivity#setupCover(org.geometerplus.android.fbreader.Book) org.geometerplus.android.fbreader.BookInfoActivity book
+DEFAULT p com.itmill.toolkit.data.Property <_LABELEMPTY_> com.itmill.toolkit.data.util.MethodProperty(java.lang.Class,java.lang.Object,java.lang.reflect.Method,java.lang.reflect.Method) type bean getMethod setMethod
+DEFAULT org.jgeboski.vindicator.VindicatorAPI#close() api org.jgeboski.vindicator.Vindicator
+DEFAULT #add(java.util.List) edu.lipreading.Sample#getMatrix() points recordedSample edu.lipreading.gui.LipReaderPanel
+DEFAULT Connector.IntegerArgument#setValue(int) timeoutArg 20000
+DEFAULT org.apache.commons.logging.Log#warn(java.lang.Object) log PLUS org.apache.fop.render.rtf.RTFHandler "Only<_LABELSPACE_>simple-page-masters<_LABELSPACE_>are<_LABELSPACE_>supported<_LABELSPACE_>on<_LABELSPACE_>page-sequences:<_LABELSPACE_>" reference
+DEFAULT = mLocation android.location.LocationManager#getLastKnownLocation(java.lang.String) com.libresoft.apps.ARviewer.Location.ARLocationManager mLocationManager loc_provider com.libresoft.apps.ARviewer.Location.ARLocationManager com.libresoft.apps.ARviewer.Location.ARLocationManager
+DEFAULT <_LABELEMPTY_> node #getNodes() hudson.model.Node <_LABELEMPTY_> #getAssignedLabel() hudson.model.AbstractBuild#getProject() build
+DEFAULT = sinkCompression sinkCompression this cascading.scheme.TextLine
+DEFAULT org.apache.http.client.methods.HttpUriRequest#addHeader() request org.apache.http.impl.auth.BasicScheme#authenticate(org.apache.http.auth.UsernamePasswordCredentials,org.apache.http.client.methods.HttpUriRequest) fi.helsinki.cs.tmc.utilities.http.HttpRequestExecutor org.apache.http.impl.auth.BasicScheme() credentials request this fi.helsinki.cs.tmc.utilities.http.HttpRequestExecutor fi.helsinki.cs.tmc.utilities.http.HttpRequestExecutor
+DEFAULT <_LABELEMPTY_> r relation com.impetus.kundera.db.RelationHolder <_LABELEMPTY_>
+DEFAULT io.undertow.io.AsyncSenderImpl#invokeOnException(io.undertow.io.IoCallback,java.io.IOException) io.undertow.io.AsyncSenderImpl$3 callback exception
+DEFAULT methods java.lang.reflect.Method[] <_LABELEMPTY_> #getMethods() org.droidparts.inject.AbstractDependencyProvider#getClass() module org.droidparts.inject.injector.DependencyInjector
+DEFAULT java.lang.reflect.Constructor#setAccessible(boolean) dsc true
+DEFAULT <_LABELEMPTY_> restriction restrictions android.content.RestrictionEntry <_LABELEMPTY_>
+DEFAULT jscategory org.json.JSONObject <_LABELEMPTY_> org.json.JSONObject()
+DEFAULT = mediaPlayer android.media.MediaPlayer() pro.trousev.cleer.android.service.PlayerAndroid
+DEFAULT = buttonIndex android.widget.LinearLayout#indexOfChild(android.widget.LinearLayout) buttons unfollowButton de.geotweeter.activities.UserDetailActivity$BlockTask
+DEFAULT com.samskivert.reversi.ReversiLogic#setState() _logic pieces com.samskivert.reversi.ReversiBoardView _gameobj com.samskivert.reversi.ReversiBoardView
+DEFAULT <_LABELEMPTY_> update merges org.structnetalign.merge.MergeUpdate <_LABELEMPTY_>
+DEFAULT <_LABELEMPTY_> attributes eionet.meta.dao.domain.VocabularyConcept#getAttributes() java.util.List <_LABELEMPTY_> vocabularyConcept eionet.web.action.VocabularyConceptActionBean
+DEFAULT net.java.sip.communicator.impl.gui.main.login.LoginManager#login(net.java.sip.communicator.impl.gui.main.login.ProtocolProviderService) this protocolProvider net.java.sip.communicator.impl.gui.main.login.LoginManager
+DEFAULT org.eclipse.birt.report.engine.emitter.wpml.AbstractEmitterImpl#adjustInline() org.eclipse.birt.report.engine.emitter.wpml.AbstractEmitterImpl
+DEFAULT android.media.SoundPool#release() soundPool sparta.workout.controllers.SoundManager
+DEFAULT com.github.dandelion.datatables.core.html.HtmlColumn#setSortDirection(java.lang.String) column sortDirection this com.github.dandelion.datatables.jsp.tag.AbstractColumnTag
+DEFAULT = month_money cornell.eickleapp.DatabaseStore#sortByTime(java.util.ArrayList) cornell.eickleapp.DatabaseStore month_money
+DEFAULT = installPath java.net.URL#getPath() org.eclipse.core.runtime.adaptor.EclipseAdaptor installURL
+DEFAULT com.ashokgelal.tagsnap.CurrentFragment#setAddressDetails(android.location.Address) com.ashokgelal.tagsnap.CurrentFragment mLastKnownAddress com.ashokgelal.tagsnap.CurrentFragment
+DEFAULT com.ferg.awfulapp.WebView#setKeepScreenOn(boolean) mThreadView false com.ferg.awfulapp.ThreadDisplayFragment
+DEFAULT #loadAttachment(com.android.email.Account,com.android.email.mail.Message,com.android.email.mail.store.LocalStore.LocalAttachmentBodyPart,java.lang.Object[],com.android.email.activity.MessageView$Listener) com.android.email.MessagingController#getInstance() mAccount mMessage part <_LABELEMPTY_> mListener com.android.email.MessagingController #getApplication() com.android.email.activity.MessageView com.android.email.activity.MessageView com.android.email.activity.MessageView attachment true attachment com.android.email.activity.MessageView
+DEFAULT distance net.h31ix.anticheat.event.Distance <_LABELEMPTY_> java.lang.Object() #getLocation() #getLocation() org.bukkit.event.player.PlayerInteractEvent#getPlayer() event org.bukkit.event.player.PlayerInteractEvent#getClickedBlock() event
+DEFAULT <_LABELEMPTY_> entry java.util.SortedMap#entrySet() java.util.Map$Entry <_LABELEMPTY_> providers com.csipsimple.wizards.impl.Betamax
+DEFAULT java.util.HashMap#put(K,V) paramBindingCandidates org.eclipse.birt.report.model.api.DataSetParameterHandle#getName() java.lang.Object() modelParam defaultValueExpr org.eclipse.birt.report.data.adapter.api.DataAdapterUtil#modelDataTypeToCoreDataType() org.eclipse.birt.report.data.adapter.api.DataAdapterUtil org.eclipse.birt.report.model.api.DataSetParameterHandle#getDataType() modelParam
+DEFAULT org.openmrs.module.reporting.cohort.definition.CohortDefinition#removeParameter(java.lang.String) org.openmrs.module.reporting.cohort.definition.InverseCohortDefinition#getBaseDefinition() parameterName org.openmrs.module.reporting.cohort.definition.InverseCohortDefinition
+DEFAULT org.osgi.framework.BundleContext#ungetService(org.osgi.framework.ServiceReference) context currentServiceReference this org.openscada.ae.server.exporter.net.Activator this org.openscada.ae.server.exporter.net.Activator
+DEFAULT #destroy() com.jme.input.InputSystem#getMouseInput() com.jme.input.InputSystem
+DEFAULT <_LABELEMPTY_> templateID templates java.lang.String <_LABELEMPTY_>
+DEFAULT android.preference.ListPreference#setOnPreferenceChangeListener(com.android.calendar.OtherPreferences) mSkipReminders this com.android.calendar.OtherPreferences com.android.calendar.OtherPreferences
+DEFAULT <_LABELEMPTY_> = <_LABELEMPTY_> usingDirective #addUsingDirective(org.eclipse.cdt.internal.core.parser.pst.IContainerSymbol) #getContainerSymbol() symbol scope pste org.eclipse.cdt.internal.core.parser.ast.complete.CompleteParseASTFactory#handleProblem(int,java.lang.String,int,int,int) org.eclipse.cdt.internal.core.parser.pst.ParserSymbolTableException <_LABELEMPTY_> org.eclipse.cdt.internal.core.parser.ast.complete.CompleteParseASTFactory org.eclipse.cdt.internal.core.parser.pst.ParserSymbolTableException#createProblemID() org.eclipse.cdt.core.parser.ITokenDuple#toString() startingOffset endingOffset startingLine pste duple
+DEFAULT java.util.ArrayList#clear() batchStatements org.postgresql.jdbc2.AbstractJdbc2Statement
+DEFAULT mdRs org.eclipse.birt.data.oda.IResultSet <_LABELEMPTY_> org.eclipse.birt.report.data.oda.jdbc.Statement#executeQuery() org.eclipse.birt.report.data.oda.jdbc.Statement
+DEFAULT n int <_LABELEMPTY_> java.lang.Math#min(int,int) final java.lang.Math length length headerFlds com.winvector.util.HBurster flds
+DEFAULT = msgBytes java.lang.String#getBytes(java.lang.String) msg "UTF-8"
+DEFAULT org.apache.directory.studio.ldapbrowser.common.filtereditor.FilterContentAssistProcessor#setSchema() contentAssistProcessor <_LABELEMPTY_> org.apache.directory.studio.ldapbrowser.common.widgets.search.FilterWidget EQ null org.apache.directory.studio.ldapbrowser.core.model.IBrowserConnection#getSchema() browserConnection null browserConnection
+DEFAULT java.lang.Thread#interrupt() processDefReaper org.apache.ode.bpel.engine.BpelServerImpl
+DEFAULT net.sf.okapi.filters.xini.XINIReader#close() reader net.sf.okapi.filters.xini.XINIFilter
+DEFAULT ij.ImagePlus#setSlice() imp ij.ImageStack#getSize() stack
+DEFAULT net.minecraft.src.Chunk#onChunkUnload() var3
+DEFAULT java.util.concurrent.locks.Lock#lock() java.util.concurrent.locks.ReadWriteLock#writeLock() serializerLock org.apache.stanbol.enhancer.nlp.json.valuetype.ValueTypeSerializerRegistry
+DEFAULT pack universalelectricity.core.electricity.ElectricityPack <_LABELEMPTY_> universalelectricity.core.electricity.ElectricityPack#getFromWatts(int) universalelectricity.core.electricity.ElectricityPack MUL 120 #powerRequest() BC3_RATIO buildcraft.api.power.IPowerReceptor#getPowerReceiver(net.minecraftforge.common.ForgeDirection) tileEntity direction Compatibility
+DEFAULT if EQ org.bukkit.inventory.ItemStack#getTypeId() 383 possibleEgg
+DEFAULT sx int <_LABELEMPTY_> PLUS MINUS java.lang.Math#round(float) <_LABELEMPTY_> <_LABELEMPTY_> xy 0 cxy 0 java.lang.Math DIV com.androzic.MapView#getWidth() 2 mapView
+DEFAULT org.bedework.calfacade.BwEvent#setOwner() ev #get(java.lang.String) org.bedework.calsvci.CalSvcI#getUsersHandler() account svci org.bedework.caldav.bwserver.BwSysIntfImpl org.bedework.caldav.bwserver.BwSysIntfImpl
+DEFAULT <_LABELEMPTY_> result org.eclipse.mylyn.internal.tasks.ui.actions.TaskSelectionDialog#getResult() java.lang.Object <_LABELEMPTY_> dlg
+DEFAULT #refreshNames() org.eclipse.jubula.client.core.businessprocess.ComponentNamesBP#getInstance() org.eclipse.jubula.client.core.model.IProjectPO#getId() org.eclipse.jubula.client.core.businessprocess.ComponentNamesBP reusedProject
+DEFAULT org.apache.directory.server.core.partition.DefaultPartitionNexus#addContextPartition(org.apache.directory.server.core.partition.Partition) partitionNexus partition org.apache.directory.server.core.DefaultDirectoryService
+DEFAULT if NOT org.eclipse.emf.mwe.ui.internal.editor.elements.AbstractWorkflowElement#isFragment() element
+DEFAULT com.android.quicksearchbox.SearchWidgetProvider$SearchWidgetState#setOnClickActivityIntent(android.content.Context,android.widget.RemoteViews,int,android.content.Intent) com.android.quicksearchbox.SearchWidgetProvider$SearchWidgetState context views R.id.search_widget_text mQueryTextViewIntent com.android.quicksearchbox.SearchWidgetProvider$SearchWidgetState
+DEFAULT = tc com.hlidskialf.android.tonepicker.TonePickerAdapter$MediaToneCursor(android.database.Cursor) cursor
+DEFAULT java.util.List#removeAll(java.util.List) oldList deleteList
+DEFAULT org.apache.directory.ldapstudio.browser.ui.editors.entry.EntryEditor#setInput(org.apache.directory.ldapstudio.browser.ui.editors.entry.EntryEditorInput) editor input
+DEFAULT com.alee.laf.rootpane.WebWindow#setVisible(boolean) popup false com.alee.extended.date.WebDateField
+DEFAULT exif android.media.ExifInterface <_LABELEMPTY_> android.media.ExifInterface(java.lang.String) filePath
+DEFAULT <_LABELEMPTY_> w webApps org.apache.openejb.assembler.classic.WebAppInfo <_LABELEMPTY_> appInfo contextInfo
+DEFAULT = lastConnection org.bukkit.configuration.ConfigurationSection#getLong(java.lang.String,long) this net.syamn.sakuracmd.player.PlayerData csi "lastConnection" 0L
+DEFAULT com.twobytes.repair.form.ServiceOrderDocForm#setWarrantyDate() docForm java.text.DateFormat#format(java.util.Date) sdf #getWarrantyDate() com.twobytes.repair.controller.ServiceOrderController com.twobytes.model.ServiceOrder#getProduct() so
+DEFAULT <_LABELEMPTY_> f org.openmrs.api.FormService#getFieldsByConcept() org.openmrs.Field <_LABELEMPTY_> fs org.openmrs.ConceptSet#getConcept() set
+DEFAULT <_LABELEMPTY_> an bodyAnnotations x10.ast.AnnotationNode <_LABELEMPTY_>
+DEFAULT jawher.moulder.Value#bind(jawher.moulder.ElementAndData) value nd jawher.moulder.moulds.AttrModifier
+DEFAULT org.eclipse.team.ui.synchronize.IWizard#setContainer() importWizard #getContainer() org.eclipse.team.ui.synchronize.ParticipantSynchronizeWizard org.eclipse.team.ui.synchronize.ParticipantSynchronizeWizard
+DEFAULT = status models.project.test.ExecutionStatus#getKey() this models.project.test.Instance executionStatus models.project.test.Instance
+DEFAULT com.sun.tools.javac.tree.JCTree.JCStatement#accept(com.sun.tools.javafx.tree.JavafxTreeScanner) part this com.sun.tools.javafx.tree.JavafxTreeScanner
+DEFAULT #addCorrelation() com.google.gwt.dev.js.ast.JsFunction#getSourceInfo() #by(com.google.gwt.dev.js.ast.JsName) jsFunction com.google.gwt.dev.jjs.ast.JProgram#getCorrelator() globalName program com.google.gwt.dev.jjs.impl.GenerateJavaScriptAST
+DEFAULT i2p.bote.io.DerivedKey#clear() derivedKey i2p.bote.io.PasswordCache
+DEFAULT java.lang.StringBuilder#append(java.lang.Object) java.lang.StringBuilder#append(java.lang.String) org.fam.ejb.model.FamFormation#getLibFormation() sb ",<_LABELSPACE_>famFormation=" famFormation org.fam.ejb.model.FamMatchTeam
+DEFAULT <_LABELEMPTY_> callInfo callsInfo com.csipsimple.api.SipCallSession <_LABELEMPTY_> com.csipsimple.ui.InCallActivity
+DEFAULT if org.eclipse.mylyn.internal.trac.core.TracRepositoryConnector#isCompleted(java.lang.String) org.eclipse.mylyn.internal.trac.core.TracRepositoryConnector org.eclipse.mylyn.tasks.core.data.TaskMapper#getStatus() mapper
+DEFAULT <_LABELEMPTY_> addrPath entries java.lang.String <_LABELEMPTY_>
+DEFAULT Paddle#setVelocity(int,int) paddle PADDLE_VEL 0 PongCourt PongCourt
+DEFAULT hash java.lang.String <_LABELEMPTY_> org.eclipse.rwt.internal.theme.Theme#getDummyPropertyName(org.eclipse.rwt.internal.theme.QxType) org.eclipse.rwt.internal.theme.Theme value
+DEFAULT haven.DisplayList#dispose() list haven.FastMesh$DLCompiler$DLCompiled
+DEFAULT = datagraph de.uni_koblenz.jgralab.graphmarker.BooleanGraphMarker#getGraph() this de.uni_koblenz.jgralab.greql2.evaluator.GreqlEvaluator subgraphMarker
+DEFAULT java.util.Properties#setProperty(java.lang.String,java.lang.String) props "password" password bitronix.tm.resource.jdbc.lrc.LrcXADataSource
+DEFAULT return java.util.Date#clone() date org.apache.maven.scm.ChangeSet
+DEFAULT edu.lipreading.gui.eyesFeatureExtractor#paintCoordinates(edu.lipreading.gui.IplImage,java.util.List) eyesFeatureExtractor grabbed eyesCoordinates
+DEFAULT java.lang.StringBuilder#append(java.lang.String) msg java.lang.Throwable#getMessage() e
+DEFAULT android.graphics.Paint#setColor() PAINT Color.WHITE org.xbmc.android.remote.presentation.widget.AbstractItemView
+DEFAULT = fLastStackFrame fStackFrame org.eclipse.jdt.internal.debug.core.model.JDIStackFrame org.eclipse.jdt.internal.debug.core.model.JDIStackFrame
+DEFAULT <_LABELEMPTY_> uploadedPicture pictures org.apache.tapestry5.upload.services.UploadedFile <_LABELEMPTY_> com.ngdb.web.pages.article.game.GameUpdate
+DEFAULT java.lang.StringBuffer#append(java.lang.String) buffer PLUS "width=" width com.googlecode.mgwt.ui.client.MGWTSettings$ViewPort
+DEFAULT cloner edu.wustl.common.util.ObjectCloner <_LABELEMPTY_> edu.wustl.common.util.ObjectCloner()
+DEFAULT android.view.MenuItem#collapseActionView() searchItem com.btmura.android.reddit.app.GlobalMenuFragment
+DEFAULT com.sun.identity.console.base.model.AMPropertySheetModel#setValue(java.lang.String,java.lang.String) propertySheetModel CONDITION_NAME conditionName com.sun.identity.console.policy.ConditionOpViewBeanBase com.sun.identity.console.policy.ConditionOpViewBeanBase
+DEFAULT java.util.Hashtable#remove(java.lang.Object) ht java.lang.Thread#currentThread() org.apache.log4j.NDC java.lang.Thread
+DEFAULT org.eclipse.emf.edapt.migration.Model#delete(org.eclipse.emf.edapt.migration.Instance) model tableCorrelation
+DEFAULT org.eclipse.team.core.subscribers.TeamProvider#fireTeamResourceChange(org.eclipse.team.core.subscribers.TeamDelta[]) org.eclipse.team.core.subscribers.TeamProvider <_LABELEMPTY_> java.lang.Object() subscriber SUBSCRIBER_DELETED null TeamDelta
+DEFAULT org.jivesoftware.smack.Connection#disconnect() conn net.ednovak.nearby.xmppService
+DEFAULT com.android.contacts.list.OnContactBrowserActionListener#onInvalidSelection() mListener com.android.contacts.list.ContactBrowseListFragment
+DEFAULT javax.media.opengl.awt.GLCanvas#invoke(boolean,net.sf.openrocket.gui.figure3d.RocketFigure3d$4) canvas true javax.media.opengl.GLRunnable() net.sf.openrocket.gui.figure3d.RocketFigure3d 4 <_LABELEMPTY_> run boolean <_LABELEMPTY_> <_LABELEMPTY_> drawable net.sf.openrocket.gui.figure3d.RocketRenderer#updateFigure(javax.media.opengl.GLAutoDrawable) return public javax.media.opengl.GLAutoDrawable <_LABELEMPTY_> rr drawable net.sf.openrocket.gui.figure3d.RocketFigure3d false
+DEFAULT if java.util.LinkedHashMap#containsKey(to.joe.strangeweapons.Part) to.joe.strangeweapons.meta.StrangeWeapon#getParts() part to.joe.strangeweapons.meta.StrangeWeapon
+DEFAULT if java.util.Date#after(java.util.Date) publishDateTime expireDateTime this org.infoglue.cms.entities.content.ContentVO this org.infoglue.cms.entities.content.ContentVO
+DEFAULT = resource #getRoot() org.eclipse.core.resources.ResourcesPlugin#getWorkspace() org.eclipse.core.resources.ResourcesPlugin
+DEFAULT javax.swing.JComponent#setBackground(java.awt.Color) coveredColor picked this cc.takacs.php_codeverage_display.config.ConfigPanel
+DEFAULT com.orangeleap.tangerine.domain.CommunicationHistory#setCustomFieldValue(java.lang.String) communicationHistory "recordedBy" PLUS "" com.orangeleap.tangerine.util.TangerineUserHelper#lookupUserId() tangerineUserHelper com.orangeleap.tangerine.service.impl.CommunicationHistoryServiceImpl
+DEFAULT java.io.InputStream#close() resource
+DEFAULT #setDisplayShowTitleEnabled(boolean) #getSupportActionBar() false org.gdg.frisbee.android.activity.GdgActivity
+DEFAULT #onAdClicked(com.appnexus.opensdk.AdView) adListener destination destination this com.appnexus.opensdk.AdWebView this com.appnexus.opensdk.AdWebView
+DEFAULT plugins.Freetalk.ui.web.ThreadPage#addRateButton(freenet.support.HTMLNode,plugins.Freetalk.Message,int) plugins.Freetalk.ui.web.ThreadPage modButtons message 10
+DEFAULT <_LABELEMPTY_> cycle java.util.HashSet(java.util.Collection) org.apache.maven.graph.effective.EProjectCycle <_LABELEMPTY_> final cycles org.apache.maven.graph.effective.transform.FilteringGraphTransformer
+DEFAULT = o org.antlr.stringtemplate.language.ASTExpr#convertAnythingToIterator(java.lang.Object) org.antlr.stringtemplate.language.ASTExpr o
+DEFAULT element org.eclipse.mylar.core.IMylarElement <_LABELEMPTY_> #getElement(java.lang.String) org.eclipse.mylar.core.MylarPlugin#getContextManager() org.eclipse.jdt.core.IJavaElement#getHandleIdentifier() org.eclipse.mylar.core.MylarPlugin javaElement
+DEFAULT org.catrobat.paintroid.dialog.colorpicker.ColorPickerDialog#changeNewColor(int) org.catrobat.paintroid.dialog.colorpicker.ColorPickerDialog color
+DEFAULT org.jdesktop.wonderland.modules.appbase.client.cell.view.viewdefault.View2DCell#userMovePlanarFinish() view org.jdesktop.wonderland.modules.appbase.client.cell.view.viewdefault.FrameHeaderSwing
+DEFAULT com.itmill.toolkit.terminal.gwt.client.ui.ICustomLayout#remove(com.google.gwt.user.client.ui.Widget) com.itmill.toolkit.terminal.gwt.client.ui.ICustomLayout previous
+DEFAULT value double <_LABELEMPTY_> PLUS org.sonar.plugins.core.timemachine.NewViolationsDecorator#calculate(org.sonar.api.batch.DecoratorContext,int) org.sonar.plugins.core.timemachine.NewViolationsDecorator#sumChildren(org.sonar.api.batch.DecoratorContext,int) org.sonar.plugins.core.timemachine.NewViolationsDecorator context days org.sonar.plugins.core.timemachine.NewViolationsDecorator context index
+DEFAULT org.montrealtransit.android.activity.BikeStationInfo#setStatusAsLoading() org.montrealtransit.android.activity.BikeStationInfo
+DEFAULT <_LABELEMPTY_> file _photoFilePaths java.lang.String <_LABELEMPTY_> tasktracker.view.TaskView
+DEFAULT pX int <_LABELEMPTY_> x imageCoords
+DEFAULT = icon org.eclipse.jface.resource.ImageDescriptor#createImage() descriptor
+DEFAULT mtpdb com.idega.jbpm.data.ManagersTypeProcessDefinitionBind <_LABELEMPTY_> com.idega.jbpm.data.dao.impl.BPMDAOImpl#getManagersTypeProcDefBind(long) com.idega.jbpm.data.dao.impl.BPMDAOImpl org.jbpm.graph.def.ProcessDefinition#getId() pd
+DEFAULT org.eclipse.ptp.rm.lml.ui.views.TableView$FirstColumnLabelProvider#clearImages() firstColumnlabelProvider org.eclipse.ptp.rm.lml.ui.views.TableView
+DEFAULT org.eclipse.acceleo.common.AcceleoCommonPlugin#log(boolean) org.eclipse.acceleo.common.AcceleoCommonPlugin org.eclipse.emf.ecore.resource.Resource.Diagnostic#toString() false diagnostic
+DEFAULT org.dom4j.Element#addAttribute(java.lang.String) elm "contentTypeId" PLUS "" #getContentTypeDefinitionId() org.infoglue.cms.controllers.kernel.impl.simple.ContentController#getContentTypeDefinition() contentController com.frovi.ss.Tree.BaseNode#getId() theNode
+DEFAULT #updateView() cytoscape.Cytoscape#getCurrentNetworkView() cytoscape.Cytoscape
+DEFAULT if GE SDK_INT 11 Build.VERSION
+DEFAULT org.opentripplanner.routing.edgetype.StreetVertex#setBicycleSafetyEffectiveLength() backStreet MUL org.opentripplanner.routing.edgetype.StreetVertex#getBicycleSafetyEffectiveLength() org.opentripplanner.common.model.P2#getSecond() backStreet multipliers
+DEFAULT roots java.util.List <_LABELEMPTY_> java.util.ArrayList(java.util.Collection) #getContents() org.eclipse.emf.ecore.EObject#eResource() model
+DEFAULT org.orbisgis.geocognition.GeocognitionElementContentListener#contentChanged() elementListener org.orbisgis.geocognition.sql.AbstractJavaSQLArtifact
+DEFAULT org.h2.server.ftp.FtpEventListener#onUnsupportedCommand(org.h2.server.ftp.FtpEvent) listener event
+DEFAULT boxToGoto de.cismet.cismap.commons.XBoundingBox <_LABELEMPTY_> java.lang.Object() final com.vividsolutions.jts.geom.Geometry#getEnvelope() SRS_SERVICE true de.cismet.cids.custom.nas.NasDialog$GeomWrapper#getGeometry() selectedGeomWrapper de.cismet.cids.custom.nas.NasDialog AlkisConstants.COMMONS
+DEFAULT = doms java.util.HashMap() this de.anomic.plasma.plasmaCrawlProfile$entry
+DEFAULT com.android.camera.ui.RotateImageView#setEnabled(boolean) mThumbnailView true com.android.camera.VideoCamera
+DEFAULT org.inherit.service.common.domain.InboxTaskItem#setStartedByFormPath(java.lang.String) taskItem startedByFormPath
+DEFAULT javax.swing.CellEditor#stopCellEditing() javax.swing.JTable#getCellEditor() tblTimeSheet view.EmployeeTimeSheet
+DEFAULT #info() com.parc.ccn.Library#logger() PLUS com.parc.ccn.Library "getFirstBlock:<_LABELSPACE_>retrieved<_LABELSPACE_>" com.parc.ccn.data.ContentObject#name() result
+DEFAULT com.thinkparity.ophelia.browser.application.browser.display.avatar.tab.TabPanelModel#selectPanel(T) com.thinkparity.ophelia.browser.application.browser.display.avatar.tab.TabPanelModel panel
+DEFAULT android.app.ProgressDialog#dismiss() m_ProgressDialog geoarmy.android.CurrentLocation
+DEFAULT return #getTag() android.support.v4.app.ActionBar#getTabAt(int) com.actionbarsherlock.internal.app.ActionBarWrapper$Impl#getActionBar() index com.actionbarsherlock.internal.app.ActionBarWrapper$Impl
+DEFAULT regexp java.lang.String <_LABELEMPTY_> org.jetbrains.plugins.cucumber.java.CucumberJavaUtil#getPatternFromStepDefinition(com.intellij.psi.PsiAnnotation) final org.jetbrains.plugins.cucumber.java.CucumberJavaUtil stepAnnotation
+DEFAULT <_LABELEMPTY_> sr org.osgi.framework.BundleContext#getServiceReferences(java.lang.String,<unknown>) org.osgi.framework.ServiceReference <_LABELEMPTY_> bundleContext java.lang.Class#getName() null org.ow2.chameleon.fuchsia.tools.grid.GridWebView class org.ow2.chameleon.fuchsia.core.ImportationLinkerIntrospection
+DEFAULT java.net.DatagramSocket#close() mcast org.apache.activemq.transport.discovery.multicast.MulticastDiscoveryAgent
+DEFAULT = version net.sf.robocode.roborumble.battlesengine.BattlesRunner#getVersion() engine
+DEFAULT org.apache.solr.client.solrj.SolrServer#query(org.apache.solr.common.params.ModifiableSolrParams) solrServer params
+DEFAULT org.dawnsci.slicing.component.AxisEditingSupport#updateAxesChoices() axisEditingSupport org.dawnsci.slicing.component.SliceSystemImpl
+DEFAULT org.eclipse.equinox.p2.publisher.eclipse.FeaturesAction#publishFeatureArtifacts(org.eclipse.equinox.p2.publisher.eclipse.Feature,org.eclipse.equinox.p2.publisher.eclipse.IInstallableUnit,org.eclipse.equinox.p2.publisher.eclipse.IPublisherInfo) org.eclipse.equinox.p2.publisher.eclipse.FeaturesAction feature featureIU info
+DEFAULT com.dmdirc.config.prefs.PreferencesManager#close() manager com.dmdirc.addons.ui_swing.dialogs.prefs.SwingPreferencesDialog
+DEFAULT simpleserver.stream.StreamTunnel#stop() serverToClient simpleserver.Player
+DEFAULT java.util.HashMap#clear() elementByIdMap ecologylab.xml.ElementState
+DEFAULT <_LABELEMPTY_> prerequisite prerequisites cours.ulaval.glo4003.domain.Prerequisite <_LABELEMPTY_> cours.ulaval.glo4003.domain.Course
+DEFAULT <_LABELEMPTY_> column no.runsafe.creativetoolbox.PlotCalculator#getColumns() long <_LABELEMPTY_> calculator no.runsafe.creativetoolbox.PlotManager
+DEFAULT com.android.camera.CameraManager.CameraProxy#cancelAutoFocus() mCameraDevice com.android.camera.PhotoModule
+DEFAULT #beep() org.eclipse.swt.widgets.Shell#getDisplay() shell
+DEFAULT capture.Client#setSocket(java.net.Socket) client clientSocket capture.ClientEventController capture.ClientEventController
+DEFAULT se.sics.contiki.collect.SerialConnection#open(java.lang.String) serialConnection comPort se.sics.contiki.collect.CollectServer
+DEFAULT java.util.Set#add(org.eclipse.core.resources.IFolder) excludeFolders outputDir net.sourceforge.texlipse.builder.ProjectFileTracking net.sourceforge.texlipse.builder.ProjectFileTracking
+DEFAULT net.i2p.router.client.ClientManager#unregisterConnection(net.i2p.router.client.ClientConnectionRunner) _manager this net.i2p.router.client.ClientConnectionRunner net.i2p.router.client.ClientConnectionRunner
+DEFAULT java.util.ArrayList#add(E) paths path
+DEFAULT item android.view.MenuItem <_LABELEMPTY_> android.view.Menu#findItem() menu R.id.menuItem_gameSettings
+DEFAULT java.util.List#add(E) limits com.griefcraft.modules.limits.LimitsV2$BlockLimit(org.bukkit.Material,int) material limit
+DEFAULT period int <_LABELEMPTY_> org.eclipse.swt.widgets.Combo#getSelectionIndex() periodBox net.sf.jmoney.reports.IncomeExpenseDetailPage
+DEFAULT <_LABELEMPTY_> institution br.ufpe.cin.reviewer.model.common.Study#getInstitutions() java.lang.String <_LABELEMPTY_> study
+DEFAULT <_LABELEMPTY_> label labels java.lang.String <_LABELEMPTY_>
+DEFAULT gwtsu.GWTSuIRClassCompiler#appendExpression(java.lang.StringBuilder,gw.lang.ir.IRExpression) gwtsu.GWTSuIRClassCompiler builder gw.lang.ir.expression.IRFieldGetExpression#getLhs() fieldGetExpression
+DEFAULT defaultContact net.java.sip.communicator.service.protocol.Contact <_LABELEMPTY_> net.java.sip.communicator.service.contactlist.MetaContact#getDefaultContact() selectedMetaContact
+DEFAULT java.util.Collection#addAll(java.util.Collection) groups groupsToCheckForPermissions
+DEFAULT if NE org.apache.maven.embedder.Configuration#getGlobalSettingsFile() null configuration
+DEFAULT java.net.Socket#close() socket this httpclient.HttpClient
+DEFAULT = valueName com.ochafik.lang.jnaerator.parser.Identifier#resolveLastSimpleIdentifier() valueName
+DEFAULT <_LABELEMPTY_> #close() <_LABELEMPTY_> mOpenHelper com.android.browser.provider.SnapshotProvider t java.lang.Throwable <_LABELEMPTY_>
+DEFAULT = <_LABELEMPTY_> #getUserPrincipal() user 0 org.eclipse.rwt.RWT#getRequest() org.eclipse.rwt.RWT
+DEFAULT uk.org.smithfamily.mslogger.ecuDef.Megasquirt#reset() ecu
+DEFAULT = fetcher java.lang.Object() com.findwise.hydra.stage.AbstractHttpFetchingProcessStage com.findwise.hydra.stage.AbstractHttpFetchingProcessStage#getSettings() com.findwise.hydra.stage.AbstractHttpFetchingProcessStage
+DEFAULT #shutdown() org.glite.authz.pap.authz.AuthorizationEngine#instance() org.glite.authz.pap.authz.AuthorizationEngine
+DEFAULT android.widget.TextView#setText() tv java.lang.String#format(java.lang.String,java.lang.Object[]) java.lang.String #getString(<unknown>) mModuleName com.imaginea.android.sugarcrm.ModuleDetailFragment$LoadContentTask R.string.detailsHeader com.imaginea.android.sugarcrm.ModuleDetailFragment
+DEFAULT org.w3c.dom.Element#setAttributeNS(java.lang.String,java.lang.String,java.lang.String) replacement DOMUtils.NS_URI_XMLNS PLUS attrValNs "xmlns:" prefix
+DEFAULT net.java.dev.moskito.core.calltrace.TraceStep#addChild(net.java.dev.moskito.core.calltrace.TraceStep) last current net.java.dev.moskito.core.calltrace.CurrentlyTracedCall
+DEFAULT org.estatio.dom.index.Index#initialize(org.estatio.dom.index.IndexationCalculator,org.joda.time.LocalDate,org.joda.time.LocalDate) index this baseIndexStartDate nextIndexStartDate org.estatio.dom.index.IndexationCalculator org.estatio.dom.index.IndexationCalculator org.estatio.dom.index.IndexationCalculator org.estatio.dom.index.IndexationCalculator
+DEFAULT org.apache.fop.render.Renderer#renderForeignObjectArea(org.apache.fop.layout.ForeignObjectArea) renderer this org.apache.fop.layout.ForeignObjectArea
+DEFAULT add ca.uhn.hl7v2.model.v25.datatype.XAD <_LABELEMPTY_> ca.uhn.hl7v2.model.v25.segment.PID#getPatientAddress(int) pid 0
+DEFAULT meeting data.Meeting <_LABELEMPTY_> #getMeeting() javax.swing.JList#getSelectedValue() warningList framePackage.NotiPanelView
+DEFAULT play.Logger#info(java.lang.String) play.Logger "%s<_LABELSPACE_>(%d:<_LABELSPACE_>%s)<_LABELSPACE_>has<_LABELSPACE_>logged<_LABELSPACE_>out." #getFormattedName() #getId() #getEmail() controllers.context#getPerson() NameFormat.FIRST_LAST context controllers.context#getPerson() context controllers.context#getPerson() context
+DEFAULT org.spoutcraft.spoutcraftapi.gui.ChatTextBox#reparse() chat
+DEFAULT <_LABELEMPTY_> cookie javax.servlet.http.HttpServletRequest#getCookies() javax.servlet.http.Cookie <_LABELEMPTY_> httpRequest net.sf.xfresh.core.SimpleInternalRequest
+DEFAULT org.prx.android.playerhater.PlaybackService#play(java.io.FileDescriptor) org.prx.android.playerhater.PlaybackService nowPlayingFile org.prx.android.playerhater.PlaybackService
+DEFAULT #tempHideAll() #getNotes() gui.PinEmUp#getMainApp() gui.PinEmUp
+DEFAULT SharedPreferences.Editor#putString(java.lang.String,java.lang.String) editor biz.bokhorst.xprivacy.XPrivacyProvider#getRestrictionPref(java.lang.String) restrictions biz.bokhorst.xprivacy.XPrivacyProvider restrictionName
+DEFAULT io.undertow.websockets.StreamSinkFrameChannel#activate() ch
+DEFAULT = host javax.swing.text.JTextComponent#getText() org.sonar.ide.intellij.component.SonarModuleComponent#getState() sonarModuleComponent org.sonar.ide.intellij.ui.SonarModuleConfiguration txtHost org.sonar.ide.intellij.ui.SonarModuleConfiguration
+DEFAULT value java.lang.Object <_LABELEMPTY_> hex.UKV#get() hex.UKV destination_key job
+DEFAULT #executeOnly(org.orman.sql.Query) org.orman.mapper.MappingSession#getExecuter() q org.orman.mapper.MappingSession
+DEFAULT attrAssertList java.util.List <_LABELEMPTY_> #getAssertsFromSimpleType(org.apache.xerces.xs.XSSimpleTypeDefinition) org.apache.xerces.impl.xs.XMLSchemaValidator#getAssertionValidator() attrSimpleType fXmlSchemaValidator org.apache.xerces.impl.xs.XMLAssertPsychopathXPath2Impl
+DEFAULT = composedOp org.eclipse.wst.common.frameworks.internal.ui.WorkspaceModifyComposedOperation()
+DEFAULT es.icarto.gvsig.navtableforms.gui.tables.AbstractSubForm#setModel(es.icarto.gvsig.navtableforms.gui.tables.TableModelAlphanumeric) form model es.icarto.gvsig.navtableforms.gui.tables.AlphanumericRelNNTableHandler
+DEFAULT POSTDEC _refCount prefix
+DEFAULT <_LABELEMPTY_> header org.restlet.util.Series#getValuesArray() java.lang.String <_LABELEMPTY_> org.restlet.engine.http.connector.ConnectedRequest#getHeaders() HeaderConstants.HEADER_VIA org.restlet.engine.http.connector.ConnectedRequest
+DEFAULT return books
+DEFAULT #loadWhenUnloaded() #getCalc() org.openflexo.foundation.viewpoint.inspector.ClassInspectorEntry
+DEFAULT com.dataiku.dctc.file.GSFile#fill(java.util.List) com.dataiku.dctc.file.GSFile recursiveFileList com.dataiku.dctc.file.GSFile
+DEFAULT it.geosolutions.geobatch.destination.common.SequenceManager#disposeManager() sequenceManager it.geosolutions.geobatch.destination.IngestionObject
+DEFAULT contentType java.lang.String <_LABELEMPTY_> java.lang.String#toString() final mimeType
+DEFAULT org.openscada.hd.Query#close() query this org.openscada.hd.server.common.internal.QueryImpl
+DEFAULT java.io.PrintStream#println(char[]) out PLUS java.lang.System PLUS org.broad.igv.sam.Alignment#getEnd() org.broad.igv.sam.Alignment#getStart() "<_LABELSPACE_>-<_LABELSPACE_>" alignment alignment
+DEFAULT f android.support.v4.app.Fragment <_LABELEMPTY_> com.bexkat.feedlib.ItemDetailFragment()
+DEFAULT java.util.Set#add(E) packageNames packageName
+DEFAULT org.eclipse.jface.viewers.TableViewer#editElement(org.cubictest.model.UserInteraction,int) tableViewer activeUserinteraction 1 org.cubictest.ui.gef.wizards.UserInteractionsComponent org.cubictest.ui.gef.wizards.UserInteractionsComponent
+DEFAULT #setChestplate(org.bukkit.inventory.ItemStack) org.bukkit.entity.Player#getInventory() com.legit2.Demigods.Libraries.Objects.SerialPlayerInventory#getChestplate() player this com.legit2.Demigods.Libraries.Objects.SerialPlayerInventory
+DEFAULT vncCanvas#softCursorFree() vc vncviewer
+DEFAULT = sharedImagesUrl com.netspective.sparx.util.config.Configuration#getTextValue(com.netspective.sparx.util.value.ValueContext) com.netspective.sparx.xaf.navigate.NavigateFileSystemServlet appConfig vc PLUS com.netspective.sparx.xaf.navigate.NavigateFileSystemServlet SHARED_CONFIG_ITEMS_PREFIX "images-url" com.netspective.sparx.Globals
+DEFAULT com.gargoylesoftware.htmlunit.Page#cleanUp() page
+DEFAULT <_LABELEMPTY_> resolver com.google.inject.Provider#get() org.eclipse.recommenders.rcp.codecompletion.IVariableUsageResolver <_LABELEMPTY_> final usageResolversProvider org.eclipse.recommenders.internal.rcp.extdoc.providers.CallsProvider
+DEFAULT com.google.ads.interactivemedia.v3.api.AdsManager#destroy() mAdsManager com.kaltura.playersdk.ima.IMAPlayer
+DEFAULT java.util.HashMap#put(K,V) validEventCache e result org.eclipse.linuxtools.oprofile.launch.configuration.EventConfigCache
+DEFAULT net.citizensnpcs.resources.npclib.PathNPC#updatePathingState() net.citizensnpcs.resources.npclib.PathNPC
+DEFAULT org.fusesource.camel.component.salesforce.SalesforceEndpointConfig#setHttpClient(org.eclipse.jetty.client.HttpClient) config httpClient org.fusesource.camel.component.salesforce.SalesforceComponent org.fusesource.camel.component.salesforce.SalesforceComponent
+DEFAULT <_LABELEMPTY_> wrapper extensions org.fedoraproject.candlepin.cert.X509ExtensionWrapper <_LABELEMPTY_>
+DEFAULT <_LABELEMPTY_> objects org.eclipse.ptp.rm.lml.internal.core.model.OverviewAccess#getObjects() org.eclipse.ptp.rm.lml.internal.core.elements.ObjectsType <_LABELEMPTY_> final org.eclipse.ptp.rm.lml.internal.core.model.LguiItem#getOverviewAccess() org.eclipse.ptp.rm.lml.internal.core.model.LguiItem
+DEFAULT if GE org.gwtapp.ccalc.rpc.proc.calculator.Calculator#r(java.lang.Double) 0.0 org.gwtapp.ccalc.rpc.proc.calculator.Calculator org.gwtapp.ccalc.rpc.data.book.Calculation#getValue() c
+DEFAULT visad.formula.ThingReference#setThing(visad.formula.Thing) tref t visad.formula.FormulaVar
+DEFAULT com.ztools.xml.XMLBean#setBean() xmlBean com.ztools.xml.AbsHandler#getXmlObject() handler
+DEFAULT <_LABELEMPTY_> comment comments com.google.api.services.plus.model.Comment <_LABELEMPTY_>
+DEFAULT = playerName org.bukkit.entity.Player#getName() targetPlayer
+DEFAULT parser cz.incad.Kramerius.processes.ParamsParser <_LABELEMPTY_> java.lang.Object() cz.incad.Kramerius.processes.ParamsLexer(java.io.StringReader) java.io.StringReader(java.lang.String) parametersString
+DEFAULT #visit(<unknown>) org.eclipse.dltk.internal.javascript.ti.TypeInferencerVisitor org.eclipse.dltk.javascript.ast.CatchClause#getStatement() catchClause
+DEFAULT net.sf.hajdbc.SQLException#initCause(java.lang.Throwable) this cause net.sf.hajdbc.SQLException
+DEFAULT <_LABELEMPTY_> player org.bukkit.Bukkit#getOnlinePlayers() org.bukkit.entity.Player <_LABELEMPTY_> org.bukkit.Bukkit
+DEFAULT if NE i 0
+DEFAULT org.mobicents.slee.resource.mgcp.ra.MgcpConnectionActivityImpl#setEndpointIdentifier(jain.protocol.ip.mgcp.message.parms.EndpointIdentifier) activity endpointIdentifier
+DEFAULT com.android.calendar.agenda.AgendaListView#refresh(boolean) mAgendaListView true com.android.calendar.agenda.AgendaFragment
+DEFAULT f org.eclipse.jdt.core.IMethod <_LABELEMPTY_> org.eclipse.recommenders.utils.rcp.JdtUtils#createUnresolvedMethod(org.eclipse.jdt.internal.compiler.lookup.MethodBinding) final org.eclipse.recommenders.utils.rcp.JdtUtils b
+DEFAULT com.hazelcast.config.EntryListenerConfig#setClassName() super com.hazelcast.config.EntryListenerConfig#getClassName() config
+DEFAULT <_LABELEMPTY_> type se.lagrummet.rinfo.base.rdf.Description#getTypes() se.lagrummet.rinfo.base.rdf.Description <_LABELEMPTY_> slugTransl
+DEFAULT <_LABELEMPTY_> file java.io.File#listFiles() java.io.File <_LABELEMPTY_> dir
+DEFAULT = bindings jline.Terminal#getDefaultBindings() terminal jline.ConsoleReader
+DEFAULT locationUtil org.apache.sling.servlets.resolver.internal.helper.NamedScriptResourceCollector <_LABELEMPTY_> org.apache.sling.servlets.resolver.internal.helper.NamedScriptResourceCollector#create(java.lang.String,org.apache.sling.api.resource.Resource,java.lang.String[]) final org.apache.sling.servlets.resolver.internal.helper.NamedScriptResourceCollector scriptName resource executionPaths this org.apache.sling.servlets.resolver.internal.SlingServletResolver
+DEFAULT uk.ac.cam.groupproj.racethewild.Engine#initEngine() uk.ac.cam.groupproj.racethewild.Engine #getResources() uk.ac.cam.groupproj.racethewild.MainMenu
+DEFAULT = moduleSeqNo #getSeqNo() this org.etudes.tool.melete.ViewNextStepsPage org.etudes.tool.melete.ModuleObjService#getCoursemodule() module this org.etudes.tool.melete.ViewNextStepsPage
+DEFAULT o java.lang.Object <_LABELEMPTY_> org.araqne.logdb.query.expr.Expression#eval(org.araqne.logdb.LogMap) expr m org.araqne.logdb.query.command.Search
+DEFAULT = mUnknownEventsOverlay java.lang.Object() br.ufsm.brunodea.tcc.map.InfoCityMap this UNKNOWN mMapView INFO br.ufsm.brunodea.tcc.map.InfoCityMap br.ufsm.brunodea.tcc.event.EventItem.EventType br.ufsm.brunodea.tcc.map.InfoCityMap br.ufsm.brunodea.tcc.map.EventsItemizedOverlay.BalloonType
+DEFAULT com.github.kevinsawicki.http.HttpRequest#part(java.lang.String,java.lang.String) request PARAM_API_USER username com.github.scottmotte.sendgrid.SendGrid this com.github.scottmotte.sendgrid.SendGrid
+DEFAULT = handler java.lang.Object() master.flame.danmaku.ui.widget.DanmakuTextureView android.os.HandlerThread#getLooper() this mDanmakuVisibile mDrawThread master.flame.danmaku.ui.widget.DanmakuTextureView master.flame.danmaku.ui.widget.DanmakuTextureView master.flame.danmaku.ui.widget.DanmakuTextureView
+DEFAULT java.util.ArrayList#clear() tweetArrayList com.google.android.apps.iosched.ui.SocialStreamFragment
+DEFAULT java.util.List#add(com.android.inputmethod.latin.Dictionary) mDictionaries newDict com.android.inputmethod.latin.DictionaryCollection
+DEFAULT java.util.Set#add(E) namespaces javax.xml.namespace.QName#getNamespaceURI() elemName
+DEFAULT <_LABELEMPTY_> mt mediaTypes java.lang.String <_LABELEMPTY_>
+DEFAULT minChar int <_LABELEMPTY_> com.palantir.typescript.services.language.NavigateToItem#getMinChar() item
+DEFAULT validator org.inspektr.common.ioc.validation.AnnotationValidator <_LABELEMPTY_> java.util.Map#get(java.lang.Class) final annotationMappings annotationClass this org.inspektr.common.ioc.validation.ValidationAnnotationBeanPostProcessor
+DEFAULT i int <_LABELEMPTY_> java.lang.String#indexOf(java.lang.String) userAgent "<_LABELSPACE_>" org.gridlab.gridsphere.portlet.impl.ClientImpl
+DEFAULT #setHasChildren(boolean) parent true
+DEFAULT android.widget.TextView#setText() detailView cz.romario.opensudoku.game.FolderInfo#getDetail(android.content.Context) folderInfo mContext cz.romario.opensudoku.gui.FolderListActivity$FolderListViewBinder
+DEFAULT com.android.internal.telephony.SmsApplication#configurePreferredActivity(android.content.pm.PackageManager,android.content.ComponentName) com.android.internal.telephony.SmsApplication packageManager componentName
+DEFAULT de.codeinfection.quickwango.AntiGuest.Preventions.ItemPrevention#prevent(org.bukkit.event.player.PlayerInteractEvent) this event org.bukkit.event.player.PlayerInteractEvent#getPlayer() #getType() de.codeinfection.quickwango.AntiGuest.Preventions.ItemPrevention event org.bukkit.event.player.PlayerInteractEvent#getItem() event
+DEFAULT net.sf.gogui.gui.AnalyzeDialog#setRunButtonEnabled(boolean) m_analyzeDialog false net.sf.gogui.gogui.GoGui
+DEFAULT #refreshAnnotations() org.eclipse.mylyn.reviews.frame.ui.annotation.IReviewAnnotationSupport#getTargetAnnotationModel() fAnnotationSupport org.eclipse.mylyn.reviews.r4e.ui.internal.editors.R4ECompareEditorInput
+DEFAULT = ok com.izforge.izpack.panels.PathInputPanel#emitNotificationFeedback() this PLUS com.izforge.izpack.panels.PathInputPanel PLUS chosenPath #getI18nStringForClass(java.lang.String,java.lang.String) "\n" com.izforge.izpack.panels.PathInputPanel "createdir" "TargetPanel"
+DEFAULT sun.misc.MIDPConfig#getPermittedClasses() sun.misc.MIDPConfig
+DEFAULT com.sun.electric.tool.user.redisplay.VectorCache$VectorCell#init(com.sun.electric.database.hierarchy.Cell) vc com.sun.electric.database.hierarchy.EDatabase#getCell(com.sun.electric.database.id.CellId) database cellId com.sun.electric.tool.user.redisplay.VectorCache
+DEFAULT net.sourceforge.eclipseccase.ui.ClearcaseDecorator#postLabelEvent(org.eclipse.jface.viewers.LabelProviderChangedEvent) activeDecorator org.eclipse.jface.viewers.LabelProviderChangedEvent(net.sourceforge.eclipseccase.ui.ClearcaseDecorator) activeDecorator
+DEFAULT com.jidesoft.popup.JidePopup#ancestorMoved() com.jidesoft.popup.JidePopup$8
+DEFAULT com.idega.presentation.Table#add(com.idega.presentation.ui.HiddenInput) T com.idega.presentation.ui.HiddenInput(java.lang.String,java.lang.String) prmAccountId java.lang.Integer#toString() com.idega.block.finance.presentation.AccountViewer accountID
+DEFAULT org.nuxeo.runtime.management.counters.CounterManager#increaseCounter(java.lang.String) cm counterName org.nuxeo.runtime.management.counters.CounterHelper
+DEFAULT org.opentripplanner.routing.core.StateEditor#cloneStateDataAsNeeded() org.opentripplanner.routing.core.StateEditor
+DEFAULT android.location.LocationManager#removeUpdates(android.location.LocationListener) gpsLocationManager locationListener ca.cumulonimbus.pressurenetsdk.CbLocationManager ca.cumulonimbus.pressurenetsdk.CbLocationManager
+DEFAULT de.lessvoid.nifty.elements.Element#setConstraintHeight(de.lessvoid.nifty.tools.SizeValue) element java.lang.Object() PLUS de.lessvoid.nifty.elements.render.TextRenderer#getTextHeight() "px" textRenderer
+DEFAULT org.freeplane.view.swing.map.MainView#updateText(org.freeplane.features.map.NodeModel) org.freeplane.view.swing.map.NodeView#getMainView() org.freeplane.view.swing.map.NodeView#getModel() view view
+DEFAULT de.ptb.epics.eve.viewer.views.devicesview.TreeViewerContentProvider#updateDeviceLists() de.ptb.epics.eve.viewer.views.devicesview.TreeViewerContentProvider
+DEFAULT goldengate.common.future.GgFuture#await() endOfCommand goldengate.ftp.core.data.FtpTransferControl
+DEFAULT path org.eclipse.core.runtime.IPath <_LABELEMPTY_> org.eclipse.core.resources.IResource#getFullPath() resource
+DEFAULT java.lang.Thread#join(long) populateThread 2000 org.paxle.data.db.impl.CommandDB
+DEFAULT org.tmatesoft.svn.core.io.SVNRepository#closeSession() repos
+DEFAULT java.util.concurrent.atomic.AtomicReference#set(V) username #getUserName() org.eclipse.tcf.te.tcf.processes.core.model.interfaces.IProcessContextNode#getSysMonitorContext() node
+DEFAULT com.voracious.dragons.client.ClientConnectionManager#close() ccm com.voracious.dragons.client.Game
+DEFAULT cc int <_LABELEMPTY_> length VALID
+DEFAULT org.elasticsearch.action.ingest.IngestProcessor#close() ingestProcessor org.elasticsearch.client.support.ingest.transport.TransportClientIngestSupport
+DEFAULT java.lang.Runnable#run() task
+DEFAULT path java.lang.String <_LABELEMPTY_> com.ichi2.anki.Deck#getDeckPath() mDeck com.ichi2.anki.CardEditor
+DEFAULT org.codehaus.groovy.grails.web.binding.BeanWrapper#setPropertyValue(java.lang.String,java.util.Collection) bean propertyName c
+DEFAULT com.android.bluetooth.opp.BluetoothOppRfcommListener#stop() mSocketListener com.android.bluetooth.opp.BluetoothOppService
+DEFAULT java.io.File#mkdirs() parentFile
+DEFAULT com.android.browser.Controller#onResume() mController com.android.browser.BrowserActivity
+DEFAULT err org.tmatesoft.svn.core.SVNErrorMessage <_LABELEMPTY_> org.tmatesoft.svn.core.SVNErrorMessage#create(java.lang.String) org.tmatesoft.svn.core.SVNErrorMessage SVNErrorCode.UNSUPPORTED_FEATURE "Commit<_LABELSPACE_>from<_LABELSPACE_>different<_LABELSPACE_>working<_LABELSPACE_>copies<_LABELSPACE_>belonging<_LABELSPACE_>to<_LABELSPACE_>different<_LABELSPACE_>repositories<_LABELSPACE_>is<_LABELSPACE_>not<_LABELSPACE_>supported"
+DEFAULT org.eclipse.ui.texteditor.ResourceMarkerAnnotationModel#updateMarkers() model fDocument info
+DEFAULT return eu.stratosphere.nephele.instance.InstanceManager#getNetworkTopology(eu.stratosphere.nephele.jobgraph.JobID) instanceManager jobID this eu.stratosphere.nephele.jobmanager.JobManager
+DEFAULT <_LABELEMPTY_> key #keySet() java.lang.String <_LABELEMPTY_> config <_LABELEMPTY_> kits 0 agents.KitStand
+DEFAULT org.davinci.server.internal.command.Download#zipLibs(java.util.List,java.util.zip.ZipOutputStream) org.davinci.server.internal.command.Download lib zos
+DEFAULT uk.org.smithfamily.mslogger.ecuDef.Megasquirt$ConnectedThread#write(byte[]) mConnectedThread pageSelectCommand uk.org.smithfamily.mslogger.ecuDef.Megasquirt
+DEFAULT org.exoplatform.faq.webui.popup.UIAdvancedSearchForm#setText(java.lang.String) uiAdvancedSearchForm text
+DEFAULT com.android.email.activity.MessageCompose#addAddress(android.widget.MultiAutoCompleteTextView,com.android.email.mail.Address) com.android.email.activity.MessageCompose mBccView java.lang.Object() com.android.email.activity.MessageCompose com.android.email.Account#getAlwaysBcc() "" mAccount com.android.email.activity.MessageCompose
+DEFAULT b android.graphics.Bitmap <_LABELEMPTY_> android.graphics.BitmapFactory#decodeFile(java.lang.String) android.graphics.BitmapFactory albumArt
+DEFAULT mapping org.zend.sdklib.internal.mapping.LibraryMapping <_LABELEMPTY_> org.zend.sdklib.internal.mapping.LibraryMapping#create(java.lang.String,java.lang.String) org.zend.sdklib.internal.mapping.LibraryMapping lastKey entry
+DEFAULT javax.swing.tree.DefaultMutableTreeNode#remove(javax.swing.tree.MutableTreeNode) parent last
+DEFAULT = iconFactory java.lang.reflect.Constructor#newInstance(java.lang.Object[]) java.lang.Class#getConstructor(java.lang.Class[]) iconFactoryClass
+DEFAULT org.atlasapi.feeds.OembedOutput#setEmbedCode() output org.atlasapi.beans.OembedTranslator#escapeQuotes(java.lang.String) org.atlasapi.beans.OembedTranslator org.atlasapi.media.entity.Location#getEmbedCode() location
+DEFAULT com.btmatthews.maven.plugins.ldap.opendj.OpenDJServer#loadLdif(org.opends.server.api.Backend) com.btmatthews.maven.plugins.ldap.opendj.OpenDJServer backend
+DEFAULT = eventHandler org.eclipse.birt.data.engine.api.IBaseDataSetDesign#getEventHandler() org.eclipse.birt.data.engine.impl.DataSetRuntime dataSetDesign
+DEFAULT #postEvent(java.awt.event.KeyEvent) net.sourceforge.marathon.event.FireableKeyEvent java.awt.event.KeyEvent(java.awt.Component,int,long,int,int,char) #getComponent() KEY_RELEASED java.lang.System#currentTimeMillis() modifiers keyCode ch net.sourceforge.marathon.event.FireableKeyEvent java.awt.event.KeyEvent java.lang.System net.sourceforge.marathon.event.FireableKeyEvent
+DEFAULT java.io.PrintWriter#println(char[]) out play.templates.JavaExtensions#toString(groovy.lang.Closure) play.templates.JavaExtensions body
+DEFAULT java.lang.reflect.Method#invoke(java.lang.Object,java.lang.Object[]) m object <_LABELEMPTY_> property
+DEFAULT #setText(java.lang.String) org.eclipse.swt.widgets.Composite#getShell() title parent org.zend.core.notifications.ui.dialogs.ReadMoreDialog
+DEFAULT <_LABELEMPTY_> jvmFlag jvmFlags java.lang.String <_LABELEMPTY_> final net.kindleit.gae.RunGoal
+DEFAULT android.os.Handler#removeMessages(int) mUpdateHandler MSG_FINAL_UPDATE com.android.providers.downloads.DownloadService com.android.providers.downloads.DownloadService
+DEFAULT net.sf.freecol.common.model.owner#modifyTension(int,int) owner nation DIV addToAlarm 2
+DEFAULT <_LABELEMPTY_> repllib java.util.List#add(E) <_LABELEMPTY_> java.io.File <_LABELEMPTY_> org.eclipse.core.runtime.FileLocator#getBundleFile() org.eclipse.core.runtime.FileLocator org.eclipse.core.runtime.Platform#getBundle(java.lang.String) org.eclipse.core.runtime.Platform "org.clojure.tools.nrepl" classpath java.io.File#getAbsolutePath() repllib e <_LABELEMPTY_> java.io.IOException <_LABELEMPTY_> org.eclipse.ui.WorkbenchException(java.lang.String,java.io.IOException) "Failed<_LABELSPACE_>to<_LABELSPACE_>find<_LABELSPACE_>nrepl<_LABELSPACE_>library" e
+DEFAULT <_LABELEMPTY_> file listOfFiles java.io.File <_LABELEMPTY_>
+DEFAULT genPackageIterable java.lang.Iterable <_LABELEMPTY_> com.google.common.collect.Lists#newArrayList() com.google.common.collect.Lists
+DEFAULT com.android.gallery3d.data.MediaDetails#addDetail(java.lang.String) details MediaDetails.INDEX_MIMETYPE mContentType com.android.gallery3d.data.UriImage
+DEFAULT org.bukkit.scoreboard.Objective#unregister() objective com.github.ucchyocean.ct.scoreboard.TabListScoreDisplay
+DEFAULT if EQ java.lang.String#indexOf(int) NEG referenceString ',' 1
+DEFAULT de.fu_berlin.inf.dpp.invitation.internal.IInvitationUI#cancel(de.fu_berlin.inf.dpp.net.JID,java.lang.String,boolean) invitationUI peer errorMsg replicated this de.fu_berlin.inf.dpp.invitation.internal.InvitationProcess this de.fu_berlin.inf.dpp.invitation.internal.InvitationProcess
+DEFAULT java.lang.StringBuilder#append(java.lang.Object) buf #toCharArray() org.eclipse.cdt.core.dom.ast.IScope#getScopeName() scope
+DEFAULT org.eclipse.ui.IPartService#removePartListener(org.codehaus.groovy.eclipse.debug.ui.EnsureJUnitFont) service ensure org.codehaus.groovy.eclipse.GroovyPlugin
+DEFAULT domain T <_LABELEMPTY_> org.apache.wicket.model.IModel#getObject() object
+DEFAULT org.eclipse.orion.server.useradmin.servlets.User#setEmail(java.lang.String) newUser email
+DEFAULT com.fsck.k9.Account#setSortType(com.fsck.k9.Account.SortType) mAccount mSortType com.fsck.k9.activity.MessageList com.fsck.k9.activity.MessageList
+DEFAULT <_LABELEMPTY_> org.voltdb.NodeDRGateway#shutdown() <_LABELEMPTY_> m_nodeDRGateway org.voltdb.RealVoltDB e org.voltcore.logging.VoltLogger#warn(java.lang.String,java.lang.InterruptedException) java.lang.InterruptedException <_LABELEMPTY_> log "Interrupted<_LABELSPACE_>shutting<_LABELSPACE_>down<_LABELSPACE_>invocation<_LABELSPACE_>buffer<_LABELSPACE_>server" e org.voltdb.RealVoltDB
+DEFAULT = bridge org.eclipse.equinox.launcher.JNIBridge(java.lang.String) org.eclipse.equinox.launcher.Main library org.eclipse.equinox.launcher.Main
+DEFAULT <_LABELEMPTY_> de.sub.goobi.helper.FilesystemHelper#createDirectoryForUser(java.lang.String) <_LABELEMPTY_> de.sub.goobi.helper.FilesystemHelper target de.sub.goobi.beans.Benutzer#getLogin() myBenutzer e de.sub.goobi.helper.Helper#setFehlerMeldung(java.lang.String,java.lang.Exception) java.lang.Exception <_LABELEMPTY_> de.sub.goobi.helper.Helper PLUS e "Export<_LABELSPACE_>canceled,<_LABELSPACE_>could<_LABELSPACE_>not<_LABELSPACE_>create<_LABELSPACE_>destination<_LABELSPACE_>directory:<_LABELSPACE_>" inTargetFolder
+DEFAULT org.apache.mina.filter.executor.IoEventQueueHandler#polled(org.apache.mina.filter.executor.UnorderedThreadPoolExecutor,org.apache.mina.common.IoEvent) queueHandler this task org.apache.mina.filter.executor.UnorderedThreadPoolExecutor org.apache.mina.filter.executor.UnorderedThreadPoolExecutor
+DEFAULT = magnification loci.common.IniTable#get(java.lang.String) loci.formats.in.FV1000Reader acquisition "Magnification"
+DEFAULT java.util.List#add(org.eclipse.virgo.kernel.userregion.internal.management.JMXQuasiWire) wires java.lang.Object() quasiImportPackage
+DEFAULT = entity null com.svanberg.household.web.wicket.EntityModel
+DEFAULT org.jasig.ssp.transferobject.external.ExternalStudentFinancialAidTO#setBalanceOwed(java.math.BigDecimal) financialAid balanceOwed org.jasig.ssp.transferobject.external.ExternalStudentRecordsLiteTO
+DEFAULT dispName java.lang.String <_LABELEMPTY_> #getDisplayName() edu.wisc.ssec.mcidasv.control.PolarOrbitTrackControl
+DEFAULT #requestFocusInWindow() gui.GuiChatWindow#get_textArea4() w
+DEFAULT org.jdom.Element#addContent(org.jdom.Element) xml org.pathvisio.visualization.plugins.ColorByExpression$ConfiguredSample#toXML() s
+DEFAULT org.esa.beam.framework.datamodel.Product#addProductNodeListener(org.esa.beam.framework.datamodel.ProductNodeListenerAdapter) product geoCodinglistener org.esa.beam.visat.toolviews.pin.GcpManagerToolView
+DEFAULT org.eclipse.jface.text.contentassist.AdditionalInfoController#setSizeConstraints(int,int,boolean,boolean) fAdditionalInfoController 50 10 true false org.eclipse.jface.text.contentassist.CompletionProposalPopup
+DEFAULT java.util.List#add(org.antlr.works.grammar.syntax.ElementImport) imports java.lang.Object() org.antlr.works.grammar.syntax.GrammarSyntaxParser name #T(int) org.antlr.works.grammar.syntax.GrammarSyntaxParser org.antlr.works.grammar.syntax.GrammarSyntaxParser 0
+DEFAULT java.util.Collection#clear() triggers this org.tmatesoft.svn.core.internal.db.SVNSqlJetTableStatement
+DEFAULT android.app.AlertDialog#setMessage(java.lang.String) dialog mProgressString com.android.email.activity.setup.AccountCheckSettingsFragment$CheckingDialog
+DEFAULT java.io.InputStream#close() stream de.geotweeter.StreamRequest$StreamRequestThread
+DEFAULT com.mongodb.ReplicaSetStatus#close() _rsStatus com.mongodb.DBTCPConnector
+DEFAULT dk.gabriel333.Library.G333Inventory#sortInventoryItems(org.getspout.spoutapi.player.SpoutPlayer,org.bukkit.inventory.Inventory) dk.gabriel333.Library.G333Inventory sPlayer inventory
+DEFAULT edu.uci.ics.hyracks.api.comm.IFrameWriter#fail() delegate edu.uci.ics.hyracks.control.nc.partitions.PipelinedPartition
+DEFAULT <_LABELEMPTY_> org.tmatesoft.svn.core.internal.wc.admin.SVNTranslator#copy(java.io.InputStream) <_LABELEMPTY_> org.tmatesoft.svn.core.internal.wc.admin.SVNTranslator source #getOutput() #getOperation() org.tmatesoft.svn.core.internal.wc2.ng.SvnNgCat e err org.tmatesoft.svn.core.internal.wc.SVNErrorManager#error(org.tmatesoft.svn.core.SVNErrorMessage) java.io.IOException <_LABELEMPTY_> org.tmatesoft.svn.core.SVNErrorMessage <_LABELEMPTY_> org.tmatesoft.svn.core.SVNErrorMessage#create(java.io.IOException) org.tmatesoft.svn.core.SVNErrorMessage SVNErrorCode.IO_ERROR e org.tmatesoft.svn.core.internal.wc.SVNErrorManager err SVNLogType.WC
+DEFAULT val java.lang.String <_LABELEMPTY_> osm.keys#get(java.lang.String) keys key osm
+DEFAULT containerEntries org.eclipse.jdt.core.IClasspathEntry[] <_LABELEMPTY_> org.eclipse.jdt.core.IClasspathContainer#getClasspathEntries() final container
+DEFAULT #setErrorMessage(java.lang.String) org.strategoxt.imp.metatooling.wizards.NewEditorWizardPage message
+DEFAULT adapted java.lang.Object <_LABELEMPTY_>
+DEFAULT org.deegree.feature.persistence.shape.SHPReader#close() shp org.deegree.feature.persistence.shape.ShapeFeatureStore
+DEFAULT com.jpennell.wcwidget.MainActivity#displayFiveDay(android.database.Cursor) com.jpennell.wcwidget.MainActivity$2 cursor
+DEFAULT if NE usrId null
+DEFAULT part org.eclipse.ui.IEditorPart <_LABELEMPTY_> org.eclipse.ui.IWorkbenchPage#getActiveEditor() page
+DEFAULT info uk.ac.starlink.table.ColumnInfo <_LABELEMPTY_> uk.ac.starlink.table.ColumnData#getColumnInfo() cdata
+DEFAULT org.esa.beam.dataio.obpg.ObpgUtils#handleMetadataGroup(ucar.nc2.Group,org.esa.beam.framework.datamodel.MetadataElement) org.esa.beam.dataio.obpg.ObpgUtils group sensorBandParam
+DEFAULT if LT buildDefinitionId 0
+DEFAULT if EQ connectorCoordinator null
+DEFAULT visad.ScalarMap#setControl() map
+DEFAULT = integerProductInfo gov.nasa.gsfc.seadas.processing.l2gen.productData.L2genProductInfo(java.lang.String) prodName
+DEFAULT com.iplanet.services.ldap.AttrSet#replace(com.iplanet.services.ldap.Attr) attrSet com.iplanet.services.ldap.Attr(java.lang.String,byte[][]) attrName attrValues
+DEFAULT com.aciertoteam.geo.entity.Country#setIpAddress(java.lang.String) country ipAddress
+DEFAULT return #getName() element
+DEFAULT java.util.Set#add(com.teatime.game.model.Craft) oldCrafts currentCraft com.teatime.game.model.Human com.teatime.game.model.Human
+DEFAULT java.util.TreeMap#put(ukhas.Telemetry_string) data java.lang.Long#valueOf(java.lang.String) str ukhas.Payload java.lang.Long str.time#getTime() time str
+DEFAULT org.openhab.binding.http.internal.eventPublisher#postUpdate(java.lang.String,org.openhab.core.types.State) eventPublisher itemName state
+DEFAULT <_LABELEMPTY_> u users dk.frv.eavdam.data.EAVDAMUser <_LABELEMPTY_>
+DEFAULT #closeScreen() thePlayer mc this net.minecraft.src.NetClientHandler
+DEFAULT <_LABELEMPTY_> allKeys java.util.Enumeration#hasMoreElements() key java.util.Enumeration <_LABELEMPTY_> java.util.Dictionary#keys() properties allKeys java.lang.String <_LABELEMPTY_> java.util.Enumeration#nextElement() allKeys
+DEFAULT javafx.animation.Timeline#stop() timeline eu.lestard.snakefx.core.GameLoop
+DEFAULT <_LABELEMPTY_> item items org.openscada.da.server.arduino.ArduinoDataItem <_LABELEMPTY_> final this org.openscada.da.server.arduino.ArduinoDevice
+DEFAULT #logout() com.gooddata.processor.ProcessingContext#getRestApi(com.gooddata.processor.CliParams) context cliParams com.gooddata.processor.GdcDI com.gooddata.processor.GdcDI
+DEFAULT fr.cg95.cvq.generator.plugins.fo.ElementFo#setHtmlClass() fr.cg95.cvq.generator.plugins.fo.ElementFo
+DEFAULT <_LABELEMPTY_> child nl.b3p.viewer.config.services.Category#getChildren() nl.b3p.viewer.config.services.Category <_LABELEMPTY_> category nl.b3p.viewer.admin.stripes.GeoServiceRegistryActionBean
+DEFAULT org.ccnx.ccn.CCNHandle#cancelInterest(org.ccnx.ccn.protocol.Interest,org.ccnx.ccn.profiles.search.Pathfinder) _handle interest this org.ccnx.ccn.profiles.search.Pathfinder org.ccnx.ccn.profiles.search.Pathfinder
+DEFAULT #remove(com.matejdro.bukkit.jail.JailCell) com.matejdro.bukkit.jail.JailZone#getCellList() this com.matejdro.bukkit.jail.JailCell#getJail() com.matejdro.bukkit.jail.JailCell com.matejdro.bukkit.jail.JailCell
+DEFAULT org.netbeans.spi.editor.hints.HintsController#setErrors(javax.swing.text.Document,java.lang.String,java.util.List) org.netbeans.spi.editor.hints.HintsController document "simple-java" errors
+DEFAULT <_LABELEMPTY_> obj spawns java.lang.Object <_LABELEMPTY_>
+DEFAULT org.fusesource.fabric.maven.impl.MavenUploadProxyServlet#stop() mavenUploadProxyServlet this org.fusesource.fabric.maven.impl.MavenProxyRegistrationHandler
+DEFAULT java.lang.Throwable#printStackTrace() ex
+DEFAULT value java.lang.String <_LABELEMPTY_> org.dita.dost.reader.GenListModuleReader#toFile(java.lang.String) final org.dita.dost.reader.GenListModuleReader org.dita.dost.util.FileUtils#normalizeDirectory(java.lang.String,java.lang.String) org.dita.dost.util.FileUtils currentDir href org.dita.dost.reader.GenListModuleReader
+DEFAULT <_LABELEMPTY_> mBinder com.fusionx.relay.connection.ConnectionManager#onDisconnectAll() com.fusionx.lightirc.communication.IRCService mConnectionManager com.fusionx.lightirc.communication.IRCService
+DEFAULT if NE MWC.GenericData.WatchableList#getStartDTG() null thePrimary
+DEFAULT if #equals(de.hsrm.inspector.gadgets.intf.Gadget) de.hsrm.inspector.gadgets.pool.GadgetEvent#getGadget() gadget ev
+DEFAULT #equals() org.jboss.tools.common.java.IParametedType#getSignature() org.jboss.tools.common.java.IParametedType#getSignature() superType delegatedType
+DEFAULT org.sonar.api.rules.Violation#setMessage(java.lang.String) violation msg
+DEFAULT = mf java.lang.Object() extFile java.io.File#getName() #makeRelative() extFile #getRuntimePath() component
+DEFAULT org.tmatesoft.svn.core.io.SVNRepository#closeSession() repository
+DEFAULT java.util.List#add(E) output out
+DEFAULT org.eclipse.birt.report.engine.api.IStatusHandler#initialize() handler
+DEFAULT org.apache.log4j.Category#info(java.lang.Object) log4j java.lang.StringBuilder#append(java.lang.String) nu.validator.messages.MessageEmitterAdapter java.lang.StringBuilder#append(char) java.lang.Throwable#getMessage() java.lang.StringBuilder#append(java.lang.String) '\t' java.lang.StringBuilder() systemId message
+DEFAULT com.volosyukivan.RemoteKeyboard#unregisterKeyListener(com.volosyukivan.RemoteKeyListener.Stub) removeKeyboard keyboardListener com.volosyukivan.WiFiInputMethod com.volosyukivan.WiFiInputMethod
+DEFAULT return java.lang.Integer#parseInt(java.lang.String) java.lang.Integer result
+DEFAULT java.util.Map#put(K,V) valueMap "selectedTab" selectedTab
+DEFAULT hudson.matrix.MatrixConfiguration#setCombination(hudson.matrix.Combination) item hudson.matrix.Combination(java.util.Map) c
+DEFAULT isApplicable boolean <_LABELEMPTY_> net.sf.jmoney.model2.ScalarPropertyAccessor#isPropertyApplicable(net.sf.jmoney.model2.IncomeExpenseAccount) propertyAccessor selectedAccount net.sf.jmoney.bookkeepingPages.CategoryPage$CategoryFormPage$PropertyControls net.sf.jmoney.bookkeepingPages.CategoryPage$CategoryFormPage
+DEFAULT org.jdesktop.wonderland.modules.appbase.client.view.View2DDisplayer#destroyView(org.jdesktop.wonderland.modules.appbase.client.view.View2D) displayer view
+DEFAULT java.util.ArrayList#addAll(java.util.Collection) virtualArrayList initialList org.caleydo.core.data.virtualarray.VirtualArray
+DEFAULT android.media.AudioManager#abandonAudioFocus(com.namelessdev.mpdroid.StreamingService) audioManager this com.namelessdev.mpdroid.StreamingService com.namelessdev.mpdroid.StreamingService
+DEFAULT android.util.Log#d(java.lang.String) android.util.Log TAG PLUS bgsep.bluetooth.BluetoothHandler "\t" android.bluetooth.BluetoothDevice#getName() d
+DEFAULT = src java.lang.String#replaceAll(java.lang.String,java.lang.String) src "\\\\\"" ""
+DEFAULT <_LABELEMPTY_> pr prs java.lang.String <_LABELEMPTY_>
+DEFAULT java.util.Map#put(java.lang.String,org.jclouds.domain.JsonBall) returnVal "platform_version" org.jclouds.domain.JsonBall(java.lang.String) java.util.Properties#getProperty(java.lang.String) systemProperties "os.version"
+DEFAULT edacc.model.ConfigurationScenario#setCourse(edacc.model.Course) cs edacc.model.Course()
+DEFAULT #startManagingCursor(<unknown>) com.android.calendar.selectcalendars.SelectSyncedCalendarsMultiAccountActivity accountsCursor
+DEFAULT = nodes java.util.ArrayList(java.util.Collection) org.apache.xerces.dom.NamedNodeMapImpl nodes org.apache.xerces.dom.NamedNodeMapImpl
+DEFAULT java.util.logging.Logger#severe(java.lang.String) logger PLUS org.geotools.xml.XMLSAXHandler PLUS org.xml.sax.Locator#getLineNumber() PLUS ",<_LABELSPACE_>line<_LABELSPACE_>" "col<_LABELSPACE_>" org.xml.sax.Locator#getColumnNumber() locator org.geotools.xml.XMLSAXHandler locator org.geotools.xml.XMLSAXHandler
+DEFAULT iconTitleBar android.widget.ImageView <_LABELEMPTY_> #findViewById() #getView() R.id.buddy_icon this de.tubs.ibr.dtn.chat.ChatFragment
+DEFAULT = prefix #substring(int,int) org.antlr.runtime.Token#getText() 0 prefixLength tokenToComplete
+DEFAULT #close() #getCursor() android.widget.ListView#getAdapter() messageList edu.ucsb.cs290.touch.to.chat.ConversationDetailFragment
+DEFAULT name java.lang.String <_LABELEMPTY_> net.sf.orcc.util.util.EcoreHelper#getFeature(org.eclipse.emf.ecore.EObject,java.lang.String) net.sf.orcc.util.util.EcoreHelper entity "name"
+DEFAULT return org.mayocat.shop.catalog.model.Purchasable#getFeaturedImageId() product
+DEFAULT <_LABELEMPTY_> view java.util.HashMap#values() com.gallatinsystems.survey.device.view.QuestionView <_LABELEMPTY_> questionMap com.gallatinsystems.survey.device.view.SurveyTabContentFactory
+DEFAULT org.jdesktop.wonderland.modules.appbase.client.swing.WindowSwingEmbeddedToolkit.WindowSwingEmbeddedPeer#dispose() embeddedPeer org.jdesktop.wonderland.modules.appbase.client.swing.WindowSwing
+DEFAULT gui.GUILoggInInfo#loadNotifications() notificationShower this synclogic.ClientSynchronizationUnit
+DEFAULT org.eclipse.swt.widgets.TableItem#setText(int) keyItem 5 #toString() org.pentaho.hbase.shim.api.Mapping#getKeyType() mapping
+DEFAULT com.pace.base.comm.SimpleCoordList#compressData() resultCoordList
+DEFAULT yuuki.battle.BattleRunner#setPaused(boolean) battleRunner false yuuki.Engine
+DEFAULT <_LABELEMPTY_> j LT POSTINC int <_LABELEMPTY_> 0 j java.util.BitSet#length() fgFields j
+DEFAULT au.com.bytecode.opencsv.CSVWriter#writeNext(java.lang.String[]) writer entry
+DEFAULT org.eclipse.egit.ui.internal.history.SWTCommitList#dispose() allCommits org.eclipse.egit.ui.internal.history.CommitGraphTable
+DEFAULT java.util.Map#putAll(java.util.Map) parameters java.util.Map#get(java.lang.Object) extensions implClassName
+DEFAULT java.util.Map#putAll(java.util.Map) envVars envMap this org.jenkinsci.plugins.envinject.EnvInjectVarList
+DEFAULT com.dmdirc.config.prefs.PreferencesCategory#dismiss() category com.dmdirc.addons.ui_swing.components.expandingsettings.SettingsPanel
+DEFAULT mBus java.util.regex.Matcher <_LABELEMPTY_> java.util.regex.Pattern#matcher(java.lang.CharSequence) final P_NORMALIZE_LINE_BUS line de.schildbach.pte.AbstractHafasProvider
+DEFAULT java.util.TimerTask#cancel() task this org.xtreemfs.babudb.replication.TimeDriftDetector
+DEFAULT <_LABELEMPTY_> ref refs org.osgi.framework.ServiceReference <_LABELEMPTY_>
+DEFAULT #notifyLocalInfoChanged(org.eclipse.mylar.tasks.core.ITask) #getTaskList() task org.eclipse.mylar.tasks.ui.TasksUiPlugin#getTaskListManager() org.eclipse.mylar.tasks.ui.TasksUiPlugin org.eclipse.mylar.tasks.ui.editors.TaskEditor
+DEFAULT org.springframework.beans.ConfigurablePropertyAccessor#setConversionService(org.springframework.core.convert.ConversionService) org.springframework.validation.AbstractPropertyBindingResult#getPropertyAccessor() conversionService org.springframework.validation.AbstractPropertyBindingResult
+DEFAULT <_LABELEMPTY_> channel com.alta189.cyborg.Settings#getChannels() java.lang.String <_LABELEMPTY_> com.alta189.cyborg.Settings
+DEFAULT sound.AudioClip#stop() backgroundmusic states.Scene
+DEFAULT config org.jivesoftware.smack.ConnectionConfiguration <_LABELEMPTY_> org.jivesoftware.smack.ConnectionConfiguration(java.lang.String,java.lang.Integer) servername port org.openhab.io.net.internal.jabber.XMPPConnect org.openhab.io.net.internal.jabber.XMPPConnect
+DEFAULT org.apache.fop.render.intermediate.IFSerializer#serializeBookmark(org.apache.fop.render.intermediate.extensions.Bookmark) org.apache.fop.render.intermediate.IFSerializer b
+DEFAULT org.caleydo.core.view.opengl.layout2.RenderCache#end(org.caleydo.core.view.opengl.layout2.GLGraphics) cache org.caleydo.core.view.opengl.layout2.IGLElementContext#getDisplayListPool() g org.caleydo.core.view.opengl.layout2.GLElement context org.caleydo.core.view.opengl.layout2.GLElement
+DEFAULT java.util.ArrayList#add() axisList org.olap4j.query.Olap4jNodeConverter#toOlap4j(org.olap4j.query.Query) org.olap4j.query.Olap4jNodeConverter axis
+DEFAULT com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard#setHTMLImpl(java.lang.String) com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard com.google.gwt.user.client.DOM#getInnerHTML(com.google.gwt.user.client.Element) com.google.gwt.user.client.DOM beforeInitPlaceholder com.google.gwt.user.client.ui.impl.RichTextAreaImplStandard
+DEFAULT java.io.File#delete() outFile this org.subethamail.smtp.server.io.DeferredFileOutputStream
+DEFAULT <_LABELEMPTY_> reg org.jdom2.Element#getChildren() org.jdom2.Element <_LABELEMPTY_> spawn
+DEFAULT = filepath #getAbsolutePath() #toFile() org.eclipse.core.resources.IFile#getLocation() file
+DEFAULT module org.python.pydev.core.IModule <_LABELEMPTY_> org.python.pydev.core.IModulesManager#getModule(java.lang.String,org.python.pydev.core.IPythonNature,boolean) modulesManager modName nature true
+DEFAULT io.trigger.forge.android.core.ForgeActivity#runOnUiThread() activity io.trigger.forge.android.modules.keyboard.API#typeString(android.widget.EditText,java.lang.String) io.trigger.forge.android.modules.keyboard.API webTextView text
+DEFAULT javax.sound.sampled.DataLine#stop() clip com.github.a2g.core.platforms.java.SoundForJava
+DEFAULT java.util.LinkedHashMap#clear() referents net.sf.okapi.common.skeleton.GenericSkeletonWriter
+DEFAULT = lastCompanyUpdate java.util.Date#clone() this fr.cph.stock.entities.Portfolio lastCompanyUpdate
+DEFAULT <_LABELEMPTY_> clazz classes java.lang.Class <_LABELEMPTY_> final
+DEFAULT #aceitar(br.univali.portugol.nucleo.analise.semantica.AnalisadorSemantico) br.univali.portugol.nucleo.analise.semantica.NoPara#getInicializacao() this noPara br.univali.portugol.nucleo.analise.semantica.AnalisadorSemantico
+DEFAULT variant org.eclipse.team.core.variants.IResourceVariant <_LABELEMPTY_> org.eclipse.team.internal.ui.Utils#getAdapter(org.eclipse.team.core.history.IFileRevision,java.lang.Class) org.eclipse.team.internal.ui.Utils remote class org.eclipse.team.core.variants.IResourceVariant
+DEFAULT org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction#run(org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction) renameDelegate this org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction
+DEFAULT = privacyLogEnabled true org.societies.comm.xmpp.xc.impl.XCCommunicationMgr
+DEFAULT java.nio.channels.DatagramChannel#send(java.nio.ByteBuffer,java.net.SocketAddress) chan buf org.cncnet.tunnel.Client#getAddress() clientTo
+DEFAULT org.geotools.filter.SQLEncoderPostgis#setDefaultGeometry() encoder #getName() org.geotools.data.postgis.PostgisDataSource org.geotools.data.postgis.FeatureType#getDefaultGeometry() schema org.geotools.data.postgis.PostgisDataSource
+DEFAULT <_LABELEMPTY_> item items model.Item <_LABELEMPTY_>
+DEFAULT <_LABELEMPTY_> tLink tOutEdges LinkObject <_LABELEMPTY_>
+DEFAULT com.elasticinbox.core.model.LabelCounters#setTotalBytes(java.lang.Long) lc size this com.elasticinbox.core.model.Message
+DEFAULT com.itmill.toolkit.terminal.gwt.client.ui.ITree$TreeNode#setSelected(boolean) oldSelection false
+DEFAULT org.ligi.gobandroid_hd.ui.SGFListFragment#refresh() list_fragment org.ligi.gobandroid_hd.ui.SGFSDCardListActivity
+DEFAULT screenPosn float <_LABELEMPTY_> net.bible.android.view.activity.page.MainBibleActivity#getCurrentPosition() mMainBibleActivity net.bible.android.control.PassageChangeMediator
+DEFAULT com.phonegap.GpsListener#stop() mGps com.phonegap.GeoListener
+DEFAULT <_LABELEMPTY_> file utils.Fixtures#getFilesInFolder(java.lang.String) play.vfs.VirtualFile <_LABELEMPTY_> utils.Fixtures path
+DEFAULT aQute.lib.deployer.Reporter#trace(java.lang.String,java.lang.String,aQute.lib.deployer.Version) reporter "bsn=%s<_LABELSPACE_>version=%s" bsn version aQute.lib.deployer.FileRepo
+DEFAULT msg java.lang.String <_LABELEMPTY_> #getEventDetail() #getOpNotification() com.madgag.agit.blockingprompt.ResponseInterface#getOpPrompt() responseInterface com.madgag.agit.DialogPromptMonkey
+DEFAULT com.idega.presentation.ui.DropdownMenu#addMenuElement() _currencies com.idega.block.trade.business.CurrencyHolder#getCurrencyID() com.idega.block.trade.business.CurrencyHolder#getCurrencyName() holder holder
+DEFAULT <_LABELEMPTY_> importDeclaration org.eclipse.xtext.xtype.XImportSection#getImportDeclarations() org.eclipse.xtext.xtype.XImportDeclaration <_LABELEMPTY_> section
+DEFAULT fr.loria.GraphViz#addln(java.lang.String) gv uk.me.thega.graph.DotGenerator#linkString(java.lang.String,java.lang.String,java.lang.String,int) uk.me.thega.graph.DotGenerator uk.me.thega.graph.DotGenerator dependeeNodeId dependencyNodeId java.util.Map#get(java.lang.Object) importance groupIdColours groupId uk.me.thega.graph.DotGenerator
+DEFAULT org.eclipse.ui.internal.cheatsheets.views.CheatSheetManager#addListener(org.eclipse.ui.cheatsheets.CheatSheetListener) org.eclipse.ui.internal.cheatsheets.views.CheatSheetViewer#getManager() listener org.eclipse.ui.internal.cheatsheets.views.CheatSheetViewer
+DEFAULT <_LABELEMPTY_> goodsRequired net.sf.freecol.common.model.BuildableType#getGoodsRequired() net.sf.freecol.common.model.AbstractGoods <_LABELEMPTY_> buildableType
+DEFAULT <_LABELEMPTY_> i Model.WindowIndex#getIndList(int) int <_LABELEMPTY_> dbWindowIndex confId
+DEFAULT org.eclipse.mylyn.internal.gerrit.ui.editor.PatchSetSection#doOpen(org.eclipse.mylyn.reviews.core.model.IReviewItemSet,org.eclipse.mylyn.reviews.core.model.IFileItem) org.eclipse.mylyn.internal.gerrit.ui.editor.PatchSetSection$12 org.eclipse.jface.viewers.TableViewer#getInput() item viewer
+DEFAULT if EQ java.util.LinkedList#size() 0 ret
+DEFAULT org.gatein.api.id.Id#associateCurrentValueWith(int) id actualCurrentComponent org.gatein.api.id.Component#getName() component index
+DEFAULT tv.danmaku.ijk.media.player.list.SimpleMediaSegmentPlayer#reset() mItemPlayer tv.danmaku.ijk.media.player.list.AbstractMediaListPlayer
+DEFAULT org.apache.juddi.webconsole.hub.builders.AddressLine#setKeyName(java.lang.String) pn <_LABELEMPTY_> t 0
+DEFAULT #postInvalidate() mapView net.wigle.wigleandroid.NetworkActivity
+DEFAULT <_LABELEMPTY_> site org.json.JSONObject#getNames(org.json.JSONObject) java.lang.String <_LABELEMPTY_> org.json.JSONObject sites
+DEFAULT = next java.util.Map#get(java.lang.Object) nl.astraeus.persistence.SimpleList$1 incoming id nl.astraeus.persistence.SimpleList
+DEFAULT com.android.camera.ui.BasicIndicator#setEnabled(boolean) mVideoQualitySettings enabled com.android.camera.ui.CamcorderHeadUpDisplay
+DEFAULT com.github.kevinsawicki.http.HttpRequest#part(java.lang.String,java.lang.String) request PARAM_FROM com.github.scottmotte.sendgrid.SendGrid#getFrom() com.github.scottmotte.sendgrid.SendGrid this com.github.scottmotte.sendgrid.SendGrid
+DEFAULT clojure.tools.nrepl.Connection#close() toolConnection ccw.repl.REPLView
+DEFAULT com.socialize.ui.share.TextView#setText() otherOptions com.socialize.i18n.LocalizationService#getString() com.socialize.ui.share.SharePanelView localizationService I18NConstants.SHARE_MORE_OPTIONS com.socialize.ui.share.SharePanelView
+DEFAULT java.lang.StringBuilder#append(char) b '.'
+DEFAULT <_LABELEMPTY_> ox.stackgame.stackmachine.Lexer$LexerException(int,java.lang.String) lineno PLUS "Argument<_LABELSPACE_>expected<_LABELSPACE_>for<_LABELSPACE_>" opName
+DEFAULT cm android.text.ClipboardManager <_LABELEMPTY_> #getSystemService() #getActivity() Context.CLIPBOARD_SERVICE com.ubergeek42.WeechatAndroid.fragments.BufferFragment
+DEFAULT java.util.Hashtable#put(K,V) props "mail.smtp.host" java.lang.System#getProperty(java.lang.String) java.lang.System "mail.smtp.host"
+DEFAULT = responseBody gov.nih.nci.cagwas.web.action.RemoteContentHelper#getContent(java.lang.String) gov.nih.nci.cagwas.web.action.RemoteContentHelper PLUS remoteUrl remoteBody
+DEFAULT if AND EQ EQ #getId() CommunicationInterfaces.ClubMemberDTO#getId() CommunicationInterfaces.CompetitionTeamDTO#getClubMember() compTeamDTO curClubMem #getId() CommunicationInterfaces.ClubMemberDTO#getId() CommunicationInterfaces.CompetitionTeamDTO#getCompetition() compTeamDTO curClubMem
+DEFAULT <_LABELEMPTY_> child org.deegree.commons.tom.ElementNode#getChildren() org.deegree.commons.tom.TypedObjectNode <_LABELEMPTY_> xml
+DEFAULT java.util.LinkedList#addAll(java.util.Collection) stripped pendingStylePushes
+DEFAULT org.bukkit.entity.LivingEntity#teleport(org.bukkit.Location) entity loc com.theminequest.MQCoreEvents.EntityEvent.EntitySpawnerNoMove com.theminequest.MQCoreEvents.EntityEvent.EntitySpawnerNoMove
+DEFAULT java.util.List#addAll() result edu.stanford.bmir.protege.web.server.owlapi.TripleMapper#getTriples() mapper
+DEFAULT = mAppMarketIntent intent com.cyanogenmod.trebuchet.Launcher
+DEFAULT = <_LABELEMPTY_> java.lang.Object() form_data_modified PLUS length 1 form_data "g2_authToken" com.gallery.GalleryRemote.g#getAuthToken() g
+DEFAULT java.util.Map#putAll(java.util.Map) map org.nutz.ioc.loader.json.JsonLoader#buildMap(java.io.File) org.nutz.ioc.loader.json.JsonLoader f
+DEFAULT net.sf.ehcache.Cache#put(net.sf.ehcache.Element) podcastEntriesCache java.lang.Object() url podcastEntryNodes
+DEFAULT #setEnabled() android.view.Menu#findItem() AND menu R.id.itemDeleteConnection NE NOT selected null com.iiordanov.bVNC.aRDP com.iiordanov.bVNC.ConnectionBean#isNew() selected com.iiordanov.bVNC.aRDP
+DEFAULT <_LABELEMPTY_> org.tomahawk.libtomahawk.audio.PlaybackService#setCurrentPlaylist(org.tomahawk.libtomahawk.playlist.Playlist) = <_LABELEMPTY_> mPlaybackService playlist org.tomahawk.libtomahawk.audio.PlaybackActivity mPlaylist org.tomahawk.libtomahawk.audio.PlaybackService#getCurrentPlaylist() org.tomahawk.libtomahawk.audio.PlaybackActivity mPlaybackService org.tomahawk.libtomahawk.audio.PlaybackActivity e java.lang.Throwable#printStackTrace() java.io.IOException <_LABELEMPTY_> e
+DEFAULT com.steamedpears.comp3004.HostGameDialog#setPlayersJoined() dialog com.steamedpears.comp3004.Router#getTotalHumanPlayers() com.steamedpears.comp3004.SevenWonders router com.steamedpears.comp3004.SevenWonders
+DEFAULT = selectedItems org.alfresco.mobile.android.application.fragments.person.onPickPersonFragment#retrieveSelection() org.alfresco.mobile.android.application.fragments.person.PersonSearchFragment fragmentPick org.alfresco.mobile.android.application.fragments.person.PersonSearchFragment
+DEFAULT java.util.List#add(E) neighbors ru.jcorp.smartstreets.routing.SmartMapLink(ru.jcorp.smartstreets.map.SmartMapNode,double) ru.jcorp.smartstreets.map.SmartMapLine#getStartNode() PLUS line cost ru.jcorp.smartstreets.map.SmartMapLine#getLength() ru.jcorp.smartstreets.routing.SmartMapLink line
+DEFAULT com.Litterfeldt.AStory.dbConnector.dbBook#addBook(android.content.Context,com.Litterfeldt.AStory.models.Book) dbBook c b
+DEFAULT <_LABELEMPTY_> factoryID factories java.lang.String <_LABELEMPTY_>
+DEFAULT javax.swing.Timer#stop() t admin.StatusPanel
+DEFAULT android.os.PowerManager.WakeLock#release() lock com.yuniclient.YuniClient
+DEFAULT = exprValue #getValue() #getVariable() #getUse() net.sf.orcc.ir.Var#getValue() source
+DEFAULT source java.lang.String <_LABELEMPTY_> org.eclipse.ui.IWorkbenchPartReference#getId() partRef
+DEFAULT net.java.sip.communicator.impl.gui.main.presence.OperationSetAvatar#addAvatarListener(net.java.sip.communicator.impl.gui.main.presence.AccountStatusPanel) avatarOpSet this net.java.sip.communicator.impl.gui.main.presence.AccountStatusPanel
+DEFAULT = info net.i2p.router.tunnel.pool.TunnelPool#getTunnel(net.i2p.data.TunnelId) _inboundExploratory id net.i2p.router.tunnel.pool.TunnelPoolManager
+DEFAULT <_LABELEMPTY_> java.lang.IllegalArgumentException(java.lang.String) PLUS "Invalid<_LABELSPACE_>event<_LABELSPACE_>priority<_LABELSPACE_>" java.util.regex.Matcher#group(int) match 4
+DEFAULT <_LABELEMPTY_> java.io.Writer#write(java.lang.String) <_LABELEMPTY_> out string org.apache.log4j.helpers.QuietWriter e org.apache.log4j.spi.ErrorHandler#error(java.lang.String,java.lang.Exception,int) java.io.IOException <_LABELEMPTY_> errorHandler PLUS e WRITE_FAILURE org.apache.log4j.helpers.QuietWriter PLUS "]." "Failed<_LABELSPACE_>to<_LABELSPACE_>write<_LABELSPACE_>[" string org.apache.log4j.spi.ErrorCode
+DEFAULT org.springframework.nanotrader.data.domain.Accountprofile#setAuthtoken(<unknown>) accountProfile null
+DEFAULT return NE org.osate.xtext.aadl2.errormodel.errorModel.ErrorModelSubclause#getComponentBehavior() null emsc
+DEFAULT net.fhtagn.zoobeditor.editor.cell.GridCell#setPath(java.util.ArrayList) selectedCell waypoints net.fhtagn.zoobeditor.editor.tools.PathTool net.fhtagn.zoobeditor.editor.tools.PathTool
+DEFAULT org.eclipse.swt.dnd.Clipboard#setContents(java.lang.Object[],org.eclipse.swt.dnd.Transfer[]) clipboard <_LABELEMPTY_> <_LABELEMPTY_> org.eclipse.mylyn.internal.tasks.ui.actions.CopyTaskDetailsAction text textTransfer
+DEFAULT <_LABELEMPTY_> metricWithError compoundMetricsWithError org.kalibro.service.entities.CompoundMetricWithErrorXml <_LABELEMPTY_> org.kalibro.service.entities.ModuleResultXml
+DEFAULT timeout int <_LABELEMPTY_> org.apache.http.impl.nio.reactor.IOSessionImpl#getSocketTimeout() session
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> 0 i length connections i
+DEFAULT observer org.couchbase.mock.http.PoolsHandler$ConfigObserver <_LABELEMPTY_> org.couchbase.mock.http.PoolsHandler$ConfigObserver(org.couchbase.mock.Bucket,java.io.OutputStream,java.util.concurrent.CountDownLatch) bucket body completed
+DEFAULT map java.util.Map <_LABELEMPTY_> java.util.HashMap()
+DEFAULT net.java.sip.communicator.impl.protocol.jabber.XMPPConnection#disconnect() connection net.java.sip.communicator.impl.protocol.jabber.ProtocolProviderServiceJabberImpl
+DEFAULT <_LABELEMPTY_> sr #getSearchResults() org.apache.directory.studio.ldapbrowser.core.model.ISearchResult <_LABELEMPTY_> org.apache.directory.studio.ldapbrowser.ui.editors.searchresult.SearchResultEditorInput#getSearch() srei
+DEFAULT event com.bingo.eatime.core.Event <_LABELEMPTY_> com.bingo.eatime.core.Event#createEvent(java.lang.String,java.lang.String,com.bingo.eatime.core.Person,java.util.Date,java.util.HashSet) com.bingo.eatime.core.Event eventEvent restaurantKeyName creator time invites
+DEFAULT <_LABELEMPTY_> dep dependancies org.openflexo.foundation.viewpoint.EditionSchemeParameter <_LABELEMPTY_>
+DEFAULT org.amanzi.neo.db.manager.NeoServiceProvider#init(java.lang.String,org.amanzi.neo.services.ui.NeoServiceProviderUi) neoPr #getGraphDbServiceSafely() org.amanzi.neo.services.ui.NeoServiceProviderUi#getDefaultDatabaseLocation() this org.neo4j.neoclipse.Activator#getDefault() org.neo4j.neoclipse.Activator org.amanzi.neo.services.ui.NeoServiceProviderUi org.amanzi.neo.services.ui.NeoServiceProviderUi
+DEFAULT key java.lang.String <_LABELEMPTY_> <_LABELEMPTY_> args 0 param
+DEFAULT <_LABELEMPTY_> theFile fs java.io.File <_LABELEMPTY_>
+DEFAULT android.support.v4.app.FragmentTransaction#hide(com.pindroid.fragment.BrowseTagsFragment) t tagFrag
+DEFAULT model.User#setOnline() user synclogic.LoginRequest#getLoginAccepted() loginRequest
+DEFAULT org.apache.myfaces.extensions.scripting.jsf.startup.StartupServletContextPluginChainLoader#startup(javax.servlet.ServletContext) org.apache.myfaces.extensions.scripting.jsf.startup.StartupServletContextPluginChainLoader servletContext
+DEFAULT style org.zkoss.poi.ss.usermodel.CellStyle <_LABELEMPTY_> org.zkoss.poi.ss.usermodel.Cell#getCellStyle() right
+DEFAULT de.ub0r.android.lib.Log#d(java.lang.String) de.ub0r.android.lib.Log TAG PLUS de.ub0r.android.smsdroid.ConversationList "got<_LABELSPACE_>intent:<_LABELSPACE_>" android.content.Intent#getAction() i
+DEFAULT <_LABELEMPTY_> article com.ximoneighteen.android.rssreader.util.RssDownloader#getArticles() com.ximoneighteen.android.rssreader.model.Article <_LABELEMPTY_> downloader
+DEFAULT #remove(Tsoha.domain.Peli) #getPelit() peli Tsoha.domain.Peli#getGenre() peli
+DEFAULT feature com.bloatit.model.Feature <_LABELEMPTY_> com.bloatit.model.HighlightFeature#getFeature() final hFeature
+DEFAULT pieceIndex int <_LABELEMPTY_> java.util.Collections#binarySearch(java.util.List,T) java.util.Collections com.eteks.sweethome3d.model.Category#getFurniture() piece category
+DEFAULT com.koushikdutta.async.AsyncSocket#close() socket
+DEFAULT regionBroker org.apache.activemq.broker.region.RegionBroker <_LABELEMPTY_> org.apache.activemq.store.kahadb.brokerService#getRegionBroker() brokerService
+DEFAULT com.tinfoil.sms.DBAccessor#resetSharedInfo(int) com.tinfoil.sms.DBAccessor reference
+DEFAULT text java.lang.String <_LABELEMPTY_> org.eclipse.birt.report.engine.presentation.LocalizedContentVisitor#localize(org.eclipse.birt.report.engine.content.IContent,java.lang.String,java.lang.String) org.eclipse.birt.report.engine.presentation.LocalizedContentVisitor foreignContent org.eclipse.birt.report.engine.content.IForeignContent#getRawKey() htmlText foreignContent
+DEFAULT = locationManager #getSystemService(<unknown>) com.example.PrayerTimes.MainActivity com.example.PrayerTimes.MainActivity Context.LOCATION_SERVICE
+DEFAULT battlecode.world.InternalRobot#setBytecodesUsed() r battlecode.engine.instrumenter.RobotMonitor#getBytecodesUsed() battlecode.engine.instrumenter.RobotMonitor
+DEFAULT = readStream java.net.URL#openStream() stream
+DEFAULT = shiftPressed false pi
+DEFAULT org.bukkit.inventory.ItemStack#createData(byte) org.bukkit.inventory.ItemStack data
+DEFAULT android.widget.Spinner#setAdapter(android.widget.ArrayAdapter) printListSpinner printListAdapter
+DEFAULT com.google.gwt.user.client.ui.FormPanel#setAction(java.lang.String) curveForm POWER_CURVE_URL edu.cudenver.bios.powercalculator.client.panels.InputWizardPanel edu.cudenver.bios.powercalculator.client.panels.InputWizardPanel
+DEFAULT org.codehaus.xfire.MessageContext#setProperty(java.lang.String,javax.servlet.ServletContext) context HTTP_SERVLET_CONTEXT servletContext org.codehaus.xfire.transport.http.XFireServletController org.codehaus.xfire.transport.http.XFireServletController
+DEFAULT java.io.Closeable#close() closeable
+DEFAULT com.iplanet.dpro.session.service.InternalSession#setIsISStored(boolean) sess false
+DEFAULT org.h2.store.fs.FileObject#releaseLock() file org.h2.store.FileStore
+DEFAULT aQute.lib.deployer.Reporter#trace(java.lang.String,java.lang.String) reporter "updating<_LABELSPACE_>%s<_LABELSPACE_>" java.io.File#getAbsolutePath() aQute.lib.deployer.FileRepo file
+DEFAULT java.util.Hashtable#put(K,V) cache iconName icon
+DEFAULT = mProfiles edu.isi.pegasus.planner.catalog.classes.Profiles() this edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
+DEFAULT net.java.sip.communicator.impl.gui.main.chat.conference.ChatContactRightButtonMenu#show(net.java.sip.communicator.impl.gui.main.chat.conference.DefaultContactList,int,int) java.lang.Object() memberList java.awt.event.MouseEvent#getX() java.awt.event.MouseEvent#getY() chat net.java.sip.communicator.impl.gui.main.chat.conference.DefaultContactList#getSelectedValue() memberList net.java.sip.communicator.impl.gui.main.chat.conference.ChatRoomMemberListPanel net.java.sip.communicator.impl.gui.main.chat.conference.ChatRoomMemberListPanel e e
+DEFAULT org.cwi.waebric.interpreter.WaebricInterpreter#outputDocument(org.jdom.Document,java.io.OutputStream) org.cwi.waebric.interpreter.WaebricInterpreter document os
+DEFAULT ownerPath java.lang.String <_LABELEMPTY_> org.tmatesoft.svn.core.internal.wc.admin.SVNAdminArea#getRelativePath() adminArea org.tmatesoft.svn.core.internal.wc.admin.SVNAdminAreaInfo#getAnchor() adminAreaInfo
+DEFAULT org.eclipse.debug.core.ILaunchConfigurationWorkingCopy#setAttribute(java.lang.String) config IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME name
+DEFAULT rajawali.Camera#setPosition(float) com.smarthome.SmartHomeRenderer#getCamera() com.smarthome.SmartHomeRenderer#getX() com.smarthome.SmartHomeRenderer#getY() NEG this com.smarthome.SmartHomeRenderer room activity com.smarthome.SmartHomeRenderer room activity com.smarthome.SmartHomeRenderer 50.0F
+DEFAULT = remotePort remotePort this org.mobicents.servlet.sip.testsuite.proxy.Shootist
+DEFAULT java.util.Calendar#setTime(java.util.Date) tempCalendar org.eclipse.mylar.provisional.tasklist.ITask#getReminderDate() task
+DEFAULT #writeLevelGroup(org.apache.fop.render.rtf.rtflib.rtfdoc.RtfListTable) org.apache.fop.render.rtf.rtflib.rtfdoc.RtfListItem#getRtfListStyle() this item org.apache.fop.render.rtf.rtflib.rtfdoc.RtfListTable
+DEFAULT com.sun.tools.xjc.reader.internalizer.SCDBasedBindingSet#apply(com.sun.xml.xsom.XSSchemaSet,com.sun.tools.xjc.util.ErrorReceiverFilter) scdBasedBindingSet result errorReceiver com.sun.tools.xjc.ModelLoader
+DEFAULT net.sf.freecol.common.model.FeatureContainer#add() featureContainer net.sf.freecol.common.model.NationType#getFeatureContainer() net.sf.freecol.common.model.Player nationType net.sf.freecol.common.model.Player
+DEFAULT org.mifos.customers.client.business.ClientNameDetailEntity#setClient(org.mifos.customers.client.business.ClientBO) spouseFatherNameDetailEntity client
+DEFAULT #setListShownNoAnimation(boolean) this true com.udb.mad.shinmen.benja.guana.anuncios.fragment.AnunciosListFragment
+DEFAULT java.util.ArrayList#add(E) untrusted untrusted this com.tinfoil.sms.ExchangeKey
+DEFAULT java.util.Timer#cancel() scheduler org.coderebels.tsaenode.Main
+DEFAULT <_LABELEMPTY_> f readerFiles java.lang.String <_LABELEMPTY_>
+DEFAULT javax.swing.AbstractButton#setIcon(javax.swing.Icon) item icon
+DEFAULT java.lang.SecurityManager#checkPermission(java.security.Permission) sm org.dvb.user.UserPreferencePermission(java.lang.String) "write"
+DEFAULT = object org.jrebirth.core.resource.parameter.ObjectParameter#object() op
+DEFAULT org.apache.geronimo.security.ContextManager#setCallers(javax.security.auth.Subject,javax.security.auth.Subject) org.apache.geronimo.security.ContextManager subject subject
+DEFAULT java.util.Map#put(K,V) userProperties name java.util.Properties#getProperty(java.lang.String) org.eclipse.ant.internal.core.ant.InternalAntRunner props name
+DEFAULT java.net.ServerSocket#close() myServerSocket org.voltdb.utils.NanoHTTPD
+DEFAULT <_LABELEMPTY_> visit org.motechproject.appointments.api.model.AppointmentCalendar#visits() org.motechproject.appointments.api.model.Visit <_LABELEMPTY_> calendar
+DEFAULT <_LABELEMPTY_> minutesForTardyOrEco org.joda.time.Duration#getStandardMinutes() overlap
+DEFAULT com.artifex.mupdfdemo.SearchTask#stop() mSearchTask com.artifex.mupdfdemo.MuPDFActivity
+DEFAULT com.idega.core.builder.data.ICDomain#setServerName(java.lang.String) domain com.idega.presentation.IWContext#getServerURL() com.idega.presentation.IWContext
+DEFAULT #select(org.freeplane.core.model.NodeModel) #getMapController() next #getModeController() org.freeplane.features.common.text.NextNodeAction
+DEFAULT java.util.Set#addAll(java.util.Collection) selectedValues values
+DEFAULT org.broad.igv.feature.BasicFeature#setType() feature BasicFeature.FEATURE_TYPE_SPLICEJUNCTION
+DEFAULT com.android.browser.ImageGrid#requestFocus() mTabOverview com.android.browser.BrowserActivity
+DEFAULT <_LABELEMPTY_> cz.vutbr.fit.gja.gjaddr.gui.Url#getType() u
+DEFAULT dist int <_LABELEMPTY_> cell.g5.Board#shortestDistance(int[],int[]) cell.g5.Board playerLoc traderLoc
+DEFAULT if NE length 0 voteArray
+DEFAULT if AND NE GE #getApplicationState() null Gossiper.instance#getEndpointStateForEndpoint(java.net.InetAddress) ApplicationState.NET_VERSION Gossiper.instance endpoint java.lang.Integer#valueOf(java.lang.String) VERSION_12 java.lang.Integer value #getApplicationState() Gossiper.instance#getEndpointStateForEndpoint(java.net.InetAddress) ApplicationState.NET_VERSION Gossiper.instance endpoint MessagingService
+DEFAULT intent android.content.Intent <_LABELEMPTY_> #getParcelableExtra() #getIntent() Intent.EXTRA_INTENT com.android.camera.ProxyLauncher
+DEFAULT if MobileOperator.FREE_MOBILE#equals(org.pixmob.freemobile.netstat.MobileOperator) MobileOperator.FREE_MOBILE mobOp0
+DEFAULT <_LABELEMPTY_> extensionPoint extensionPoints org.eclipse.core.runtime.IExtensionPoint <_LABELEMPTY_> final
+DEFAULT = groupsList com.adm.findme.GroupDAO#getAllGroupsName() com.adm.findme.Contact groupsource com.adm.findme.Contact
+DEFAULT java.lang.reflect.Method#invoke(java.lang.Object,java.lang.Object[]) finishMethod java.lang.reflect.Method#invoke(java.lang.Object,java.lang.Object[]) null jIDE.RunMAS$MASRunnerInsideJIDE getRunnerMethod null null jIDE.RunMAS$MASRunnerInsideJIDE
+DEFAULT <_LABELEMPTY_> i java.util.Iterator#hasNext() = java.util.Iterator <_LABELEMPTY_> gov.nih.nci.caintegrator.analysis.messaging.IdGroup#iterator() group i id java.util.Iterator#next() i
+DEFAULT org.eclipse.jgit.lib.Repository#close() repo
+DEFAULT if EQ maxOccurs OCCURRENCE_UNBOUNDED <_LABELEMPTY_> fCountingStates <_LABELEMPTY_> base d 0 org.apache.xerces.impl.xs.SchemaSymbols
+DEFAULT Paddle#setVelocity(int,int) paddle 0 0 PongCourt
+DEFAULT #setScale(float) <_LABELEMPTY_> fpsScale mNumerals i paulscode.android.mupen64plusae.input.map.VisibleTouchMap
+DEFAULT java.lang.StringBuilder#append(java.lang.String) java.lang.StringBuilder#append(java.lang.String) "\n" sb constructorCode org.wixpress.hoopoe.lambda.LambdaClassGenerator
+DEFAULT nu.validator.htmlparser.io.Driver#setErrorHandler(org.xml.sax.ErrorHandler) driver errorHandler nu.validator.htmlparser.dom.HtmlDocumentBuilder
+DEFAULT org.bukkit.scoreboard.Objective#unregister() objective com.github.ucchyocean.ct.scoreboard.SidebarScoreDisplay
+DEFAULT if #equals(java.lang.String) com.mavenlab.jetset.model.Entry#getStatus() "active" entry
+DEFAULT java.util.Hashtable#put(K,V) appenderBag appenderName appender org.apache.log4j.xml.DOMConfigurator
+DEFAULT java.lang.reflect.Method#invoke(java.lang.Object,java.lang.Object[]) java.lang.Class#getMethod(java.lang.String,java.lang.Class[]) vm java.io.File#getAbsolutePath() vmClass "loadAgent" class java.lang.String file
+DEFAULT totalDelta long <_LABELEMPTY_> com.mountainminds.eclemma.internal.core.analysis.Lines#getTotalCount() lines this com.mountainminds.eclemma.internal.core.analysis.JavaElementCoverage
+DEFAULT vmInstallTypeID java.lang.String <_LABELEMPTY_> #getId() org.eclipse.jdt.launching.VMStandin#getVMInstallType() vmStandin
+DEFAULT com.android.settings.NsdEnabler#resume() mNsdEnabler com.android.settings.WirelessSettings
+DEFAULT java.util.Hashtable#put(K,V) be.ibridge.kettle.core.database.BaseDatabaseMeta#getAttributes() ATTRIBUTE_PORT_NUMBER databasePortNumberString be.ibridge.kettle.core.database.BaseDatabaseMeta be.ibridge.kettle.core.database.BaseDatabaseMeta
+DEFAULT javax.swing.CellEditor#stopCellEditing() javax.swing.JTable#getCellEditor() myTable ca.neo.ui.configurable.matrixEditor.MatrixEditor
+DEFAULT #addObserver(org.openflexo.components.browser.ProjectElement) org.openflexo.foundation.rm.FlexoProject#getFlexoWorkflow() this project org.openflexo.components.browser.ProjectElement
+DEFAULT removeMatcher java.util.regex.Matcher <_LABELEMPTY_> java.util.regex.Pattern#matcher(java.lang.CharSequence) removePattern text
+DEFAULT java.sql.PreparedStatement#setString(int,java.lang.String) stmtInsertProperty 1 entryId com.github.davidmoten.logan.DataPersisted
+DEFAULT #startActivity(<unknown>) fr.ybo.transportscommun.activity.bus.AbstractListArret intent
+DEFAULT de.aidger.view.forms.EmploymentEditorForm#refreshFunds(de.aidger.model.models.Course) de.aidger.view.forms.EmploymentEditorForm javax.swing.JComboBox#getSelectedItem() cmbCourse de.aidger.view.forms.EmploymentEditorForm
+DEFAULT org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor) ignoreJob monitor
+DEFAULT = debugLevel #DefaultDebugLevel(<unknown>) no.runsafe.framework.internal.Debug no.runsafe.framework.internal.Debug no.runsafe.framework.internal.InjectionPlugin#getName() plugin
+DEFAULT purejavacomm.CommPortIdentifier#fireOwnershipEvent(int) portid CommPortOwnershipListener.PORT_UNOWNED
+DEFAULT net.jsiq.marketing.activity.BaseActivity#registerReceiver() net.jsiq.marketing.activity.BaseActivity receiver filter net.jsiq.marketing.activity.BaseActivity
+DEFAULT <_LABELEMPTY_> itemId com.vaadin.data.util.HierarchicalContainer#rootItemIds() java.lang.Object <_LABELEMPTY_> container
+DEFAULT return java.lang.Float#valueOf(java.lang.String) java.lang.Float java.util.List#get(int) enrichmentPlaceLongitude 0 eu.europeana.api2.web.model.json.api1.BriefDoc
+DEFAULT java.util.List#add(E) commands mkdirsCommand
+DEFAULT if org.eclipse.dltk.internal.debug.core.model.HotCodeReplaceManager#supportsHotCodeReplace(org.eclipse.dltk.debug.core.model.IScriptDebugTarget) org.eclipse.dltk.internal.debug.core.model.HotCodeReplaceManager target
+DEFAULT #removeSessionListener(net.java.sip.communicator.impl.protocol.yahoo.OperationSetPersistentPresenceYahooImpl$EarlyEventListener) net.java.sip.communicator.impl.protocol.yahoo.parentProvider#getYahooSession() earlyEventListener parentProvider net.java.sip.communicator.impl.protocol.yahoo.OperationSetPersistentPresenceYahooImpl
+DEFAULT com.pindroid.listadapter.BookmarkListAdapter#update(java.util.ArrayList) adapter bookmarkList com.pindroid.activity.BrowseBookmarks
+DEFAULT if NOT mIsSignedIn
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> 0 i java.util.List#size() children i
+DEFAULT java.util.ArrayList#add(org.archive.wayback.accesspoint.AccessPointAdapter$DynamicExclusionFactory) allExclusions org.archive.wayback.accesspoint.AccessPointAdapter$DynamicExclusionFactory()
+DEFAULT android.content.ContentValues#put(byte[]) values PubkeyDatabase.FIELD_PUBKEY_PUBLIC java.security.Key#getEncoded() publicKey org.connectbot.bean.PubkeyBean
+DEFAULT android.widget.TextView#setAnimation(android.view.animation.Animation) mValidationTextView animation org.adaptlab.chpir.android.survey.QuestionFragment
+DEFAULT <_LABELEMPTY_> = = <_LABELEMPTY_> tmpIn java.net.Socket#getInputStream() socket tmpOut java.net.Socket#getOutputStream() socket e android.util.Log#e(java.lang.String,java.lang.String,java.io.IOException) java.io.IOException <_LABELEMPTY_> android.util.Log TAG "temp<_LABELSPACE_>sockets<_LABELSPACE_>not<_LABELSPACE_>created" e cs309.a1.shared.wifi.WifiConnectionService
+DEFAULT return #getId() #getOwner() field
+DEFAULT buildArray java.util.List <_LABELEMPTY_> java.util.ArrayList()
+DEFAULT org.eclipse.birt.data.engine.impl.DataEngineImpl#shutdown() dataEngine org.eclipse.birt.report.data.adapter.impl.DataRequestSessionImpl
+DEFAULT if AND GE LE remotePort 9200 remotePort 9203
+DEFAULT java.lang.Throwable#printStackTrace(java.io.PrintStream) cause hudson.util.StreamTaskListener#error(java.lang.String) listener "slave<_LABELSPACE_>agent<_LABELSPACE_>was<_LABELSPACE_>terminated"
+DEFAULT = sound org.resources.Help#getSound(java.lang.String) org.publicmain.gui.HTMLContentDialog org.resources.Help "test.wav"
+DEFAULT #cancel() #getDialog() this com.grep.ui.DeleteTopicWarningDialogFragment
+DEFAULT plugins.WoT.IdentityFetcher#fetch(plugins.WoT.Identity) mFetcher target plugins.WoT.WoT
+DEFAULT relatedEmployment gr.sch.ira.minoas.model.employement.Employment <_LABELEMPTY_> gr.sch.ira.minoas.model.employement.ServiceAllocation#getAffectedEmployment() serviceAllocation
+DEFAULT iter java.util.ListIterator <_LABELEMPTY_> java.util.List#listIterator() output
+DEFAULT javax.servlet.http.HttpServletResponse#setContentType(java.lang.String) resp contentType org.nutz.mvc.view.RawView
+DEFAULT com.netxforge.netxstudio.screens.AbstractSmartTableViewerComponent#clearFilter() viewerComponent com.netxforge.netxstudio.screens.f3.SmartValueComponent
+DEFAULT java.util.HashMap#put(java.lang.String,com.bendude56.bencmd.warps.Warp) warps name com.bendude56.bencmd.warps.Warp(double,double,double,double,double,java.lang.String,java.lang.String,java.lang.String) com.bendude56.bencmd.warps.HomeList x y z yaw pitch world name group
+DEFAULT java.util.Map#put(K,V) parameterMap "sitestate" java.lang.Enum#name() com.parworks.androidlibrary.response.SiteInfo#getSiteState() com.parworks.androidlibrary.response.SiteInfo
+DEFAULT com.google.gwt.user.client.ui.TextBox#setValue() feeOwner eu.comexis.napoleon.client.utils.UiHelper#FloatToString() this eu.comexis.napoleon.client.core.lease.LeaseUpdateView eu.comexis.napoleon.client.utils.UiHelper MINUS eu.comexis.napoleon.shared.model.Lease#getRent() eu.comexis.napoleon.shared.model.Lease#getFee() l l
+DEFAULT java.util.Set#addAll(java.util.Collection) result java.util.Map#keySet() index
+DEFAULT if AND NE NOT process null org.eclipse.tm.internal.tcf.debug.model.TCFLaunch terminated org.eclipse.tm.internal.tcf.debug.model.TCFLaunch
+DEFAULT p org.eclipse.core.runtime.Preferences <_LABELEMPTY_> #getPluginPreferences() plugin net.sourceforge.vrapper.eclipse.activator.VrapperPlugin
+DEFAULT java.util.Set#addAll() ret java.util.Arrays#asList(T[]) java.util.Arrays projects
+DEFAULT android.app.ProgressDialog#setProgress(int) progressDialog MUL at.tomtasche.reader.ui.widget.ProgressDialogFragment progress 100
+DEFAULT if io.undertow.servlet.spec.ServletOutputStreamImpl#flushBufferAsync() io.undertow.servlet.spec.ServletOutputStreamImpl
+DEFAULT if java.lang.String#equals(java.lang.Object) org.w3c.dom.Element#getAttribute(java.lang.String) traitName rendered "gwasname"
+DEFAULT java.util.zip.ZipFile#close() jarFile
+DEFAULT ft android.app.FragmentTransaction <_LABELEMPTY_> #beginTransaction() #getFragmentManager() com.madisp.bad.demo.MainActivity
+DEFAULT java.io.InputStream#close() err com.redhat.qe.tools.SSHCommandRunner
+DEFAULT = beanclass uk.org.ponder.reflect.ClassGetter#forName(java.lang.String) rbi uk.org.ponder.reflect.ClassGetter bcn
+DEFAULT java.util.List#set(int,E) path 0 PLUS java.util.List#get(int) 1 path 0
+DEFAULT org.spiffyui.maven.plugins.GwtCompileMojo$ClassBuilder#add(java.lang.String) org.spiffyui.maven.plugins.GwtCompileMojo$ClassBuilder #getAbsolutePath() org.apache.maven.artifact.Artifact#getFile() artifact
+DEFAULT javax.sound.sampled.DataLine#start() line com.tulskiy.musique.audio.player.Player$PlayerThread
+DEFAULT hints java.awt.RenderingHints <_LABELEMPTY_> javax.media.jai.RenderedOp#getRenderingHints() final targetImage
+DEFAULT #invoke(java.lang.Object,java.lang.String,java.lang.String) fr.jamgotchian.jabat.artifact.annotated.AnalyserAnnotatedClass#getAnalyseStatusMethod() object batchStatus exitStatus annotatedClass fr.jamgotchian.jabat.artifact.annotated.SplitAnalyserProxy fr.jamgotchian.jabat.artifact.annotated.SplitAnalyserProxy
+DEFAULT = key #toString() com.idega.user.data.Group#getPrimaryKey() item
+DEFAULT org.slf4j.Logger#error(java.lang.String) logger PLUS org.dcache.srm.client.SRMClientV2 PLUS java.lang.Throwable#getMessage() PLUS "<_LABELSPACE_>failed<_LABELSPACE_>with<_LABELSPACE_>error" PLUS i name ":<_LABELSPACE_>try<_LABELSPACE_>#<_LABELSPACE_>" e
+DEFAULT com.itmill.toolkit.terminal.gwt.client.RenderInformation.Size#setWidth() activeLayoutSize MINUS com.itmill.toolkit.terminal.gwt.client.ui.IOrderedLayout #getOffsetWidth() com.itmill.toolkit.terminal.gwt.client.ui.activeMargins#getHorizontal() com.itmill.toolkit.terminal.gwt.client.ui.IOrderedLayout activeMargins
+DEFAULT ensemble de.opalproject.vespucci.datamodel.Ensemble <_LABELEMPTY_> de.opalproject.vespucci.ui.handlers.NewEnsembleHandler#createEnsemble(de.opalproject.vespucci.ui.wizards.NewEnsembleWizard) de.opalproject.vespucci.ui.handlers.NewEnsembleHandler wizard
+DEFAULT com.wolvencraft.prison.mines.util.Message#log(java.util.logging.Level) com.wolvencraft.prison.mines.util.Message SEVERE PLUS java.util.logging.Level "hasPermission<_LABELSPACE_>=<_LABELSPACE_>" org.bukkit.command.CommandSender#hasPermission(java.lang.String) sender permission com.wolvencraft.prison.mines.CommandManager com.wolvencraft.prison.mines.CommandManager
+DEFAULT java.lang.Process#destroy() pr org.netbeans.modules.javafx.editor.preview.JavaFXPreviewTopComponent
+DEFAULT obj java.lang.Object <_LABELEMPTY_> org.eclipse.core.runtime.IConfigurationElement#createExecutableExtension(java.lang.String) ce "class"
+DEFAULT iter java.util.Iterator <_LABELEMPTY_> java.util.Collection#iterator() collectionOfPrimaryKeys
+DEFAULT de.minestar.minestarlibrary.stats.StatisticHandler#handleStatistic(de.minestar.FifthElement.statistics.home.HomeStat) de.minestar.minestarlibrary.stats.StatisticHandler java.lang.Object() org.bukkit.entity.Player#getName() de.minestar.FifthElement.data.Home#getOwner() player home
+DEFAULT resources.objects.SWGMap#queue(byte[]) resources.objects.SWGMap resources.objects.SWGMap#item(int,java.lang.Object,byte[],boolean,boolean) resources.objects.SWGMap 2 key #getBytes() true true value
+DEFAULT childCountPattern java.lang.String <_LABELEMPTY_> org.eclipse.nebula.widgets.nattable.config.IConfigRegistry#getConfigAttribute() configRegistry GroupByConfigAttributes.GROUP_BY_CHILD_COUNT_PATTERN DisplayMode.NORMAL org.eclipse.nebula.widgets.nattable.layer.LabelStack#getLabels() this org.eclipse.nebula.widgets.nattable.extension.glazedlists.groupBy.GroupByColumnAccessor labelStack
+DEFAULT <_LABELEMPTY_> totalQuestions org.chai.kevin.survey.validation.SurveyEnteredSection#getTotalQuestions() enteredSection
+DEFAULT = result org.eclipse.dltk.ui.ScriptElementImageProvider#getImageLabel(java.lang.Object,int) fImageLabelProvider element org.eclipse.dltk.ui.viewsupport.ScriptUILabelProvider#evaluateImageFlags(java.lang.Object) org.eclipse.dltk.ui.viewsupport.ScriptUILabelProvider org.eclipse.dltk.ui.viewsupport.ScriptUILabelProvider element
+DEFAULT <_LABELEMPTY_> a tmp org.broadinstitute.sting.utils.variantcontext.Allele <_LABELEMPTY_>
+DEFAULT android.database.sqlite.SQLiteDatabase#close() tagDatabase com.timsu.astrid.data.tag.TagController
+DEFAULT if com.atlassian.user.GroupManager#hasMembership(com.atlassian.user.User) groupManager java.util.List#get(int) user confluence.chat.conditions.ChatUseCondition groups i confluence.chat.conditions.ChatUseCondition
+DEFAULT com.vaadin.terminal.gwt.client.ui.VCustomLayout#detachResizedFunction(com.google.gwt.user.client.Element) com.vaadin.terminal.gwt.client.ui.VCustomLayout elementWithNativeResizeFunction com.vaadin.terminal.gwt.client.ui.VCustomLayout
+DEFAULT <_LABELEMPTY_> slot slots backtype.storm.scheduler.WorkerSlot <_LABELEMPTY_>
+DEFAULT de.bsd.zwitscher.pg#setVisibility() pg ProgressBar.VISIBLE
+DEFAULT geogebra.euclidian.EuclidianController#setColor() ec geogebra.gui.ColorChooserButton#getSelectedColor() geogebra.euclidian.EuclidianStyleBar btnBgColor geogebra.euclidian.EuclidianStyleBar
+DEFAULT = url java.lang.String#substring(int) url java.lang.String#indexOf(java.lang.String) url PLUS PLUS "/" "/" portalContainerName
+DEFAULT java.util.Map#remove(java.lang.Object) imageComponents e org.xhtmlrenderer.swing.SwingReplacedElementFactory
+DEFAULT android.widget.ListView#setAdapter() timelineListView de.geotweeter.Account#getElements() de.geotweeter.activities.TimelineActivity current_account de.geotweeter.activities.TimelineActivity
+DEFAULT java.util.concurrent.ExecutorService#shutdown() threadPool com.thinkaurelius.titan.diskstorage.Backend
+DEFAULT com.sun.electric.tool.simulation.Signal#addSample(double,com.sun.electric.tool.simulation.ScalarSample) as <_LABELEMPTY_> com.sun.electric.tool.simulation.ScalarSample(double) time i <_LABELEMPTY_> values i
+DEFAULT eu.stratosphere.nephele.instance.InstanceManager#reportHeartBeat(eu.stratosphere.nephele.instance.InstanceConnectionInfo,eu.stratosphere.nephele.instance.HardwareDescription) instanceManager instanceConnectionInfo hardwareDescription this eu.stratosphere.nephele.jobmanager.JobManager
+DEFAULT com.cloudera.flume.agent.LivenessManager#stop() liveMan com.cloudera.flume.agent.FlumeNode
+DEFAULT com.ftwinston.Killer.WorldManager#setDifficulty() netherWorld Difficulty.HARD worldManager plugin com.ftwinston.Killer.WorldManager
+DEFAULT android.media.MediaRecorder#release() recorder edu.mit.mel.locast.mobile.templates.VideoRecorder
+DEFAULT java.util.HashMap#clear() fImageMap org.eclipse.jdt.internal.debug.ui.breakpoints.AddExceptionDialog$ExceptionLabelProvider
+DEFAULT o net.sf.freecol.common.option.Option <_LABELEMPTY_> #getOption(java.lang.String) net.sf.freecol.client.FreeColClient#getClientOptions() PLUS freeColClient net.sf.freecol.client.gui.panel.FreeColPanel java.lang.Class#getName() key java.lang.Object#getClass() net.sf.freecol.client.gui.panel.FreeColPanel
+DEFAULT #set() com.campus.prime.ui.PagedCardFragment$GetDataTask#getListAdapter() items com.campus.prime.ui.PagedCardFragment$GetDataTask
+DEFAULT com.android.contacts.quickcontact.FloatingChildLayout#setChildTargetScreen(android.graphics.Rect) mFloatingLayout sourceBounds com.android.contacts.quickcontact.QuickContactActivity
+DEFAULT <_LABELEMPTY_> lb org.apache.hadoop.hdfs.server.balancer.LocatedBlocks#getLocatedBlocks() org.apache.hadoop.hdfs.server.balancer.LocatedBlock <_LABELEMPTY_> blocks
+DEFAULT java.util.Set#add(E) currentNames java.lang.Thread#getName() t
+DEFAULT #setText(java.lang.String) #textWithId(<unknown>,java.lang.String) java.lang.Object#toString() org.eclipse.emf.eef.runtime.tests.swtbot.finder.SWTEEFBot org.eclipse.emf.eef.runtime.ui.UIConstants.EEF_WIDGET_ID_KEY viewId newValue
+DEFAULT <_LABELEMPTY_> = <_LABELEMPTY_> resource de.anomic.plasma.plasmaSnippetCache#getResource(de.anomic.yacy.yacyURL,boolean,int,boolean,boolean) plasmaSnippetCache url true timeout false true e de.anomic.kelondro.util.Log#logWarning(java.lang.String,java.lang.String) java.io.IOException <_LABELEMPTY_> de.anomic.kelondro.util.Log "ViewImage" PLUS "cannot<_LABELSPACE_>load:<_LABELSPACE_>" java.lang.Throwable#getMessage() e
+DEFAULT org.infoglue.cms.applications.managementtool.actions.ExportRepositoryAction#getSiteNodePropertiesAndAccessRights(com.opensymphony.module.propertyset.PropertySet,java.util.Hashtable,java.util.List,org.infoglue.cms.entities.structure.SiteNode,org.exolab.castor.jdo.Database) org.infoglue.cms.applications.managementtool.actions.ExportRepositoryAction ps allSiteNodeProperties allAccessRights siteNode db
+DEFAULT if java.io.File#exists() file
+DEFAULT org.lateralgm.subframes.GmObjectInfoFrame#setActionContainer(org.lateralgm.resources.sub.Event) actions javax.swing.tree.DefaultMutableTreeNode#getUserObject() gmObjFrame org.lateralgm.subframes.GmObjectInfoFrame node
+DEFAULT org.netbeans.modules.javafx.preview.PreviewSideServerFace#run(org.netbeans.modules.javafx.preview.CodeUtils.Context) previewSideServerFace java.lang.Object() classBytes className fileName org.netbeans.modules.javafx.preview.PreviewCodeGenerate#toURLs(org.netbeans.api.java.classpath.ClassPath) org.netbeans.modules.javafx.preview.PreviewCodeGenerate#toURLs(org.netbeans.api.java.classpath.ClassPath) org.netbeans.modules.javafx.preview.PreviewCodeGenerate#toURLs(org.netbeans.api.java.classpath.ClassPath) org.netbeans.modules.javafx.preview.PreviewCodeGenerate sourceCP org.netbeans.modules.javafx.preview.PreviewCodeGenerate executeCP org.netbeans.modules.javafx.preview.PreviewCodeGenerate bootCP
+DEFAULT services.TTPConnEndPoint#sendFinackAcknowledgement() services.TTPConnEndPoint
+DEFAULT scheme java.lang.String <_LABELEMPTY_> java.lang.System#getProperty(java.lang.String) java.lang.System PROPERTY_SCHEME org.eclipse.lyo.oslc4j.automation.servlet.ServletListener
+DEFAULT android.widget.ListView#setDivider(<unknown>) mListView null com.haarman.listviewanimations.AnimationAdapter
+DEFAULT <_LABELEMPTY_> key customFilter.customExtras#keySet() java.lang.String <_LABELEMPTY_> customExtras customFilter
+DEFAULT = articleProvider com.torrentfreak.reader.free.categories.CategoryItem#createProvider() com.torrentfreak.reader.free.fragments.ArticleListFragment category
+DEFAULT com.continuent.tungsten.commons.cache.IndexedLRUCache#invalidateAll() filterCache this com.continuent.tungsten.replicator.filter.ReplicateFilter
+DEFAULT org.apache.cordova.NativeToJsMessageQueue$BridgeMode#notifyOfFlush(boolean) <_LABELEMPTY_> fromOnlineEvent registeredListeners activeListenerIndex org.apache.cordova.NativeToJsMessageQueue org.apache.cordova.NativeToJsMessageQueue
+DEFAULT gov.nist.javax.sip.stack.SIPClientTransaction#setEncapsulatedChannel(gov.nist.javax.sip.stack.MessageChannel) clientTransactionId messageChannel
+DEFAULT java.util.ArrayList#add(E) events battlecode.analysis.AwesomenessAnalyzer$Event(float,battlecode.common.MapLocation) awesomeness location r
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> 0 i length pingyinArray i
+DEFAULT co.paralleluniverse.actors.LocalActor#stopMonitor() actor child
+DEFAULT org.concord.datagraph.state.DataGraphManagerStartable#update() startable org.concord.datagraph.state.DataGraphManager
+DEFAULT com.mosync.internal.android.MoSyncCameraController#acquireCamera() mMoSyncCameraController com.mosync.internal.android.MoSyncThread
+DEFAULT = description org.gephi.layout.spi.LayoutUI#getDescription() layoutUI
+DEFAULT com.android.launcher2.Workspace#updateShortcuts(java.util.ArrayList) mWorkspace apps com.android.launcher2.Launcher
+DEFAULT dev.memento.MementoList#clear() mMementos dev.memento.MementoClient
+DEFAULT = uncy java.util.Map#get(java.lang.Object) uncyMap mi gov.usgs.cida.coastalhazards.uncy.Xploder
+DEFAULT nz.co.withfire.obliterate.Engine#settings() nz.co.withfire.obliterate.Engine
+DEFAULT = featureRef #createFeatureReferenceModel() archiveFactory
+DEFAULT = serviceTicket no.feide.moria.controller.MoriaController#attemptSingleSignOn(java.lang.String,java.lang.String) no.feide.moria.controller.MoriaController loginTicketId ssoTicketId
+DEFAULT org.eclipse.graphiti.ui.editor.DiagramEditorContextMenuProvider#addActionToMenu(org.eclipse.jface.action.IMenuManager,java.lang.String,java.lang.String) org.eclipse.graphiti.ui.editor.DiagramEditorContextMenuProvider manager ActionFactory.PRINT#getId() GEFActionConstants.GROUP_PRINT ActionFactory.PRINT
+DEFAULT return org.openflexo.foundation.viewpoint.AddIndividual#getScheme() org.openflexo.foundation.viewpoint.AbstractAssertion#getAction() org.openflexo.foundation.viewpoint.AbstractAssertion
+DEFAULT <_LABELEMPTY_> command commandList java.lang.String <_LABELEMPTY_>
+DEFAULT result int <_LABELEMPTY_> com.android.mms.data.WorkingMessage#setAttachment(android.net.Uri) mWorkingMessage WorkingMessage.VIDEO uri com.android.mms.ui.ComposeMessageActivity
+DEFAULT = mAccessToken java.lang.String(java.lang.String) com.example.client.entity.Membership mAccessToken copyModel
+DEFAULT = title org.xhtmlrenderer.simple.extend.XhtmlCssOnlyNamespaceHandler#collapseWhiteSpace(java.lang.String) org.xhtmlrenderer.simple.extend.XhtmlCssOnlyNamespaceHandler java.lang.String#trim() org.xhtmlrenderer.simple.extend.XhtmlCssOnlyNamespaceHandler#readTextContent(org.w3c.dom.Element) org.xhtmlrenderer.simple.extend.XhtmlCssOnlyNamespaceHandler titleElem
+DEFAULT com.android.phone.InCallMenuItemView#setBackgroundDrawable() itemView #newDrawable() android.graphics.drawable.Drawable#getConstantState() mItemBackground com.android.phone.InCallMenuView
+DEFAULT #unregisterNode(de.tuilmenau.ics.fog.transfer.forwardingNodes.ClientFN) de.tuilmenau.ics.fog.FoGEntity#getTransferPlane() this mEntity de.tuilmenau.ics.fog.transfer.forwardingNodes.ClientFN de.tuilmenau.ics.fog.transfer.forwardingNodes.ClientFN
+DEFAULT java.util.List#add(E) events PLUS PLUS "<_LABELSPACE_>in<_LABELSPACE_>inventory" PLUS <_LABELEMPTY_> interaction "<_LABELSPACE_>on<_LABELSPACE_>" #split(java.lang.String) 0 net.aufdemrand.denizen.scripts.containers.core.dItem#identify() ":" item
+DEFAULT = value org.jbei.ice.client.bulkupload.model.SheetCellData#getValue() data
+DEFAULT org.springframework.data.document.mongodb.MongoTemplate#maybeEmitEvent(org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent) org.springframework.data.document.mongodb.MongoTemplate$ReadDbObjectCallback java.lang.Object() object
+DEFAULT com.google.gwt.user.client.ui.Panel#add(com.google.gwt.user.client.ui.Widget) compositePanel mainWidget com.xpn.xwiki.watch.client.ui.utils.TextWidgetComposite this com.xpn.xwiki.watch.client.ui.utils.TextWidgetComposite
+DEFAULT java.util.Map#put(K,V) userCaps user node org.jivesoftware.smackx.EntityCapsManager
+DEFAULT <_LABELEMPTY_> server java.util.Map#values() java.lang.String <_LABELEMPTY_> forcedServers net.md_5.bungee.Configuration
+DEFAULT java.sql.ResultSet#close() rSet
+DEFAULT = theme java.util.Map#get(java.lang.String) projectStyleMap themeName
+DEFAULT java.io.OutputStream#flush() outputStream
+DEFAULT org.apache.wicket.ajax.AjaxRequestTarget#add(org.apache.wicket.markup.html.image.Image) target img hu.sch.web.wicket.components.customlinks.AttributeAjaxFallbackLink
+DEFAULT android.speech.tts.TextToSpeech#stop() mTts uk.co.spookypeanut.wake_me_at.Alarm
+DEFAULT java.lang.Thread#interrupt() currentJobThread
+DEFAULT <_LABELEMPTY_> i LT POSTINC int <_LABELEMPTY_> 0 i length jsprop i
+DEFAULT com.continuent.tungsten.replicator.database.Database#close() conn com.continuent.tungsten.replicator.thl.CatalogManager
+DEFAULT if alt_valid coords str
+DEFAULT com.android.inputmethod.keyboard.PointerTrackerQueue#remove(com.android.inputmethod.keyboard.PointerTracker) queue this com.android.inputmethod.keyboard.PointerTracker
+DEFAULT org.apache.log4j.chainsaw.ChainsawStatusBar#setMessage(java.lang.String) org.apache.log4j.chainsaw.LogUI#getStatusBar() PLUS this org.apache.log4j.chainsaw.LogUI "Configured<_LABELSPACE_>Log4j<_LABELSPACE_>using<_LABELSPACE_>remembered<_LABELSPACE_>URL<_LABELSPACE_>::<_LABELSPACE_>" url
+DEFAULT org.infoglue.cms.entities.content.ContentVersionVO#setVersionComment(java.lang.String) contentVersionVO versionComment this org.infoglue.cms.applications.contenttool.actions.ViewContentVersionAction
+DEFAULT java.util.Map#clear() registeredActions org.apache.wicket.security.swarm.actions.SwarmActionFactory
+DEFAULT com.cloudera.crunch.Pipeline#setConfiguration(org.apache.hadoop.conf.Configuration) pipeline conf com.cloudera.crunch.tool.CrunchTool
+DEFAULT org.jfree.chart.plot.XYPlot#addAnnotation(de.berlios.statcvs.xml.chart.SymbolicNameAnnotation) xyplot java.lang.Object() sn
+DEFAULT = cert org.signserver.server.cryptotokens.ICryptoToken#getCertificate() org.signserver.server.BaseProcessable org.signserver.server.BaseProcessable#getCryptoToken() ICryptoToken.PURPOSE_SIGN org.signserver.server.BaseProcessable
+DEFAULT javax.swing.JLabel#setText(java.lang.String) channel devplugin.Channel#getName() lazybones.gui.TimerListCellRenderer c
+DEFAULT return #createConverter(java.lang.Class) javax.faces.context.FacesContext#getApplication() valueType context
+DEFAULT = typeReference org.eclipse.xtext.common.types.util.TypeReferences#getTypeForName(java.lang.Class,org.eclipse.viatra2.patternlanguage.core.patternLanguage.Variable) typeReferences class variable org.eclipse.viatra2.patternlanguage.types.EMFPatternTypeProvider java.lang.Object
+DEFAULT org.apache.xerces.parsers.fDTDContentModelHandler#setDTDContentModelSource(org.apache.xerces.xni.parser.XMLDTDScanner) fDTDContentModelHandler fDTDScanner org.apache.xerces.parsers.DTDConfiguration
+DEFAULT = stranded org.biojavax.Note#getValue() n
+DEFAULT <_LABELEMPTY_> java.io.ObjectOutputStream#writeObject(java.lang.Object) java.net.Socket#close() <_LABELEMPTY_> output LobbyServer.DISCONNECT riskyspace.network.LobbyClient socket riskyspace.network.LobbyClient e java.lang.Throwable#printStackTrace() java.io.IOException <_LABELEMPTY_> e
+DEFAULT if OR EQ EQ regionFiles null newData length 0 regionFiles newData
+DEFAULT com.learnit.LearnIt.fragments.MyProgressDialogFragment#dismiss() _progressDialog com.learnit.LearnIt.activities.StarDictToSqlActivity
+DEFAULT org.gdg.frisbee.android.view.ResizableImageView#setDimensions() photo #getWidth() #getHeight() #getUrl() mViewHolder Activity.PlusObject.Attachments#getImage() attachment Activity.PlusObject.Attachments#getImage() attachment Activity.PlusObject.Attachments#getImage() attachment
+DEFAULT javax.xml.bind.JAXBElement#setValue(T) e o
+DEFAULT <_LABELEMPTY_> o client.ui.ClientGameUIModel.Request#getOffer() client.ui.ClientGameUIModel.SupplierOffer <_LABELEMPTY_> newValue
+DEFAULT inv org.bukkit.inventory.Inventory <_LABELEMPTY_> org.getspout.spoutapi.event.inventory.InventoryCloseEvent#getInventory() event
+DEFAULT java.util.Set#addAll(java.util.Set) wotIdentities untrustedIds
+DEFAULT <_LABELEMPTY_> cmd PLUS PLUS portval PLUS "=" "-D" PROP_AGENT_PORT com.parc.ccn.network.CCNNetworkManager
+DEFAULT if EQ task null
+DEFAULT if EQ type LOG_ERROR com.sun.identity.authentication.service.AuthD
+DEFAULT org.molgenis.framework.db.Database#remove() db org.molgenis.animaldb.commonservice.CommonService#getProtocolApplicationByName() cs org.molgenis.pheno.ObservedValue#getProtocolApplication_Name() org.molgenis.animaldb.plugins.animal.EditAnimalPlugin value
+DEFAULT nodes.Selection#add() selection nodes.Graph#getEdge(nodes.Node,nodes.Node) nodes.ModifierPopulator graph src dst nodes.ModifierPopulator
+DEFAULT au.org.intersect.faims.android.ui.form.IRestoreActionListener#restoreViewValuesForTabGroup(au.org.intersect.faims.android.ui.form.TabGroup) actionListener this this au.org.intersect.faims.android.ui.form.TabGroup au.org.intersect.faims.android.ui.form.TabGroup
+DEFAULT org.fedoraproject.candlepin.model.SubscriptionCurator#delete(org.fedoraproject.candlepin.model.Subscription) subscriptionCurator s org.fedoraproject.candlepin.resource.OwnerResource
+DEFAULT xmlReader org.xml.sax.XMLReader <_LABELEMPTY_> null
+DEFAULT java.util.List#add() tags net.zhuoweizhang.pocketinveditor.io.nbt.NBTConverter#writeArmor(java.util.List,java.lang.String) net.zhuoweizhang.pocketinveditor.io.nbt.NBTConverter net.zhuoweizhang.pocketinveditor.io.nbt.Player#getArmor() "Armor" player
+DEFAULT POSTDEC count
+DEFAULT = propStatus org.tmatesoft.svn.core.internal.wc.SVNMerger#directoryPropertiesChanged(java.lang.String,java.util.Map) myMerger myWCPath myPropertyDiff org.tmatesoft.svn.core.internal.wc.SVNMergeEditor myCurrentDirectory org.tmatesoft.svn.core.internal.wc.SVNMergeEditor myCurrentDirectory org.tmatesoft.svn.core.internal.wc.SVNMergeEditor
+DEFAULT #enableInput() javax.microedition.lcdui.TextBoxLFImpl
+DEFAULT java.lang.System#setProperty(java.lang.String,java.lang.String) java.lang.System "solr.data.dir" PLUS root "core/target/solrdata"
+DEFAULT #append(java.util.List) java.lang.StringBuilder#append(java.lang.Object) stations java.lang.StringBuilder#append(java.lang.String) java.util.List#size() builder "<_LABELSPACE_>" stations de.schildbach.pte.dto.NearbyStationsResult de.schildbach.pte.dto.NearbyStationsResult
+DEFAULT java.util.HashMap#putAll(java.util.Map) temp distances
+DEFAULT #update() #getBlockTracker() com.bergerkiller.bukkit.tc.controller.MinecartMember#getGroup() owner com.bergerkiller.bukkit.tc.controller.components.BlockTrackerMember
+DEFAULT android.app.ProgressDialog#dismiss() mDialog com.google.android.apps.iosched2.ui.SetupActivity
+DEFAULT <_LABELEMPTY_> f fs java.io.File <_LABELEMPTY_> final
+DEFAULT java.lang.Object#wait() this com.android.phone.EmergencyCallbackModeExitDialog
+DEFAULT org.eclipse.birt.report.engine.extension.IBaseResultSet#close() rset
+DEFAULT org.eclipse.riena.ui.ridgets.uibinding.DefaultBindingManager#bindRidget(org.eclipse.riena.ui.ridgets.IRidget,java.lang.Object,boolean) org.eclipse.riena.ui.ridgets.uibinding.DefaultBindingManager ridget control unbind
+DEFAULT com.aionemu.gameserver.controllers.NpcController#doReward(com.aionemu.gameserver.model.gameobjects.Creature) this lastAttacker com.aionemu.gameserver.controllers.NpcController
+DEFAULT <_LABELEMPTY_> dataFieldHolder dataFieldHolders org.jbpm.formModeler.components.editor.DataFieldHolder <_LABELEMPTY_>
+DEFAULT #setJarByClass(java.lang.Class) com.yahoo.hadoop_bsp.BspJob class com.yahoo.hadoop_bsp.BspJob
+DEFAULT <_LABELEMPTY_> artCord artifactCoords sorcer.util.ArtifactCoordinates <_LABELEMPTY_>
+DEFAULT image java.awt.image.BufferedImage <_LABELEMPTY_> java.awt.Component#createImage(int,int) nrider.ui.MediaPlayerView$MediaPanel com.sun.media.jmc.control.VideoDataBuffer#getWidth() com.sun.media.jmc.control.VideoDataBuffer#getHeight() buffer buffer
+DEFAULT org.collectionspace.services.nuxeo.client.java.RemoteDocumentModelHandlerImpl#addOutputPart(java.util.Map,java.lang.String,org.collectionspace.services.common.service.ObjectPartType) org.collectionspace.services.nuxeo.client.java.RemoteDocumentModelHandlerImpl unQObjectProperties partLabel partMeta
+DEFAULT <_LABELEMPTY_> subfile files java.io.File <_LABELEMPTY_>
+DEFAULT de.fu_berlin.inf.dpp.ui.actions.FollowModeAction#run() this de.fu_berlin.inf.dpp.ui.actions.FollowModeAction
+DEFAULT java.io.File#mkdirs() java.io.File#getParentFile() file net.sourceforge.cilib.simulator.MeasurementCombiner
+DEFAULT org.eclipse.mylar.provisional.tasklist.AbstractRepositoryClient#requestRefresh(org.eclipse.mylar.provisional.tasklist.AbstractRepositoryTask) client task
+DEFAULT java.util.List#add(com.brotherlogic.booser.atom.Drink) drinks d com.brotherlogic.booser.atom.User
+DEFAULT = baseQuery org.springframework.data.graph.neo4j.repository.GraphRepositoryFactory$GraphQueryMethod#addSorting(java.lang.String,org.springframework.data.domain.Sort) org.springframework.data.graph.neo4j.repository.GraphRepositoryFactory$GraphQueryMethod baseQuery org.springframework.data.domain.Pageable#getSort() pageable
+DEFAULT java.util.Map#clear() query org.paxle.core.filter.impl.ReferenceNormalizationFilter$OwnURL
+DEFAULT = plugin org.goobi.production.plugin.PluginLoader#getPlugin(java.lang.String) this de.sub.goobi.Forms.MassImportForm org.goobi.production.plugin.PluginLoader PluginType.Import currentPlugin this de.sub.goobi.Forms.MassImportForm
+DEFAULT com.sunlightlabs.android.congress.BillInfo#loadSponsor() com.sunlightlabs.android.congress.BillInfo
+DEFAULT org.jboss.reflect.plugins.introspection.ReflectFieldInfoImpl#accessCheck(boolean) org.jboss.reflect.plugins.introspection.ReflectFieldInfoImpl java.lang.reflect.Modifier#isPublic(int) java.lang.reflect.Modifier java.lang.reflect.Field#getModifiers() field
+DEFAULT if #equals(team.GunsPlus.GunsPlusPlayer) team.GunsPlus.Block.TripodData#getOwner() gp td
+DEFAULT net.i2p.client.streaming.I2PSocketOptions#setConnectTimeout(int) opts MUL 60 1000
+DEFAULT org.w3c.dom.Element#removeAttributeNode(org.w3c.dom.Attr) element oldAttr
+DEFAULT geomList java.util.List <_LABELEMPTY_> au.org.intersect.faims.android.ui.form.Relationship#getGeometryList() r
+DEFAULT <_LABELEMPTY_> assignment assignmentList no.uis.portal.student.Assignment <_LABELEMPTY_> no.uis.portal.student.StudentService
+DEFAULT java.io.FileInputStream#close() is
+DEFAULT defaultAcb org.eweb4j.mvc.config.bean.ActionConfigBean <_LABELEMPTY_> org.eweb4j.mvc.config.ActionAnnotationConfig#parseDefaultActionConfig(java.lang.String,java.lang.String) org.eweb4j.mvc.config.ActionAnnotationConfig methodName moduleName
+DEFAULT = currentId org.liberty.android.fantastischmemo.currentItem#getId() org.liberty.android.fantastischmemo.EditScreen currentItem
+DEFAULT <_LABELEMPTY_> selectedElement selectedElements java.lang.Object <_LABELEMPTY_>
+DEFAULT if INSTANCEOF buildStep hudson.model.DependecyDeclarer org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder
+DEFAULT #info(java.lang.String) org.tigris.mbt.ModelBasedTesting#getLogger() "==<_LABELSPACE_>BACKTRACKING<_LABELSPACE_>==" mbt
+DEFAULT ucar.nc2.NetcdfFile#close() netCDF
+DEFAULT element org.w3c.dom.Element <_LABELEMPTY_> org.w3c.dom.Document#getDocumentElement() dom org.jboss.tools.jst.jsp.support.kb.WTPTextJspKbConnector
+DEFAULT org.sakaiproject.content.impl.ContentHostingHandlerResolverImpl#setStorage(org.sakaiproject.content.impl.Storage) contentHostingHandlerResolver storage org.sakaiproject.content.impl.DbContentService
+DEFAULT <_LABELEMPTY_> r builtRankings org.gephi.ranking.api.Ranking <_LABELEMPTY_>
+DEFAULT return sponsor_start_date org.sukrupa.student.Student
+DEFAULT if #isPresent() de.hswt.hrm.inspection.model.Inspection#getPlantpicture() inspection de.hswt.hrm.inspection.ui.part.ReportGeneralComposite

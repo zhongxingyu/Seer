@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2006-2007 MOSTRARE INRIA Project
+ * 
+ * This file is part of XCRF, an implementation of CRFs for trees (http://treecrf.gforge.inria.fr)
+ * 
+ * XCRF is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * XCRF is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with XCRF; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+package mostrare.coltAdaptation.function;
+
+import cern.colt.list.IntArrayList;
+
+/**
+ * Interface that represents a procedure object: a procedure that takes a single argument and does
+ * not return a value. This class is an adaptation of
+ * <code>cern.colt.function.ObjectProcedure</code> of the colt API.
+ * 
+ * @author missi
+ */
+public interface IntArrayListProcedure
+{
+	/**
+	 * Applies a procedure to an argument. Optionally can return a boolean flag to inform the object
+	 * calling the procedure.
+	 * <p>
+	 * Example: forEach() methods often use procedure objects. To signal to a forEach() method
+	 * whether iteration should continue normally or terminate (because for example a matching
+	 * element has been found), a procedure can return <code>false</code> to indicate termination
+	 * and <code>true</code> to indicate continuation.
+	 * 
+	 * @param element
+	 *            element passed to the procedure.
+	 * @return a flag to inform the object calling the procedure.
+	 */
+	abstract public boolean apply(IntArrayList element);
+}

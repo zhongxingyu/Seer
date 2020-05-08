@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "eu.webtoolkit.jwt.WJavaScriptPreamble",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "WtClassScope",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.StdGridLayoutImpl2",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "JavaScriptScope",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "JavaScriptConstructor",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.StdGridLayoutImpl2",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "JavaScriptObjectType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"StdLayout2\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"function(G,A,M,N,O,t,H,D,B,v,z){function u(a,b){var c\u003ds[b],h\u003db?a.scrollHeight:a.scrollWidth,i\u003db?a.clientHeight:a.clientWidth;b\u003db?a.offsetHeight:a.offsetWidth;if(i\u003e\u003d1E6){i-\u003d1E6;if(h\u003e\u003d1E6)h-\u003d1E6}if(h\u003d\u003d\u003d0)h\u003de.pxself(a,c.size);if(e.isIE\u0026\u0026(e.hasTag(a,\\\"BUTTON\\\")||e.hasTag(a,\\\"TEXTAREA\\\")||e.hasTag(a,\\\"INPUT\\\")||e.hasTag(a,\\\"SELECT\\\")))h\u003di;if(!e.isOpera\u0026\u0026!e.isGecko)h+\u003de.px(a,\\\"border\\\"+c.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+c.Right+\\\"Width\\\");h+\u003de.px(a,\\\"margin\\\"+c.Left)+ e.px(a,\\\"margin\\\"+c.Right);if(!e.boxSizing(a)\u0026\u0026!e.isIE)h+\u003de.px(a,\\\"padding\\\"+c.Left)+e.px(a,\\\"padding\\\"+c.Right);if(h\u003cb)h\u003db;return h}function I(a,b){b\u003ds[b];if(a.style.display\u003d\u003d\\\"none\\\")return 0;else if(a[\\\"layoutMin\\\"+b.Size])return a[\\\"layoutMin\\\"+b.Size];else{var c\u003de.px(a,\\\"min\\\"+b.Size);e.boxSizing(a)||(c+\u003de.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right));return c}}function E(a,b){b\u003ds[b];var c\u003de.px(a,\\\"margin\\\"+b.Left)+e.px(a,\\\"margin\\\"+b.Right);if(!e.boxSizing(a)\u0026\u0026!(e.isIE\u0026\u0026!e.isIElt9\u0026\u0026e.hasTag(a,\\\"BUTTON\\\")))c+\u003d e.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right);return c}function X(a,b){b\u003ds[b];return e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right)}function S(a,b){if(e.boxSizing(a)){b\u003ds[b];return e.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right)}else return 0}function T(a,b){b\u003ds[b];return e.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+e.px(a,\\\"margin\\\"+b.Left)+ e.px(a,\\\"margin\\\"+b.Right)+e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right)}function P(a,b){J\u003da.dirty\u003dtrue;b\u0026\u0026G.layouts2.scheduleAdjust()}function y(a,b,c){if(a.style[b]!\u003d\u003dc){a.style[b]\u003dc;return true}else return false}function Z(a,b,c){b\u003ds[a];var h\u003ds[a^1],i\u003db.measures,k\u003db.config.length,o\u003dh.config.length;if(J||K){if(c\u0026\u0026typeof b.minSize\u003d\u003d\\\"undefined\\\"){b.minSize\u003de.px(c,\\\"min\\\"+b.Size);if(b.minSize\u003e0)b.minSize-\u003dS(c,a)}i\u003di.slice();if(i.length\u003d\u003d5){i[0]\u003di[0].slice();i[1]\u003di[1].slice()}var w\u003d[],g\u003d[],m\u003d0,j\u003d0, d,p;for(d\u003d0;d\u003ck;++d){var l\u003d0,q\u003db.config[d][2],n\u003dtrue;for(p\u003d0;p\u003co;++p){var f\u003db.getItem(d,p);if(f){if(!f.w){var x\u003d$(\\\"#\\\"+f.id);f.w\u003dx.get(0);(function(){x.find(\\\"img\\\").load(function(){P(f)})})();f.w.style[b.left]\u003df.w.style[h.left]\u003d\\\"-1000000px\\\"}if(!t\u0026\u0026f.w.style.position!\u003d\\\"absolute\\\"){f.w.style.position\u003d\\\"absolute\\\";f.w.style.visibility\u003d\\\"hidden\\\";if(!f.w.wtResize){f.w.style.boxSizing\u003d\\\"border-box\\\";var r\u003de.cssPrefix(\\\"BoxSizing\\\");if(r)f.w.style[r+\\\"BoxSizing\\\"]\u003d\\\"border-box\\\"}}if(!f.ps)f.ps\u003d[];if(!f.ms)f.ms\u003d[];if(!f.size)f.size\u003d [];if(!f.psize)f.psize\u003d[];if(!f.fs)f.fs\u003d[];if(!f.set)f.set\u003d[false,false];if(f.w){if(e.isIE)f.w.style.visibility\u003d\\\"\\\";if(f.dirty||K){r\u003dI(f.w,a);if(r\u003eq)q\u003dr;f.ms[a]\u003dr;if(!f.set[a])if(a\u003d\u003d0){var F\u003de.pxself(f.w,b.size);f.fs[a]\u003dF?F+E(f.w,a):0}else{F\u003de.px(f.w,b.size);f.fs[a]\u003dF\u003eMath.max(S(f.w,a),r)?F+E(f.w,a):0}r\u003df.fs[a];if(f.layout)r\u003dMath.max(r,f.ps[a]);else{F\u003du(f.w,a);r\u003d(typeof f.ps[a]\u003d\u003d\u003d\\\"undefined\\\"||b.config[d][0]\u003c\u003d0)\u0026\u0026(!f.set[a]||F!\u003df.psize[a])?Math.max(r,F):Math.max(r,f.ps[a])}f.ps[a]\u003dr;if(!f.span||f.span[a]\u003d\u003d 1)if(r\u003el)l\u003dr}else if(!f.span||f.span[a]\u003d\u003d1){if(f.ps[a]\u003el)l\u003df.ps[a];if(f.ms[a]\u003eq)q\u003df.ms[a]}if(f.w.style.display!\u003d\u003d\\\"none\\\"||e.hasTag(f.w,\\\"TEXTAREA\\\")\u0026\u0026f.w.wtResize)n\u003dfalse}}}if(n)q\u003dl\u003d-1;else if(q\u003el)l\u003dq;w[d]\u003dl;g[d]\u003dq;if(q\u003e-1){m+\u003dl;j+\u003dq}}h\u003d0;o\u003dtrue;p\u003dfalse;for(d\u003d0;d\u003ck;++d)if(g[d]\u003e-1){if(o){h+\u003db.margins[1];o\u003dfalse}else{h+\u003db.margins[0];if(p)h+\u003d4}p\u003db.config[d][1]!\u003d\u003d0}o||(h+\u003db.margins[2]);m+\u003dh;j+\u003dh;b.measures\u003d[w,g,m,j,h];U\u0026\u0026i[2]!\u003db.measures[2]\u0026\u0026U.setChildSize(Q,a,b.measures[2]+L[a]);c\u0026\u0026b.minSize!\u003d0\u0026\u0026i[3]!\u003d b.measures[3]\u0026\u0026c.parentNode.className!\u003d\\\"Wt-domRoot\\\"\u0026\u0026y(c,\\\"min\\\"+b.Size,b.measures[3]+\\\"px\\\")\u0026\u0026V.ancestor\u0026\u0026V.ancestor.setContentsDirty(c);c\u0026\u0026a\u003d\u003d0\u0026\u0026c\u0026\u0026e.hasTag(c,\\\"TD\\\")\u0026\u0026y(c,b.size,b.measures[2]+\\\"px\\\")}}function aa(a,b,c){a\u003ds[a];if(R)c\u003d-c;a.fixedSize[b]\u003da.sizes[b]+c;G.layouts2.scheduleAdjust()}function ba(a,b,c){var h\u003db.di,i\u003ds[a],k\u003ds[a^1],o,w\u003de.getElement(A),g;for(g\u003dh-1;g\u003e\u003d0;--g)if(i.sizes[g]\u003e\u003d0){o\u003d-(i.sizes[g]-i.measures[1][g]);break}h\u003di.sizes[h]-i.measures[1][h];if(R){var m\u003do;o\u003d-h;h\u003d-m}new e.SizeHandle(e, i.resizeDir,e.pxself(b,i.size),e.pxself(b,k.size),o,h,i.resizerClass,function(j){aa(a,g,j)},b,w,c,0,0)}function ca(a,b){var c\u003ds[a],h\u003ds[a^1],i\u003dc.measures,k\u003d0,o\u003dfalse,w\u003dfalse,g\u003dfalse,m\u003dW?b.parentNode:null;if(c.maxSize\u003d\u003d\u003d0)if(m){var j\u003de.css(m,\\\"position\\\");if(j\u003d\u003d\u003d\\\"absolute\\\")k\u003de.pxself(m,c.size);if(k\u003d\u003d\u003d0){if(!c.initialized)if(j!\u003d\u003d\\\"absolute\\\"){k\u003da?m.clientHeight:m.clientWidth;o\u003dtrue;if(a\u003d\u003d0\u0026\u0026k\u003d\u003d0\u0026\u0026e.isIElt9){k\u003dm.offsetWidth;o\u003dfalse}var d;if((e.hasTag(m,\\\"TD\\\")||e.hasTag(m,\\\"TH\\\"))\u0026\u0026!(e.isIE\u0026\u0026!e.isIElt9)){d\u003d0; g\u003d1}else{d\u003di[3];g\u003d0}if(e.isIElt9\u0026\u0026k\u003d\u003dg||k\u003d\u003dd+X(m,a))c.maxSize\u003d999999}if(k\u003d\u003d\u003d0\u0026\u0026c.maxSize\u003d\u003d\u003d0){k\u003da?m.clientHeight:m.clientWidth;o\u003dtrue}}}else{k\u003de.pxself(b,c.size);w\u003dtrue}d\u003d0;if(m\u0026\u0026a\u003d\u003d1\u0026\u0026e.hasTag(m,\\\"FIELDSET\\\")\u0026\u0026m.children.length\u003d\u003d2)d\u003dm.firstChild.offsetHeight;g\u003di[2];if(g\u003cc.minSize)g\u003dc.minSize;if(c.maxSize)if(g\u003cc.maxSize){y(m,c.size,g+S(m,a)+\\\"px\\\");k\u003dg;g\u003dw\u003dtrue}else{k\u003dc.maxSize;o\u003dfalse}c.cSize\u003dk;if(a\u003d\u003d1\u0026\u0026m\u0026\u0026m.wtResize){g\u003dh.cSize;m.wtResize(m,g,c.cSize)}k-\u003dd;if(!w){w\u003d0;if(c.initialized)w\u003dc.cPadding;else{w\u003d o?X(m,a):S(m,a);c.cPadding\u003dw}k-\u003dw}c.initialized\u003dtrue;if(!(m\u0026\u0026k\u003c\u003d0)){if(k\u003ci[3]-d)k\u003di[3]-d;$(b).children(\\\".\\\"+h.handleClass).css(c.size,k-c.margins[2]-c.margins[1]+\\\"px\\\");o\u003d[];m\u003dc.config.length;w\u003dh.config.length;if(k\u003e\u003di[3]-d){var p\u003dk-i[4];g\u003d[];var l\u003d[0,0],q\u003d[0,0],n\u003d0;for(d\u003d0;d\u003cm;++d)if(i[1][d]\u003e-1){j\u003d-1;if(typeof c.fixedSize[d]!\u003d\u003d\\\"undefined\\\")j\u003dc.fixedSize[d];else if(c.config[d][1]!\u003d\u003d0\u0026\u0026c.config[d][1][0]\u003e\u003d0){j\u003dc.config[d][1][0];if(c.config[d][1][1])j\u003d(k-i[4])*j/100}if(j\u003e\u003d0){g[d]\u003d-1;o[d]\u003dj;p-\u003do[d]}else{if(c.config[d][0]\u003e 0){j\u003d1;g[d]\u003dc.config[d][0];n+\u003dg[d]}else{j\u003d0;g[d]\u003d0}l[j]+\u003di[1][d];q[j]+\u003di[0][d];o[d]\u003di[0][d]}}else g[d]\u003d-2;if(n\u003d\u003d0){for(d\u003d0;d\u003cm;++d)if(g[d]\u003d\u003d0){g[d]\u003d1;++n}q[1]\u003dq[0];l[1]\u003dl[0];q[0]\u003d0;l[0]\u003d0}if(p\u003eq[0]+l[1]){p-\u003dq[0];if(p\u003eq[1]){if(c.fitSize){p-\u003dq[1];k\u003dp/n;for(d\u003d0;d\u003cm;++d)if(g[d]\u003e0)o[d]+\u003dMath.round(g[d]*k)}}else{j\u003d1;if(p\u003cl[j])p\u003dl[j];k\u003dq[j]-l[j]\u003e0?(p-l[j])/(q[j]-l[j]):0;for(d\u003d0;d\u003cm;++d)if(g[d]\u003e0){p\u003di[0][d]-i[1][d];o[d]\u003di[1][d]+Math.round(p*k)}}}else{for(d\u003d0;d\u003cm;++d)if(g[d]\u003e0)o[d]\u003di[1][d];p-\u003dl[1];j\u003d0;if(p\u003c l[j])p\u003dl[j];k\u003dq[j]-l[j]\u003e0?(p-l[j])/(q[j]-l[j]):0;for(d\u003d0;d\u003cm;++d)if(g[d]\u003d\u003d0){p\u003di[0][d]-i[1][d];o[d]\u003di[1][d]+Math.round(p*k)}}}else o\u003di[1];c.sizes\u003do;i\u003d0;k\u003dtrue;l\u003dfalse;for(d\u003d0;d\u003cm;++d)if(o[d]\u003e-1){if(p\u003dl){g\u003dA+\\\"-rs\\\"+a+\\\"-\\\"+d;l\u003de.getElement(g);if(!l){l\u003ddocument.createElement(\\\"div\\\");l.setAttribute(\\\"id\\\",g);l.di\u003dd;l.style.position\u003d\\\"absolute\\\";l.style[h.left]\u003dh.margins[1]+\\\"px\\\";l.style[c.size]\u003dc.margins[0]+\\\"px\\\";l.className\u003dc.handleClass;b.insertBefore(l,b.firstChild);l.onmousedown\u003dl.ontouchstart\u003dfunction(F){ba(a, this,F||window.event)}}i+\u003d2;y(l,c.left,i+\\\"px\\\");i+\u003d2}l\u003dc.config[d][1]!\u003d\u003d0;if(k){i+\u003dc.margins[1];k\u003dfalse}else i+\u003dc.margins[0];for(q\u003d0;q\u003cw;++q)if((n\u003dc.getItem(d,q))\u0026\u0026n.w){g\u003dn.w;j\u003do[d];if(n.span){var f,x\u003dl;for(f\u003d1;f\u003cn.span[a];++f){if(x)j+\u003d4;x\u003dc.config[d+x][1]!\u003d\u003d0;j+\u003dc.margins[0];j+\u003do[d+f]}}var r;g.style.visibility\u003d\\\"\\\";x\u003dn.align\u003e\u003ec.alignBits\u002615;f\u003dn.ps[a];if(j\u003cf)x\u003d0;if(x){switch(x){case 1:r\u003di;break;case 4:r\u003di+(j-f)/2;break;case 2:r\u003di+(j-f);break}if(n.layout){y(g,c.size,f+\\\"px\\\")\u0026\u0026P(n);n.set[a]\u003dtrue}else if(j\u003e\u003d f\u0026\u0026n.set[a]){y(g,c.size,f+\\\"px\\\")\u0026\u0026P(n);n.set[a]\u003dfalse}n.size[a]\u003df;n.psize[a]\u003df}else{r\u003dE(n.w,a);x\u003dj;if(e.isIElt9||!e.hasTag(g,\\\"BUTTON\\\")\u0026\u0026!e.hasTag(g,\\\"INPUT\\\")\u0026\u0026!e.hasTag(g,\\\"SELECT\\\")\u0026\u0026!e.hasTag(g,\\\"TEXTAREA\\\"))x\u003dMath.max(0,x-r);r\u003dfalse;if(e.isIE\u0026\u0026e.hasTag(g,\\\"BUTTON\\\"))r\u003dtrue;if(r||j!\u003df||n.layout){y(g,c.size,x+\\\"px\\\")\u0026\u0026P(n);n.set[a]\u003dtrue}else if(n.fs[a])a\u003d\u003d0\u0026\u0026y(g,c.size,n.fs[a]+\\\"px\\\");else{y(g,c.size,\\\"\\\")\u0026\u0026P(n);n.set[a]\u003dfalse}r\u003di;n.size[a]\u003dx;n.psize[a]\u003dj}if(t)if(p){y(g,c.left,\\\"4px\\\");j\u003de.css(g,\\\"position\\\");if(j!\u003d\u003d \\\"absolute\\\")g.style.position\u003d\\\"relative\\\"}else y(g,c.left,\\\"0px\\\");else y(g,c.left,r+\\\"px\\\");if(a\u003d\u003d1){g.wtResize\u0026\u0026g.wtResize(g,n.size[0],n.size[1]);n.dirty\u003dfalse}}i+\u003do[d]}}}var e\u003dG.WT;this.ancestor\u003dnull;this.descendants\u003d[];var V\u003dthis,C\u003dz,J\u003dfalse,K\u003dtrue,W\u003dfalse,U\u003dnull,Q\u003dnull,Y\u003dfalse,L\u003d[],R\u003d$(document.body).hasClass(\\\"Wt-rtl\\\"),s\u003d[{initialized:false,config:C.cols,margins:B,maxSize:H,measures:[],sizes:[],fixedSize:[],Left:R?\\\"Right\\\":\\\"Left\\\",left:R?\\\"right\\\":\\\"left\\\",Right:R?\\\"Left\\\":\\\"Right\\\",Size:\\\"Width\\\",size:\\\"width\\\", alignBits:0,getItem:function(a,b){return C.items[b*s[0].config.length+a]},handleClass:\\\"Wt-vrh2\\\",resizeDir:\\\"h\\\",resizerClass:\\\"Wt-hsh2\\\",fitSize:N},{initialized:false,config:C.rows,margins:v,maxSize:D,measures:[],sizes:[],fixedSize:[],Left:\\\"Top\\\",left:\\\"top\\\",Right:\\\"Bottom\\\",Size:\\\"Height\\\",size:\\\"height\\\",alignBits:4,getItem:function(a,b){return C.items[a*s[0].config.length+b]},handleClass:\\\"Wt-hrh2\\\",resizeDir:\\\"v\\\",resizerClass:\\\"Wt-vsh2\\\",fitSize:O}];jQuery.data(document.getElementById(A),\\\"layout\\\",this);this.setConfig\u003d function(a){var b\u003dC;C\u003da;s[0].config\u003dC.cols;s[1].config\u003dC.rows;var c;a\u003d0;for(c\u003db.items.length;a\u003cc;++a){var h\u003db.items[a];if(h){h.set[0]\u0026\u0026y(h.w,s[0].size,\\\"\\\");h.set[1]\u0026\u0026y(h.w,s[1].size,\\\"\\\");if(h.layout){V.setChildSize(h.w,0,h.ps[0]);V.setChildSize(h.w,1,h.ps[1])}}}K\u003dtrue};this.getId\u003dfunction(){return A};this.setItemsDirty\u003dfunction(a){var b,c,h\u003ds[0].config.length;b\u003d0;for(c\u003da.length;b\u003cc;++b)C.items[a[b][0]*h+a[b][1]].dirty\u003dtrue;J\u003dtrue};this.setDirty\u003dfunction(){K\u003dtrue};this.setChildSize\u003dfunction(a,b,c){var h, i;h\u003d0;for(i\u003dC.items.length;h\u003ci;++h){var k\u003dC.items[h];if(k\u0026\u0026k.id\u003d\u003da.id){if(!k.ps)k.ps\u003d[];k.ps[b]\u003dc;k.layout\u003dtrue;break}}J\u003dtrue};this.measure\u003dfunction(a){var b\u003de.getElement(A);if(b)if(!e.isHidden(b)){if(!Y){Y\u003dtrue;if(W\u003dM\u003d\u003dnull){var c\u003db.parentNode;for(L\u003d[0,0];;){L[0]+\u003dT(c,0);L[1]+\u003dT(c,1);var h\u003djQuery.data(c.parentNode,\\\"layout\\\");if(h){U\u003dh;Q\u003dc;break}c\u003dc.parentNode;if(c.childNodes.length!\u003d1)break}}else{U\u003djQuery.data(document.getElementById(M),\\\"layout\\\");Q\u003db;L[0]\u003dT(Q,0);L[1]\u003dT(Q,1)}}if(J||K)Z(a,b,W?b.parentNode: null);if(a\u003d\u003d1)J\u003dK\u003dfalse}};this.apply\u003dfunction(a){var b\u003de.getElement(A);if(!b)return false;if(e.isHidden(b))return true;ca(a,b);return true};this.contains\u003dfunction(a){var b\u003de.getElement(A);a\u003de.getElement(a.getId());return b\u0026\u0026a?e.contains(b,a):false}}\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "true",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "WtClassScope": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "JavaScriptConstructor": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"function(G,A,M,N,O,t,H,D,B,v,z){function u(a,b){var c\u003ds[b],h\u003db?a.scrollHeight:a.scrollWidth,i\u003db?a.clientHeight:a.clientWidth;b\u003db?a.offsetHeight:a.offsetWidth;if(i\u003e\u003d1E6){i-\u003d1E6;if(h\u003e\u003d1E6)h-\u003d1E6}if(h\u003d\u003d\u003d0)h\u003de.pxself(a,c.size);if(e.isIE\u0026\u0026(e.hasTag(a,\\\"BUTTON\\\")||e.hasTag(a,\\\"TEXTAREA\\\")||e.hasTag(a,\\\"INPUT\\\")||e.hasTag(a,\\\"SELECT\\\")))h\u003di;if(!e.isOpera\u0026\u0026!e.isGecko)h+\u003de.px(a,\\\"border\\\"+c.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+c.Right+\\\"Width\\\");h+\u003de.px(a,\\\"margin\\\"+c.Left)+ e.px(a,\\\"margin\\\"+c.Right);if(!e.boxSizing(a)\u0026\u0026!e.isIE)h+\u003de.px(a,\\\"padding\\\"+c.Left)+e.px(a,\\\"padding\\\"+c.Right);if(h\u003cb)h\u003db;return h}function I(a,b){b\u003ds[b];if(a.style.display\u003d\u003d\\\"none\\\")return 0;else if(a[\\\"layoutMin\\\"+b.Size])return a[\\\"layoutMin\\\"+b.Size];else{var c\u003de.px(a,\\\"min\\\"+b.Size);e.boxSizing(a)||(c+\u003de.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right));return c}}function E(a,b){b\u003ds[b];var c\u003de.px(a,\\\"margin\\\"+b.Left)+e.px(a,\\\"margin\\\"+b.Right);if(!e.boxSizing(a)\u0026\u0026!(e.isIE\u0026\u0026!e.isIElt9\u0026\u0026e.hasTag(a,\\\"BUTTON\\\")))c+\u003d e.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right);return c}function X(a,b){b\u003ds[b];return e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right)}function S(a,b){if(e.boxSizing(a)){b\u003ds[b];return e.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right)}else return 0}function T(a,b){b\u003ds[b];return e.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+e.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+e.px(a,\\\"margin\\\"+b.Left)+ e.px(a,\\\"margin\\\"+b.Right)+e.px(a,\\\"padding\\\"+b.Left)+e.px(a,\\\"padding\\\"+b.Right)}function P(a,b){J\u003da.dirty\u003dtrue;b\u0026\u0026G.layouts2.scheduleAdjust()}function y(a,b,c){if(a.style[b]!\u003d\u003dc){a.style[b]\u003dc;return true}else return false}function Z(a,b,c){b\u003ds[a];var h\u003ds[a^1],i\u003db.measures,k\u003db.config.length,o\u003dh.config.length;if(J||K){if(c\u0026\u0026typeof b.minSize\u003d\u003d\\\"undefined\\\"){b.minSize\u003de.px(c,\\\"min\\\"+b.Size);if(b.minSize\u003e0)b.minSize-\u003dS(c,a)}i\u003di.slice();if(i.length\u003d\u003d5){i[0]\u003di[0].slice();i[1]\u003di[1].slice()}var w\u003d[],g\u003d[],m\u003d0,j\u003d0, d,p;for(d\u003d0;d\u003ck;++d){var l\u003d0,q\u003db.config[d][2],n\u003dtrue;for(p\u003d0;p\u003co;++p){var f\u003db.getItem(d,p);if(f){if(!f.w){var x\u003d$(\\\"#\\\"+f.id);f.w\u003dx.get(0);(function(){x.find(\\\"img\\\").load(function(){P(f)})})();f.w.style[b.left]\u003df.w.style[h.left]\u003d\\\"-1000000px\\\"}if(!t\u0026\u0026f.w.style.position!\u003d\\\"absolute\\\"){f.w.style.position\u003d\\\"absolute\\\";f.w.style.visibility\u003d\\\"hidden\\\";if(!f.w.wtResize){f.w.style.boxSizing\u003d\\\"border-box\\\";var r\u003de.cssPrefix(\\\"BoxSizing\\\");if(r)f.w.style[r+\\\"BoxSizing\\\"]\u003d\\\"border-box\\\"}}if(!f.ps)f.ps\u003d[];if(!f.ms)f.ms\u003d[];if(!f.size)f.size\u003d [];if(!f.psize)f.psize\u003d[];if(!f.fs)f.fs\u003d[];if(!f.set)f.set\u003d[false,false];if(f.w){if(e.isIE)f.w.style.visibility\u003d\\\"\\\";if(f.dirty||K){r\u003dI(f.w,a);if(r\u003eq)q\u003dr;f.ms[a]\u003dr;if(!f.set[a])if(a\u003d\u003d0){var F\u003de.pxself(f.w,b.size);f.fs[a]\u003dF?F+E(f.w,a):0}else{F\u003de.px(f.w,b.size);f.fs[a]\u003dF\u003eMath.max(S(f.w,a),r)?F+E(f.w,a):0}r\u003df.fs[a];if(f.layout)r\u003dMath.max(r,f.ps[a]);else{F\u003du(f.w,a);r\u003d(typeof f.ps[a]\u003d\u003d\u003d\\\"undefined\\\"||b.config[d][0]\u003c\u003d0)\u0026\u0026(!f.set[a]||F!\u003df.psize[a])?Math.max(r,F):Math.max(r,f.ps[a])}f.ps[a]\u003dr;if(!f.span||f.span[a]\u003d\u003d 1)if(r\u003el)l\u003dr}else if(!f.span||f.span[a]\u003d\u003d1){if(f.ps[a]\u003el)l\u003df.ps[a];if(f.ms[a]\u003eq)q\u003df.ms[a]}if(f.w.style.display!\u003d\u003d\\\"none\\\"||e.hasTag(f.w,\\\"TEXTAREA\\\")\u0026\u0026f.w.wtResize)n\u003dfalse}}}if(n)q\u003dl\u003d-1;else if(q\u003el)l\u003dq;w[d]\u003dl;g[d]\u003dq;if(q\u003e-1){m+\u003dl;j+\u003dq}}h\u003d0;o\u003dtrue;p\u003dfalse;for(d\u003d0;d\u003ck;++d)if(g[d]\u003e-1){if(o){h+\u003db.margins[1];o\u003dfalse}else{h+\u003db.margins[0];if(p)h+\u003d4}p\u003db.config[d][1]!\u003d\u003d0}o||(h+\u003db.margins[2]);m+\u003dh;j+\u003dh;b.measures\u003d[w,g,m,j,h];U\u0026\u0026i[2]!\u003db.measures[2]\u0026\u0026U.setChildSize(Q,a,b.measures[2]+L[a]);c\u0026\u0026b.minSize!\u003d0\u0026\u0026i[3]!\u003d b.measures[3]\u0026\u0026c.parentNode.className!\u003d\\\"Wt-domRoot\\\"\u0026\u0026y(c,\\\"min\\\"+b.Size,b.measures[3]+\\\"px\\\")\u0026\u0026V.ancestor\u0026\u0026V.ancestor.setContentsDirty(c);c\u0026\u0026a\u003d\u003d0\u0026\u0026c\u0026\u0026e.hasTag(c,\\\"TD\\\")\u0026\u0026y(c,b.size,b.measures[2]+\\\"px\\\")}}function aa(a,b,c){a\u003ds[a];if(R)c\u003d-c;a.fixedSize[b]\u003da.sizes[b]+c;G.layouts2.scheduleAdjust()}function ba(a,b,c){var h\u003db.di,i\u003ds[a],k\u003ds[a^1],o,w\u003de.getElement(A),g;for(g\u003dh-1;g\u003e\u003d0;--g)if(i.sizes[g]\u003e\u003d0){o\u003d-(i.sizes[g]-i.measures[1][g]);break}h\u003di.sizes[h]-i.measures[1][h];if(R){var m\u003do;o\u003d-h;h\u003d-m}new e.SizeHandle(e, i.resizeDir,e.pxself(b,i.size),e.pxself(b,k.size),o,h,i.resizerClass,function(j){aa(a,g,j)},b,w,c,0,0)}function ca(a,b){var c\u003ds[a],h\u003ds[a^1],i\u003dc.measures,k\u003d0,o\u003dfalse,w\u003dfalse,g\u003dfalse,m\u003dW?b.parentNode:null;if(c.maxSize\u003d\u003d\u003d0)if(m){var j\u003de.css(m,\\\"position\\\");if(j\u003d\u003d\u003d\\\"absolute\\\")k\u003de.pxself(m,c.size);if(k\u003d\u003d\u003d0){if(!c.initialized)if(j!\u003d\u003d\\\"absolute\\\"){k\u003da?m.clientHeight:m.clientWidth;o\u003dtrue;if(a\u003d\u003d0\u0026\u0026k\u003d\u003d0\u0026\u0026e.isIElt9){k\u003dm.offsetWidth;o\u003dfalse}var d;if((e.hasTag(m,\\\"TD\\\")||e.hasTag(m,\\\"TH\\\"))\u0026\u0026!(e.isIE\u0026\u0026!e.isIElt9)){d\u003d0; g\u003d1}else{d\u003di[3];g\u003d0}if(e.isIElt9\u0026\u0026k\u003d\u003dg||k\u003d\u003dd+X(m,a))c.maxSize\u003d999999}if(k\u003d\u003d\u003d0\u0026\u0026c.maxSize\u003d\u003d\u003d0){k\u003da?m.clientHeight:m.clientWidth;o\u003dtrue}}}else{k\u003de.pxself(b,c.size);w\u003dtrue}d\u003d0;if(m\u0026\u0026a\u003d\u003d1\u0026\u0026e.hasTag(m,\\\"FIELDSET\\\")\u0026\u0026m.children.length\u003d\u003d2)d\u003dm.firstChild.offsetHeight;g\u003di[2];if(g\u003cc.minSize)g\u003dc.minSize;if(c.maxSize)if(g\u003cc.maxSize){y(m,c.size,g+S(m,a)+\\\"px\\\");k\u003dg;g\u003dw\u003dtrue}else{k\u003dc.maxSize;o\u003dfalse}c.cSize\u003dk;if(a\u003d\u003d1\u0026\u0026m\u0026\u0026m.wtResize){g\u003dh.cSize;m.wtResize(m,g,c.cSize)}k-\u003dd;if(!w){w\u003d0;if(c.initialized)w\u003dc.cPadding;else{w\u003d o?X(m,a):S(m,a);c.cPadding\u003dw}k-\u003dw}c.initialized\u003dtrue;if(!(m\u0026\u0026k\u003c\u003d0)){if(k\u003ci[3]-d)k\u003di[3]-d;$(b).children(\\\".\\\"+h.handleClass).css(c.size,k-c.margins[2]-c.margins[1]+\\\"px\\\");o\u003d[];m\u003dc.config.length;w\u003dh.config.length;if(k\u003e\u003di[3]-d){var p\u003dk-i[4];g\u003d[];var l\u003d[0,0],q\u003d[0,0],n\u003d0;for(d\u003d0;d\u003cm;++d)if(i[1][d]\u003e-1){j\u003d-1;if(typeof c.fixedSize[d]!\u003d\u003d\\\"undefined\\\")j\u003dc.fixedSize[d];else if(c.config[d][1]!\u003d\u003d0\u0026\u0026c.config[d][1][0]\u003e\u003d0){j\u003dc.config[d][1][0];if(c.config[d][1][1])j\u003d(k-i[4])*j/100}if(j\u003e\u003d0){g[d]\u003d-1;o[d]\u003dj;p-\u003do[d]}else{if(c.config[d][0]\u003e 0){j\u003d1;g[d]\u003dc.config[d][0];n+\u003dg[d]}else{j\u003d0;g[d]\u003d0}l[j]+\u003di[1][d];q[j]+\u003di[0][d];o[d]\u003di[0][d]}}else g[d]\u003d-2;if(n\u003d\u003d0){for(d\u003d0;d\u003cm;++d)if(g[d]\u003d\u003d0){g[d]\u003d1;++n}q[1]\u003dq[0];l[1]\u003dl[0];q[0]\u003d0;l[0]\u003d0}if(p\u003eq[0]+l[1]){p-\u003dq[0];if(p\u003eq[1]){if(c.fitSize){p-\u003dq[1];k\u003dp/n;for(d\u003d0;d\u003cm;++d)if(g[d]\u003e0)o[d]+\u003dMath.round(g[d]*k)}}else{j\u003d1;if(p\u003cl[j])p\u003dl[j];k\u003dq[j]-l[j]\u003e0?(p-l[j])/(q[j]-l[j]):0;for(d\u003d0;d\u003cm;++d)if(g[d]\u003e0){p\u003di[0][d]-i[1][d];o[d]\u003di[1][d]+Math.round(p*k)}}}else{for(d\u003d0;d\u003cm;++d)if(g[d]\u003e0)o[d]\u003di[1][d];p-\u003dl[1];j\u003d0;if(p\u003c l[j])p\u003dl[j];k\u003dq[j]-l[j]\u003e0?(p-l[j])/(q[j]-l[j]):0;for(d\u003d0;d\u003cm;++d)if(g[d]\u003d\u003d0){p\u003di[0][d]-i[1][d];o[d]\u003di[1][d]+Math.round(p*k)}}}else o\u003di[1];c.sizes\u003do;i\u003d0;k\u003dtrue;l\u003dfalse;for(d\u003d0;d\u003cm;++d)if(o[d]\u003e-1){if(p\u003dl){g\u003dA+\\\"-rs\\\"+a+\\\"-\\\"+d;l\u003de.getElement(g);if(!l){l\u003ddocument.createElement(\\\"div\\\");l.setAttribute(\\\"id\\\",g);l.di\u003dd;l.style.position\u003d\\\"absolute\\\";l.style[h.left]\u003dh.margins[1]+\\\"px\\\";l.style[c.size]\u003dc.margins[0]+\\\"px\\\";l.className\u003dc.handleClass;b.insertBefore(l,b.firstChild);l.onmousedown\u003dl.ontouchstart\u003dfunction(F){ba(a, this,F||window.event)}}i+\u003d2;y(l,c.left,i+\\\"px\\\");i+\u003d2}l\u003dc.config[d][1]!\u003d\u003d0;if(k){i+\u003dc.margins[1];k\u003dfalse}else i+\u003dc.margins[0];for(q\u003d0;q\u003cw;++q)if((n\u003dc.getItem(d,q))\u0026\u0026n.w){g\u003dn.w;j\u003do[d];if(n.span){var f,x\u003dl;for(f\u003d1;f\u003cn.span[a];++f){if(x)j+\u003d4;x\u003dc.config[d+x][1]!\u003d\u003d0;j+\u003dc.margins[0];j+\u003do[d+f]}}var r;g.style.visibility\u003d\\\"\\\";x\u003dn.align\u003e\u003ec.alignBits\u002615;f\u003dn.ps[a];if(j\u003cf)x\u003d0;if(x){switch(x){case 1:r\u003di;break;case 4:r\u003di+(j-f)/2;break;case 2:r\u003di+(j-f);break}if(n.layout){y(g,c.size,f+\\\"px\\\")\u0026\u0026P(n);n.set[a]\u003dtrue}else if(j\u003e\u003d f\u0026\u0026n.set[a]){y(g,c.size,f+\\\"px\\\")\u0026\u0026P(n);n.set[a]\u003dfalse}n.size[a]\u003df;n.psize[a]\u003df}else{r\u003dE(n.w,a);x\u003dj;if(e.isIElt9||!e.hasTag(g,\\\"BUTTON\\\")\u0026\u0026!e.hasTag(g,\\\"INPUT\\\")\u0026\u0026!e.hasTag(g,\\\"SELECT\\\")\u0026\u0026!e.hasTag(g,\\\"TEXTAREA\\\"))x\u003dMath.max(0,x-r);r\u003dfalse;if(e.isIE\u0026\u0026e.hasTag(g,\\\"BUTTON\\\"))r\u003dtrue;if(r||j!\u003df||n.layout){y(g,c.size,x+\\\"px\\\")\u0026\u0026P(n);n.set[a]\u003dtrue}else if(n.fs[a])a\u003d\u003d0\u0026\u0026y(g,c.size,n.fs[a]+\\\"px\\\");else{y(g,c.size,\\\"\\\")\u0026\u0026P(n);n.set[a]\u003dfalse}r\u003di;n.size[a]\u003dx;n.psize[a]\u003dj}if(t)if(p){y(g,c.left,\\\"4px\\\");j\u003de.css(g,\\\"position\\\");if(j!\u003d\u003d \\\"absolute\\\")g.style.position\u003d\\\"relative\\\"}else y(g,c.left,\\\"0px\\\");else y(g,c.left,r+\\\"px\\\");if(a\u003d\u003d1){g.wtResize\u0026\u0026g.wtResize(g,n.size[0],n.size[1]);n.dirty\u003dfalse}}i+\u003do[d]}}}var e\u003dG.WT;this.ancestor\u003dnull;this.descendants\u003d[];var V\u003dthis,C\u003dz,J\u003dfalse,K\u003dtrue,W\u003dfalse,U\u003dnull,Q\u003dnull,Y\u003dfalse,L\u003d[],R\u003d$(document.body).hasClass(\\\"Wt-rtl\\\"),s\u003d[{initialized:false,config:C.cols,margins:B,maxSize:H,measures:[],sizes:[],fixedSize:[],Left:R?\\\"Right\\\":\\\"Left\\\",left:R?\\\"right\\\":\\\"left\\\",Right:R?\\\"Left\\\":\\\"Right\\\",Size:\\\"Width\\\",size:\\\"width\\\", alignBits:0,getItem:function(a,b){return C.items[b*s[0].config.length+a]},handleClass:\\\"Wt-vrh2\\\",resizeDir:\\\"h\\\",resizerClass:\\\"Wt-hsh2\\\",fitSize:N},{initialized:false,config:C.rows,margins:v,maxSize:D,measures:[],sizes:[],fixedSize:[],Left:\\\"Top\\\",left:\\\"top\\\",Right:\\\"Bottom\\\",Size:\\\"Height\\\",size:\\\"height\\\",alignBits:4,getItem:function(a,b){return C.items[a*s[0].config.length+b]},handleClass:\\\"Wt-hrh2\\\",resizeDir:\\\"v\\\",resizerClass:\\\"Wt-vsh2\\\",fitSize:O}];jQuery.data(document.getElementById(A),\\\"layout\\\",this);this.setConfig\u003d function(a){var b\u003dC;C\u003da;s[0].config\u003dC.cols;s[1].config\u003dC.rows;var c;a\u003d0;for(c\u003db.items.length;a\u003cc;++a){var h\u003db.items[a];if(h){h.set[0]\u0026\u0026y(h.w,s[0].size,\\\"\\\");h.set[1]\u0026\u0026y(h.w,s[1].size,\\\"\\\");if(h.layout){V.setChildSize(h.w,0,h.ps[0]);V.setChildSize(h.w,1,h.ps[1])}}}K\u003dtrue};this.getId\u003dfunction(){return A};this.setItemsDirty\u003dfunction(a){var b,c,h\u003ds[0].config.length;b\u003d0;for(c\u003da.length;b\u003cc;++b)C.items[a[b][0]*h+a[b][1]].dirty\u003dtrue;J\u003dtrue};this.setDirty\u003dfunction(){K\u003dtrue};this.setChildSize\u003dfunction(a,b,c){var h, i;h\u003d0;for(i\u003dC.items.length;h\u003ci;++h){var k\u003dC.items[h];if(k\u0026\u0026k.id\u003d\u003da.id){if(!k.ps)k.ps\u003d[];k.ps[b]\u003dc;k.layout\u003dtrue;break}}J\u003dtrue};this.measure\u003dfunction(a){var b\u003de.getElement(A);if(b)if(!e.isHidden(b)){if(!Y){Y\u003dtrue;if(W\u003dM\u003d\u003dnull){var c\u003db.parentNode;for(L\u003d[0,0];;){L[0]+\u003dT(c,0);L[1]+\u003dT(c,1);var h\u003djQuery.data(c.parentNode,\\\"layout\\\");if(h){U\u003dh;Q\u003dc;break}c\u003dc.parentNode;if(c.childNodes.length!\u003d1)break}}else{U\u003djQuery.data(document.getElementById(M),\\\"layout\\\");Q\u003db;L[0]\u003dT(Q,0);L[1]\u003dT(Q,1)}}if(J||K)Z(a,b,W?b.parentNode: null);if(a\u003d\u003d1)J\u003dK\u003dfalse}};this.apply\u003dfunction(a){var b\u003de.getElement(A);if(!b)return false;if(e.isHidden(b))return true;ca(a,b);return true};this.contains\u003dfunction(a){var b\u003de.getElement(A);a\u003de.getElement(a.getId());return b\u0026\u0026a?e.contains(b,a):false}}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"StdLayout2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+      "S4_Field_NOT_ASSIGNED": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "JavaScriptObjectType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "JavaScriptScope": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

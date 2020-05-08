@@ -1,0 +1,14 @@
+package mostrare.crf.tree;
+
+public enum CharacteristicConstructor {
+	
+	CON1_OVERLOADED_CONSTRUCTOR,
+	CON2_SIMILAR_CONSTRUCTOR,
+	CON3_WRAPTTED_IN_OTHER_CALLS,
+	CON4_Return_Primitive,
+	CON5_Of_Class,
+	CON6_Argument_Has_Primitive,
+	CON9_METHOD_CALL_WITH_NORMAL_GUARD,
+	CON10_METHOD_CALL_WITH_NULL_GUARD,
+	CON12_METHOD_CALL_WITH_TRY_CATCH,
+}

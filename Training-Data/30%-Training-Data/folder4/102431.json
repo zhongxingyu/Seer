@@ -1,0 +1,83 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "htmlTemplate",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "\"\u003c!DOCTYPE html\u003e\u003chtml\u003e\u003chead\u003e\u003cmeta http-equiv\u003d\u0027content-type\u0027 content\u003d\u0027text/html;charset\u003dUTF-8\u0027\u003e\u003ctitle\u003eLatest Mail De Point\u003c/title\u003e\u003cscript type\u003d\u0027text/javascript\u0027 src\u003d\u0027http://code.jquery.com/jquery-1.8.3.js\u0027\u003e\u003c/script\u003e\u003cscript type\u003d\u0027text/javascript\u0027\u003e$(function(){$(\u0027#OPEN_LIST a\u0027).each(function(i){var href\u003d$(this).attr(\u0027href\u0027);setTimeout(function(){$(\u0027#mywin\u0027).attr(\u0027src\u0027, href);},i*10000)});});\u003c/script\u003e\u003c/head\u003e\u003cbody\u003e#REPLACE_HERE#\u003ciframe id\u003d\u0027mywin\u0027 src\u003d\u0027http://www.bing.com\u0027 width\u003d1024 height\u003d768\u003e\u003c/iframe\u003e\u003c/body\u003e\u003c/html\u003e\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"\u003c!DOCTYPE html\u003e\u003chtml\u003e\u003chead\u003e\u003cmeta http-equiv\u003d\u0027content-type\u0027 content\u003d\u0027text/html;charset\u003dUTF-8\u0027\u003e\u003ctitle\u003eLatest Mail De Point\u003c/title\u003e\u003cscript type\u003d\u0027text/javascript\u0027 src\u003d\u0027http://code.jquery.com/jquery-1.8.3.js\u0027\u003e\u003c/script\u003e\u003cscript type\u003d\u0027text/javascript\u0027\u003e$(function(){$(\u0027#OPEN_LIST a\u0027).each(function(i){var href\u003d$(this).attr(\u0027href\u0027);setTimeout(function(){$(\u0027#mywin\u0027).attr(\u0027src\u0027, href);},i*10000)});});\u003c/script\u003e\u003c/head\u003e\u003cbody\u003e#REPLACE_HERE#\u003ciframe id\u003d\u0027mywin\u0027 src\u003d\u0027http://www.bing.com\u0027 width\u003d1024 height\u003d768\u003e\u003c/iframe\u003e\u003c/body\u003e\u003c/html\u003e\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

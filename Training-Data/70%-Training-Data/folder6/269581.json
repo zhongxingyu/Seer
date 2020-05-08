@@ -1,0 +1,302 @@
+{
+  "nr_root_ast_changes": 6,
+  "faulty_ast": [
+    {
+      "label": "dialog",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "org.eclipse.ui.dialogs.ContainerSelectionDialog",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "org.eclipse.ui.dialogs.ContainerSelectionDialog",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "#getShell()",
+              "type": "Invocation",
+              "return_type": "java.lang.Object",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "org.eclipse.jdt.internal.debug.ui.launcher.WorkingDirectoryBlock",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "#getRoot()",
+              "type": "Invocation",
+              "return_type": "java.lang.Object",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "org.eclipse.core.resources.ResourcesPlugin#getWorkspace()",
+                  "type": "Invocation",
+                  "return_type": "java.lang.Object",
+                  "index_of_exper": "expression_3",
+                  "children": [
+                    {
+                      "label": "org.eclipse.core.resources.ResourcesPlugin",
+                      "type": "TypeAccess",
+                      "return_type": "void",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "false",
+              "type": "Literal",
+              "return_type": "java.lang.Boolean",
+              "index_of_exper": "expression_4",
+              "index_of_logical_exper": "logical_expression_0",
+              "children": []
+            },
+            {
+              "label": "org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages#getString(java.lang.String)",
+              "type": "Invocation",
+              "return_type": "java.lang.Object",
+              "index_of_exper": "expression_5",
+              "children": [
+                {
+                  "label": "org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                },
+                {
+                  "label": "\"WorkingDirectoryBlock.Select_a_\u0026workspace_relative_working_directory__4\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_6",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "true",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_METHODS": {
+        "org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages#getString(java.lang.String)": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "true",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "true",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "true",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "true"
+        },
+        "#getShell()": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        },
+        "#getRoot()": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        },
+        "org.eclipse.core.resources.ResourcesPlugin#getWorkspace()": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        }
+      },
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "FEATURES_LOGICAL_EXPRESSION": {
+        "logical_expression_0": {
+          "LE9_NULL_CHECK": "false",
+          "LE10_ATOMIC_EXPRESSION_SAME_INVOCATION_TARGET": "false",
+          "LE2_IS_BOOLEAN_METHOD_PARAM_TYPE_VAR": "false",
+          "LE5_COMPLEX_REFERENCE": "false",
+          "LE10_ATOMIC_EXPRESSION_COMPARISION_SAME_LEFT": "false",
+          "LE7_SIMPLE_VAR_OR_METHOD_IN_LOGIC": "false",
+          "LE9_EQUAL_NOTEQUAL_NULL_CHECK": "false",
+          "LE6_HAS_NEGATION": "false",
+          "LE1_EXISTS_RELATED_BOOLEAN_EXPRESSION": "false",
+          "LE9_MIX_CHECK": "false",
+          "LE3_IS_COMPATIBLE_VAR_NOT_INCLUDED": "false",
+          "LE4_EXISTS_LOCAL_UNUSED_VARIABLES": "false",
+          "LE10_ATOMIC_EXPRESSION_COMPARISION_SAME_RIGHT": "false",
+          "LE9_NORMAL_CHECK": "false",
+          "LE10_ATOMIC_EXPRESSION_MULTIPLE_VAR_AS_BOOLEAN": "false",
+          "LE10_ATOMIC_EXPRESSION_USED_IN_INVOCATION_COMPARISION_VARIABLE": "false",
+          "LE10_CONTAINS_ALL_INVOCATION_COMPARISION_VARIABLE": "false",
+          "LE8_SCOPE_VAR_USED_OTHER_BOOLEXPER": "true"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "true",
+      "CONSTANT": {
+        "false": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"WorkingDirectoryBlock.Select_a_\u0026workspace_relative_working_directory__4\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "true",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "LocalVariable",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "Invocation",
+      "FEATURES_TYPEACCESS": {
+        "org.eclipse.core.resources.ResourcesPlugin": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "org.eclipse.jdt.internal.debug.ui.launcher.WorkingDirectoryBlock": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "If",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

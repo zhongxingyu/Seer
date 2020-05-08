@@ -1,0 +1,203 @@
+{
+  "nr_root_ast_changes": 9,
+  "faulty_ast": [
+    {
+      "label": "add_cot_member",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "com.sun.identity.cli.annotation.SubCommandInfo",
+          "children": [
+            {
+              "label": "\"Add a member to a circle of trust.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"com.sun.identity.federation.cli.AddCircleOfTrustMembers\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"authentication\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"cot|t|s|Circle of Trust\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_3",
+                  "children": []
+                },
+                {
+                  "label": "\"entityid|y|s|Entity ID\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_4",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.Object[]",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"realm|e|s|Realm where circle of trust resides\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_5",
+                  "children": []
+                },
+                {
+                  "label": "\"spec|c|s|Specify metadata specification, either idff or saml2, defaults to saml2\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_6",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"add-circle-of-trust-member-succeeded\u003dEntity, {2} was added to the circle of trust, {1}, in realm {3}.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_7",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"true\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_8",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"realm|e|s|Realm where circle of trust resides\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"entityid|y|s|Entity ID\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"add-circle-of-trust-member-succeeded\u003dEntity, {2} was added to the circle of trust, {1}, in realm {3}.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"com.sun.identity.federation.cli.AddCircleOfTrustMembers\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"spec|c|s|Specify metadata specification, either idff or saml2, defaults to saml2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"authentication\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"cot|t|s|Circle of Trust\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Add a member to a circle of trust.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"true\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

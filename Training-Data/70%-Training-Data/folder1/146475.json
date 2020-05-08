@@ -1,0 +1,68 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "player_prefsQuery",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "\"CREATE TABLE IF NOT EXISTS player_prefs (pp_id int(11) NOT NULL AUTO_INCREMENT, player varchar(32), `key_item` varchar(32) DEFAULT \u00270\u0027, sfx_on int(1) DEFAULT \u00270\u0027, platform_on int(1) DEFAULT \u00270\u0027, quotes_on int(1) DEFAULT \u00270\u0027, artron_level int(11) DEFAULT \u00270\u0027, wall varchar(64) DEFAULT \u0027ORANGE_WOOL\u0027, floor varchar(64) DEFAULT \u0027LIGHT_GREY_WOOL\u0027, auto_on int(1) DEFAULT \u00270\u0027, beacon_on int(11) DEFAULT \u00271\u0027, hads_on int(11) DEFAULT \u00271\u0027, eps_on int(1) DEFAULT \u00270\u0027, eps_message text, lamp int(6) DEFAULT \u00270\u0027, texture_on int(1) DEFAULT \u00270\u0027, texture_in varchar(512) DEFAULT \u0027\u0027, texture_out varchar(512) DEFAULT \u0027default\u0027, submarine_on int(1) DEFAULT \u00270\u0027, dnd_on int(1) DEFAULT \u00270\u0027, PRIMARY KEY (pp_id)) DEFAULT CHARSET\u003dutf8 COLLATE utf8_general_ci\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Try",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "Invocation",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "Invocation",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"CREATE TABLE IF NOT EXISTS player_prefs (pp_id int(11) NOT NULL AUTO_INCREMENT, player varchar(32), `key_item` varchar(32) DEFAULT \u00270\u0027, sfx_on int(1) DEFAULT \u00270\u0027, platform_on int(1) DEFAULT \u00270\u0027, quotes_on int(1) DEFAULT \u00270\u0027, artron_level int(11) DEFAULT \u00270\u0027, wall varchar(64) DEFAULT \u0027ORANGE_WOOL\u0027, floor varchar(64) DEFAULT \u0027LIGHT_GREY_WOOL\u0027, auto_on int(1) DEFAULT \u00270\u0027, beacon_on int(11) DEFAULT \u00271\u0027, hads_on int(11) DEFAULT \u00271\u0027, eps_on int(1) DEFAULT \u00270\u0027, eps_message text, lamp int(6) DEFAULT \u00270\u0027, texture_on int(1) DEFAULT \u00270\u0027, texture_in varchar(512) DEFAULT \u0027\u0027, texture_out varchar(512) DEFAULT \u0027default\u0027, submarine_on int(1) DEFAULT \u00270\u0027, dnd_on int(1) DEFAULT \u00270\u0027, PRIMARY KEY (pp_id)) DEFAULT CHARSET\u003dutf8 COLLATE utf8_general_ci\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Invocation",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "Invocation",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "LocalVariable",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

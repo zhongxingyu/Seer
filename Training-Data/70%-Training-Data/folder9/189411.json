@@ -1,0 +1,361 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "injector",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "com.google.inject.Injector",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "com.google.inject.Guice#createInjector(cz.incad.Kramerius.backend.guice.BaseModule,cz.incad.kramerius.pdf.guice.PDFModule,cz.incad.kramerius.imaging.guice.ImageModule,cz.incad.kramerius.service.guice.I18NModule,cz.incad.kramerius.users.guice.LoggedUsersModule,cz.incad.kramerius.service.guice.MailModule,cz.incad.kramerius.document.guice.DocumentServiceModule,cz.incad.kramerius.security.guice.GuiceSecurityModule,cz.incad.kramerius.security.impl.http.GuiceSecurityHTTPModule,cz.incad.kramerius.processes.guice.LongRunningProcessModule,cz.incad.kramerius.printing.guice.PrintModule,cz.incad.kramerius.database.guice.DatabaseVersionGuiceModule,cz.incad.Kramerius.exts.menu.main.guice.MenuConfiguration,com.google.inject.servlet.ServletModule)",
+          "type": "Invocation",
+          "susp": [
+            "susp_wrongMethodRef_SameNamedifferentArgument"
+          ],
+          "return_type": "com.google.inject.Injector",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "com.google.inject.Guice",
+              "type": "TypeAccess",
+              "return_type": "void",
+              "children": []
+            },
+            {
+              "label": "cz.incad.Kramerius.backend.guice.BaseModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.Kramerius.backend.guice.BaseModule",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.pdf.guice.PDFModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.pdf.guice.PDFModule",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.imaging.guice.ImageModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.imaging.guice.ImageModule",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.service.guice.I18NModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.service.guice.I18NModule",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.users.guice.LoggedUsersModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.users.guice.LoggedUsersModule",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.service.guice.MailModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.service.guice.MailModule",
+              "index_of_exper": "expression_6",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.document.guice.DocumentServiceModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.document.guice.DocumentServiceModule",
+              "index_of_exper": "expression_7",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.security.guice.GuiceSecurityModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.security.guice.GuiceSecurityModule",
+              "index_of_exper": "expression_8",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.security.impl.http.GuiceSecurityHTTPModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.security.impl.http.GuiceSecurityHTTPModule",
+              "index_of_exper": "expression_9",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.processes.guice.LongRunningProcessModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.processes.guice.LongRunningProcessModule",
+              "index_of_exper": "expression_10",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.printing.guice.PrintModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.printing.guice.PrintModule",
+              "index_of_exper": "expression_11",
+              "children": []
+            },
+            {
+              "label": "cz.incad.kramerius.database.guice.DatabaseVersionGuiceModule()",
+              "type": "ConstructorCall",
+              "return_type": "cz.incad.kramerius.database.guice.DatabaseVersionGuiceModule",
+              "index_of_exper": "expression_12",
+              "children": []
+            },
+            {
+              "label": "cz.incad.Kramerius.exts.menu.main.guice.MenuConfiguration()",
+              "type": "ConstructorCall",
+              "susp": [
+                "susp_wrongMethodRef_differentMethodName"
+              ],
+              "return_type": "cz.incad.Kramerius.exts.menu.main.guice.MenuConfiguration",
+              "index_of_exper": "expression_13",
+              "children": []
+            },
+            {
+              "label": "com.google.inject.servlet.ServletModule()",
+              "type": "ConstructorCall",
+              "return_type": "com.google.inject.servlet.ServletModule",
+              "index_of_exper": "expression_14",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_METHODS": {
+        "com.google.inject.Guice#createInjector(cz.incad.Kramerius.backend.guice.BaseModule,cz.incad.kramerius.pdf.guice.PDFModule,cz.incad.kramerius.imaging.guice.ImageModule,cz.incad.kramerius.service.guice.I18NModule,cz.incad.kramerius.users.guice.LoggedUsersModule,cz.incad.kramerius.service.guice.MailModule,cz.incad.kramerius.document.guice.DocumentServiceModule,cz.incad.kramerius.security.guice.GuiceSecurityModule,cz.incad.kramerius.security.impl.http.GuiceSecurityHTTPModule,cz.incad.kramerius.processes.guice.LongRunningProcessModule,cz.incad.kramerius.printing.guice.PrintModule,cz.incad.kramerius.database.guice.DatabaseVersionGuiceModule,cz.incad.Kramerius.exts.menu.main.guice.MenuConfiguration,com.google.inject.servlet.ServletModule)": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "false",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "false",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "false",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        }
+      },
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "cz.incad.kramerius.processes.guice.LongRunningProcessModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.database.guice.DatabaseVersionGuiceModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.Kramerius.backend.guice.BaseModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.imaging.guice.ImageModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.security.guice.GuiceSecurityModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "com.google.inject.servlet.ServletModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.pdf.guice.PDFModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.security.impl.http.GuiceSecurityHTTPModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.Kramerius.exts.menu.main.guice.MenuConfiguration()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.service.guice.I18NModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.service.guice.MailModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.users.guice.LoggedUsersModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.document.guice.DocumentServiceModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "cz.incad.kramerius.printing.guice.PrintModule()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Return",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "com.google.inject.Guice": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "true"
+    }
+  }
+}

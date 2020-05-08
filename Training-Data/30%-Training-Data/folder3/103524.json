@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 2,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "eu.webtoolkit.jwt.WJavaScriptPreamble",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "WtClassScope",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.StdGridLayoutImpl2",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "JavaScriptScope",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "JavaScriptConstructor",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.StdGridLayoutImpl2",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "JavaScriptObjectType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"StdLayout2\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"function(D,B,J,P,Q,r,E,y,w,v,z){function u(a,b){var d\u003dq[b],g\u003db?a.scrollHeight:a.scrollWidth,h\u003db?a.clientHeight:a.clientWidth;b\u003db?a.offsetHeight:a.offsetWidth;if(h\u003e\u003d1E6)h-\u003d1E6;if(g\u003e\u003d1E6)g-\u003d1E6;if(b\u003e\u003d1E6)b-\u003d1E6;if(g\u003d\u003d\u003d0)g\u003df.pxself(a,d.size);if(f.isIE\u0026\u0026(f.hasTag(a,\\\"BUTTON\\\")||f.hasTag(a,\\\"TEXTAREA\\\")||f.hasTag(a,\\\"INPUT\\\")||f.hasTag(a,\\\"SELECT\\\")))g\u003dh;if(g\u003eb)if(f.pxself(a,d.size)\u003d\u003d0)g\u003d0;else{var o\u003dfalse;$(a).find(\\\".Wt-popup\\\").each(function(){if(this.style.display!\u003d \\\"none\\\")o\u003dtrue});if(o)g\u003d0}if(!f.isOpera\u0026\u0026!f.isGecko)g+\u003df.px(a,\\\"border\\\"+d.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+d.Right+\\\"Width\\\");g+\u003df.px(a,\\\"margin\\\"+d.Left)+f.px(a,\\\"margin\\\"+d.Right);if(!f.boxSizing(a)\u0026\u0026!f.isIE)g+\u003df.px(a,\\\"padding\\\"+d.Left)+f.px(a,\\\"padding\\\"+d.Right);if(g\u003cb)g\u003db;return Math.round(g)}function I(a,b){b\u003dq[b];if(a.style.display\u003d\u003d\\\"none\\\")return 0;else if(a[\\\"layoutMin\\\"+b.Size])return a[\\\"layoutMin\\\"+b.Size];else{var d\u003df.px(a,\\\"min\\\"+b.Size);f.boxSizing(a)||(d+\u003df.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right)); return d}}function H(a,b){b\u003dq[b];var d\u003df.px(a,\\\"margin\\\"+b.Left)+f.px(a,\\\"margin\\\"+b.Right);if(!f.boxSizing(a)\u0026\u0026!(f.isIE\u0026\u0026!f.isIElt9\u0026\u0026f.hasTag(a,\\\"BUTTON\\\")))d+\u003df.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+f.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right);return d}function Y(a,b){b\u003dq[b];return f.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right)}function U(a,b){if(f.boxSizing(a)){b\u003dq[b];return f.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+f.px(a,\\\"padding\\\"+b.Left)+f.px(a, \\\"padding\\\"+b.Right)}else return 0}function R(a,b){b\u003dq[b];return Math.round(f.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+f.px(a,\\\"margin\\\"+b.Left)+f.px(a,\\\"margin\\\"+b.Right)+f.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right))}function L(a,b){S\u003da.dirty\u003dtrue;b\u0026\u0026D.layouts2.scheduleAdjust()}function x(a,b,d){if(a.style[b]!\u003d\u003dd){a.style[b]\u003dd;return true}else return false}function ba(a,b,d){b\u003dq[a];var g\u003dq[a^1],h\u003db.measures,o\u003db.config.length,m\u003dg.config.length;if(S||K){if(d\u0026\u0026typeof b.minSize\u003d\u003d \\\"undefined\\\"){b.minSize\u003df.px(d,\\\"min\\\"+b.Size);if(b.minSize\u003e0)b.minSize-\u003dU(d,a)}h\u003dh.slice();if(h.length\u003d\u003d5){h[0]\u003dh[0].slice();h[1]\u003dh[1].slice()}var A\u003d[],e\u003d[],l\u003d0,t\u003d0,i,n;for(i\u003d0;i\u003co;++i){var p\u003d0,k\u003db.config[i][2],F\u003dtrue;for(n\u003d0;n\u003cm;++n){var c\u003db.getItem(i,n);if(c){if(!c.w||a\u003d\u003d0\u0026\u0026c.dirty){var j\u003d$(\\\"#\\\"+c.id),s\u003dj.get(0);if(s!\u003dc.w){c.w\u003ds;j.find(\\\"img\\\").add(j.filter(\\\"img\\\")).bind(\\\"load\\\",{item:c},function(W){L(W.data.item,true)});c.w.style[b.left]\u003dc.w.style[g.left]\u003d\\\"-1000000px\\\"}}if(!r\u0026\u0026c.w.style.position!\u003d\\\"absolute\\\"){c.w.style.position\u003d \\\"absolute\\\";c.w.style.visibility\u003d\\\"hidden\\\";if(!c.w.wtResize\u0026\u0026!f.isIElt9){c.w.style.boxSizing\u003d\\\"border-box\\\";if(j\u003df.cssPrefix(\\\"BoxSizing\\\"))c.w.style[j+\\\"BoxSizing\\\"]\u003d\\\"border-box\\\"}}if(!c.ps)c.ps\u003d[];if(!c.ms)c.ms\u003d[];if(!c.size)c.size\u003d[];if(!c.psize)c.psize\u003d[];if(!c.fs)c.fs\u003d[];if($(c.w).hasClass(\\\"Wt-hidden\\\"))c.ps[a]\u003dc.ms[a]\u003d0;else{j\u003d!c.set;if(!c.set)c.set\u003d[false,false];if(c.w){if(f.isIE)c.w.style.visibility\u003d\\\"\\\";if(c.dirty||K){s\u003dI(c.w,a);if(s\u003ek)k\u003ds;c.ms[a]\u003ds;if(!c.set[a])if(a\u003d\u003d0||!j){j\u003df.pxself(c.w,b.size);c.fs[a]\u003d j?j+H(c.w,a):0}else{j\u003dMath.round(f.px(c.w,b.size));c.fs[a]\u003dj\u003eMath.max(U(c.w,a),s)?j+H(c.w,a):0}j\u003dc.fs[a];if(c.layout){if(j\u003d\u003d0)j\u003dc.ps[a]}else{if(c.wasLayout){c.wasLayout\u003dfalse;c.set\u003d[false,false];x(c.w,q[0].size,\\\"\\\");x(c.w,q[1].size,\\\"\\\")}s\u003du(c.w,a);var C\u003dtypeof c.ps[a]!\u003d\u003d\\\"undefined\\\"\u0026\u0026b.config[i][0]\u003e0\u0026\u0026c.set[a];j\u003dc.set[a]\u0026\u0026s\u003e\u003dc.psize[a]-4\u0026\u0026s\u003c\u003dc.psize[a]+4||C?Math.max(j,c.ps[a]):Math.max(j,s)}c.ps[a]\u003dj;if(!c.span||c.span[a]\u003d\u003d1)if(j\u003ep)p\u003dj}else if(!c.span||c.span[a]\u003d\u003d1){if(c.ps[a]\u003ep)p\u003dc.ps[a];if(c.ms[a]\u003e k)k\u003dc.ms[a]}if(c.w.style.display!\u003d\u003d\\\"none\\\"||f.hasTag(c.w,\\\"TEXTAREA\\\")\u0026\u0026c.w.wtResize)F\u003dfalse}}}}if(F)k\u003dp\u003d-1;else if(k\u003ep)p\u003dk;A[i]\u003dp;e[i]\u003dk;if(k\u003e-1){l+\u003dp;t+\u003dk}}g\u003d0;j\u003dtrue;m\u003dfalse;for(i\u003d0;i\u003co;++i)if(e[i]\u003e-1){if(j){g+\u003db.margins[1];j\u003dfalse}else{g+\u003db.margins[0];if(m)g+\u003d4}m\u003db.config[i][1]!\u003d\u003d0}j||(g+\u003db.margins[2]);l+\u003dg;t+\u003dg;b.measures\u003d[A,e,l,t,g];if(K||h[2]!\u003db.measures[2])M.updateSizeInParent(a);d\u0026\u0026b.minSize\u003d\u003d0\u0026\u0026h[3]!\u003db.measures[3]\u0026\u0026d.parentNode.className!\u003d\\\"Wt-domRoot\\\"\u0026\u0026x(d,\\\"min\\\"+b.Size,b.measures[3]+\\\"px\\\")\u0026\u0026 M.ancestor\u0026\u0026M.ancestor.setContentsDirty(d);d\u0026\u0026a\u003d\u003d0\u0026\u0026d\u0026\u0026f.hasTag(d,\\\"TD\\\")\u0026\u0026x(d,b.size,b.measures[2]+\\\"px\\\")}}function ca(a,b,d){a\u003dq[a];if(T)d\u003d-d;if(a.config[b][0]\u003e0\u0026\u0026a.config[b+1][0]\u003d\u003d0){++b;d\u003d-d}a.fixedSize[b]\u003da.sizes[b]+d;D.layouts2.scheduleAdjust()}function da(a,b,d){var g\u003db.di,h\u003dq[a],o\u003dq[a^1],m,A\u003df.getElement(B),e;for(e\u003dg-1;e\u003e\u003d0;--e)if(h.sizes[e]\u003e\u003d0){m\u003d-(h.sizes[e]-h.measures[1][e]);break}g\u003dh.sizes[g]-h.measures[1][g];if(T){var l\u003dm;m\u003d-g;g\u003d-l}new f.SizeHandle(f,h.resizeDir,f.pxself(b,h.size),f.pxself(b, o.size),m,g,h.resizerClass,function(t){ca(a,e,t)},b,A,d,0,0)}function ea(a,b){var d\u003dq[a],g\u003dq[a^1],h\u003dd.measures,o\u003d0,m\u003dfalse,A\u003dfalse,e\u003dfalse,l\u003dX?b.parentNode:null;if(d.maxSize\u003d\u003d\u003d0)if(l){var t\u003df.css(l,\\\"position\\\");if(t\u003d\u003d\u003d\\\"absolute\\\")o\u003df.pxself(l,d.size);if(o\u003d\u003d\u003d0){if(!d.initialized)if(t!\u003d\u003d\\\"absolute\\\"){o\u003da?l.clientHeight:l.clientWidth;m\u003dtrue;if(a\u003d\u003d0\u0026\u0026o\u003d\u003d0\u0026\u0026f.isIElt9){o\u003dl.offsetWidth;m\u003dfalse}var i;if((f.hasTag(l,\\\"TD\\\")||f.hasTag(l,\\\"TH\\\"))\u0026\u0026!(f.isIE\u0026\u0026!f.isIElt9)){e\u003d0;i\u003d1}else{e\u003dd.minSize?d.minSize:h[3];i\u003d0}if(f.isIElt9\u0026\u0026 o\u003d\u003di||o\u003d\u003de+Y(l,a))d.maxSize\u003d999999}if(o\u003d\u003d\u003d0\u0026\u0026d.maxSize\u003d\u003d\u003d0){o\u003da?l.clientHeight:l.clientWidth;m\u003dtrue}}}else{o\u003df.pxself(b,d.size);A\u003dtrue}var n\u003d0;if(l\u0026\u0026l.wtGetPS\u0026\u0026a\u003d\u003d1)n\u003dl.wtGetPS(l,b,a,0);e\u003dh[2];if(e\u003cd.minSize)e\u003dd.minSize;if(d.maxSize)if(e+n\u003cd.maxSize){x(l,d.size,e+n+U(l,a)+\\\"px\\\");o\u003de+n;e\u003dA\u003dtrue}else{o\u003dd.maxSize;m\u003dfalse}d.cSize\u003do;if(a\u003d\u003d1\u0026\u0026l\u0026\u0026l.wtResize){i\u003dg.cSize;e\u003dd.cSize;l.wtResize(l,Math.round(i),Math.round(e))}o-\u003dn;if(!A){A\u003d0;if(typeof d.cPadding\u003d\u003d\u003d\\\"undefined\\\"){A\u003dm?Y(l,a):U(l,a);d.cPadding\u003dA}else A\u003d d.cPadding;o-\u003dA}d.initialized\u003dtrue;if(!(l\u0026\u0026o\u003c\u003d0)){if(o\u003ch[3]-n)o\u003dh[3]-n;m\u003d[];l\u003dd.config.length;A\u003dg.config.length;for(e\u003d0;e\u003cl;++e)d.stretched[e]\u003dfalse;if(o\u003e\u003dh[3]-n){n\u003do-h[4];i\u003d[];var p\u003d[0,0],k\u003d[0,0],F\u003d0;for(e\u003d0;e\u003cl;++e)if(h[1][e]\u003e-1){var c\u003d-1;if(typeof d.fixedSize[e]!\u003d\u003d\\\"undefined\\\")c\u003dd.fixedSize[e];else if(d.config[e][1]!\u003d\u003d0\u0026\u0026d.config[e][1][0]\u003e\u003d0){c\u003dd.config[e][1][0];if(d.config[e][1][1])c\u003d(o-h[4])*c/100}if(c\u003e\u003d0){i[e]\u003d-1;m[e]\u003dc;n-\u003dm[e]}else{if(d.config[e][0]\u003e0){c\u003d1;i[e]\u003dd.config[e][0];F+\u003di[e]}else{c\u003d 0;i[e]\u003d0}p[c]+\u003dh[1][e];k[c]+\u003dh[0][e];m[e]\u003dh[0][e]}}else i[e]\u003d-2;if(F\u003d\u003d0){for(e\u003d0;e\u003cl;++e)if(i[e]\u003d\u003d0){i[e]\u003d1;++F}k[1]\u003dk[0];p[1]\u003dp[0];k[0]\u003d0;p[0]\u003d0}if(n\u003ek[0]+p[1]){n-\u003dk[0];if(n\u003ek[1]){if(d.fitSize){n-\u003dk[1];n\u003dn/F;for(e\u003d0;e\u003cl;++e)if(i[e]\u003e0){m[e]+\u003dMath.round(i[e]*n);d.stretched[e]\u003dtrue}}}else{c\u003d1;if(n\u003cp[c])n\u003dp[c];n\u003dk[c]-p[c]\u003e0?(n-p[c])/(k[c]-p[c]):0;for(e\u003d0;e\u003cl;++e)if(i[e]\u003e0){p\u003dh[0][e]-h[1][e];m[e]\u003dh[1][e]+Math.round(p*n)}}}else{for(e\u003d0;e\u003cl;++e)if(i[e]\u003e0)m[e]\u003dh[1][e];n-\u003dp[1];c\u003d0;if(n\u003cp[c])n\u003dp[c];n\u003dk[c]- p[c]\u003e0?(n-p[c])/(k[c]-p[c]):0;for(e\u003d0;e\u003cl;++e)if(i[e]\u003d\u003d0){p\u003dh[0][e]-h[1][e];m[e]\u003dh[1][e]+Math.round(p*n)}}}else m\u003dh[1];d.sizes\u003dm;h\u003d0;n\u003dtrue;k\u003dfalse;for(e\u003d0;e\u003cl;++e)if(m[e]\u003e-1){if(p\u003dk){i\u003dB+\\\"-rs\\\"+a+\\\"-\\\"+e;k\u003df.getElement(i);if(!k){k\u003ddocument.createElement(\\\"div\\\");k.setAttribute(\\\"id\\\",i);k.di\u003de;k.style.position\u003d\\\"absolute\\\";k.style[g.left]\u003dg.margins[1]+\\\"px\\\";k.style[d.size]\u003dd.margins[0]+\\\"px\\\";k.className\u003dd.handleClass;b.insertBefore(k,b.firstChild);k.onmousedown\u003dk.ontouchstart\u003dfunction(W){da(a,this,W||window.event)}}h+\u003d 2;x(k,d.left,h+\\\"px\\\");h+\u003d2}k\u003dd.config[e][1]!\u003d\u003d0;if(n){h+\u003dd.margins[1];n\u003dfalse}else h+\u003dd.margins[0];for(F\u003d0;F\u003cA;++F)if((c\u003dd.getItem(e,F))\u0026\u0026c.w){i\u003dc.w;t\u003dm[e];if(c.span){var j,s\u003dk;for(j\u003d1;j\u003cc.span[a];++j){if(s)t+\u003d4;s\u003dd.config[e+s][1]!\u003d\u003d0;t+\u003dd.margins[0];t+\u003dm[e+j]}}var C;x(i,\\\"visibility\\\",\\\"\\\");s\u003dc.align\u003e\u003ed.alignBits\u002615;j\u003dc.ps[a];if(t\u003cj)s\u003d0;if(s){switch(s){case 1:C\u003dh;break;case 4:C\u003dh+(t-j)/2;break;case 2:C\u003dh+(t-j);break}if(c.layout){x(i,d.size,j+\\\"px\\\")\u0026\u0026L(c);c.set[a]\u003dtrue}else if(t\u003e\u003dj\u0026\u0026c.set[a]){x(i,d.size, j+\\\"px\\\")\u0026\u0026L(c);c.set[a]\u003dfalse}c.size[a]\u003dj;c.psize[a]\u003dj}else{C\u003dH(c.w,a);s\u003dt;if(f.isIElt9||!f.hasTag(i,\\\"BUTTON\\\")\u0026\u0026!f.hasTag(i,\\\"INPUT\\\")\u0026\u0026!f.hasTag(i,\\\"SELECT\\\")\u0026\u0026!f.hasTag(i,\\\"TEXTAREA\\\"))s\u003dMath.max(0,s-C);C\u003dfalse;if(f.isIE\u0026\u0026f.hasTag(i,\\\"BUTTON\\\"))C\u003dtrue;if(C||t!\u003dj||c.layout){x(i,d.size,s+\\\"px\\\")\u0026\u0026L(c);c.set[a]\u003dtrue}else if(c.fs[a])a\u003d\u003d0\u0026\u0026x(i,d.size,c.fs[a]+\\\"px\\\");else{x(i,d.size,\\\"\\\")\u0026\u0026L(c);c.set[a]\u003dfalse}C\u003dh;c.size[a]\u003ds;c.psize[a]\u003dt}if(r)if(p){x(i,d.left,\\\"4px\\\");t\u003df.css(i,\\\"position\\\");if(t!\u003d\u003d\\\"absolute\\\")i.style.position\u003d \\\"relative\\\"}else x(i,d.left,\\\"0px\\\");else x(i,d.left,C+\\\"px\\\");if(a\u003d\u003d1){i.wtResize\u0026\u0026i.wtResize(i,Math.round(c.size[0]),Math.round(c.size[1]),c);c.dirty\u003dfalse}}h+\u003dm[e]}$(b).children(\\\".\\\"+g.handleClass).css(d.size,o-d.margins[2]-d.margins[1]+\\\"px\\\")}}var f\u003dD.WT;this.ancestor\u003dnull;this.descendants\u003d[];var M\u003dthis,G\u003dz,S\u003dfalse,K\u003dtrue,X\u003dfalse,V\u003dnull,N\u003dnull,Z\u003dfalse,O\u003d[],aa\u003dfalse,T\u003d$(document.body).hasClass(\\\"Wt-rtl\\\"),q\u003d[{initialized:false,config:G.cols,margins:w,maxSize:E,measures:[],sizes:[],stretched:[],fixedSize:[], Left:T?\\\"Right\\\":\\\"Left\\\",left:T?\\\"right\\\":\\\"left\\\",Right:T?\\\"Left\\\":\\\"Right\\\",Size:\\\"Width\\\",size:\\\"width\\\",alignBits:0,getItem:function(a,b){return G.items[b*q[0].config.length+a]},handleClass:\\\"Wt-vrh2\\\",resizeDir:\\\"h\\\",resizerClass:\\\"Wt-hsh2\\\",fitSize:P},{initialized:false,config:G.rows,margins:v,maxSize:y,measures:[],sizes:[],stretched:[],fixedSize:[],Left:\\\"Top\\\",left:\\\"top\\\",Right:\\\"Bottom\\\",Size:\\\"Height\\\",size:\\\"height\\\",alignBits:4,getItem:function(a,b){return G.items[a*q[0].config.length+b]},handleClass:\\\"Wt-hrh2\\\",resizeDir:\\\"v\\\", resizerClass:\\\"Wt-vsh2\\\",fitSize:Q}];jQuery.data(document.getElementById(B),\\\"layout\\\",this);this.updateSizeInParent\u003dfunction(a){if(V){var b\u003dq[a].measures[2];if(aa){var d\u003df.getElement(B);if(!d)return;d\u003dd;for(var g\u003dd.parentNode;;){if(g.wtGetPS)b\u003dg.wtGetPS(g,d,a,b);b+\u003dR(g,a);if(g\u003d\u003dN)break;d\u003dg;g\u003dd.parentNode}}else b+\u003dO[a];V.setChildSize(N,a,b)}};this.setConfig\u003dfunction(a){var b\u003dG;G\u003da;q[0].config\u003dG.cols;q[1].config\u003dG.rows;q[0].stretched\u003d[];q[1].stretched\u003d[];var d;a\u003d0;for(d\u003db.items.length;a\u003cd;++a){var g\u003db.items[a]; if(g){g.set[0]\u0026\u0026x(g.w,q[0].size,\\\"\\\");g.set[1]\u0026\u0026x(g.w,q[1].size,\\\"\\\");if(g.layout){M.setChildSize(g.w,0,g.ps[0]);M.setChildSize(g.w,1,g.ps[1])}}}K\u003dtrue;D.layouts2.scheduleAdjust()};this.getId\u003dfunction(){return B};this.setItemsDirty\u003dfunction(a){var b,d,g\u003dq[0].config.length;b\u003d0;for(d\u003da.length;b\u003cd;++b){var h\u003dG.items[a[b][0]*g+a[b][1]];h.dirty\u003dtrue;if(h.layout){h.layout\u003dfalse;h.wasLayout\u003dtrue;D.layouts2.setChildLayoutsDirty(M,h.w)}}S\u003dtrue};this.setDirty\u003dfunction(){K\u003dtrue};this.setChildSize\u003dfunction(a,b,d){var g, h,o\u003dq[0].config.length;g\u003d0;for(h\u003dG.items.length;g\u003ch;++g){var m\u003dG.items[g];if(m\u0026\u0026m.id\u003d\u003da.id){if(!q[b].stretched[b\u003d\u003d\u003d0?g%o:g/o]){if(!m.ps)m.ps\u003d[];m.ps[b]\u003dd}m.layout\u003dtrue;L(m);break}}};this.measure\u003dfunction(a){var b\u003df.getElement(B);if(b)if(!f.isHidden(b)){if(!Z){Z\u003dtrue;if(X\u003dJ\u003d\u003dnull){var d\u003db;d\u003dd.parentNode;for(O\u003d[0,0];;){O[0]+\u003dR(d,0);O[1]+\u003dR(d,1);if(d.wtGetPS)aa\u003dtrue;var g\u003djQuery.data(d.parentNode,\\\"layout\\\");if(g){V\u003dg;N\u003dd;break}d\u003dd;d\u003dd.parentNode;if(d.childNodes.length!\u003d1\u0026\u0026!d.wtGetPS)break}}else{V\u003djQuery.data(document.getElementById(J), \\\"layout\\\");N\u003db;O[0]\u003dR(N,0);O[1]\u003dR(N,1)}}if(S||K)ba(a,b,X?b.parentNode:null);if(a\u003d\u003d1)S\u003dK\u003dfalse}};this.setMaxSize\u003dfunction(a,b){q[0].maxSize\u003da;q[1].maxSize\u003db};this.apply\u003dfunction(a){var b\u003df.getElement(B);if(!b)return false;if(f.isHidden(b))return true;ea(a,b);return true};this.contains\u003dfunction(a){var b\u003df.getElement(B);a\u003df.getElement(a.getId());return b\u0026\u0026a?f.contains(b,a):false};this.WT\u003df}\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "true",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "WtClassScope": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "JavaScriptConstructor": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"StdLayout2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"function(D,B,J,P,Q,r,E,y,w,v,z){function u(a,b){var d\u003dq[b],g\u003db?a.scrollHeight:a.scrollWidth,h\u003db?a.clientHeight:a.clientWidth;b\u003db?a.offsetHeight:a.offsetWidth;if(h\u003e\u003d1E6)h-\u003d1E6;if(g\u003e\u003d1E6)g-\u003d1E6;if(b\u003e\u003d1E6)b-\u003d1E6;if(g\u003d\u003d\u003d0)g\u003df.pxself(a,d.size);if(f.isIE\u0026\u0026(f.hasTag(a,\\\"BUTTON\\\")||f.hasTag(a,\\\"TEXTAREA\\\")||f.hasTag(a,\\\"INPUT\\\")||f.hasTag(a,\\\"SELECT\\\")))g\u003dh;if(g\u003eb)if(f.pxself(a,d.size)\u003d\u003d0)g\u003d0;else{var o\u003dfalse;$(a).find(\\\".Wt-popup\\\").each(function(){if(this.style.display!\u003d \\\"none\\\")o\u003dtrue});if(o)g\u003d0}if(!f.isOpera\u0026\u0026!f.isGecko)g+\u003df.px(a,\\\"border\\\"+d.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+d.Right+\\\"Width\\\");g+\u003df.px(a,\\\"margin\\\"+d.Left)+f.px(a,\\\"margin\\\"+d.Right);if(!f.boxSizing(a)\u0026\u0026!f.isIE)g+\u003df.px(a,\\\"padding\\\"+d.Left)+f.px(a,\\\"padding\\\"+d.Right);if(g\u003cb)g\u003db;return Math.round(g)}function I(a,b){b\u003dq[b];if(a.style.display\u003d\u003d\\\"none\\\")return 0;else if(a[\\\"layoutMin\\\"+b.Size])return a[\\\"layoutMin\\\"+b.Size];else{var d\u003df.px(a,\\\"min\\\"+b.Size);f.boxSizing(a)||(d+\u003df.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right)); return d}}function H(a,b){b\u003dq[b];var d\u003df.px(a,\\\"margin\\\"+b.Left)+f.px(a,\\\"margin\\\"+b.Right);if(!f.boxSizing(a)\u0026\u0026!(f.isIE\u0026\u0026!f.isIElt9\u0026\u0026f.hasTag(a,\\\"BUTTON\\\")))d+\u003df.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+f.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right);return d}function Y(a,b){b\u003dq[b];return f.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right)}function U(a,b){if(f.boxSizing(a)){b\u003dq[b];return f.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+f.px(a,\\\"padding\\\"+b.Left)+f.px(a, \\\"padding\\\"+b.Right)}else return 0}function R(a,b){b\u003dq[b];return Math.round(f.px(a,\\\"border\\\"+b.Left+\\\"Width\\\")+f.px(a,\\\"border\\\"+b.Right+\\\"Width\\\")+f.px(a,\\\"margin\\\"+b.Left)+f.px(a,\\\"margin\\\"+b.Right)+f.px(a,\\\"padding\\\"+b.Left)+f.px(a,\\\"padding\\\"+b.Right))}function L(a,b){S\u003da.dirty\u003dtrue;b\u0026\u0026D.layouts2.scheduleAdjust()}function x(a,b,d){if(a.style[b]!\u003d\u003dd){a.style[b]\u003dd;return true}else return false}function ba(a,b,d){b\u003dq[a];var g\u003dq[a^1],h\u003db.measures,o\u003db.config.length,m\u003dg.config.length;if(S||K){if(d\u0026\u0026typeof b.minSize\u003d\u003d \\\"undefined\\\"){b.minSize\u003df.px(d,\\\"min\\\"+b.Size);if(b.minSize\u003e0)b.minSize-\u003dU(d,a)}h\u003dh.slice();if(h.length\u003d\u003d5){h[0]\u003dh[0].slice();h[1]\u003dh[1].slice()}var A\u003d[],e\u003d[],l\u003d0,t\u003d0,i,n;for(i\u003d0;i\u003co;++i){var p\u003d0,k\u003db.config[i][2],F\u003dtrue;for(n\u003d0;n\u003cm;++n){var c\u003db.getItem(i,n);if(c){if(!c.w||a\u003d\u003d0\u0026\u0026c.dirty){var j\u003d$(\\\"#\\\"+c.id),s\u003dj.get(0);if(s!\u003dc.w){c.w\u003ds;j.find(\\\"img\\\").add(j.filter(\\\"img\\\")).bind(\\\"load\\\",{item:c},function(W){L(W.data.item,true)});c.w.style[b.left]\u003dc.w.style[g.left]\u003d\\\"-1000000px\\\"}}if(!r\u0026\u0026c.w.style.position!\u003d\\\"absolute\\\"){c.w.style.position\u003d \\\"absolute\\\";c.w.style.visibility\u003d\\\"hidden\\\";if(!c.w.wtResize\u0026\u0026!f.isIElt9){c.w.style.boxSizing\u003d\\\"border-box\\\";if(j\u003df.cssPrefix(\\\"BoxSizing\\\"))c.w.style[j+\\\"BoxSizing\\\"]\u003d\\\"border-box\\\"}}if(!c.ps)c.ps\u003d[];if(!c.ms)c.ms\u003d[];if(!c.size)c.size\u003d[];if(!c.psize)c.psize\u003d[];if(!c.fs)c.fs\u003d[];if($(c.w).hasClass(\\\"Wt-hidden\\\"))c.ps[a]\u003dc.ms[a]\u003d0;else{j\u003d!c.set;if(!c.set)c.set\u003d[false,false];if(c.w){if(f.isIE)c.w.style.visibility\u003d\\\"\\\";if(c.dirty||K){s\u003dI(c.w,a);if(s\u003ek)k\u003ds;c.ms[a]\u003ds;if(!c.set[a])if(a\u003d\u003d0||!j){j\u003df.pxself(c.w,b.size);c.fs[a]\u003d j?j+H(c.w,a):0}else{j\u003dMath.round(f.px(c.w,b.size));c.fs[a]\u003dj\u003eMath.max(U(c.w,a),s)?j+H(c.w,a):0}j\u003dc.fs[a];if(c.layout){if(j\u003d\u003d0)j\u003dc.ps[a]}else{if(c.wasLayout){c.wasLayout\u003dfalse;c.set\u003d[false,false];x(c.w,q[0].size,\\\"\\\");x(c.w,q[1].size,\\\"\\\")}s\u003du(c.w,a);var C\u003dtypeof c.ps[a]!\u003d\u003d\\\"undefined\\\"\u0026\u0026b.config[i][0]\u003e0\u0026\u0026c.set[a];j\u003dc.set[a]\u0026\u0026s\u003e\u003dc.psize[a]-4\u0026\u0026s\u003c\u003dc.psize[a]+4||C?Math.max(j,c.ps[a]):Math.max(j,s)}c.ps[a]\u003dj;if(!c.span||c.span[a]\u003d\u003d1)if(j\u003ep)p\u003dj}else if(!c.span||c.span[a]\u003d\u003d1){if(c.ps[a]\u003ep)p\u003dc.ps[a];if(c.ms[a]\u003e k)k\u003dc.ms[a]}if(c.w.style.display!\u003d\u003d\\\"none\\\"||f.hasTag(c.w,\\\"TEXTAREA\\\")\u0026\u0026c.w.wtResize)F\u003dfalse}}}}if(F)k\u003dp\u003d-1;else if(k\u003ep)p\u003dk;A[i]\u003dp;e[i]\u003dk;if(k\u003e-1){l+\u003dp;t+\u003dk}}g\u003d0;j\u003dtrue;m\u003dfalse;for(i\u003d0;i\u003co;++i)if(e[i]\u003e-1){if(j){g+\u003db.margins[1];j\u003dfalse}else{g+\u003db.margins[0];if(m)g+\u003d4}m\u003db.config[i][1]!\u003d\u003d0}j||(g+\u003db.margins[2]);l+\u003dg;t+\u003dg;b.measures\u003d[A,e,l,t,g];if(K||h[2]!\u003db.measures[2])M.updateSizeInParent(a);d\u0026\u0026b.minSize\u003d\u003d0\u0026\u0026h[3]!\u003db.measures[3]\u0026\u0026d.parentNode.className!\u003d\\\"Wt-domRoot\\\"\u0026\u0026x(d,\\\"min\\\"+b.Size,b.measures[3]+\\\"px\\\")\u0026\u0026 M.ancestor\u0026\u0026M.ancestor.setContentsDirty(d);d\u0026\u0026a\u003d\u003d0\u0026\u0026d\u0026\u0026f.hasTag(d,\\\"TD\\\")\u0026\u0026x(d,b.size,b.measures[2]+\\\"px\\\")}}function ca(a,b,d){a\u003dq[a];if(T)d\u003d-d;if(a.config[b][0]\u003e0\u0026\u0026a.config[b+1][0]\u003d\u003d0){++b;d\u003d-d}a.fixedSize[b]\u003da.sizes[b]+d;D.layouts2.scheduleAdjust()}function da(a,b,d){var g\u003db.di,h\u003dq[a],o\u003dq[a^1],m,A\u003df.getElement(B),e;for(e\u003dg-1;e\u003e\u003d0;--e)if(h.sizes[e]\u003e\u003d0){m\u003d-(h.sizes[e]-h.measures[1][e]);break}g\u003dh.sizes[g]-h.measures[1][g];if(T){var l\u003dm;m\u003d-g;g\u003d-l}new f.SizeHandle(f,h.resizeDir,f.pxself(b,h.size),f.pxself(b, o.size),m,g,h.resizerClass,function(t){ca(a,e,t)},b,A,d,0,0)}function ea(a,b){var d\u003dq[a],g\u003dq[a^1],h\u003dd.measures,o\u003d0,m\u003dfalse,A\u003dfalse,e\u003dfalse,l\u003dX?b.parentNode:null;if(d.maxSize\u003d\u003d\u003d0)if(l){var t\u003df.css(l,\\\"position\\\");if(t\u003d\u003d\u003d\\\"absolute\\\")o\u003df.pxself(l,d.size);if(o\u003d\u003d\u003d0){if(!d.initialized)if(t!\u003d\u003d\\\"absolute\\\"){o\u003da?l.clientHeight:l.clientWidth;m\u003dtrue;if(a\u003d\u003d0\u0026\u0026o\u003d\u003d0\u0026\u0026f.isIElt9){o\u003dl.offsetWidth;m\u003dfalse}var i;if((f.hasTag(l,\\\"TD\\\")||f.hasTag(l,\\\"TH\\\"))\u0026\u0026!(f.isIE\u0026\u0026!f.isIElt9)){e\u003d0;i\u003d1}else{e\u003dd.minSize?d.minSize:h[3];i\u003d0}if(f.isIElt9\u0026\u0026 o\u003d\u003di||o\u003d\u003de+Y(l,a))d.maxSize\u003d999999}if(o\u003d\u003d\u003d0\u0026\u0026d.maxSize\u003d\u003d\u003d0){o\u003da?l.clientHeight:l.clientWidth;m\u003dtrue}}}else{o\u003df.pxself(b,d.size);A\u003dtrue}var n\u003d0;if(l\u0026\u0026l.wtGetPS\u0026\u0026a\u003d\u003d1)n\u003dl.wtGetPS(l,b,a,0);e\u003dh[2];if(e\u003cd.minSize)e\u003dd.minSize;if(d.maxSize)if(e+n\u003cd.maxSize){x(l,d.size,e+n+U(l,a)+\\\"px\\\");o\u003de+n;e\u003dA\u003dtrue}else{o\u003dd.maxSize;m\u003dfalse}d.cSize\u003do;if(a\u003d\u003d1\u0026\u0026l\u0026\u0026l.wtResize){i\u003dg.cSize;e\u003dd.cSize;l.wtResize(l,Math.round(i),Math.round(e))}o-\u003dn;if(!A){A\u003d0;if(typeof d.cPadding\u003d\u003d\u003d\\\"undefined\\\"){A\u003dm?Y(l,a):U(l,a);d.cPadding\u003dA}else A\u003d d.cPadding;o-\u003dA}d.initialized\u003dtrue;if(!(l\u0026\u0026o\u003c\u003d0)){if(o\u003ch[3]-n)o\u003dh[3]-n;m\u003d[];l\u003dd.config.length;A\u003dg.config.length;for(e\u003d0;e\u003cl;++e)d.stretched[e]\u003dfalse;if(o\u003e\u003dh[3]-n){n\u003do-h[4];i\u003d[];var p\u003d[0,0],k\u003d[0,0],F\u003d0;for(e\u003d0;e\u003cl;++e)if(h[1][e]\u003e-1){var c\u003d-1;if(typeof d.fixedSize[e]!\u003d\u003d\\\"undefined\\\")c\u003dd.fixedSize[e];else if(d.config[e][1]!\u003d\u003d0\u0026\u0026d.config[e][1][0]\u003e\u003d0){c\u003dd.config[e][1][0];if(d.config[e][1][1])c\u003d(o-h[4])*c/100}if(c\u003e\u003d0){i[e]\u003d-1;m[e]\u003dc;n-\u003dm[e]}else{if(d.config[e][0]\u003e0){c\u003d1;i[e]\u003dd.config[e][0];F+\u003di[e]}else{c\u003d 0;i[e]\u003d0}p[c]+\u003dh[1][e];k[c]+\u003dh[0][e];m[e]\u003dh[0][e]}}else i[e]\u003d-2;if(F\u003d\u003d0){for(e\u003d0;e\u003cl;++e)if(i[e]\u003d\u003d0){i[e]\u003d1;++F}k[1]\u003dk[0];p[1]\u003dp[0];k[0]\u003d0;p[0]\u003d0}if(n\u003ek[0]+p[1]){n-\u003dk[0];if(n\u003ek[1]){if(d.fitSize){n-\u003dk[1];n\u003dn/F;for(e\u003d0;e\u003cl;++e)if(i[e]\u003e0){m[e]+\u003dMath.round(i[e]*n);d.stretched[e]\u003dtrue}}}else{c\u003d1;if(n\u003cp[c])n\u003dp[c];n\u003dk[c]-p[c]\u003e0?(n-p[c])/(k[c]-p[c]):0;for(e\u003d0;e\u003cl;++e)if(i[e]\u003e0){p\u003dh[0][e]-h[1][e];m[e]\u003dh[1][e]+Math.round(p*n)}}}else{for(e\u003d0;e\u003cl;++e)if(i[e]\u003e0)m[e]\u003dh[1][e];n-\u003dp[1];c\u003d0;if(n\u003cp[c])n\u003dp[c];n\u003dk[c]- p[c]\u003e0?(n-p[c])/(k[c]-p[c]):0;for(e\u003d0;e\u003cl;++e)if(i[e]\u003d\u003d0){p\u003dh[0][e]-h[1][e];m[e]\u003dh[1][e]+Math.round(p*n)}}}else m\u003dh[1];d.sizes\u003dm;h\u003d0;n\u003dtrue;k\u003dfalse;for(e\u003d0;e\u003cl;++e)if(m[e]\u003e-1){if(p\u003dk){i\u003dB+\\\"-rs\\\"+a+\\\"-\\\"+e;k\u003df.getElement(i);if(!k){k\u003ddocument.createElement(\\\"div\\\");k.setAttribute(\\\"id\\\",i);k.di\u003de;k.style.position\u003d\\\"absolute\\\";k.style[g.left]\u003dg.margins[1]+\\\"px\\\";k.style[d.size]\u003dd.margins[0]+\\\"px\\\";k.className\u003dd.handleClass;b.insertBefore(k,b.firstChild);k.onmousedown\u003dk.ontouchstart\u003dfunction(W){da(a,this,W||window.event)}}h+\u003d 2;x(k,d.left,h+\\\"px\\\");h+\u003d2}k\u003dd.config[e][1]!\u003d\u003d0;if(n){h+\u003dd.margins[1];n\u003dfalse}else h+\u003dd.margins[0];for(F\u003d0;F\u003cA;++F)if((c\u003dd.getItem(e,F))\u0026\u0026c.w){i\u003dc.w;t\u003dm[e];if(c.span){var j,s\u003dk;for(j\u003d1;j\u003cc.span[a];++j){if(s)t+\u003d4;s\u003dd.config[e+s][1]!\u003d\u003d0;t+\u003dd.margins[0];t+\u003dm[e+j]}}var C;x(i,\\\"visibility\\\",\\\"\\\");s\u003dc.align\u003e\u003ed.alignBits\u002615;j\u003dc.ps[a];if(t\u003cj)s\u003d0;if(s){switch(s){case 1:C\u003dh;break;case 4:C\u003dh+(t-j)/2;break;case 2:C\u003dh+(t-j);break}if(c.layout){x(i,d.size,j+\\\"px\\\")\u0026\u0026L(c);c.set[a]\u003dtrue}else if(t\u003e\u003dj\u0026\u0026c.set[a]){x(i,d.size, j+\\\"px\\\")\u0026\u0026L(c);c.set[a]\u003dfalse}c.size[a]\u003dj;c.psize[a]\u003dj}else{C\u003dH(c.w,a);s\u003dt;if(f.isIElt9||!f.hasTag(i,\\\"BUTTON\\\")\u0026\u0026!f.hasTag(i,\\\"INPUT\\\")\u0026\u0026!f.hasTag(i,\\\"SELECT\\\")\u0026\u0026!f.hasTag(i,\\\"TEXTAREA\\\"))s\u003dMath.max(0,s-C);C\u003dfalse;if(f.isIE\u0026\u0026f.hasTag(i,\\\"BUTTON\\\"))C\u003dtrue;if(C||t!\u003dj||c.layout){x(i,d.size,s+\\\"px\\\")\u0026\u0026L(c);c.set[a]\u003dtrue}else if(c.fs[a])a\u003d\u003d0\u0026\u0026x(i,d.size,c.fs[a]+\\\"px\\\");else{x(i,d.size,\\\"\\\")\u0026\u0026L(c);c.set[a]\u003dfalse}C\u003dh;c.size[a]\u003ds;c.psize[a]\u003dt}if(r)if(p){x(i,d.left,\\\"4px\\\");t\u003df.css(i,\\\"position\\\");if(t!\u003d\u003d\\\"absolute\\\")i.style.position\u003d \\\"relative\\\"}else x(i,d.left,\\\"0px\\\");else x(i,d.left,C+\\\"px\\\");if(a\u003d\u003d1){i.wtResize\u0026\u0026i.wtResize(i,Math.round(c.size[0]),Math.round(c.size[1]),c);c.dirty\u003dfalse}}h+\u003dm[e]}$(b).children(\\\".\\\"+g.handleClass).css(d.size,o-d.margins[2]-d.margins[1]+\\\"px\\\")}}var f\u003dD.WT;this.ancestor\u003dnull;this.descendants\u003d[];var M\u003dthis,G\u003dz,S\u003dfalse,K\u003dtrue,X\u003dfalse,V\u003dnull,N\u003dnull,Z\u003dfalse,O\u003d[],aa\u003dfalse,T\u003d$(document.body).hasClass(\\\"Wt-rtl\\\"),q\u003d[{initialized:false,config:G.cols,margins:w,maxSize:E,measures:[],sizes:[],stretched:[],fixedSize:[], Left:T?\\\"Right\\\":\\\"Left\\\",left:T?\\\"right\\\":\\\"left\\\",Right:T?\\\"Left\\\":\\\"Right\\\",Size:\\\"Width\\\",size:\\\"width\\\",alignBits:0,getItem:function(a,b){return G.items[b*q[0].config.length+a]},handleClass:\\\"Wt-vrh2\\\",resizeDir:\\\"h\\\",resizerClass:\\\"Wt-hsh2\\\",fitSize:P},{initialized:false,config:G.rows,margins:v,maxSize:y,measures:[],sizes:[],stretched:[],fixedSize:[],Left:\\\"Top\\\",left:\\\"top\\\",Right:\\\"Bottom\\\",Size:\\\"Height\\\",size:\\\"height\\\",alignBits:4,getItem:function(a,b){return G.items[a*q[0].config.length+b]},handleClass:\\\"Wt-hrh2\\\",resizeDir:\\\"v\\\", resizerClass:\\\"Wt-vsh2\\\",fitSize:Q}];jQuery.data(document.getElementById(B),\\\"layout\\\",this);this.updateSizeInParent\u003dfunction(a){if(V){var b\u003dq[a].measures[2];if(aa){var d\u003df.getElement(B);if(!d)return;d\u003dd;for(var g\u003dd.parentNode;;){if(g.wtGetPS)b\u003dg.wtGetPS(g,d,a,b);b+\u003dR(g,a);if(g\u003d\u003dN)break;d\u003dg;g\u003dd.parentNode}}else b+\u003dO[a];V.setChildSize(N,a,b)}};this.setConfig\u003dfunction(a){var b\u003dG;G\u003da;q[0].config\u003dG.cols;q[1].config\u003dG.rows;q[0].stretched\u003d[];q[1].stretched\u003d[];var d;a\u003d0;for(d\u003db.items.length;a\u003cd;++a){var g\u003db.items[a]; if(g){g.set[0]\u0026\u0026x(g.w,q[0].size,\\\"\\\");g.set[1]\u0026\u0026x(g.w,q[1].size,\\\"\\\");if(g.layout){M.setChildSize(g.w,0,g.ps[0]);M.setChildSize(g.w,1,g.ps[1])}}}K\u003dtrue;D.layouts2.scheduleAdjust()};this.getId\u003dfunction(){return B};this.setItemsDirty\u003dfunction(a){var b,d,g\u003dq[0].config.length;b\u003d0;for(d\u003da.length;b\u003cd;++b){var h\u003dG.items[a[b][0]*g+a[b][1]];h.dirty\u003dtrue;if(h.layout){h.layout\u003dfalse;h.wasLayout\u003dtrue;D.layouts2.setChildLayoutsDirty(M,h.w)}}S\u003dtrue};this.setDirty\u003dfunction(){K\u003dtrue};this.setChildSize\u003dfunction(a,b,d){var g, h,o\u003dq[0].config.length;g\u003d0;for(h\u003dG.items.length;g\u003ch;++g){var m\u003dG.items[g];if(m\u0026\u0026m.id\u003d\u003da.id){if(!q[b].stretched[b\u003d\u003d\u003d0?g%o:g/o]){if(!m.ps)m.ps\u003d[];m.ps[b]\u003dd}m.layout\u003dtrue;L(m);break}}};this.measure\u003dfunction(a){var b\u003df.getElement(B);if(b)if(!f.isHidden(b)){if(!Z){Z\u003dtrue;if(X\u003dJ\u003d\u003dnull){var d\u003db;d\u003dd.parentNode;for(O\u003d[0,0];;){O[0]+\u003dR(d,0);O[1]+\u003dR(d,1);if(d.wtGetPS)aa\u003dtrue;var g\u003djQuery.data(d.parentNode,\\\"layout\\\");if(g){V\u003dg;N\u003dd;break}d\u003dd;d\u003dd.parentNode;if(d.childNodes.length!\u003d1\u0026\u0026!d.wtGetPS)break}}else{V\u003djQuery.data(document.getElementById(J), \\\"layout\\\");N\u003db;O[0]\u003dR(N,0);O[1]\u003dR(N,1)}}if(S||K)ba(a,b,X?b.parentNode:null);if(a\u003d\u003d1)S\u003dK\u003dfalse}};this.setMaxSize\u003dfunction(a,b){q[0].maxSize\u003da;q[1].maxSize\u003db};this.apply\u003dfunction(a){var b\u003df.getElement(B);if(!b)return false;if(f.isHidden(b))return true;ea(a,b);return true};this.contains\u003dfunction(a){var b\u003df.getElement(B);a\u003df.getElement(a.getId());return b\u0026\u0026a?f.contains(b,a):false};this.WT\u003df}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "true",
+      "S4_Field_NOT_ASSIGNED": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "JavaScriptObjectType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "JavaScriptScope": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

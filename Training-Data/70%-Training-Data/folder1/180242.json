@@ -1,0 +1,332 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "PROP_IMPLEMENTATION",
+      "type": "Field",
+      "children": [
+        {
+          "label": "org.eclipse.sapphire.modeling.ValueProperty",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "public",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.modeling.annotations.Type",
+          "children": [
+            {
+              "label": "class",
+              "type": "FieldRead",
+              "return_type": "java.lang.Class",
+              "index_of_exper": "expression_0",
+              "children": [
+                {
+                  "label": "org.eclipse.sapphire.java.JavaTypeName",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.modeling.annotations.Reference",
+          "children": [
+            {
+              "label": "class",
+              "type": "FieldRead",
+              "return_type": "java.lang.Class",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "org.eclipse.sapphire.java.JavaType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.modeling.annotations.Label",
+          "children": [
+            {
+              "label": "\"Listener implementation class\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"Implementation\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.modeling.annotations.Required",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.java.JavaTypeConstraint",
+          "children": [
+            {
+              "label": "CLASS",
+              "type": "FieldRead",
+              "return_type": "com.liferay.ide.eclipse.portlet.core.model.IListener",
+              "index_of_exper": "expression_4",
+              "children": [
+                {
+                  "label": "org.eclipse.sapphire.java.JavaTypeKind",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"javax.portlet.PortletContextListener\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.modeling.xml.annotations.XmlBinding",
+          "children": [
+            {
+              "label": "\"listener-class\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "org.eclipse.sapphire.modeling.annotations.Documentation",
+          "children": [
+            {
+              "label": "\"The listener implementation class.\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_7",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "org.eclipse.sapphire.modeling.ValueProperty",
+          "index_of_exper": "expression_8",
+          "children": [
+            {
+              "label": "TYPE",
+              "type": "FieldRead",
+              "return_type": "org.eclipse.sapphire.modeling.ModelElementType",
+              "index_of_exper": "expression_9",
+              "children": [
+                {
+                  "label": "com.liferay.ide.eclipse.portlet.core.model.IListener",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"Implementation\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Interface",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "CLASS": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V3_HAS_CONSTANT": "true",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V19_With_Special_Name": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "false",
+          "V8_VAR_PRIMITIVE": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V8_VAR_OBJECT": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false"
+        },
+        "class": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V4_Field_NOT_USED": "false",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V19_With_Special_Name": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "false",
+          "V8_VAR_PRIMITIVE": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V8_VAR_OBJECT": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false"
+        },
+        "TYPE": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V3_HAS_CONSTANT": "true",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V4_Field_NOT_USED": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V19_With_Special_Name": "false",
+          "V4_Field_NOT_ASSIGNED": "false",
+          "V8_VAR_PRIMITIVE": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V8_VAR_OBJECT": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"The listener implementation class.\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Listener implementation class\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"listener-class\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"javax.portlet.PortletContextListener\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Implementation\"": {
+          "C1_SAME_TYPE_CONSTANT": "false",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "com.liferay.ide.eclipse.portlet.core.model.IListener": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "org.eclipse.sapphire.java.JavaTypeKind": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "org.eclipse.sapphire.java.JavaType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "org.eclipse.sapphire.java.JavaTypeName": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

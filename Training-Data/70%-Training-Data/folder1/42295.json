@@ -1,0 +1,186 @@
+{
+  "nr_root_ast_changes": 3,
+  "faulty_ast": [
+    {
+      "label": "hierarchyLevels",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.util.List",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "java.util.Arrays#asList(T[])",
+          "type": "Invocation",
+          "return_type": "java.util.List",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "java.util.Arrays",
+              "type": "TypeAccess",
+              "return_type": "void",
+              "children": []
+            },
+            {
+              "label": "\"country\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"state_province\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"city_village\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"address3\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"address2\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "\"address1\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_METHODS": {
+        "java.util.Arrays#asList(T[])": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "false",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "false",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "true",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "false",
+          "M9_RETURN_OBJECTIVE": "false",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "true",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "false",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "false"
+        }
+      },
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"address3\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"state_province\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"address1\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"address2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"country\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"city_village\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "java.util.Arrays": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "true"
+    }
+  }
+}

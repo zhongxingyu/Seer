@@ -1,0 +1,139 @@
+{
+  "nr_root_ast_changes": 6,
+  "faulty_ast": [
+    {
+      "label": "helpItem",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "javax.swing.JMenuItem",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "javax.swing.JMenuItem(javax.swing.Icon)",
+          "type": "ConstructorCall",
+          "susp": [
+            "susp_wrongMethodRef_SameNamedifferentArgument"
+          ],
+          "return_type": "javax.swing.JMenuItem",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "SeljeIRC.I18N#get(java.lang.String)",
+              "type": "Invocation",
+              "return_type": "java.lang.Object",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "SeljeIRC.I18N",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                },
+                {
+                  "label": "\"mainmenu.help\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_2",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "true",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_METHODS": {
+        "SeljeIRC.I18N#get(java.lang.String)": {
+          "M10_WRAPTTED_IN_OTHER_CALLS": "true",
+          "M4_Field_NOT_ASSIGNED": "false",
+          "M7_INV_Invocation_INV_REPLACE_BY_INV": "true",
+          "M1_LOCAL_VAR_NOT_USED": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+          "M8_RETURN_PRIMITIVE": "false",
+          "M12_METHOD_CALL_WITH_TRY_CATCH": "true",
+          "M9_RETURN_OBJECTIVE": "true",
+          "M1_OVERLOADED_METHOD": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "M4_Field_NOT_USED": "false",
+          "M13_Argument_Has_Primitive": "true",
+          "M10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "M2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "M11_Satrt_With_Get": "true",
+          "M3_ANOTHER_METHOD_WITH_PARAMETER_RETURN_COMP": "false",
+          "M12_Has_Var_Similar_In_Name": "false",
+          "M4_PARAMETER_RETURN_COMPABILITY": "false",
+          "M1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "M7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "M5_MI_WITH_COMPATIBLE_VAR_TYPE": "false",
+          "M5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "M6_INV_Invocation_INV_REPLACE_BY_VAR": "false",
+          "M8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "M2_SIMILAR_METHOD_WITH_SAME_RETURN": "false",
+          "M9_METHOD_CALL_WITH_NORMAL_GUARD": "true"
+        }
+      },
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "javax.swing.JMenuItem(javax.swing.Icon)": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "true",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "true",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "true",
+      "CONSTANT": {
+        "\"mainmenu.help\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Invocation",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "Invocation",
+      "FEATURES_TYPEACCESS": {
+        "SeljeIRC.I18N": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "true",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "LocalVariable",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "true"
+    }
+  }
+}

@@ -1,0 +1,251 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "add_amsdk_idrepo_plugin",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "Annotation",
+          "return_type": "com.sun.identity.cli.annotation.SubCommandInfo",
+          "children": [
+            {
+              "label": "\"Create AMSDK IdRepo Plug-in\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"com.sun.identity.cli.datastore.AddAMSDKIdRepoPlugin\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"authentication\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"directory-servers|s|m|directory servers \u003cprotocol\u003e://\u003chostname\u003e:\u003cport\u003e. Can have multiple entries.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_3",
+                  "children": []
+                },
+                {
+                  "label": "\"basedn|b|s|Directory Server base distinguished name.\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_4",
+                  "children": []
+                },
+                {
+                  "label": "\"dsame-password-file|x|s|File that contains password of the dsameuser\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_5",
+                  "children": []
+                },
+                {
+                  "label": "\"puser-password-file|p|s|File that contains password of the puser\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_6",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.Object[]",
+              "children": []
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"user|a|s|User objects naming attribute (defaults to \u0027uid\u0027)\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_7",
+                  "children": []
+                },
+                {
+                  "label": "\"org|o|s|Organization objects naming attribute (defaults to \u0027o\u0027)\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_8",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "",
+              "type": "NewArray",
+              "return_type": "java.lang.String[]",
+              "children": [
+                {
+                  "label": "\"datastore-add-amsdk-idrepo-plugin-succeeded\u003dAMSDK Plugin creaded successfully.\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_9",
+                  "children": []
+                },
+                {
+                  "label": "\"datastore-add-amsdk-idrepo-plugin-failed\u003dAMSDK Plugin creation failed\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_10",
+                  "children": []
+                },
+                {
+                  "label": "\"datastore-add-amsdk-idrepo-plugin-policies-failed\u003dAdding Delegation policies failed\"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_11",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"true\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_12",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"basedn|b|s|Directory Server base distinguished name.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"puser-password-file|p|s|File that contains password of the puser\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"org|o|s|Organization objects naming attribute (defaults to \u0027o\u0027)\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Create AMSDK IdRepo Plug-in\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"datastore-add-amsdk-idrepo-plugin-failed\u003dAMSDK Plugin creation failed\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"true\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"user|a|s|User objects naming attribute (defaults to \u0027uid\u0027)\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"directory-servers|s|m|directory servers \u003cprotocol\u003e://\u003chostname\u003e:\u003cport\u003e. Can have multiple entries.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"datastore-add-amsdk-idrepo-plugin-policies-failed\u003dAdding Delegation policies failed\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"com.sun.identity.cli.datastore.AddAMSDKIdRepoPlugin\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"datastore-add-amsdk-idrepo-plugin-succeeded\u003dAMSDK Plugin creaded successfully.\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"authentication\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"dsame-password-file|x|s|File that contains password of the dsameuser\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

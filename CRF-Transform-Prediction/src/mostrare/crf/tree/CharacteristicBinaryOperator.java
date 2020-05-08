@@ -1,0 +1,16 @@
+package mostrare.crf.tree;
+
+public enum CharacteristicBinaryOperator {
+	
+	O1_IS_LOGICAL,
+	O1_IS_BIT,
+	O1_IS_COMPARE, 
+	O1_IS_SHIFT,
+	O1_IS_MATH,
+	O1_IS_OTHERS,
+	O2_LOGICAL_CONTAIN_NOT,
+	O3_CONTAIN_NULL,
+	O3_CONTAIN_01,
+	O4_COMPARE_IN_CONDITION,
+	O5_IS_MATH_ROOT
+}

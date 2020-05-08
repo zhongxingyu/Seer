@@ -1,0 +1,195 @@
+{
+  "nr_root_ast_changes": 4,
+  "faulty_ast": [
+    {
+      "label": "return",
+      "type": "Return",
+      "children": [
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "eu.webtoolkit.jwt.WJavaScriptPreamble",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "WtClassScope",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.WTreeView",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "JavaScriptScope",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "JavaScriptConstructor",
+              "type": "FieldRead",
+              "return_type": "eu.webtoolkit.jwt.WTreeView",
+              "index_of_exper": "expression_2",
+              "children": [
+                {
+                  "label": "JavaScriptObjectType",
+                  "type": "TypeAccess",
+                  "return_type": "void",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "\"WTreeView\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"function(m,d,i,t,r){function p(c){var a\u003d-1,b\u003dnull,e\u003dfalse,g\u003dfalse,h\u003dnull;for(c\u003df.target(c);c;){if(c.className.indexOf(\\\"c1 rh\\\")\u003d\u003d0){if(a\u003d\u003d-1)a\u003d0}else if(c.className.indexOf(\\\"Wt-tv-c\\\")\u003d\u003d0){if(c.className.indexOf(\\\"Wt-tv-c\\\")\u003d\u003d0)a\u003dc.className.split(\\\" \\\")[0].substring(7)*1;else if(a\u003d\u003d-1)a\u003d0;if(c.getAttribute(\\\"drop\\\")\u003d\u003d\u003d\\\"true\\\")g\u003dtrue;h\u003dc}else if(c.className\u003d\u003d\\\"Wt-tv-node\\\"){b\u003dc.id;break}if(c.className\u003d\u003d\u003d\\\"Wt-selected\\\")e\u003dtrue;c\u003dc.parentNode;if(f.hasTag(c, \\\"BODY\\\"))break}return{columnId:a,nodeId:b,selected:e,drop:g,el:h}}function x(){if(s){s\u003dfalse;var c\u003du.firstChild,a\u003dl.firstChild,b\u003d0,e\u003d0;e\u003dl.lastChild.className.split(\\\" \\\")[0];var g\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+e);if(r)a\u003da.firstChild;if(!(f.isHidden(d)||l.offsetWidth-a.offsetWidth\u003c8)){for(var h\u003d0,k\u003da.childNodes.length;h\u003ck;++h)if(a.childNodes[h].className){var j\u003da.childNodes[h].className.split(\\\" \\\")[0];j\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+j);if(j.style.display!\u003d\\\"none\\\")b+\u003df.pxself(j,\\\"width\\\")+7}if(!r)if(g.style.width)$(d).find(\\\".Wt-headerdiv .\\\"+ e).css(\\\"width\\\",g.style.width);else g.style.width\u003dl.offsetWidth-a.offsetWidth-8+\\\"px\\\";e\u003db+f.pxself(g,\\\"width\\\")+(f.isIE6?10:7);if(r){j\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .Wt-tv-rowc\\\");j.style.width\u003db+\\\"px\\\";f.isIE\u0026\u0026setTimeout(function(){$(d).find(\\\".Wt-tv-rowc\\\").css(\\\"width\\\",b+\\\"px\\\").css(\\\"width\\\",\\\"\\\")},0);d.changed\u003dtrue}else{l.style.width\u003dc.style.width\u003de+\\\"px\\\";a.style.width\u003db+\\\"px\\\"}}}}jQuery.data(d,\\\"obj\\\",this);var u\u003di.firstChild,l\u003dt.firstChild,v\u003dthis,f\u003dm.WT;this.click\u003dfunction(c,a){var b\u003dp(a);b.columnId!\u003d-1\u0026\u0026m.emit(d,{name:\\\"itemEvent\\\", eventObject:c,event:a},b.nodeId,b.columnId,\\\"clicked\\\",\\\"\\\",\\\"\\\")};this.dblClick\u003dfunction(c,a){var b\u003dp(a);b.columnId!\u003d-1\u0026\u0026m.emit(d,{name:\\\"itemEvent\\\",eventObject:c,event:a},b.nodeId,b.columnId,\\\"dblclicked\\\",\\\"\\\",\\\"\\\")};this.mouseDown\u003dfunction(c,a){f.capture(null);var b\u003dp(a);if(b.columnId!\u003d-1){m.emit(d,{name:\\\"itemEvent\\\",eventObject:c,event:a},b.nodeId,b.columnId,\\\"mousedown\\\",\\\"\\\",\\\"\\\");d.getAttribute(\\\"drag\\\")\u003d\u003d\u003d\\\"true\\\"\u0026\u0026b.selected\u0026\u0026m._p_.dragStart(d,a)}};this.mouseUp\u003dfunction(c,a){var b\u003dp(a);b.columnId!\u003d-1\u0026\u0026m.emit(d, {name:\\\"itemEvent\\\",eventObject:c,event:a},b.nodeId,b.columnId,\\\"mouseup\\\",\\\"\\\",\\\"\\\")};this.resizeHandleMDown\u003dfunction(c,a){var b\u003dc.parentNode.parentNode.className.split(\\\" \\\")[0];if(b){var e\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+b),g\u003df.pxself(e,\\\"width\\\"),h\u003d-g,k\u003d1E4,j\u003d$(document.body).hasClass(\\\"Wt-rtl\\\");if(j){var w\u003dh;h\u003d-k;k\u003d-w}new f.SizeHandle(f,\\\"h\\\",c.offsetWidth,d.firstChild.offsetHeight,h,k,\\\"Wt-hsh\\\",function(n){n\u003dg+(j?-n:n);var q\u003db.substring(7)*1;e.style.width\u003dn+\\\"px\\\";v.adjustColumns();m.emit(d,\\\"columnResized\\\",q,parseInt(n))}, c,d,a,-2,-1)}};var s\u003dfalse;this.adjustColumns\u003dfunction(){if(!s){s\u003dtrue;setTimeout(x,0)}};var o\u003dnull;d.handleDragDrop\u003dfunction(c,a,b,e,g){if(o){o.className\u003do.classNameOrig;o\u003dnull}if(c!\u003d\\\"end\\\"){var h\u003dp(b);if(!h.selected\u0026\u0026h.drop\u0026\u0026h.columnId!\u003d-1)if(c\u003d\u003d\\\"drop\\\")m.emit(d,{name:\\\"itemEvent\\\",eventObject:a,event:b},h.nodeId,h.columnId,\\\"drop\\\",e,g);else{a.className\u003d\\\"Wt-valid-drop\\\";o\u003dh.el;o.classNameOrig\u003do.className;o.className+\u003d\\\" Wt-drop-site\\\"}else a.className\u003d\\\"\\\"}};this.autoJavaScript\u003dfunction(){if(d.parentNode\u003d\u003d null){d\u003di\u003dt\u003du\u003dl\u003dnull;this.autoJavaScript\u003dfunction(){}}else if(!f.isHidden(d)){x();var c\u003d$(d),a,b\u003dnull,e\u003df.pxself(d,\\\"width\\\");if(e\u003d\u003d0)e\u003dd.clientWidth;else if(f.boxSizing(d)){e-\u003df.px(d,\\\"borderLeftWidth\\\");e-\u003df.px(d,\\\"borderRightWidth\\\")}var g\u003di.offsetWidth-i.clientWidth;if(i.clientWidth\u003e0)e-\u003dg;if(c.hasClass(\\\"column1\\\")){a\u003dc.find(\\\".Wt-headerdiv\\\").get(0).lastChild.className.split(\\\" \\\")[0];a\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+a);b\u003df.pxself(a,\\\"width\\\")}if((!f.isIE||e\u003e100)\u0026\u0026(e!\u003di.tw||b!\u003di.c0w||d.changed)){var h\u003d!d.changed; i.tw\u003de;i.c0w\u003db;a\u003dc.find(\\\".Wt-headerdiv\\\").get(0).lastChild.className.split(\\\" \\\")[0];a\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+a);var k\u003du.firstChild,j\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .cwidth\\\"),w\u003dj.style.width\u003d\u003dk.offsetWidth+1+\\\"px\\\",n\u003dl.firstChild;j.style.width\u003de+\\\"px\\\";i.style.width\u003de+g+\\\"px\\\";if(!f.isIE)t.style.marginRight\u003dg+\\\"px\\\";if(b!\u003dnull){b\u003de-b-(f.isIE6?10:7);if(b\u003e0){var q\u003dMath.min(b,f.pxself(f.getCssRule(\\\"#\\\"+d.id+\\\" .Wt-tv-rowc\\\"),\\\"width\\\"));e-\u003db-q;l.style.width\u003de+\\\"px\\\";k.style.width\u003de+\\\"px\\\";f.getCssRule(\\\"#\\\"+d.id+\\\" .Wt-tv-row\\\").style.width\u003d q+\\\"px\\\";f.isIE\u0026\u0026setTimeout(function(){c.find(\\\" .Wt-tv-row\\\").css(\\\"width\\\",q+\\\"px\\\").css(\\\"width\\\",\\\"\\\")},0)}}else if(w){l.style.width\u003dj.style.width;k.style.width\u003dj.style.width}else l.style.width\u003dk.offsetWidth+\\\"px\\\";if(!r\u0026\u0026k.offsetWidth-n.offsetWidth\u003e\u003d7)a.style.width\u003dk.offsetWidth-n.offsetWidth-7+\\\"px\\\";d.changed\u003dfalse;h\u0026\u0026v.adjustColumns()}}};this.scrollTo\u003dfunction(c,a,b,e){if(a!\u003d-1){a*\u003db;c\u003di.scrollTop;var g\u003di.clientHeight;if(e\u003d\u003d0)if(c+g\u003ca)e\u003d1;else if(a\u003cc)e\u003d2;switch(e){case 1:i.scrollTop\u003da;break;case 2:i.scrollTop\u003d a-(g-b);break;case 3:i.scrollTop\u003da-(g-b)/2;break}window.fakeEvent\u003d{object:i};i.onscroll(window.fakeEvent);window.fakeEvent\u003dnull}};v.adjustColumns()}\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Method",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+      "S4_Field_NOT_USED": "true",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "FEATURES_VARS": {
+        "WtClassScope": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        },
+        "JavaScriptConstructor": {
+          "V2_HAS_VAR_SIM_NAME_COMP_TYPE": "false",
+          "V8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "true",
+          "V4_Field_NOT_USED": "true",
+          "V13_VAR_Invocation_VAR_REPLACE_BY_INVOCATION": "false",
+          "V1_IS_TYPE_COMPATIBLE_METHOD_CALL_PARAM_RETURN": "false",
+          "V18_Has_Method_Similar_In_Name": "false",
+          "V11_VAR_COMPATIBLE_TYPE_IN_CONDITION": "false",
+          "V1_LOCAL_VAR_NOT_ASSIGNED": "false",
+          "V16_IS_METHOD_PARAMETER_TYPE_VAR": "true",
+          "V12_VAR_Invocation_VAR_REPLACE_BY_VAR": "false",
+          "V4_Field_NOT_ASSIGNED": "true",
+          "V8_VAR_PRIMITIVE": "false",
+          "V2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+          "V8_VAR_OBJECT": "true",
+          "V14_VAR_INSTANCE_OF_CLASS": "true",
+          "V4B_USED_MULTIPLE_AS_PARAMETER": "false",
+          "V10_VAR_TYPE_Similar_VAR": "false",
+          "V3_HAS_CONSTANT": "false",
+          "V9_VAR_TYPE_Similar_Literal": "false",
+          "V2_HAS_VAR_SIM_NAME": "false",
+          "V1_LOCAL_VAR_NOT_USED": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+          "V19_With_Special_Name": "false",
+          "V6_IS_METHOD_RETURN_TYPE_VAR": "true",
+          "V7_OBJECT_USED_IN_ASSIGNMENT": "false",
+          "V5_HAS_VAR_IN_TRANSFORMATION": "false",
+          "V15_VAR_LAST_THREE_SAME_TYPE_LOC": "false",
+          "V5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+          "V17_VAR_IS_ENUMERATION": "false"
+        }
+      },
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"WTreeView\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"function(m,d,i,t,r){function p(c){var a\u003d-1,b\u003dnull,e\u003dfalse,g\u003dfalse,h\u003dnull;for(c\u003df.target(c);c;){if(c.className.indexOf(\\\"c1 rh\\\")\u003d\u003d0){if(a\u003d\u003d-1)a\u003d0}else if(c.className.indexOf(\\\"Wt-tv-c\\\")\u003d\u003d0){if(c.className.indexOf(\\\"Wt-tv-c\\\")\u003d\u003d0)a\u003dc.className.split(\\\" \\\")[0].substring(7)*1;else if(a\u003d\u003d-1)a\u003d0;if(c.getAttribute(\\\"drop\\\")\u003d\u003d\u003d\\\"true\\\")g\u003dtrue;h\u003dc}else if(c.className\u003d\u003d\\\"Wt-tv-node\\\"){b\u003dc.id;break}if(c.className\u003d\u003d\u003d\\\"Wt-selected\\\")e\u003dtrue;c\u003dc.parentNode;if(f.hasTag(c, \\\"BODY\\\"))break}return{columnId:a,nodeId:b,selected:e,drop:g,el:h}}function x(){if(s){s\u003dfalse;var c\u003du.firstChild,a\u003dl.firstChild,b\u003d0,e\u003d0;e\u003dl.lastChild.className.split(\\\" \\\")[0];var g\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+e);if(r)a\u003da.firstChild;if(!(f.isHidden(d)||l.offsetWidth-a.offsetWidth\u003c8)){for(var h\u003d0,k\u003da.childNodes.length;h\u003ck;++h)if(a.childNodes[h].className){var j\u003da.childNodes[h].className.split(\\\" \\\")[0];j\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+j);if(j.style.display!\u003d\\\"none\\\")b+\u003df.pxself(j,\\\"width\\\")+7}if(!r)if(g.style.width)$(d).find(\\\".Wt-headerdiv .\\\"+ e).css(\\\"width\\\",g.style.width);else g.style.width\u003dl.offsetWidth-a.offsetWidth-8+\\\"px\\\";e\u003db+f.pxself(g,\\\"width\\\")+(f.isIE6?10:7);if(r){j\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .Wt-tv-rowc\\\");j.style.width\u003db+\\\"px\\\";f.isIE\u0026\u0026setTimeout(function(){$(d).find(\\\".Wt-tv-rowc\\\").css(\\\"width\\\",b+\\\"px\\\").css(\\\"width\\\",\\\"\\\")},0);d.changed\u003dtrue}else{l.style.width\u003dc.style.width\u003de+\\\"px\\\";a.style.width\u003db+\\\"px\\\"}}}}jQuery.data(d,\\\"obj\\\",this);var u\u003di.firstChild,l\u003dt.firstChild,v\u003dthis,f\u003dm.WT;this.click\u003dfunction(c,a){var b\u003dp(a);b.columnId!\u003d-1\u0026\u0026m.emit(d,{name:\\\"itemEvent\\\", eventObject:c,event:a},b.nodeId,b.columnId,\\\"clicked\\\",\\\"\\\",\\\"\\\")};this.dblClick\u003dfunction(c,a){var b\u003dp(a);b.columnId!\u003d-1\u0026\u0026m.emit(d,{name:\\\"itemEvent\\\",eventObject:c,event:a},b.nodeId,b.columnId,\\\"dblclicked\\\",\\\"\\\",\\\"\\\")};this.mouseDown\u003dfunction(c,a){f.capture(null);var b\u003dp(a);if(b.columnId!\u003d-1){m.emit(d,{name:\\\"itemEvent\\\",eventObject:c,event:a},b.nodeId,b.columnId,\\\"mousedown\\\",\\\"\\\",\\\"\\\");d.getAttribute(\\\"drag\\\")\u003d\u003d\u003d\\\"true\\\"\u0026\u0026b.selected\u0026\u0026m._p_.dragStart(d,a)}};this.mouseUp\u003dfunction(c,a){var b\u003dp(a);b.columnId!\u003d-1\u0026\u0026m.emit(d, {name:\\\"itemEvent\\\",eventObject:c,event:a},b.nodeId,b.columnId,\\\"mouseup\\\",\\\"\\\",\\\"\\\")};this.resizeHandleMDown\u003dfunction(c,a){var b\u003dc.parentNode.parentNode.className.split(\\\" \\\")[0];if(b){var e\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+b),g\u003df.pxself(e,\\\"width\\\"),h\u003d-g,k\u003d1E4,j\u003d$(document.body).hasClass(\\\"Wt-rtl\\\");if(j){var w\u003dh;h\u003d-k;k\u003d-w}new f.SizeHandle(f,\\\"h\\\",c.offsetWidth,d.firstChild.offsetHeight,h,k,\\\"Wt-hsh\\\",function(n){n\u003dg+(j?-n:n);var q\u003db.substring(7)*1;e.style.width\u003dn+\\\"px\\\";v.adjustColumns();m.emit(d,\\\"columnResized\\\",q,parseInt(n))}, c,d,a,-2,-1)}};var s\u003dfalse;this.adjustColumns\u003dfunction(){if(!s){s\u003dtrue;setTimeout(x,0)}};var o\u003dnull;d.handleDragDrop\u003dfunction(c,a,b,e,g){if(o){o.className\u003do.classNameOrig;o\u003dnull}if(c!\u003d\\\"end\\\"){var h\u003dp(b);if(!h.selected\u0026\u0026h.drop\u0026\u0026h.columnId!\u003d-1)if(c\u003d\u003d\\\"drop\\\")m.emit(d,{name:\\\"itemEvent\\\",eventObject:a,event:b},h.nodeId,h.columnId,\\\"drop\\\",e,g);else{a.className\u003d\\\"Wt-valid-drop\\\";o\u003dh.el;o.classNameOrig\u003do.className;o.className+\u003d\\\" Wt-drop-site\\\"}else a.className\u003d\\\"\\\"}};this.autoJavaScript\u003dfunction(){if(d.parentNode\u003d\u003d null){d\u003di\u003dt\u003du\u003dl\u003dnull;this.autoJavaScript\u003dfunction(){}}else if(!f.isHidden(d)){x();var c\u003d$(d),a,b\u003dnull,e\u003df.pxself(d,\\\"width\\\");if(e\u003d\u003d0)e\u003dd.clientWidth;else if(f.boxSizing(d)){e-\u003df.px(d,\\\"borderLeftWidth\\\");e-\u003df.px(d,\\\"borderRightWidth\\\")}var g\u003di.offsetWidth-i.clientWidth;if(i.clientWidth\u003e0)e-\u003dg;if(c.hasClass(\\\"column1\\\")){a\u003dc.find(\\\".Wt-headerdiv\\\").get(0).lastChild.className.split(\\\" \\\")[0];a\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+a);b\u003df.pxself(a,\\\"width\\\")}if((!f.isIE||e\u003e100)\u0026\u0026(e!\u003di.tw||b!\u003di.c0w||d.changed)){var h\u003d!d.changed; i.tw\u003de;i.c0w\u003db;a\u003dc.find(\\\".Wt-headerdiv\\\").get(0).lastChild.className.split(\\\" \\\")[0];a\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .\\\"+a);var k\u003du.firstChild,j\u003df.getCssRule(\\\"#\\\"+d.id+\\\" .cwidth\\\"),w\u003dj.style.width\u003d\u003dk.offsetWidth+1+\\\"px\\\",n\u003dl.firstChild;j.style.width\u003de+\\\"px\\\";i.style.width\u003de+g+\\\"px\\\";if(!f.isIE)t.style.marginRight\u003dg+\\\"px\\\";if(b!\u003dnull){b\u003de-b-(f.isIE6?10:7);if(b\u003e0){var q\u003dMath.min(b,f.pxself(f.getCssRule(\\\"#\\\"+d.id+\\\" .Wt-tv-rowc\\\"),\\\"width\\\"));e-\u003db-q;l.style.width\u003de+\\\"px\\\";k.style.width\u003de+\\\"px\\\";f.getCssRule(\\\"#\\\"+d.id+\\\" .Wt-tv-row\\\").style.width\u003d q+\\\"px\\\";f.isIE\u0026\u0026setTimeout(function(){c.find(\\\" .Wt-tv-row\\\").css(\\\"width\\\",q+\\\"px\\\").css(\\\"width\\\",\\\"\\\")},0)}}else if(w){l.style.width\u003dj.style.width;k.style.width\u003dj.style.width}else l.style.width\u003dk.offsetWidth+\\\"px\\\";if(!r\u0026\u0026k.offsetWidth-n.offsetWidth\u003e\u003d7)a.style.width\u003dk.offsetWidth-n.offsetWidth-7+\\\"px\\\";d.changed\u003dfalse;h\u0026\u0026v.adjustColumns()}}};this.scrollTo\u003dfunction(c,a,b,e){if(a!\u003d-1){a*\u003db;c\u003di.scrollTop;var g\u003di.clientHeight;if(e\u003d\u003d0)if(c+g\u003ca)e\u003d1;else if(a\u003cc)e\u003d2;switch(e){case 1:i.scrollTop\u003da;break;case 2:i.scrollTop\u003d a-(g-b);break;case 3:i.scrollTop\u003da-(g-b)/2;break}window.fakeEvent\u003d{object:i};i.onscroll(window.fakeEvent);window.fakeEvent\u003dnull}};v.adjustColumns()}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "true",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Return",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "FEATURES_TYPEACCESS": {
+        "JavaScriptObjectType": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        },
+        "JavaScriptScope": {
+          "C3_TYPEACCESS_ACTUAL_VAR": "false",
+          "C4_SIMILAR_TYPEACCESS_ACTUAL_VAR": "false"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

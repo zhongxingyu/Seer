@@ -1,0 +1,255 @@
+{
+  "nr_root_ast_changes": 7,
+  "faulty_ast": [
+    {
+      "label": "e2",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "com.tabbie.android.radar.Event",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "com.tabbie.android.radar.Event(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.net.URL,double,double,int,boolean,java.lang.String)",
+          "type": "ConstructorCall",
+          "return_type": "com.tabbie.android.radar.Event",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "\"2\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"Ginyu Force Party\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"Dress up as Ginyu Force and show off your Recoome Boom!\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"230 Fifth\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "java.net.URL(java.lang.String)",
+              "type": "ConstructorCall",
+              "return_type": "java.net.URL",
+              "index_of_exper": "expression_5",
+              "children": [
+                {
+                  "label": "\"http://3.bp.blogspot.com/_NQz93lR8zIY/TSlxGIsV3vI/AAAAAAAAAOI/s0AoNlr18v8/s640/230_Fifth_v2_460x285.jpg\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_6",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "40.744253",
+              "type": "Literal",
+              "return_type": "double",
+              "index_of_exper": "expression_7",
+              "children": []
+            },
+            {
+              "label": "NEG",
+              "type": "UnaryOperator",
+              "return_type": "double",
+              "children": [
+                {
+                  "label": "73.987991",
+                  "type": "Literal",
+                  "return_type": "double",
+                  "index_of_exper": "expression_8",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "label": "6",
+              "type": "Literal",
+              "return_type": "int",
+              "index_of_exper": "expression_9",
+              "children": []
+            },
+            {
+              "label": "true",
+              "type": "Literal",
+              "return_type": "java.lang.Boolean",
+              "index_of_exper": "expression_10",
+              "index_of_logical_exper": "logical_expression_0",
+              "children": []
+            },
+            {
+              "label": "\"8:00pm\"",
+              "type": "Literal",
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_11",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Try",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "com.tabbie.android.radar.Event(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.net.URL,double,double,int,boolean,java.lang.String)": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "java.net.URL(java.lang.String)": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "FEATURES_LOGICAL_EXPRESSION": {
+        "logical_expression_0": {
+          "LE9_NULL_CHECK": "false",
+          "LE10_ATOMIC_EXPRESSION_SAME_INVOCATION_TARGET": "false",
+          "LE2_IS_BOOLEAN_METHOD_PARAM_TYPE_VAR": "false",
+          "LE5_COMPLEX_REFERENCE": "false",
+          "LE10_ATOMIC_EXPRESSION_COMPARISION_SAME_LEFT": "false",
+          "LE7_SIMPLE_VAR_OR_METHOD_IN_LOGIC": "false",
+          "LE9_EQUAL_NOTEQUAL_NULL_CHECK": "false",
+          "LE6_HAS_NEGATION": "false",
+          "LE1_EXISTS_RELATED_BOOLEAN_EXPRESSION": "false",
+          "LE9_MIX_CHECK": "false",
+          "LE3_IS_COMPATIBLE_VAR_NOT_INCLUDED": "false",
+          "LE4_EXISTS_LOCAL_UNUSED_VARIABLES": "false",
+          "LE10_ATOMIC_EXPRESSION_COMPARISION_SAME_RIGHT": "false",
+          "LE9_NORMAL_CHECK": "false",
+          "LE10_ATOMIC_EXPRESSION_MULTIPLE_VAR_AS_BOOLEAN": "false",
+          "LE10_ATOMIC_EXPRESSION_USED_IN_INVOCATION_COMPARISION_VARIABLE": "false",
+          "LE10_CONTAINS_ALL_INVOCATION_COMPARISION_VARIABLE": "false",
+          "LE8_SCOPE_VAR_USED_OTHER_BOOLEXPER": "true"
+        }
+      },
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "LocalVariable",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"2\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"Ginyu Force Party\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"http://3.bp.blogspot.com/_NQz93lR8zIY/TSlxGIsV3vI/AAAAAAAAAOI/s0AoNlr18v8/s640/230_Fifth_v2_460x285.jpg\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "40.744253": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "6": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "true": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"8:00pm\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"230 Fifth\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "73.987991": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"Dress up as Ginyu Force and show off your Recoome Boom!\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "Invocation",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "Invocation",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "Invocation",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

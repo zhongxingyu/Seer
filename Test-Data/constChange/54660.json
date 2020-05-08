@@ -1,0 +1,78 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "google_config_production",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "private",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "\"{\\\"auth_uri\\\":\\\"https://accounts.google.com/o/oauth2/auth\\\",\\\"client_secret\\\":\\\"7hV6CnQ-etu-QWLHXixoRwjB\\\",\\\"token_uri\\\":\\\"https://accounts.google.com/o/oauth2/token\\\",\\\"client_email\\\":\\\"808248997275-ou0vtokaht54knr34697a1epd5m0j5rf@developer.gserviceaccount.com\\\",\\\"redirect_uris\\\":[\\\"http://api.brif.us/auth/signin\\\"],\\\"client_x509_cert_url\\\":\\\"https://www.googleapis.com/robot/v1/metadata/x509/808248997275-ou0vtokaht54knr34697a1epd5m0j5rf@developer.gserviceaccount.com\\\",\\\"client_id\\\":\\\"808248997275-ou0vtokaht54knr34697a1epd5m0j5rf.apps.googleusercontent.com\\\",\\\"auth_provider_x509_cert_url\\\":\\\"https://www.googleapis.com/oauth2/v1/certs\\\",\\\"javascript_origins\\\":[\\\"http://www.brif.us\\\"]}\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"{\\\"auth_uri\\\":\\\"https://accounts.google.com/o/oauth2/auth\\\",\\\"client_secret\\\":\\\"7hV6CnQ-etu-QWLHXixoRwjB\\\",\\\"token_uri\\\":\\\"https://accounts.google.com/o/oauth2/token\\\",\\\"client_email\\\":\\\"808248997275-ou0vtokaht54knr34697a1epd5m0j5rf@developer.gserviceaccount.com\\\",\\\"redirect_uris\\\":[\\\"http://api.brif.us/auth/signin\\\"],\\\"client_x509_cert_url\\\":\\\"https://www.googleapis.com/robot/v1/metadata/x509/808248997275-ou0vtokaht54knr34697a1epd5m0j5rf@developer.gserviceaccount.com\\\",\\\"client_id\\\":\\\"808248997275-ou0vtokaht54knr34697a1epd5m0j5rf.apps.googleusercontent.com\\\",\\\"auth_provider_x509_cert_url\\\":\\\"https://www.googleapis.com/oauth2/v1/certs\\\",\\\"javascript_origins\\\":[\\\"http://www.brif.us\\\"]}\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

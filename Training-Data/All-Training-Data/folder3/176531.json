@@ -1,0 +1,190 @@
+{
+  "nr_root_ast_changes": 8,
+  "faulty_ast": [
+    {
+      "label": "createQueries",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String[]",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "protected",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "",
+          "type": "NewArray",
+          "return_type": "java.lang.String[]",
+          "children": [
+            {
+              "label": "\"CREATE TABLE categories (\\\"id\\\" INTEGER NOT NULL PRIMARY KEY ,\\\"name\\\" VARCHAR (300),\\\"description\\\" VARCHAR (300));\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_0",
+              "children": []
+            },
+            {
+              "label": "\"CREATE TABLE categories_md (\\\"pk\\\" INTEGER NOT NULL PRIMARY KEY, \\\"mdv\\\" VARCHAR (300), \\\"rev\\\" INTEGER DEFAULT 1, \\\"f\\\" INTEGER DEFAULT 0);\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "\"CREATE TABLE items (\\\"id\\\" INTEGER NOT NULL PRIMARY KEY ,\\\"name\\\" VARCHAR (300),\\\"description\\\" VARCHAR (300));\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_2",
+              "children": []
+            },
+            {
+              "label": "\"CREATE TABLE items_md (\\\"pk\\\" INTEGER NOT NULL PRIMARY KEY, \\\"mdv\\\" VARCHAR (300), \\\"rev\\\" INTEGER DEFAULT 1, \\\"f\\\" INTEGER DEFAULT 0);\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_3",
+              "children": []
+            },
+            {
+              "label": "\"INSERT INTO categories (\\\"id\\\", \\\"name\\\", \\\"description\\\") VALUES (1, \\\u0027Beverages\\\u0027, \\\u0027Soft drinks\\\u0027)\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_4",
+              "children": []
+            },
+            {
+              "label": "\"INSERT INTO categories (\\\"id\\\", \\\"name\\\", \\\"description\\\") VALUES (2, \\\u0027Condiments\\\u0027, \\\u0027Sweet and \\\u0027)\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_5",
+              "children": []
+            },
+            {
+              "label": "\"INSERT INTO categories_md (\\\"rev\\\", \\\"mdv\\\", \\\"pk\\\", \\\"f\\\") VALUES (1, \\\u00278B7132AE51A73532FBD29CCA15B2CB38\\\u0027, 1, 0)\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_6",
+              "children": []
+            },
+            {
+              "label": "\"INSERT INTO categories_md (\\\"rev\\\", \\\"mdv\\\", \\\"pk\\\", \\\"f\\\") VALUES (1, \\\u0027FB5EF33FE008589C86C0007AC0597E00\\\u0027, 2, 0)\"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_7",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"INSERT INTO categories (\\\"id\\\", \\\"name\\\", \\\"description\\\") VALUES (1, \\\u0027Beverages\\\u0027, \\\u0027Soft drinks\\\u0027)\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"CREATE TABLE categories_md (\\\"pk\\\" INTEGER NOT NULL PRIMARY KEY, \\\"mdv\\\" VARCHAR (300), \\\"rev\\\" INTEGER DEFAULT 1, \\\"f\\\" INTEGER DEFAULT 0);\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"CREATE TABLE categories (\\\"id\\\" INTEGER NOT NULL PRIMARY KEY ,\\\"name\\\" VARCHAR (300),\\\"description\\\" VARCHAR (300));\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"CREATE TABLE items (\\\"id\\\" INTEGER NOT NULL PRIMARY KEY ,\\\"name\\\" VARCHAR (300),\\\"description\\\" VARCHAR (300));\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"INSERT INTO categories (\\\"id\\\", \\\"name\\\", \\\"description\\\") VALUES (2, \\\u0027Condiments\\\u0027, \\\u0027Sweet and \\\u0027)\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"INSERT INTO categories_md (\\\"rev\\\", \\\"mdv\\\", \\\"pk\\\", \\\"f\\\") VALUES (1, \\\u0027FB5EF33FE008589C86C0007AC0597E00\\\u0027, 2, 0)\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"INSERT INTO categories_md (\\\"rev\\\", \\\"mdv\\\", \\\"pk\\\", \\\"f\\\") VALUES (1, \\\u00278B7132AE51A73532FBD29CCA15B2CB38\\\u0027, 1, 0)\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        },
+        "\"CREATE TABLE items_md (\\\"pk\\\" INTEGER NOT NULL PRIMARY KEY, \\\"mdv\\\" VARCHAR (300), \\\"rev\\\" INTEGER DEFAULT 1, \\\"f\\\" INTEGER DEFAULT 0);\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

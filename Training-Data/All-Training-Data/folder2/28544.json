@@ -1,0 +1,113 @@
+{
+  "nr_root_ast_changes": 8,
+  "faulty_ast": [
+    {
+      "label": "s",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "de.cismet.cismap.commons.raster.wms.simple.SimpleWMS",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "java.lang.Object()",
+          "type": "ConstructorCall",
+          "return_type": "de.cismet.cismap.commons.raster.wms.simple.SimpleWMS",
+          "index_of_exper": "expression_0",
+          "children": [
+            {
+              "label": "de.cismet.cismap.commons.raster.wms.simple.SimpleWmsGetMapUrl(java.lang.String)",
+              "type": "ConstructorCall",
+              "return_type": "de.cismet.cismap.commons.raster.wms.simple.SimpleWmsGetMapUrl",
+              "index_of_exper": "expression_1",
+              "children": [
+                {
+                  "label": "\"http://S102X284:8399/arcgis/services/WuNDa-DGK/MapServer/WMSServer?\u0026VERSION\u003d1.1.1\u0026REQUEST\u003dGetMap\u0026BBOX\u003d\u003ccismap:boundingBox\u003e\u0026WIDTH\u003d\u003ccismap:width\u003e\u0026HEIGHT\u003d\u003ccismap:height\u003e\u0026SRS\u003dEPSG:25832\u0026FORMAT\u003dimage/png\u0026TRANSPARENT\u003dTRUE\u0026BGCOLOR\u003d0xF0F0F0\u0026EXCEPTIONS\u003dapplication/vnd.ogc.se_xml\u0026LAYERS\u003d48\u0026STYLES\u003ddefault\"",
+                  "type": "Literal",
+                  "susp": [
+                    "susp_constChange_literal_by_varaccess"
+                  ],
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_2",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Constructor",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "FEATURES_CONSTRUCTOR": {
+        "java.lang.Object()": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "false",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "false",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        },
+        "de.cismet.cismap.commons.raster.wms.simple.SimpleWmsGetMapUrl(java.lang.String)": {
+          "CON5_Of_Class": "false",
+          "CON3_WRAPTTED_IN_OTHER_CALLS": "true",
+          "CON1_OVERLOADED_CONSTRUCTOR": "false",
+          "CON4_Return_Primitive": "false",
+          "CON6_Argument_Has_Primitive": "true",
+          "CON9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+          "CON10_METHOD_CALL_WITH_NULL_GUARD": "false",
+          "CON2_SIMILAR_CONSTRUCTOR": "false",
+          "CON12_METHOD_CALL_WITH_TRY_CATCH": "false"
+        }
+      },
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "Assignment",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "Assignment",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "Assignment",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"http://S102X284:8399/arcgis/services/WuNDa-DGK/MapServer/WMSServer?\u0026VERSION\u003d1.1.1\u0026REQUEST\u003dGetMap\u0026BBOX\u003d\u003ccismap:boundingBox\u003e\u0026WIDTH\u003d\u003ccismap:width\u003e\u0026HEIGHT\u003d\u003ccismap:height\u003e\u0026SRS\u003dEPSG:25832\u0026FORMAT\u003dimage/png\u0026TRANSPARENT\u003dTRUE\u0026BGCOLOR\u003d0xF0F0F0\u0026EXCEPTIONS\u003dapplication/vnd.ogc.se_xml\u0026LAYERS\u003d48\u0026STYLES\u003ddefault\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "true",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "LocalVariable",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "Invocation",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "LocalVariable",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

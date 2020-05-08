@@ -1,0 +1,83 @@
+{
+  "nr_root_ast_changes": 1,
+  "faulty_ast": [
+    {
+      "label": "_WMPJS_",
+      "type": "Field",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": [
+            {
+              "label": "final",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "public",
+              "type": "Modifier",
+              "children": []
+            },
+            {
+              "label": "static",
+              "type": "Modifier",
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "\"(function(){function h(a){var e\u003da.length,c;for(c\u003d0;c\u003ce;c++)this[c]\u003da[c];this.length\u003de}var b\u003dwindow,g\u003d[],f\u003dnull,k\u003d!0,l\u003dfunction(a){this.clientX\u003da.clientX;this.clientY\u003da.clientY;this.pageX\u003da.pageX;this.pageY\u003da.pageY;this.screenX\u003da.screenX;this.screenY\u003da.screenY;this.identifier\u003da.identifier?a.identifier:0;this.target\u003da.target?a.target:b.document.elementFromPoint(this.pageX,this.pageY)};h.prototype.item\u003dfunction(a){return this[a]};var d\u003d{currentTouch:null,knowsTouchAPI:null,mapPolyfillToTouch:{down:\\\"touchstart\\\", move:\\\"touchmove\\\",up:\\\"touchend\\\",cancel:\\\"touchcancel\\\"},checkTouchDevice:function(){try{return\\\"function\\\"\u003d\u003d\u003dtypeof document.createEvent(\\\"TouchEvent\\\").initTouchEvent\u0026\u0026\\\"function\\\"\u003d\u003d\u003dtypeof b.document.createTouchList}catch(a){return!1}},checkMouseDevice:function(){try{return document.createEvent(\\\"MouseEvent\\\"),!0}catch(a){return!1}},polyfill:function(a){var e\u003dd._getTouchesFromPolyfillData(a);f\u003de[0];for(action in a)if(\\\"move\\\"\u003d\u003daction)for(i in e)d._updateTouchMap(e[i]);else\\\"down\\\"\u003d\u003daction?d._updateTouchMap(f): (\\\"up\\\"\u003d\u003daction||\\\"cancel\\\"\u003d\u003daction)\u0026\u0026d._removeFromTouchMap(f);d._raiseTouch(f,d.mapPolyfillToTouch[action]);return!0},nativeTouchListener:function(a){a.isPolyfilled||(f\u003dd._getTouchFromEvent(a.changedTouches[0]),\\\"touchmove\\\"\u003d\u003da.type||\\\"touchstart\\\"\u003d\u003da.type?d._updateTouchMap(f):(\\\"touchend\\\"\u003d\u003da.type||\\\"touchcancel\\\"\u003d\u003da.type)\u0026\u0026d._removeFromTouchMap(f))},_raiseTouch:function(a,e){var c\u003da,j\u003da.target,d\u003dthis.getCleanedTouchMap(e),c\u003db.document.createEvent(\\\"Event\\\");c.initEvent(e,!0,!0,document.body,0);c.changedTouches\u003d new h([f]);c.touches\u003dnew h(d);c.targetTouches\u003dnew h(this.getTargetTouches(a.target));this._fillUpEventData(c);c.altKey\u003d!1;c.ctrlKey\u003d!1;c.metaKey\u003d!1;c.shiftKey\u003d!1;c.isPolyfilled\u003d!0;j||(j\u003db.document.elementFromPoint(a.clientX,a.clientY));j?j.dispatchEvent(c):document.dispatchEvent(c)},_getTouchesFromPolyfillData:function(a){var e\u003d[],c,b;for(action in a)if(\\\"move\\\"\u003d\u003daction)for(c\u003d0;c\u003ca[action].length;c++)for(touchId in a[action][c])b\u003d{identifier:parseInt(touchId),clientX:a[action][c][touchId][0],clientY:a[action][c][touchId][1]}, this._fillUpEventData(b),e.push(d._getTouchFromEvent(b));else{b\u003d{};if(\\\"down\\\"\u003d\u003daction)for(touchId in a[action])b.identifier\u003dparseInt(touchId),b.clientX\u003da[action][touchId][0],b.clientY\u003da[action][touchId][1];else if(\\\"up\\\"\u003d\u003daction||\\\"cancel\\\"\u003d\u003daction)b.identifier\u003dparseInt(a[action]),b.clientX\u003df.clientX,b.clientY\u003df.clientY;this._fillUpEventData(b);e.push(d._getTouchFromEvent(b))}return e},_fillUpEventData:function(a){a.target\u003dg[a.identifier]?g[a.identifier].target:b.document.elementFromPoint(a.clientX,a.clientY); a.screenX\u003da.clientX;a.screenY\u003da.clientY;a.pageX\u003da.clientX+b.pageXOffset;a.pageY\u003da.clientY+b.pageYOffset;return a},_getTouchFromEvent:function(a){return this.knowsTouchAPI?b.document.createTouch(b,a.target,a.identifier?a.identifier:0,a.pageX,a.pageY,a.screenX,a.screenY):new l(a)},getTouchList:function(a){return this.knowsTouchAPI?this._callCreateTouchList(cleanedArray):new h(a)},getCleanedTouchMap:function(){var a,b\u003d[];for(a\u003d0;a\u003cg.length;a++)g[a]\u0026\u0026b.push(g[a]);return b},_updateTouchMap:function(a){g[a.identifier]\u003d a},_removeFromTouchMap:function(a){delete g[a.identifier]},_callCreateTouchList:function(a){switch(a.length){case 1:return b.document.createTouchList(a[0]);case 2:return b.document.createTouchList(a[0],a[1]);case 3:return b.document.createTouchList(a[0],a[1],a[2]);case 4:return b.document.createTouchList(a[0],a[1],a[2],a[3]);case 5:return b.document.createTouchList(a[0],a[1],a[2],a[3],a[4]);default:return b.document.createTouchList()}},getTargetTouches:function(a){var b,c,d\u003d[];for(b\u003d0;b\u003cg.length;b++)(c\u003d g[b])\u0026\u0026c.target\u003d\u003da\u0026\u0026d.push(c);return d},registerNativeTouchListener:function(a){var e\u003da\u0026\u0026!k?\\\"removeEventListener\\\":!a\u0026\u0026k?\\\"addEventListener\\\":!1;e\u0026\u0026(b.document[e](\\\"touchstart\\\",d.nativeTouchListener,!0),b.document[e](\\\"touchend\\\",d.nativeTouchListener,!0),b.document[e](\\\"touchcancel\\\",d.nativeTouchListener,!0),b.document[e](\\\"touchmove\\\",d.nativeTouchListener,!0));k\u003da}};d.knowsTouchAPI\u003dd.checkTouchDevice();b.WMP\u003d{polyfill:d.polyfill,setPolyfillAllTouches:d.registerNativeTouchListener,Version:\\\"0.2.1\\\"}})();\"",
+          "type": "Literal",
+          "susp": [
+            "susp_constChange_literal"
+          ],
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "children": []
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Class",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"(function(){function h(a){var e\u003da.length,c;for(c\u003d0;c\u003ce;c++)this[c]\u003da[c];this.length\u003de}var b\u003dwindow,g\u003d[],f\u003dnull,k\u003d!0,l\u003dfunction(a){this.clientX\u003da.clientX;this.clientY\u003da.clientY;this.pageX\u003da.pageX;this.pageY\u003da.pageY;this.screenX\u003da.screenX;this.screenY\u003da.screenY;this.identifier\u003da.identifier?a.identifier:0;this.target\u003da.target?a.target:b.document.elementFromPoint(this.pageX,this.pageY)};h.prototype.item\u003dfunction(a){return this[a]};var d\u003d{currentTouch:null,knowsTouchAPI:null,mapPolyfillToTouch:{down:\\\"touchstart\\\", move:\\\"touchmove\\\",up:\\\"touchend\\\",cancel:\\\"touchcancel\\\"},checkTouchDevice:function(){try{return\\\"function\\\"\u003d\u003d\u003dtypeof document.createEvent(\\\"TouchEvent\\\").initTouchEvent\u0026\u0026\\\"function\\\"\u003d\u003d\u003dtypeof b.document.createTouchList}catch(a){return!1}},checkMouseDevice:function(){try{return document.createEvent(\\\"MouseEvent\\\"),!0}catch(a){return!1}},polyfill:function(a){var e\u003dd._getTouchesFromPolyfillData(a);f\u003de[0];for(action in a)if(\\\"move\\\"\u003d\u003daction)for(i in e)d._updateTouchMap(e[i]);else\\\"down\\\"\u003d\u003daction?d._updateTouchMap(f): (\\\"up\\\"\u003d\u003daction||\\\"cancel\\\"\u003d\u003daction)\u0026\u0026d._removeFromTouchMap(f);d._raiseTouch(f,d.mapPolyfillToTouch[action]);return!0},nativeTouchListener:function(a){a.isPolyfilled||(f\u003dd._getTouchFromEvent(a.changedTouches[0]),\\\"touchmove\\\"\u003d\u003da.type||\\\"touchstart\\\"\u003d\u003da.type?d._updateTouchMap(f):(\\\"touchend\\\"\u003d\u003da.type||\\\"touchcancel\\\"\u003d\u003da.type)\u0026\u0026d._removeFromTouchMap(f))},_raiseTouch:function(a,e){var c\u003da,j\u003da.target,d\u003dthis.getCleanedTouchMap(e),c\u003db.document.createEvent(\\\"Event\\\");c.initEvent(e,!0,!0,document.body,0);c.changedTouches\u003d new h([f]);c.touches\u003dnew h(d);c.targetTouches\u003dnew h(this.getTargetTouches(a.target));this._fillUpEventData(c);c.altKey\u003d!1;c.ctrlKey\u003d!1;c.metaKey\u003d!1;c.shiftKey\u003d!1;c.isPolyfilled\u003d!0;j||(j\u003db.document.elementFromPoint(a.clientX,a.clientY));j?j.dispatchEvent(c):document.dispatchEvent(c)},_getTouchesFromPolyfillData:function(a){var e\u003d[],c,b;for(action in a)if(\\\"move\\\"\u003d\u003daction)for(c\u003d0;c\u003ca[action].length;c++)for(touchId in a[action][c])b\u003d{identifier:parseInt(touchId),clientX:a[action][c][touchId][0],clientY:a[action][c][touchId][1]}, this._fillUpEventData(b),e.push(d._getTouchFromEvent(b));else{b\u003d{};if(\\\"down\\\"\u003d\u003daction)for(touchId in a[action])b.identifier\u003dparseInt(touchId),b.clientX\u003da[action][touchId][0],b.clientY\u003da[action][touchId][1];else if(\\\"up\\\"\u003d\u003daction||\\\"cancel\\\"\u003d\u003daction)b.identifier\u003dparseInt(a[action]),b.clientX\u003df.clientX,b.clientY\u003df.clientY;this._fillUpEventData(b);e.push(d._getTouchFromEvent(b))}return e},_fillUpEventData:function(a){a.target\u003dg[a.identifier]?g[a.identifier].target:b.document.elementFromPoint(a.clientX,a.clientY); a.screenX\u003da.clientX;a.screenY\u003da.clientY;a.pageX\u003da.clientX+b.pageXOffset;a.pageY\u003da.clientY+b.pageYOffset;return a},_getTouchFromEvent:function(a){return this.knowsTouchAPI?b.document.createTouch(b,a.target,a.identifier?a.identifier:0,a.pageX,a.pageY,a.screenX,a.screenY):new l(a)},getTouchList:function(a){return this.knowsTouchAPI?this._callCreateTouchList(cleanedArray):new h(a)},getCleanedTouchMap:function(){var a,b\u003d[];for(a\u003d0;a\u003cg.length;a++)g[a]\u0026\u0026b.push(g[a]);return b},_updateTouchMap:function(a){g[a.identifier]\u003d a},_removeFromTouchMap:function(a){delete g[a.identifier]},_callCreateTouchList:function(a){switch(a.length){case 1:return b.document.createTouchList(a[0]);case 2:return b.document.createTouchList(a[0],a[1]);case 3:return b.document.createTouchList(a[0],a[1],a[2]);case 4:return b.document.createTouchList(a[0],a[1],a[2],a[3]);case 5:return b.document.createTouchList(a[0],a[1],a[2],a[3],a[4]);default:return b.document.createTouchList()}},getTargetTouches:function(a){var b,c,d\u003d[];for(b\u003d0;b\u003cg.length;b++)(c\u003d g[b])\u0026\u0026c.target\u003d\u003da\u0026\u0026d.push(c);return d},registerNativeTouchListener:function(a){var e\u003da\u0026\u0026!k?\\\"removeEventListener\\\":!a\u0026\u0026k?\\\"addEventListener\\\":!1;e\u0026\u0026(b.document[e](\\\"touchstart\\\",d.nativeTouchListener,!0),b.document[e](\\\"touchend\\\",d.nativeTouchListener,!0),b.document[e](\\\"touchcancel\\\",d.nativeTouchListener,!0),b.document[e](\\\"touchmove\\\",d.nativeTouchListener,!0));k\u003da}};d.knowsTouchAPI\u003dd.checkTouchDevice();b.WMP\u003d{polyfill:d.polyfill,setPolyfillAllTouches:d.registerNativeTouchListener,Version:\\\"0.2.1\\\"}})();\"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "false"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "Field",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}

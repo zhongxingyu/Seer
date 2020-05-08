@@ -1,0 +1,138 @@
+{
+  "nr_root_ast_changes": 4,
+  "faulty_ast": [
+    {
+      "label": "query",
+      "type": "LocalVariable",
+      "children": [
+        {
+          "label": "java.lang.String",
+          "type": "VARIABLE_TYPE",
+          "children": []
+        },
+        {
+          "label": "",
+          "type": "Modifiers",
+          "children": []
+        },
+        {
+          "label": "PLUS",
+          "type": "BinaryOperator",
+          "return_type": "java.lang.String",
+          "index_of_exper": "expression_0",
+          "index_of_binary_operator": "BinOperator_0",
+          "children": [
+            {
+              "label": "\"select DISTINCT e2.entry_id, e2.entry_name, e2.db_name from mm_entry e1,mm_xref xr, mm_entry e2 where e1.db_name \u003d? and e1.entry_id like ? \"",
+              "type": "Literal",
+              "susp": [
+                "susp_constChange_literal"
+              ],
+              "return_type": "java.lang.String",
+              "index_of_exper": "expression_1",
+              "children": []
+            },
+            {
+              "label": "PLUS",
+              "type": "BinaryOperator",
+              "return_type": "java.lang.Object",
+              "index_of_exper": "expression_2",
+              "index_of_binary_operator": "BinOperator_1",
+              "children": [
+                {
+                  "label": "\"and ((e1.id \u003d xr.from_entry and xr.to_entry \u003d e2.id) or \"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_3",
+                  "children": []
+                },
+                {
+                  "label": "\"(e1.id \u003d xr.to_entry and xr.from_entry \u003d e2.id)) and e2.db_name in (?,?,?) and e2.entry_name is not null \"",
+                  "type": "Literal",
+                  "return_type": "java.lang.String",
+                  "index_of_exper": "expression_4",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context": {
+    "cntx": {
+      "S1_LOCAL_VAR_NOT_ASSIGNED": "false",
+      "S14_TYPE_OF_FAULTY_STATEMENT_PARENT": "Try",
+      "S9_METHOD_CALL_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NORMAL_GUARD": "false",
+      "S4_Field_NOT_USED": "false",
+      "S18_In_Synchronized_Method": "false",
+      "S8_PRIMITIVE_USED_IN_ASSIGNMENT": "false",
+      "S11_FAULTY_CLASS_EXCEPTION_TYPE": "false",
+      "FEATURES_BINARYOPERATOR": {
+        "binaryoperator_0": {
+          "O1_IS_BIT": "false",
+          "O1_IS_LOGICAL": "false",
+          "O3_CONTAIN_01": "false",
+          "O1_IS_OTHERS": "false",
+          "O2_LOGICAL_CONTAIN_NOT": "false",
+          "O4_COMPARE_IN_CONDITION": "false",
+          "O5_IS_MATH_ROOT": "true",
+          "O1_IS_MATH": "true",
+          "O3_CONTAIN_NULL": "false",
+          "O1_IS_SHIFT": "false",
+          "O1_IS_COMPARE": "false"
+        },
+        "binaryoperator_1": {
+          "O1_IS_BIT": "false",
+          "O1_IS_LOGICAL": "false",
+          "O3_CONTAIN_01": "false",
+          "O1_IS_OTHERS": "false",
+          "O2_LOGICAL_CONTAIN_NOT": "false",
+          "O4_COMPARE_IN_CONDITION": "false",
+          "O5_IS_MATH_ROOT": "false",
+          "O1_IS_MATH": "true",
+          "O3_CONTAIN_NULL": "false",
+          "O1_IS_SHIFT": "false",
+          "O1_IS_COMPARE": "false"
+        }
+      },
+      "S16_HAS_Invocations_Prone_Exception": "false",
+      "S7_OBJECT_USED_IN_ASSIGNMENT": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NULL_GUARD": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_2": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_1": "If",
+      "S6_METHOD_THROWS_EXCEPTION": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_BEFORE_3": "",
+      "S12_METHOD_CALL_WITH_TRY_CATCH": "false",
+      "CONSTANT": {
+        "\"and ((e1.id \u003d xr.from_entry and xr.to_entry \u003d e2.id) or \"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"select DISTINCT e2.entry_id, e2.entry_name, e2.db_name from mm_entry e1,mm_xref xr, mm_entry e2 where e1.db_name \u003d? and e1.entry_id like ? \"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        },
+        "\"(e1.id \u003d xr.to_entry and xr.from_entry \u003d e2.id)) and e2.db_name in (?,?,?) and e2.entry_name is not null \"": {
+          "C1_SAME_TYPE_CONSTANT": "true",
+          "C2_SAME_TYPE_CONSTANT_VAR": "false",
+          "C2_SAME_TYPE_VAR": "true"
+        }
+      },
+      "S10_METHOD_CALL_WITH_NULL_GUARD": "false",
+      "S5_SIMILAR_PRIMITIVE_TYPE_WITH_NORMAL_GUARD": "false",
+      "S2_SIMILAR_OBJECT_TYPE_WITH_NULL_GUARD": "false",
+      "S4_Field_NOT_ASSIGNED": "false",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_1": "If",
+      "S1_LOCAL_VAR_NOT_USED": "false",
+      "S3_TYPE_OF_FAULTY_STATEMENT": "LocalVariable",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_3": "",
+      "S13_TYPE_OF_FAULTY_STATEMENT_AFTER_2": "",
+      "S15_HAS_OBJECTIVE_METHOD_CALL": "false"
+    }
+  }
+}
