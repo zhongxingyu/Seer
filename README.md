@@ -23,8 +23,8 @@ Pre-requisites:
 
 ### Step 0: Cloning the repository and package
 ```
-git clone https://github.com/TransformPrediction/CodeTransform.git
-cd CodeTransform
+git https://github.com/zhongxingyu/Seer.git
+cd Seer
 ```
 Note as the repository contains a lot of data, it will take quite a while to clone the repository.
 
