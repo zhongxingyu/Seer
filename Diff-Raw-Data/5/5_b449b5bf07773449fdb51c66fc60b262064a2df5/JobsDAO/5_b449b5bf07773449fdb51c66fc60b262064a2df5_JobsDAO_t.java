@@ -1,0 +1,207 @@
+ /*
+  * Jobs Plugin for Bukkit
+  * Copyright (C) 2011  Zak Ford <zak.j.ford@gmail.com>
+  * 
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  * 
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  * 
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  * 
+  */
+ 
+ package me.zford.jobs.dao;
+ 
+ import java.sql.PreparedStatement;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ import me.zford.jobs.Jobs;
+ import me.zford.jobs.config.container.Job;
+ import me.zford.jobs.config.container.JobProgression;
+ import me.zford.jobs.config.container.JobsPlayer;
+ import me.zford.jobs.dao.container.JobsDAOData;
+ 
+ 
+ /**
+  * Data Access Object interface for the Jobs plugin
+  * 
+  * Interface that holds all methods that a DAO needs to have
+  * @author Alex
+  *
+  */
+ public abstract class JobsDAO {
+     
+     private JobsConnectionPool pool;
+     protected Jobs plugin;
+     private String prefix;
+     
+     public JobsDAO(Jobs plugin, String driver, String url, String username, String password, String prefix) {
+         this.plugin = plugin;
+         this.prefix = prefix;
+         try {
+             pool = new JobsConnectionPool(driver, url, username, password);
+         } catch (Exception e) {
+             e.printStackTrace();
+             System.err.println("[Jobs] - database connection error. Disabling jobs!");
+             this.plugin.disablePlugin();
+         }
+     }
+     
+     /**
+      * Gets the database prefix
+      * @return the prefix
+      */
+     protected String getPrefix() {
+         return prefix;
+     }
+     
+     /**
+      * Get all jobs the player is part of.
+      * @param player - the player being searched for
+      * @return list of all of the names of the jobs the players are part of.
+      */
+     public List<JobsDAOData> getAllJobs(JobsPlayer player) {
+         ArrayList<JobsDAOData> jobs = null;
+         try{
+             JobsConnection conn = getConnection();
+             String sql = "SELECT `experience`, `level`, `job` FROM `" + prefix + "jobs` WHERE `username` = ?;";
+             PreparedStatement prest = conn.prepareStatement(sql);
+             prest.setString(1, player.getName());
+             ResultSet res = prest.executeQuery();
+             while(res.next()){
+                 if(jobs == null){
+                     jobs = new ArrayList<JobsDAOData>();
+                 }
+                 jobs.add(new JobsDAOData(res.getString(3), res.getInt(1), res.getInt(2)));
+             }
+            prest.close();
+             conn.close();
+         }
+         catch(SQLException e){
+             e.printStackTrace();
+             plugin.disablePlugin();
+         }
+         return jobs;
+     }
+     
+     /**
+      * Join a job (create player-job entry from storage)
+      * @param player - player that wishes to join the job
+      * @param job - job that the player wishes to join
+      */
+     public void joinJob(JobsPlayer player, Job job) {
+         String sql = "INSERT INTO `" + prefix + "jobs` (`username`, `experience`, `level`, `job`) VALUES (?, ?, ?, ?);";
+         try {
+             JobsConnection conn = getConnection();
+             PreparedStatement prest = conn.prepareStatement(sql);
+             prest.setString(1, player.getName());
+             prest.setInt(2, 0);
+             prest.setInt(3, 1);
+             prest.setString(4, job.getName());
+             prest.executeUpdate();
+             prest.close();
+             conn.close();
+         } catch (SQLException e) {
+             e.printStackTrace();
+             plugin.disablePlugin();
+         }
+     }
+     
+     /**
+      * Quit a job (delete player-job entry from storage)
+      * @param player - player that wishes to quit the job
+      * @param job - job that the player wishes to quit
+      */
+     public void quitJob(JobsPlayer player, Job job) {
+         try{
+             JobsConnection conn = getConnection();
+             String sql1 = "DELETE FROM `" + prefix + "jobs` WHERE `username` = ? AND `job` = ?;";
+             PreparedStatement prest = conn.prepareStatement(sql1);
+             prest.setString(1, player.getName());
+             prest.setString(2, job.getName());
+             prest.executeUpdate();
+             prest.close();
+             conn.close();
+         }
+         catch(SQLException e){
+             e.printStackTrace();
+             plugin.disablePlugin();
+         }       
+     }
+     
+     /**
+      * Save player-job information
+      * @param jobInfo - the information getting saved
+      */
+     public void save(JobsPlayer player) {
+         String sql = "UPDATE `" + prefix + "jobs` SET `experience` = ?, `level` = ? WHERE `username` = ? AND `job` = ?;";
+         try {
+             JobsConnection conn = getConnection();
+             PreparedStatement prest = conn.prepareStatement(sql);
+             for(JobProgression temp: player.getJobsProgression()){
+                 prest.setInt(1, (int)temp.getExperience());
+                 prest.setInt(2, temp.getLevel());
+                 prest.setString(3, player.getName());
+                 prest.setString(4, temp.getJob().getName());
+                 prest.executeUpdate();
+             }
+            prest.close();
+             conn.close();
+         } catch (SQLException e) {
+             e.printStackTrace();
+             plugin.disablePlugin();
+         }
+     }
+     
+     /**
+      * Get the number of players that have a particular job
+      * @param job - the job
+      * @return  the number of players that have a particular job
+      */
+     public Integer getSlotsTaken(Job job) {
+         Integer slot = 0;
+         try{
+             JobsConnection conn = getConnection();
+             String sql = "SELECT COUNT(*) FROM `" + prefix + "jobs` WHERE `job` = ?;";
+             PreparedStatement prest = conn.prepareStatement(sql);
+             prest.setString(1, job.getName());
+             ResultSet res = prest.executeQuery();
+             if(res.next()){
+                 slot = res.getInt(1);
+             }
+            prest.close();
+             conn.close();
+         }
+         catch(SQLException e){
+             e.printStackTrace();
+             plugin.disablePlugin();
+         }
+         return slot;
+     }
+     
+     /**
+      * Get a database connection
+      * @return  JobsConnection object
+      * @throws SQLException 
+      */
+     protected JobsConnection getConnection() throws SQLException {
+         return pool.getConnection();
+     }
+     
+     /**
+      * Close all active database handles
+      */
+     public void closeConnections() {
+         pool.closeConnections();
+     }
+ }

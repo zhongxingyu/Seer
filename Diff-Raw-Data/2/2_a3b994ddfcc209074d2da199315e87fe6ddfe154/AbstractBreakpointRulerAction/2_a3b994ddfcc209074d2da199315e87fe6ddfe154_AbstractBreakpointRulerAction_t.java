@@ -1,0 +1,140 @@
+ package org.eclipse.jdt.internal.debug.ui.actions;
+ 
+ /**********************************************************************
+ Copyright (c) 2000, 2002 IBM Corp. and others.
+ All rights reserved. This program and the accompanying materials
+ are made available under the terms of the Common Public License v0.5
+ which accompanies this distribution, and is available at
+ http://www.eclipse.org/legal/cpl-v05.html
+ 
+ Contributors:
+     IBM Corporation - Initial implementation
+ **********************************************************************/
+ 
+ import org.eclipse.core.resources.IFile;
+ import org.eclipse.core.resources.IResource;
+ import org.eclipse.core.runtime.CoreException;
+ import org.eclipse.debug.core.DebugPlugin;
+ import org.eclipse.debug.core.IBreakpointManager;
+ import org.eclipse.debug.core.model.IBreakpoint;
+ import org.eclipse.jdt.core.IClassFile;
+ import org.eclipse.jdt.core.IType;
+ import org.eclipse.jdt.debug.core.IJavaLineBreakpoint;
+ import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
+ import org.eclipse.jface.action.Action;
+ import org.eclipse.jface.text.BadLocationException;
+ import org.eclipse.jface.text.IDocument;
+ import org.eclipse.jface.text.source.IVerticalRulerInfo;
+ import org.eclipse.ui.IEditorInput;
+ import org.eclipse.ui.texteditor.IDocumentProvider;
+ import org.eclipse.ui.texteditor.ITextEditor;
+ import org.eclipse.ui.texteditor.IUpdate;
+ 
+ public abstract class AbstractBreakpointRulerAction extends Action implements IUpdate {
+ 
+ 	private IVerticalRulerInfo fInfo;
+ 
+ 	private ITextEditor fTextEditor;
+ 
+ 	private IBreakpoint fBreakpoint;
+ 
+ 	protected IBreakpoint determineBreakpoint() {
+ 		IBreakpointManager breakpointManager= DebugPlugin.getDefault().getBreakpointManager();
+ 		IBreakpoint[] breakpoints= breakpointManager.getBreakpoints();
+ 		for (int i= 0; i < breakpoints.length; i++) {
+ 			IBreakpoint breakpoint= breakpoints[i];
+ 			if (breakpoint instanceof IJavaLineBreakpoint) {
+ 				IJavaLineBreakpoint jBreakpoint= (IJavaLineBreakpoint)breakpoint;
+ 				boolean match= false;
+ 				try {
+ 					match= breakpointAtRulerLine(jBreakpoint);
+ 				} catch (CoreException ce) {
+ 					JDIDebugUIPlugin.log(ce);
+ 					continue;
+ 				}
+ 				if (match) {
+ 					IResource breakpointResource= jBreakpoint.getMarker().getResource();
+ 					IResource editorResource= getResource();
+ 					if (breakpointResource.equals(editorResource)) {
+ 						return breakpoint;
+ 					} else if (editorResource == null) {
+ 						IClassFile classFile= (IClassFile)getTextEditor().getEditorInput().getAdapter(IClassFile.class);
+ 						if (classFile != null) {
+ 							try {
+ 								IType type = classFile.getType();
+ 								if (type.getFullyQualifiedName().equals(jBreakpoint.getTypeName())) {
+ 									return breakpoint;
+ 								}
+ 							} catch (CoreException ce) {
+ 								JDIDebugUIPlugin.log(ce);
+ 								continue;
+ 							}
+ 			
+ 						} 
+ 					}
+ 				}
+ 			}
+ 		}
+ 		return null;
+ 	
+ 	}
+ 
+ 	protected IVerticalRulerInfo getInfo() {
+ 		return fInfo;
+ 	}
+ 
+ 	protected void setInfo(IVerticalRulerInfo info) {
+ 		fInfo = info;
+ 	}
+ 
+ 	protected ITextEditor getTextEditor() {
+ 		return fTextEditor;
+ 	}
+ 
+ 	protected void setTextEditor(ITextEditor textEditor) {
+ 		fTextEditor = textEditor;
+ 	}
+ 
+ 	/** 
+ 	 * Returns the resource for which to create the marker, 
+ 	 * or <code>null</code> if there is no applicable resource.
+ 	 *
+ 	 * @return the resource for which to create the marker or <code>null</code>
+ 	 */
+ 	protected IResource getResource() {
+ 		IEditorInput input= fTextEditor.getEditorInput();
+ 		IResource resource= (IResource) input.getAdapter(IFile.class);
+ 		if (resource == null) {
+ 			resource= (IResource) input.getAdapter(IResource.class);
+ 		}	
+ 		return resource;
+ 	}
+ 
+ 	protected boolean breakpointAtRulerLine(IJavaLineBreakpoint jBreakpoint) throws CoreException {
+ 		int lineNumber= jBreakpoint.getLineNumber();
+ 		if (lineNumber == -1) {
+ 			int charStart= jBreakpoint.getCharStart();
+ 			if (charStart != -1) {
+ 				IDocumentProvider provider= fTextEditor.getDocumentProvider();
+ 				IDocument doc=  provider.getDocument(fTextEditor.getEditorInput());
+ 				try {
+ 					//must add one
+ 					lineNumber= doc.getLineOfOffset(jBreakpoint.getCharStart()) + 1;
+ 				} catch(BadLocationException e) {
+					return false;
+ 				}
+ 			}
+ 		}
+ 		//document line numbers 0 based; breakpoints 1 based
+ 		int line= getInfo().getLineOfLastMouseButtonActivity();
+ 		return (line + 1) == lineNumber;
+ 	}
+ 		
+ 	protected IBreakpoint getBreakpoint() {
+ 		return fBreakpoint;
+ 	}
+ 
+ 	protected void setBreakpoint(IBreakpoint breakpoint) {
+ 		fBreakpoint = breakpoint;
+ 	}
+ }

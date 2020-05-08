@@ -1,0 +1,229 @@
+ /*
+ DialerActivity.java
+ Copyright (C) 2010  Belledonne Communications, Grenoble, France
+ 
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+ package org.linphone;
+ 
+ 
+ 
+ import java.util.List;
+ 
+ import org.linphone.core.CallDirection;
+ import org.linphone.core.LinphoneAddress;
+ import org.linphone.core.LinphoneCallLog;
+ import org.linphone.core.LinphoneCore;
+ import org.linphone.core.LinphoneProxyConfig;
+ import org.linphone.core.Log;
+ 
+ import android.app.ListActivity;
+ import android.content.Context;
+ import android.database.Cursor;
+ import android.net.Uri;
+ import android.os.Bundle;
+ import android.provider.ContactsContract;
+ import android.view.LayoutInflater;
+ import android.view.Menu;
+ import android.view.MenuInflater;
+ import android.view.MenuItem;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.widget.BaseAdapter;
+ import android.widget.ImageView;
+ import android.widget.ListView;
+ import android.widget.TextView;
+ 
+ public class HistoryActivity extends ListActivity {
+ 	LayoutInflater mInflater;   
+ 	Cursor mContacts;
+ 	@Override
+ 	    public void onCreate(Bundle savedInstanceState) {
+ 	        super.onCreate(savedInstanceState);
+ 	        mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+ 	        mContacts = getContacts();
+ 	    }
+ 	
+ 	  
+ 	  @Override
+ 	protected void onListItemClick(ListView l, View v, int position, long id) {
+ 		super.onListItemClick(l, v, position, id);
+ 		TextView lFirstLineView = (TextView) v.findViewById(R.id.history_cell_first_line);
+ 		TextView lSecondLineView = (TextView) v.findViewById(R.id.history_cell_second_line);
+ 		ContactPicked parent = (ContactPicked) getParent();
+ 		if (lSecondLineView.getVisibility() == View.GONE) {
+ 			// no display name
+ 			parent.setAddressAndGoToDialer(lFirstLineView.getText().toString(), null, null);
+ 		} else {
+ 			parent.setAddressAndGoToDialer(
+ 					lSecondLineView.getText().toString(),
+ 					lFirstLineView.getText().toString(),
+ 					null);
+ 		}
+ 	}
+ 
+ 
+ 	@Override
+ 	protected void onResume() {
+ 		super.onResume();
+ 		 setListAdapter(new CallHistoryAdapter(this));
+ 	}
+ 
+ 	@Override
+ 	public boolean onCreateOptionsMenu(Menu menu) {
+ 		// Inflate the currently selected menu XML resource.
+ 		MenuInflater inflater = getMenuInflater();
+ 		inflater.inflate(R.menu.history_activity_menu, menu);
+ 		return true;
+ 	}
+ 
+ 	@Override
+ 	public boolean onOptionsItemSelected(MenuItem item) {
+ 		switch (item.getItemId()) {
+ 		case R.id.menu_clear_history:
+ 			LinphoneManager.getLc().clearCallLogs();
+ 			setListAdapter(new CallHistoryAdapter(this));
+ 			
+ 			break;
+ 		default:
+ 			Log.e("Unknown menu item [",item,"]");
+ 			break;
+ 		}
+ 
+ 		return false;
+ 	}
+ 	
+ 	/**
+      * Obtains the contact list for the currently selected account.
+      *
+      * @return A cursor for for accessing the contact list.
+      */
+     private Cursor getContacts()
+     {
+         // Run query
+         Uri uri = ContactsContract.Data.CONTENT_URI;
+         String[] projection = new String[] {
+                 ContactsContract.Data._ID,
+                 ContactsContract.Data.DISPLAY_NAME,
+                 ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS,
+                 ContactsContract.CommonDataKinds.Phone.NUMBER
+         };
+         String selection = 
+         	    ContactsContract.Data.MIMETYPE+" ='" 
+         	    +ContactsContract.CommonDataKinds.SipAddress.CONTENT_ITEM_TYPE+"'";
+         String[] selectionArgs = null;
+         String sortOrder = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
+ 
+         return managedQuery(uri, projection, selection, selectionArgs, sortOrder);
+     }
+     
+     private String getContactNameIfExist(String sipUri)
+     {
+     	String contactName = null;
+     	if (mContacts != null && mContacts.moveToFirst())
+     	{
+     		int displayNameColumnIndex = mContacts.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+     		int sipAdressColumnIndex = mContacts.getColumnIndex(ContactsContract.CommonDataKinds.SipAddress.SIP_ADDRESS);
+     		int phoneNumberColumnIndex = mContacts.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+     		do
+     		{
+     			String sipAdress = mContacts.getString(sipAdressColumnIndex);
+     			String phoneNumber = mContacts.getString(phoneNumberColumnIndex);
+     			if (sipUri.toLowerCase().contains(sipAdress.toLowerCase()) || sipUri.toLowerCase().contains(phoneNumber.toLowerCase()))
+     				contactName = mContacts.getString(displayNameColumnIndex);
+     		}
+     		while (contactName == null && mContacts.moveToNext());
+     	}    	
+     	return contactName;
+     }
+ 	
+ 	class CallHistoryAdapter extends  BaseAdapter {
+ 		final List<LinphoneCallLog> mLogs; 
+ 
+ 		@SuppressWarnings("unchecked")
+ 		CallHistoryAdapter(Context aContext) {
+ 			mLogs = LinphoneManager.getLc().getCallLogs();
+ 		}
+ 		public int getCount() {
+ 			return mLogs.size();
+ 		}
+ 
+ 		public Object getItem(int position) {
+ 			return position;
+ 		}
+ 
+ 		public long getItemId(int position) {
+ 			
+ 			return position;
+ 		}
+ 
+ 		public View getView(int position, View convertView, ViewGroup parent) {
+ 			View lView=null;
+ 			if (convertView !=null) {
+ 				lView = convertView;
+ 			} else {
+ 				lView = mInflater.inflate(R.layout.history_cell, parent,false);
+ 				
+ 			}
+ 			LinphoneCallLog lLog = mLogs.get(position);
+ 			LinphoneAddress lAddress;
+ 			TextView lFirstLineView = (TextView) lView.findViewById(R.id.history_cell_first_line);
+ 			TextView lSecondLineView = (TextView) lView.findViewById(R.id.history_cell_second_line);
+ 			ImageView lDirectionImageIn = (ImageView) lView.findViewById(R.id.history_cell_icon_in);
+ 			ImageView lDirectionImageOut = (ImageView) lView.findViewById(R.id.history_cell_icon_out);
+ 			ImageView lContactPicture = (ImageView) lView.findViewById(R.id.history_cell_icon_contact);
+ 			
+ 			if (lLog.getDirection() == CallDirection.Incoming) {
+ 				lAddress = lLog.getFrom();
+ 				lDirectionImageIn.setVisibility(View.VISIBLE);
+ 				lDirectionImageOut.setVisibility(View.GONE);
+ 				
+ 			} else {
+ 				lAddress = lLog.getTo();
+ 				lDirectionImageIn.setVisibility(View.GONE);
+ 				lDirectionImageOut.setVisibility(View.VISIBLE);
+ 			}
+ 			
+ 			Uri uri = LinphoneUtils.findUriPictureOfContactAndSetDisplayName(lAddress, getContentResolver());
+ 			LinphoneUtils.setImagePictureFromUri(lView.getContext(), lContactPicture, uri, R.drawable.unknown_person);
+ 			
+ 			LinphoneCore lc = LinphoneManager.getLc();
+ 			LinphoneProxyConfig lProxyConfig = lc.getDefaultProxyConfig();
+ 			String lDetailedName=null;
+ 			String lDisplayName = lAddress.getDisplayName(); 
+ 			if (lDisplayName == null)
+ 				lDisplayName = getContactNameIfExist(lAddress.asStringUriOnly());
+ 			
+ 			if (lProxyConfig != null && lProxyConfig.getDomain().equals(lAddress.getDomain())) {
+ 				lDetailedName = lAddress.getUserName();
+ 			} else {
+ 				lDetailedName = lAddress.asStringUriOnly();
+ 			}
+ 			
+ 			if (lDisplayName == null) {
+ 				lFirstLineView.setText(lDetailedName);
+ 				lSecondLineView.setVisibility(View.GONE);
+ 			} else {
+ 				lFirstLineView.setText(lDisplayName);
+ 				lSecondLineView.setText(lDetailedName);
+ 				lSecondLineView.setVisibility(View.VISIBLE);
+ 			}
+ 			
+ 			return lView;
+ 			
+ 		}
+ 		  
+ 	  }
+ }

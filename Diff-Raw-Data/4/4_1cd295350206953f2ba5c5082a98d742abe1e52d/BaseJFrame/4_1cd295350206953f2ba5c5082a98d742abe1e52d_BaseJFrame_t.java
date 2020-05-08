@@ -1,0 +1,963 @@
+ /*
+  * Fresnel Editor
+  */
+ 
+ package cz.muni.fi.fresneleditor.common;
+ 
+ import cz.muni.fi.fresneleditor.common.config.RepositoryConfiguration;
+ import java.awt.Component;
+ import java.awt.event.KeyAdapter;
+ import java.awt.event.KeyEvent;
+ import java.awt.event.MouseAdapter;
+ import java.awt.event.MouseEvent;
+ import java.awt.event.WindowAdapter;
+ import java.awt.event.WindowEvent;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.Map;
+ import java.util.Map.Entry;
+ import java.util.Set;
+ 
+ import javax.swing.JFileChooser;
+ import javax.swing.JMenuItem;
+ import javax.swing.JPopupMenu;
+ import javax.swing.JScrollPane;
+ import javax.swing.JTabbedPane;
+ import javax.swing.filechooser.FileFilter;
+ import javax.swing.filechooser.FileNameExtensionFilter;
+ import javax.swing.tree.TreeNode;
+ 
+ import org.jdesktop.application.Application;
+ import org.jdesktop.application.ResourceMap;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import cz.muni.fi.fresneleditor.common.config.projectconf.CreateNewProjectDialog;
+ import cz.muni.fi.fresneleditor.common.events.IOpenProjectConfigurationChangedListener;
+ import cz.muni.fi.fresneleditor.common.events.OpenProjectConfigurationChangedEvent;
+ import cz.muni.fi.fresneleditor.common.guisupport.IContextMenu;
+ import cz.muni.fi.fresneleditor.common.guisupport.MessageDialog;
+ import cz.muni.fi.fresneleditor.common.guisupport.dialogs.SampleProjectsDialog;
+ import cz.muni.fi.fresneleditor.common.reposconf.FresnelEditorConfigurationDialog;
+ import cz.muni.fi.fresneleditor.common.utils.GuiUtils;
+ import cz.muni.fi.fresneleditor.model.BaseRepositoryDao.RepositoryDomain;
+ import cz.muni.fi.fresneleditor.model.BaseRepositoryDao.RepositoryType;
+ import java.util.List;
+ import javax.swing.ButtonGroup;
+ import javax.swing.DefaultButtonModel;
+ import javax.swing.JCheckBoxMenuItem;
+ import javax.swing.JRadioButtonMenuItem;
+ 
+ /**
+  * Base JFrame for Fresnel Editor application.
+  * 
+  * @author Igor Zemsky (zemsky@mail.muni.cz), Miroslav Warchil
+  *         (warmir@mail.muni.cz)
+  * @version 15. 3. 2009
+  */
+ public class BaseJFrame extends javax.swing.JFrame implements
+ 		IOpenProjectConfigurationChangedListener {
+ 
+ 	/**
+ 	 * 
+ 	 */
+ 	private static final long serialVersionUID = 1L;
+ 
+ 	private static final Logger LOG = LoggerFactory.getLogger(BaseJFrame.class);
+ 
+ 	private FresnelEditorConfigurationDialog configDialog;
+ 
+ 	private static int SHOWN_DIVIDER_SIZE = 5;
+ 	private static int HIDDEN_DIVIDER_SIZE = 5;
+ 
+ 	/**
+ 	 * Map that contains links to all opened tabs in the {@link #mainTabbedPane}
+ 	 * .
+ 	 * 
+ 	 * <br>
+ 	 * Keys are the tab IDs.
+ 	 */
+ 	private Map<TreeNode, Component> openedTabs = new HashMap<TreeNode, Component>();
+ 
+ 	/** Creates new form BaseJFrame */
+ 	public BaseJFrame() {
+ 		initComponents();
+ 		mainTabbedPane.addKeyListener(new CloseTabKeyListener(mainTabbedPane));
+ 		mainTabbedPane.addMouseListener(new CloseTabListener());
+ 
+ 		// register application events listeners
+ 		AppEventsManager.getInstance().addFresnelAppEventListener(
+ 				IOpenProjectConfigurationChangedListener.class, this);
+ 
+ 		// exit on close
+ 		addWindowListener(new WindowAdapter() {
+ 			@Override
+ 			public void windowClosing(WindowEvent we) {
+ 				FresnelApplication.getApp().exit();
+ 			}
+ 		});
+ 
+ 		updateStatusBar();
+ 		updateFileMenu();
+                 
+                 initDataRepositoryMenu();
+ 	}
+         
+         ButtonGroup group = null;
+         
+         private void initDataRepositoryMenu(){
+             group = new ButtonGroup();
+             dataRepositoryMenu.removeAll();
+            
+             List<String> repositories = ContextHolder.getInstance().getDataRepositoryNames();           
+             for(String repo : repositories){                          
+                 JMenuItem item = new JRadioButtonMenuItem();
+                 item.setText(repo);
+                 item.setActionCommand(repo);
+                 item.addActionListener(new java.awt.event.ActionListener() {
+                     @Override
+                     public void actionPerformed(java.awt.event.ActionEvent evt) {
+                         //group.getSelection().getActionCommand()
+                         ContextHolder.getInstance().setSelectedDataRepositoryName(evt.getActionCommand());
+                     }
+                 });
+                 group.add(item);
+                 group.setSelected(item.getModel(), true);
+                 dataRepositoryMenu.add(item);
+             }
+             
+            if(group.getSelection() != null){
+                ContextHolder.getInstance().setSelectedDataRepositoryName(group.getSelection().getActionCommand());
+            }
+         }
+ 
+ 	/**
+ 	 * This method is called from within the constructor to initialize the form.
+ 	 * WARNING: Do NOT modify this code. The content of this method is always
+ 	 * regenerated by the Form Editor.
+ 	 */
+ 	@SuppressWarnings("unchecked")
+ 	// <editor-fold defaultstate="collapsed"
+ 	// <editor-fold defaultstate="collapsed"
+     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+     private void initComponents() {
+ 
+         statusPanel = new javax.swing.JPanel();
+         statusLabel = new javax.swing.JLabel();
+         statusPanelSeparator = new javax.swing.JSeparator();
+         dataRepositoryLabel = new javax.swing.JLabel();
+         fresnelRepositoryLabel = new javax.swing.JLabel();
+         mainSplitPane = new javax.swing.JSplitPane();
+         menuScrollPane = new javax.swing.JScrollPane();
+         projectTree = new cz.muni.fi.fresneleditor.common.guisupport.projecttree.ProjectTree();
+         rightSplitPane = new javax.swing.JSplitPane();
+         mainTabbedPane = new javax.swing.JTabbedPane();
+         previewSplitPane = new javax.swing.JSplitPane();
+         previewToolPanel = new javax.swing.JPanel();
+         hideButton = new javax.swing.JButton();
+         previewPanel = new javax.swing.JPanel();
+         mainMenuBar = new javax.swing.JMenuBar();
+         fileMenu = new javax.swing.JMenu();
+         newProjectMItem = new javax.swing.JMenuItem();
+         openProjectMItem = new javax.swing.JMenuItem();
+         saveProjectMItem = new javax.swing.JMenuItem();
+         saveAsProjectMitem = new javax.swing.JMenuItem();
+         closeCurrentProjectMItem = new javax.swing.JMenuItem();
+         fileMenuExitSeparator = new javax.swing.JSeparator();
+         exitMItem = new javax.swing.JMenuItem();
+         editMenu = new javax.swing.JMenu();
+         configurationMItem = new javax.swing.JMenuItem();
+         transformationMenu = new javax.swing.JMenu();
+         xhtmlItem = new javax.swing.JRadioButtonMenuItem();
+         rdfaItem = new javax.swing.JRadioButtonMenuItem();
+         microFormatItem = new javax.swing.JRadioButtonMenuItem();
+         html5Item = new javax.swing.JRadioButtonMenuItem();
+         svgItem = new javax.swing.JRadioButtonMenuItem();
+         dataRepositoryMenu = new javax.swing.JMenu();
+         helpMenu = new javax.swing.JMenu();
+         sampleProjectsMItem = new javax.swing.JMenuItem();
+         aboutSeparator = new javax.swing.JSeparator();
+         aboutMItem = new javax.swing.JMenuItem();
+ 
+         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+         setTitle("Fresnel Editor v" + System.getProperty(FresnelEditorConstants.PROP_APP_VERSION) + " (" + System.getProperty(FresnelEditorConstants.PROP_APP_RELEASE_DATE)+ ")");
+         setName("Form"); // NOI18N
+ 
+         statusPanel.setMaximumSize(new java.awt.Dimension(32000, 33));
+         statusPanel.setName("statusPanel"); // NOI18N
+ 
+         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance().getContext().getResourceMap(BaseJFrame.class);
+         statusLabel.setText(resourceMap.getString("statusLabel.text")); // NOI18N
+         statusLabel.setName("statusLabel"); // NOI18N
+ 
+         statusPanelSeparator.setName("statusPanelSeparator"); // NOI18N
+ 
+         dataRepositoryLabel.setText(resourceMap.getString("dataRepositoryLabel.text")); // NOI18N
+         dataRepositoryLabel.setName("dataRepositoryLabel"); // NOI18N
+ 
+         fresnelRepositoryLabel.setText(resourceMap.getString("fresnelRepositoryLabel.text")); // NOI18N
+         fresnelRepositoryLabel.setName("fresnelRepositoryLabel"); // NOI18N
+ 
+         javax.swing.GroupLayout statusPanelLayout = new javax.swing.GroupLayout(statusPanel);
+         statusPanel.setLayout(statusPanelLayout);
+         statusPanelLayout.setHorizontalGroup(
+             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addComponent(statusPanelSeparator, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 994, Short.MAX_VALUE)
+             .addGroup(statusPanelLayout.createSequentialGroup()
+                 .addContainerGap()
+                 .addComponent(statusLabel)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 356, Short.MAX_VALUE)
+                 .addComponent(dataRepositoryLabel)
+                 .addGap(18, 18, 18)
+                 .addComponent(fresnelRepositoryLabel)
+                 .addContainerGap())
+         );
+         statusPanelLayout.setVerticalGroup(
+             statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(statusPanelLayout.createSequentialGroup()
+                 .addComponent(statusPanelSeparator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addGroup(statusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(statusLabel)
+                     .addComponent(fresnelRepositoryLabel)
+                     .addComponent(dataRepositoryLabel))
+                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+         );
+ 
+         mainSplitPane.setName("mainSplitPane"); // NOI18N
+ 
+         menuScrollPane.setName("menuScrollPane"); // NOI18N
+ 
+         projectTree.setName("projectTree"); // NOI18N
+         menuScrollPane.setViewportView(projectTree);
+ 
+         mainSplitPane.setLeftComponent(menuScrollPane);
+ 
+         rightSplitPane.setDividerLocation(mainSplitPane.getHeight());
+         rightSplitPane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+         rightSplitPane.setName("rightSplitPane"); // NOI18N
+ 
+         mainTabbedPane.setName("mainTabbedPane"); // NOI18N
+         rightSplitPane.setTopComponent(mainTabbedPane);
+ 
+         previewSplitPane.setBorder(null);
+         previewSplitPane.setDividerLocation(24);
+         previewSplitPane.setDividerSize(1);
+         previewSplitPane.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+         previewSplitPane.setDoubleBuffered(true);
+         previewSplitPane.setName("previewSplitPane"); // NOI18N
+ 
+         previewToolPanel.setMinimumSize(new java.awt.Dimension(100, 24));
+         previewToolPanel.setName("previewToolPanel"); // NOI18N
+ 
+         hideButton.setText(resourceMap.getString("hideButton.text")); // NOI18N
+         hideButton.setDoubleBuffered(true);
+         hideButton.setName("hideButton"); // NOI18N
+         hideButton.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 hideButtonActionPerformed(evt);
+             }
+         });
+ 
+         javax.swing.GroupLayout previewToolPanelLayout = new javax.swing.GroupLayout(previewToolPanel);
+         previewToolPanel.setLayout(previewToolPanelLayout);
+         previewToolPanelLayout.setHorizontalGroup(
+             previewToolPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, previewToolPanelLayout.createSequentialGroup()
+                 .addContainerGap(839, Short.MAX_VALUE)
+                 .addComponent(hideButton))
+         );
+         previewToolPanelLayout.setVerticalGroup(
+             previewToolPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(previewToolPanelLayout.createSequentialGroup()
+                 .addComponent(hideButton)
+                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+         );
+ 
+         previewSplitPane.setTopComponent(previewToolPanel);
+ 
+         previewPanel.setName("previewPanel"); // NOI18N
+ 
+         javax.swing.GroupLayout previewPanelLayout = new javax.swing.GroupLayout(previewPanel);
+         previewPanel.setLayout(previewPanelLayout);
+         previewPanelLayout.setHorizontalGroup(
+             previewPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGap(0, 914, Short.MAX_VALUE)
+         );
+         previewPanelLayout.setVerticalGroup(
+             previewPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGap(0, 307, Short.MAX_VALUE)
+         );
+ 
+         previewSplitPane.setRightComponent(previewPanel);
+ 
+         rightSplitPane.setRightComponent(previewSplitPane);
+ 
+         mainSplitPane.setRightComponent(rightSplitPane);
+ 
+         mainMenuBar.setName("mainMenuBar"); // NOI18N
+ 
+         fileMenu.setText(resourceMap.getString("fileMenu.text")); // NOI18N
+         fileMenu.setName("fileMenu"); // NOI18N
+ 
+         newProjectMItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
+         newProjectMItem.setText(resourceMap.getString("newProjectMItem.text")); // NOI18N
+         newProjectMItem.setName("newProjectMItem"); // NOI18N
+         newProjectMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 newProjectMItemActionPerformed(evt);
+             }
+         });
+         fileMenu.add(newProjectMItem);
+ 
+         openProjectMItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+         openProjectMItem.setText(resourceMap.getString("openProjectMItem.text")); // NOI18N
+         openProjectMItem.setName("openProjectMItem"); // NOI18N
+         openProjectMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 openProjectMItemActionPerformed(evt);
+             }
+         });
+         fileMenu.add(openProjectMItem);
+ 
+         saveProjectMItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
+         saveProjectMItem.setText(resourceMap.getString("saveProjectMItem.text")); // NOI18N
+         saveProjectMItem.setName("saveProjectMItem"); // NOI18N
+         saveProjectMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 saveProjectMItemActionPerformed(evt);
+             }
+         });
+         fileMenu.add(saveProjectMItem);
+ 
+         saveAsProjectMitem.setText(resourceMap.getString("saveAsProjectMitem.text")); // NOI18N
+         saveAsProjectMitem.setName("saveAsProjectMitem"); // NOI18N
+         saveAsProjectMitem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 saveAsProjectMitemActionPerformed(evt);
+             }
+         });
+         fileMenu.add(saveAsProjectMitem);
+ 
+         closeCurrentProjectMItem.setText(resourceMap.getString("closeCurrentProjectMItem.text")); // NOI18N
+         closeCurrentProjectMItem.setName("closeCurrentProjectMItem"); // NOI18N
+         closeCurrentProjectMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 closeCurrentProjectMItemActionPerformed(evt);
+             }
+         });
+         fileMenu.add(closeCurrentProjectMItem);
+ 
+         fileMenuExitSeparator.setName("fileMenuExitSeparator"); // NOI18N
+         fileMenu.add(fileMenuExitSeparator);
+ 
+         exitMItem.setText(resourceMap.getString("exitMItem.text")); // NOI18N
+         exitMItem.setName("exitMItem"); // NOI18N
+         exitMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 exitMItemActionPerformed(evt);
+             }
+         });
+         fileMenu.add(exitMItem);
+ 
+         mainMenuBar.add(fileMenu);
+ 
+         editMenu.setText(resourceMap.getString("editMenu.text")); // NOI18N
+         editMenu.setName("editMenu"); // NOI18N
+ 
+         configurationMItem.setText(resourceMap.getString("configurationMItem.text")); // NOI18N
+         configurationMItem.setName("configurationMItem"); // NOI18N
+         configurationMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 configurationMItemActionPerformed(evt);
+             }
+         });
+         editMenu.add(configurationMItem);
+ 
+         mainMenuBar.add(editMenu);
+ 
+         transformationMenu.setText(resourceMap.getString("transformationMenu.text")); // NOI18N
+         transformationMenu.setName("transformationMenu"); // NOI18N
+         transformationMenu.setText(resourceMap.getString("transformationMenu.text"));
+ 
+         xhtmlItem.setSelected(true);
+         xhtmlItem.setText(resourceMap.getString("xhtmlItem.text")); // NOI18N
+         xhtmlItem.setName("xhtmlItem"); // NOI18N
+         rdfaItem.setText(resourceMap.getString("xhtmlItem.text"));
+         xhtmlItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 xhtmlTransform(evt);
+             }
+         });
+         transformationMenu.add(xhtmlItem);
+ 
+         rdfaItem.setText(resourceMap.getString("rdfaItem.text")); // NOI18N
+         rdfaItem.setName("rdfaItem"); // NOI18N
+         rdfaItem.setText(resourceMap.getString("rdfaItem.text"));
+         rdfaItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 rdfaTransform(evt);
+             }
+         });
+         transformationMenu.add(rdfaItem);
+ 
+         microFormatItem.setText(resourceMap.getString("microFormatItem.text")); // NOI18N
+         microFormatItem.setName("microFormatItem"); // NOI18N
+         microFormatItem.setText(resourceMap.getString("microFormatItem.text"));
+         microFormatItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 microFromatTransform(evt);
+             }
+         });
+         transformationMenu.add(microFormatItem);
+ 
+         html5Item.setText(resourceMap.getString("html5Item.text"));
+         html5Item.setText(resourceMap.getString("html5Item.text")); // NOI18N
+         html5Item.setName("html5Item"); // NOI18N
+         html5Item.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 html5Transform(evt);
+             }
+         });
+         transformationMenu.add(html5Item);
+ 
+         svgItem.setText(resourceMap.getString("svgItem.text")); // NOI18N
+         svgItem.setName("svgItem"); // NOI18N
+         svgItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 svgTransform(evt);
+             }
+         });
+         transformationMenu.add(svgItem);
+ 
+         mainMenuBar.add(transformationMenu);
+ 
+         dataRepositoryMenu.setText(resourceMap.getString("dataRepositoryMenu.text")); // NOI18N
+         dataRepositoryMenu.setName("dataRepositoryMenu"); // NOI18N
+         mainMenuBar.add(dataRepositoryMenu);
+ 
+         helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
+         helpMenu.setName("helpMenu"); // NOI18N
+ 
+         sampleProjectsMItem.setText(resourceMap.getString("sampleProjectsMItem.text")); // NOI18N
+         sampleProjectsMItem.setName("sampleProjectsMItem"); // NOI18N
+         sampleProjectsMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 sampleProjectsMItemActionPerformed(evt);
+             }
+         });
+         helpMenu.add(sampleProjectsMItem);
+ 
+         aboutSeparator.setName("aboutSeparator"); // NOI18N
+         helpMenu.add(aboutSeparator);
+ 
+         aboutMItem.setText(resourceMap.getString("aboutMItem.text")); // NOI18N
+         aboutMItem.setName("aboutMItem"); // NOI18N
+         aboutMItem.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 aboutMItemActionPerformed(evt);
+             }
+         });
+         helpMenu.add(aboutMItem);
+ 
+         mainMenuBar.add(helpMenu);
+ 
+         setJMenuBar(mainMenuBar);
+ 
+         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+         getContentPane().setLayout(layout);
+         layout.setHorizontalGroup(
+             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(layout.createSequentialGroup()
+                 .addComponent(statusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                 .addContainerGap())
+             .addComponent(mainSplitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 1014, Short.MAX_VALUE)
+         );
+         layout.setVerticalGroup(
+             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(layout.createSequentialGroup()
+                 .addComponent(mainSplitPane, javax.swing.GroupLayout.DEFAULT_SIZE, 370, Short.MAX_VALUE)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addComponent(statusPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+         );
+ 
+         pack();
+     }// </editor-fold>//GEN-END:initComponents
+ 
+ 	private void aboutMItemActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_aboutMItemActionPerformed
+ 		aboutMItemClicked();
+ 	}// GEN-LAST:event_aboutMItemActionPerformed
+ 
+ 	private void hideButtonActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_hideButtonActionPerformed
+ 		FresnelApplication.getApp().hidePreviewPanel();
+ 	}// GEN-LAST:event_hideButtonActionPerformed
+ 
+ 	private void sampleProjectsMItemActionPerformed(
+ 			java.awt.event.ActionEvent evt) {// GEN-FIRST:event_sampleProjectsMItemActionPerformed
+ 		sampleProjectsMItemClicked();
+ 	}// GEN-LAST:event_sampleProjectsMItemActionPerformed
+ 
+ 	private void configurationMItemActionPerformed(
+ 			java.awt.event.ActionEvent evt) {// GEN-FIRST:event_configurationMItemActionPerformed
+ 		getConfigurationDialog().setVisible(true);
+ 	}// GEN-LAST:event_configurationMItemActionPerformed
+ 
+ 	private void exitMItemActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_exitMItemActionPerformed
+ 		FresnelApplication.getInstance().exit();
+ 	}// GEN-LAST:event_exitMItemActionPerformed
+ 
+ 	private void newProjectMItemActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_newProjectMItemActionPerformed
+ 		new CreateNewProjectDialog(this, true).setVisible(true);
+ 	}// GEN-LAST:event_newProjectMItemActionPerformed
+ 
+ 	private void openProjectMItemActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_openProjectMItemActionPerformed
+ 
+ 		JFileChooser chooser = new JFileChooser();
+ 
+ 		FileFilter filter = new FileNameExtensionFilter(
+ 				"Fresnel Editor projects (*.n3)", "n3");
+ 		chooser.setFileFilter(filter);
+ 
+ 		int returnVal = chooser.showOpenDialog(GuiUtils.getTopComponent());
+ 		if (returnVal == JFileChooser.APPROVE_OPTION) {
+ 			try {
+ 				ContextHolder.getInstance().openProject(
+ 						chooser.getSelectedFile().getCanonicalPath(), false);
+ 				AppEventsManager.getInstance().fireOpenProjectChanged(this);
+ 			} catch (Exception ex) {
+ 				// FIXME message dialog
+ 				LOG.error("Cannot open project");
+ 			}
+ 		}
+ 
+ 	}// GEN-LAST:event_openProjectMItemActionPerformed
+ 
+ 	private void closeCurrentProjectMItemActionPerformed(
+ 			java.awt.event.ActionEvent evt) {// GEN-FIRST:event_closeCurrentProjectMItemActionPerformed
+ 		// close all opened tabs
+ 		FresnelApplication.getApp().getBaseFrame().closeAllOpenedTabs();
+ 		ContextHolder.getInstance().closeProject();
+ 		AppEventsManager.getInstance().fireOpenProjectChanged(this);
+ 	}// GEN-LAST:event_closeCurrentProjectMItemActionPerformed
+ 
+     private void xhtmlTransform(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_xhtmlTransform
+         this.microFormatItem.setSelected(false);
+         this.xhtmlItem.setSelected(true);
+         this.rdfaItem.setSelected(false);
+         this.html5Item.setSelected(false);
+         this.svgItem.setSelected(false);
+         ContextHolder.getInstance().setTransformation(FresnelEditorConstants.Transformations.XHTML);
+     }//GEN-LAST:event_xhtmlTransform
+ 
+     private void rdfaTransform(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdfaTransform
+         this.microFormatItem.setSelected(false);
+         this.xhtmlItem.setSelected(false);
+         this.rdfaItem.setSelected(true);
+         this.html5Item.setSelected(false);
+         this.svgItem.setSelected(false);
+         ContextHolder.getInstance().setTransformation(FresnelEditorConstants.Transformations.RDFA);
+     }//GEN-LAST:event_rdfaTransform
+ 
+     private void microFromatTransform(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_microFromatTransform
+         this.microFormatItem.setSelected(true);
+         this.xhtmlItem.setSelected(false);
+         this.rdfaItem.setSelected(false);// TODO add your handling code here:
+         this.html5Item.setSelected(false);
+         this.svgItem.setSelected(false);
+         ContextHolder.getInstance().setTransformation(FresnelEditorConstants.Transformations.MICRO);
+     }//GEN-LAST:event_microFromatTransform
+ 
+     private void html5Transform(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_html5Transform
+         this.microFormatItem.setSelected(false);
+         this.xhtmlItem.setSelected(false);
+         this.rdfaItem.setSelected(false);// TODO add your handling code here:
+         this.html5Item.setSelected(true);
+         this.svgItem.setSelected(false);
+         ContextHolder.getInstance().setTransformation(FresnelEditorConstants.Transformations.HTML5);
+     }//GEN-LAST:event_html5Transform
+ 
+     private void svgTransform(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_svgTransform
+         this.microFormatItem.setSelected(false);
+         this.xhtmlItem.setSelected(false);
+         this.rdfaItem.setSelected(false);// TODO add your handling code here:
+         this.html5Item.setSelected(false);
+         this.svgItem.setSelected(true);
+         ContextHolder.getInstance().setTransformation(FresnelEditorConstants.Transformations.SVG);
+     }//GEN-LAST:event_svgTransform
+ 
+     private void saveProjectMItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveProjectMItemActionPerformed
+         ContextHolder.getInstance().saveProject(null);
+     }//GEN-LAST:event_saveProjectMItemActionPerformed
+ 
+     private void saveAsProjectMitemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveAsProjectMitemActionPerformed
+         JFileChooser chooser = new JFileChooser();
+ 
+         FileFilter filter = new FileNameExtensionFilter(
+                 "Fresnel Editor projects (*.n3)", "n3");
+         chooser.setFileFilter(filter);
+ 
+         int returnVal = chooser.showSaveDialog(GuiUtils.getTopComponent());
+         if (returnVal == JFileChooser.APPROVE_OPTION) {
+             try {
+                 String filename = chooser.getSelectedFile().getCanonicalPath();
+                 ContextHolder.getInstance().saveProject(filename);
+                 ContextHolder.getInstance().openProject(filename, false);
+                 AppEventsManager.getInstance().fireOpenProjectChanged(this);
+             } catch (Exception ex) {
+                 // FIXME message dialog
+                 LOG.error("Cannot open project", ex);
+             }
+         }
+     }//GEN-LAST:event_saveAsProjectMitemActionPerformed
+ 	
+ 	private FresnelEditorConfigurationDialog getConfigurationDialog() {
+ 		if (configDialog == null) {
+ 			configDialog = new FresnelEditorConfigurationDialog(this);
+ 		}
+ 		return configDialog;
+ 	}
+ 
+     // Variables declaration - do not modify//GEN-BEGIN:variables
+     private javax.swing.JMenuItem aboutMItem;
+     private javax.swing.JSeparator aboutSeparator;
+     private javax.swing.JMenuItem closeCurrentProjectMItem;
+     private javax.swing.JMenuItem configurationMItem;
+     private javax.swing.JLabel dataRepositoryLabel;
+     private javax.swing.JMenu dataRepositoryMenu;
+     private javax.swing.JMenu editMenu;
+     private javax.swing.JMenuItem exitMItem;
+     private javax.swing.JMenu fileMenu;
+     private javax.swing.JSeparator fileMenuExitSeparator;
+     private javax.swing.JLabel fresnelRepositoryLabel;
+     private javax.swing.JMenu helpMenu;
+     private javax.swing.JButton hideButton;
+     private javax.swing.JRadioButtonMenuItem html5Item;
+     private javax.swing.JMenuBar mainMenuBar;
+     private javax.swing.JSplitPane mainSplitPane;
+     private javax.swing.JTabbedPane mainTabbedPane;
+     private javax.swing.JScrollPane menuScrollPane;
+     private javax.swing.JRadioButtonMenuItem microFormatItem;
+     private javax.swing.JMenuItem newProjectMItem;
+     private javax.swing.JMenuItem openProjectMItem;
+     private javax.swing.JPanel previewPanel;
+     private javax.swing.JSplitPane previewSplitPane;
+     private javax.swing.JPanel previewToolPanel;
+     private cz.muni.fi.fresneleditor.common.guisupport.projecttree.ProjectTree projectTree;
+     private javax.swing.JRadioButtonMenuItem rdfaItem;
+     private javax.swing.JSplitPane rightSplitPane;
+     private javax.swing.JMenuItem sampleProjectsMItem;
+     private javax.swing.JMenuItem saveAsProjectMitem;
+     private javax.swing.JMenuItem saveProjectMItem;
+     private javax.swing.JLabel statusLabel;
+     private javax.swing.JPanel statusPanel;
+     private javax.swing.JSeparator statusPanelSeparator;
+     private javax.swing.JRadioButtonMenuItem svgItem;
+     private javax.swing.JMenu transformationMenu;
+     private javax.swing.JRadioButtonMenuItem xhtmlItem;
+     // End of variables declaration//GEN-END:variables
+ 	private JPopupMenu popup;
+ 
+ 	/**
+ 	 * Removes (closes) the tab which contains the given tabComponent.
+ 	 * 
+ 	 * @param tabId
+ 	 *            the ID of the component to remove from the tabbed pane
+ 	 */
+ 	public void closeTab(Object tabId) {
+ 		mainTabbedPane.remove(openedTabs.get(tabId));
+ 		openedTabs.remove(tabId);
+ 	}
+ 
+ 	/**
+ 	 * Closes all tabs that are currently opened.
+ 	 */
+ 	public void closeAllOpenedTabs() {
+ 		Set<TreeNode> tabNodes = new HashSet<TreeNode>(openedTabs.keySet());
+ 		for (TreeNode tabNode : tabNodes) {
+ 			closeTab(tabNode);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Makes the tab with given component visible (if it exists already) or adds
+ 	 * a tab with the given component and makes it visible.
+ 	 * 
+ 	 * @param component
+ 	 *            the component that should appear visible in the tabbed pane
+ 	 */
+ 	// public void openTab(ATabNode<?> tabNode, ITabComponent<?> component) {
+ 	public void openTab(TreeNode tabNode, ITabComponent<?> component) {
+ 
+ 		// Get scroll pane of given component
+ 		JScrollPane scrollPane = component.getScrollPane();
+ 
+ 		// Set focus to given tab panel
+ 		int index = mainTabbedPane.indexOfComponent(scrollPane);
+ 		if (index != -1) {
+ 			mainTabbedPane.setSelectedIndex(index);
+ 		} else {
+ 			mainTabbedPane.addTab(component.getLabel(), scrollPane);
+ 			index = mainTabbedPane.indexOfComponent(scrollPane);
+ 			mainTabbedPane.setSelectedIndex(index);
+ 
+ 			openedTabs.put(tabNode, scrollPane);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Makes the tab visible if it is already present in the tabbed pane. If it
+ 	 * is not present it does nothing.
+ 	 * 
+ 	 * @param component
+ 	 */
+ 	public void showTab(ITabComponent<?> component) {
+ 		// Get scroll pane of given component
+ 		JScrollPane scrollPane = component.getScrollPane();
+ 
+ 		// Set focus to given tab panel
+ 		int index = mainTabbedPane.indexOfComponent(scrollPane);
+ 		if (index != -1) {
+ 			mainTabbedPane.setSelectedIndex(index);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Returns true if the tabbed pane contains component with given ID.
+ 	 * 
+ 	 * @param tabId
+ 	 *            the id of the component
+ 	 * 
+ 	 * @return true if the tabbed pane contains component with given ID. <br>
+ 	 *         Returns false otherwise.
+ 	 */
+ 	public boolean constainsTab(Object tabId) {
+ 		return openedTabs.containsKey(tabId);
+ 	}
+ 
+ 	private JPopupMenu getPopup() {
+ 		if (popup == null) {
+ 			popup = new JPopupMenu();
+ 		}
+ 		return popup;
+ 	}
+ 
+ 	private class CloseTabKeyListener extends KeyAdapter {
+ 		// fixme igor: maybe remove this class and listener, does not work
+ 		// very well (the component has to have focus probably...)
+ 		private JTabbedPane tabbedPane;
+ 
+ 		public CloseTabKeyListener(JTabbedPane tabbedPane) {
+ 			this.tabbedPane = tabbedPane;
+ 		}
+ 
+ 		@Override
+ 		public void keyTyped(KeyEvent e) {
+ 			if (e.getKeyChar() == '') { // ctrl-w - close tab
+ 				tabbedPane.remove(tabbedPane.getSelectedIndex());
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Listener class that displays popup-menu after clicked.
+ 	 * 
+ 	 * @author Igor Zemsky (zemsky@mail.muni.cz)
+ 	 * 
+ 	 */
+ 	private class CloseTabListener extends MouseAdapter {
+ 
+ 		@Override
+ 		public void mousePressed(MouseEvent e) {
+ 			showPopup(e);
+ 		}
+ 
+ 		@Override
+ 		public void mouseReleased(MouseEvent e) {
+ 			showPopup(e); // here because different platforms handle popups
+ 							// differently
+ 		}
+ 
+ 	}
+ 
+ 	/**
+ 	 * If the mouse event e is an event that should display the context menu
+ 	 * (for example right click on windows platform) than a context menu might
+ 	 * be displayed. It is displayed in place of click if the clicked component
+ 	 * supports context menu. The context menu is created dynamically based on
+ 	 * the component that is clicked.
+ 	 * 
+ 	 * @param e
+ 	 */
+ 	private void showPopup(MouseEvent e) {
+ 		int tabIndex = mainTabbedPane.indexAtLocation(e.getX(), e.getY());
+ 		if (e.isPopupTrigger() && tabIndex >= 0) {
+ 			Component tab = mainTabbedPane.getComponentAt(tabIndex);
+ 			if (tab instanceof IContextMenu) {
+ 				getPopup().removeAll();
+ 				for (JMenuItem item : ((IContextMenu) tab).getMenu()) {
+ 					getPopup().add(item);
+ 				}
+ 				getPopup().show(e.getComponent(), e.getX(), e.getY());
+ 			}
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void openProjectConfigurationChanged(
+ 			OpenProjectConfigurationChangedEvent evt) {
+ 		updateStatusBar();
+ 		updateFileMenu();
+ 		// note that the tabs have to be refreshed on another place otherwise
+ 		// race condition is possible
+ 		// - it is necessary to possibly close old tabs and possibly open new
+ 		// tabs
+ 	}
+ 
+ 	/**
+ 	 * Updates the File menu - enables/disables menu items depending on whether
+ 	 * project is open or not.
+ 	 */
+ 	private void updateFileMenu() {
+ 		boolean isOpen = ContextHolder.getInstance().isProjectOpen();
+ 		closeCurrentProjectMItem.setEnabled(isOpen);
+ 		saveAsProjectMitem.setEnabled(isOpen);
+ 		saveProjectMItem.setEnabled(isOpen);
+ 	}
+ 
+ 	/**
+ 	 * Updates the status bar with current application values.
+ 	 */
+ 	private void updateStatusBar() {
+ 
+ 		ResourceMap resourceMap = Application
+ 				.getInstance(FresnelApplication.class).getContext()
+ 				.getResourceMap(BaseJFrame.class);
+ 
+ 		if (ContextHolder.getInstance().isProjectOpen()) {
+ 			statusLabel.setText(resourceMap
+ 					.getString("statusLabel.openedProjectText")
+ 					+ " "
+ 					+ ContextHolder.getInstance().getOpenProjectName());
+ 			fresnelRepositoryLabel.setText(resourceMap
+ 					.getString("fresnelRepositoryLabel.openedText")
+ 					+ " "
+ 					+ ContextHolder.getInstance().getFresnelRepositoryName());
+ 			dataRepositoryLabel.setText(resourceMap
+ 					.getString("dataRepositoryLabel.openedText")
+ 					+ " "
+ 					+ ContextHolder.getInstance().getDataRepositoryName());
+ 		} else {
+ 			statusLabel.setText(resourceMap.getString("statusLabel.text")); // NOI18N
+ 			fresnelRepositoryLabel.setText(resourceMap
+ 					.getString("fresnelRepositoryLabel.text")); // NOI18N
+ 			dataRepositoryLabel.setText(resourceMap
+ 					.getString("dataRepositoryLabel.text")); // NOI18N
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Closes the tab containing the scroll panel of given tabComponent.
+ 	 * 
+ 	 * @param tabComponent
+ 	 *            whose tab should be closed
+ 	 */
+ 	public void closeTabByComponent(ITabComponent<?> tabComponent) {
+ 		TreeNode id = getIdForComponent(tabComponent.getScrollPane());
+ 		if (id != null) {
+ 			closeTab(id);
+ 		}
+ 	}
+ 
+ 	private TreeNode getIdForComponent(JScrollPane scrollPane) {
+ 		for (Entry<TreeNode, Component> entry : openedTabs.entrySet()) {
+ 			if (entry.getValue().equals(scrollPane)) {
+ 				return entry.getKey();
+ 			}
+ 		}
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * Handles displaying of dialog about Fresnel Editor application.
+ 	 */
+ 	private void aboutMItemClicked() {
+ 
+ 		org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application
+ 				.getInstance(
+ 						cz.muni.fi.fresneleditor.common.FresnelApplication.class)
+ 				.getContext().getResourceMap(BaseJFrame.class);
+ 
+ 		new MessageDialog(
+ 				GuiUtils.getOwnerFrame(this),
+ 				resourceMap.getString("about.title"),
+ 				resourceMap.getString("about.heading")
+ 						+ resourceMap.getString("about.version")
+ 						+ " "
+ 						+ System.getProperty(FresnelEditorConstants.PROP_APP_VERSION)
+ 						+ "</p>"
+ 						+ resourceMap.getString("about.releasedate")
+ 						+ " "
+ 						+ System.getProperty(FresnelEditorConstants.PROP_APP_RELEASE_DATE)
+ 						+ "</p>" + resourceMap.getString("about.authors")
+ 						+ resourceMap.getString("about.authors.jan")
+ 						+ resourceMap.getString("about.authors.martin")
+ 						+ resourceMap.getString("about.authors.igor")
+ 						+ resourceMap.getString("about.authors.miroslav")
+ 						+ resourceMap.getString("about.description")
+ 						+ "</html>").setVisible(true);
+ 	}
+ 
+ 	/**
+ 	 * Displays subdialog with the list of available sample projects which can
+ 	 * be then opened and tried out.
+ 	 */
+ 	private void sampleProjectsMItemClicked() {
+ 		SampleProjectsDialog sampleProjectsDialog = new SampleProjectsDialog(
+ 				GuiUtils.getOwnerFrame(this), true);
+ 		GuiUtils.centerOnScreen(sampleProjectsDialog);
+ 		sampleProjectsDialog.setVisible(true);
+ 	}
+ 
+ 	/****************************************
+ 	 * Functionality related to preview panel
+ 	 ****************************************/
+ 
+ 	/**
+ 	 * Displays render preview panel.
+ 	 */
+ 	public void showPreviewPanel() {
+ 		rightSplitPane.setDividerLocation(rightSplitPane.getHeight() / 2);
+ 		rightSplitPane.setDividerSize(SHOWN_DIVIDER_SIZE);
+ 	}
+ 
+ 	/**
+ 	 * Displays render preview panel.
+ 	 */
+ 	public void showPreviewPanelFullSize() {
+ 		rightSplitPane.setDividerLocation(0);
+ 		rightSplitPane.setDividerSize(SHOWN_DIVIDER_SIZE);
+ 	}
+ 
+ 	/**
+ 	 * Displays render preview panel.
+ 	 */
+ 	public void hidePreviewPanel() {
+ 		rightSplitPane.setDividerLocation(rightSplitPane.getHeight());
+ 		rightSplitPane.setDividerSize(HIDDEN_DIVIDER_SIZE);
+ 	}
+ 
+ 	/**
+ 	 * 
+ 	 * @param newPreviewPanel
+ 	 *            new preview panel to be used
+ 	 */
+ 	public void updatePreviewPanel(Component newPreviewPanel) {
+ 		this.previewSplitPane.setBottomComponent(newPreviewPanel);
+ 	}
+ 	
+ 	public Component getPreviewPanel() {
+ 		return this.previewSplitPane.getBottomComponent();
+ 	}
+ 
+ 	
+ }

@@ -1,0 +1,106 @@
+ /**
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+  * as published by the Free Software Foundation; either version 3
+  * of the License, or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+  *
+  */
+ 
+ package autosaveworld.threads.restart;
+ 
+ import java.text.SimpleDateFormat;
+ import autosaveworld.config.AutoSaveConfig;
+ import autosaveworld.config.AutoSaveConfigMSG;
+ import autosaveworld.core.AutoSaveWorld;
+ 
+ 
+ public class AutoRestartThread  extends Thread{
+ 	
+ 	private AutoSaveWorld plugin;
+ 	private AutoSaveConfig config;
+ 	AutoSaveConfigMSG configmsg;
+ 	public AutoRestartThread(AutoSaveWorld plugin,AutoSaveConfig config,AutoSaveConfigMSG configmsg)
+ 	{
+ 		this.plugin = plugin;
+ 		this.config = config;
+ 		this.configmsg = configmsg;
+ 	}
+ 	
+ 	public void stopThread()
+ 	{
+ 		this.run = false;
+ 	}
+ 	
+ 	public void startrestart(boolean skipcountdown)
+ 	{
+ 		this.command = true;
+ 	}
+ 	
+ 
+ 	private volatile boolean run = true;
+ 	private boolean command = false;
+ 	private boolean skipcountdown = false;
+ 	public void run()
+ 	{	
+ 		plugin.debug("AutoRestartThread started");
+ 		Thread.currentThread().setName("AutoSaveWorld AutoRestartThread");
+ 		
+ 		//check if we just restarted (server can restart faster than 1 minute. Without this check AutoRestartThread will stop working after restart)
+ 		if  (config.autorestarttime.contains(getCurTime()))	{try {Thread.sleep(61000);} catch (InterruptedException e) {}}
+ 		
+ 		while (run)
+ 		{
+ 			 if ((config.autorestart && config.autorestarttime.contains(getCurTime())) || command)
+ 			 {
+ 				run = false;
+ 				command = false;
+ 				
+ 				if (config.autorestartcountdown && !skipcountdown)
+ 				{
+ 					for (int i = config.autorestartbroadcastonseconds.get(0); i>0; i--)
+ 					{
+ 						if (config.autorestartbroadcastonseconds.contains(i))
+ 						{
+ 							plugin.broadcast(configmsg.messageAutoRestartCountdown.replace("{SECONDS}", String.valueOf(i)), true);
+ 						}
+ 						try {Thread.sleep(1000);} catch (InterruptedException e) {}
+ 					} 
+ 				}
+ 				
+ 				plugin.broadcast(configmsg.messageAutoRestart, config.autorestartBroadcast);
+ 				
+				plugin.debug("[AutoSaveWorld] AutoRestarting server");
+ 				
+ 				if (!config.astop) 
+ 				{
+ 					plugin.JVMsh.setPath(config.autorestartscriptpath);
+ 					Runtime.getRuntime().addShutdownHook(plugin.JVMsh); 
+ 				}
+ 				
+ 				plugin.getServer().shutdown();
+ 				
+ 			 }
+ 			 try {Thread.sleep(1000);} catch (InterruptedException e) {}
+ 		}
+ 		
+ 		plugin.debug("Graceful quit of AutoRestartThread");
+ 		
+ 	}
+ 	
+ 	SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+ 	private String getCurTime()
+ 	{
+ 		String curtime = sdf.format(System.currentTimeMillis());
+ 		return curtime;
+ 	}
+ 	
+ }

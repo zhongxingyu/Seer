@@ -1,0 +1,985 @@
+ /*
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  *
+  * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+  *
+  * The contents of this file are subject to the terms of either the GNU
+  * General Public License Version 2 only ("GPL") or the Common Development
+  * and Distribution License("CDDL") (collectively, the "License").  You
+  * may not use this file except in compliance with the License.  You can
+  * obtain a copy of the License at
+  * https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html
+  * or packager/legal/LICENSE.txt.  See the License for the specific
+  * language governing permissions and limitations under the License.
+  *
+  * When distributing the software, include this License Header Notice in each
+  * file and include the License file at packager/legal/LICENSE.txt.
+  *
+  * GPL Classpath Exception:
+  * Oracle designates this particular file as subject to the "Classpath"
+  * exception as provided by Oracle in the GPL Version 2 section of the License
+  * file that accompanied this code.
+  *
+  * Modifications:
+  * If applicable, add the following below the License Header, with the fields
+  * enclosed by brackets [] replaced by your own identifying information:
+  * "Portions Copyright [year] [name of copyright owner]"
+  *
+  * Contributor(s):
+  * If you wish your version of this file to be governed by only the CDDL or
+  * only the GPL Version 2, indicate your decision by adding "[Contributor]
+  * elects to include this software in this distribution under the [CDDL or GPL
+  * Version 2] license."  If you don't indicate a single choice of license, a
+  * recipient has the option to distribute your version of this file under
+  * either the CDDL, the GPL Version 2 or to extend the choice of license to
+  * its licensees as provided above.  However, if you add GPL Version 2 code
+  * and therefore, elected the GPL Version 2 license, then the option applies
+  * only if the new code is made subject to such option by the copyright
+  * holder.
+  */
+ package org.glassfish.hk2.utilities.reflection;
+ 
+ import java.io.IOException;
+ import java.lang.annotation.Annotation;
+ import java.lang.reflect.AnnotatedElement;
+ import java.lang.reflect.GenericArrayType;
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Member;
+ import java.lang.reflect.Method;
+ import java.lang.reflect.Modifier;
+ import java.lang.reflect.ParameterizedType;
+ import java.lang.reflect.Type;
+ import java.lang.reflect.TypeVariable;
+ import java.security.AccessController;
+ import java.security.PrivilegedAction;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.LinkedHashMap;
+ import java.util.LinkedHashSet;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ 
+ import javax.inject.Named;
+ import javax.inject.Qualifier;
+ import javax.inject.Scope;
+ 
+ /**
+  * @author jwells
+  *
+  */
+ public class ReflectionHelper {
+     private final static HashSet<Character> ESCAPE_CHARACTERS = new HashSet<Character>();
+     private final static char ILLEGAL_CHARACTERS[] = {
+         '{' , '}', '[', ']', ':', ';', '=', ',', '\\'
+     };
+     private final static HashMap<Character, Character> REPLACE_CHARACTERS = new HashMap<Character, Character>();
+     
+     static {
+         for (char illegal : ILLEGAL_CHARACTERS) {
+             ESCAPE_CHARACTERS.add(illegal);
+         }
+         
+         REPLACE_CHARACTERS.put('\n', 'n');
+         REPLACE_CHARACTERS.put('\r', 'r');
+     }
+     
+     /**
+      * Given the type parameter gets the raw type represented
+      * by the type, or null if this has no associated raw class
+      * @param type The type to find the raw class on
+      * @return The raw class associated with this type
+      */
+     public static Class<?> getRawClass(Type type) {
+         if (type == null) return null;
+         
+         if (type instanceof GenericArrayType) {
+             Type componentType = ((GenericArrayType) type).getGenericComponentType();
+             
+             if (!(componentType instanceof ParameterizedType)) {
+                 // type variable is not supported
+                 return null;
+             }
+             
+             Class<?> rawComponentClass = getRawClass(componentType);
+             
+             String forNameName = "[L" + rawComponentClass.getName() + ";";
+             try {
+                 return Class.forName(forNameName);
+             }
+             catch (Throwable th) {
+                 // ignore, but return null
+                 return null;
+             }
+         }
+         
+         if (type instanceof Class) {
+             return (Class<?>) type;
+         }
+         
+         if (type instanceof ParameterizedType) {
+             Type rawType = ((ParameterizedType) type).getRawType();
+             if (rawType instanceof Class) {
+                 return (Class<?>) rawType;
+             }
+         }
+         
+         return null;
+     }
+     
+     private static String getNamedName(Named named, Class<?> implClass) {
+         String name = named.value();
+         if (name != null && !name.equals("")) return name;
+         
+         String cn = implClass.getName();
+             
+         int index = cn.lastIndexOf(".");
+         if (index < 0) return cn;
+         
+         return cn.substring(index + 1);
+     }
+     
+     /**
+      * Returns the name that should be associated with this class
+      * 
+      * @param implClass The class to evaluate
+      * @return The name this class should have
+      */
+     public static String getName(Class<?> implClass) {
+         Named named = implClass.getAnnotation(Named.class);
+         
+         String namedName = (named != null) ? getNamedName(named, implClass) : null ;
+         
+         if (namedName != null) return namedName;
+         
+         return null;
+     }
+     
+     /**
+      * Gets all the interfaces on this particular class (but not any
+      * superclasses of this class).
+      */
+     private static void addAllGenericInterfaces(Class<?> rawClass ,
+                                                 Type type,
+                                                 Set<Type> closures) {
+ 
+         Map<String, Type> typeArgumentsMap = null;
+ 
+         for (Type currentType : rawClass.getGenericInterfaces()) {
+ 
+             if (type instanceof ParameterizedType &&
+                     currentType instanceof ParameterizedType) {
+ 
+                 if (typeArgumentsMap == null ) {
+                     typeArgumentsMap = getTypeArguments(rawClass, (ParameterizedType) type);
+                 }
+ 
+                 currentType = fixTypeVariables((ParameterizedType) currentType, typeArgumentsMap);
+             }
+ 
+             closures.add(currentType);
+ 
+             rawClass = ReflectionHelper.getRawClass(currentType);
+             if (rawClass != null) {
+                 addAllGenericInterfaces(rawClass, currentType, closures);
+             }
+         }
+     }
+ 
+     /**
+      * Replace any TypeVariables in the given type's arguments with
+      * the actual argument types.  Return the given type if no replacing
+      * is required.
+      */
+     private static Type fixTypeVariables(ParameterizedType type,
+                                          Map<String, Type> typeArgumentsMap) {
+ 
+         Type[] newTypeArguments = getNewTypeArguments(type, typeArgumentsMap);
+ 
+         if (newTypeArguments != null) {
+             type = new ParameterizedTypeImpl(type.getRawType(), newTypeArguments);
+         }
+         return type;
+     }
+ 
+     /**
+      * Get a new array of type arguments for the given ParameterizedType, replacing any TypeVariables with
+      * actual types.  The types should be found in the given arguments map, keyed by variable name.  Return
+      * null if no arguments needed to be replaced.
+      */
+     private static Type[] getNewTypeArguments(final ParameterizedType type,
+                                               final Map<String, Type> typeArgumentsMap) {
+ 
+         Type[]  typeArguments    = type.getActualTypeArguments();
+         Type[]  newTypeArguments = new Type[typeArguments.length];
+         boolean newArgsNeeded    = false;
+ 
+         int i = 0;
+         for (Type argType : typeArguments) {
+             if (argType instanceof TypeVariable) {
+                 newTypeArguments[i++] = typeArgumentsMap.get(((TypeVariable) argType).getName());
+                 newArgsNeeded = true;
+             } else {
+                 newTypeArguments[i++] = argType;
+             }
+         }
+         return newArgsNeeded ? newTypeArguments : null;
+     }
+ 
+     /**
+      * Gets a mapping of type variable names of the raw class to type arguments of the
+      * parameterized type.
+      */
+     private static Map<String, Type> getTypeArguments(Class<?> rawClass,
+                                                       ParameterizedType type) {
+ 
+         Map<String, Type> typeMap       = new HashMap<String, Type>();
+         Type[]            typeArguments = type.getActualTypeArguments();
+ 
+         int i = 0;
+         for (TypeVariable typeVariable : rawClass.getTypeParameters() ) {
+             typeMap.put(typeVariable.getName(), typeArguments[i++]);
+         }
+         return typeMap;
+     }
+ 
+     /**
+      * Returns the type closure of the given class
+      * 
+      * @param ofType The full type closure of the given class
+      * with nothing omitted (normal case).  May not be null
+      * @return The non-null (and never empty) set of classes
+      * that this class can be assigned to
+      */
+     private static Set<Type> getTypeClosure(Type ofType) {
+         Set<Type> retVal   = new HashSet<Type>();
+         Class<?>  rawClass = ReflectionHelper.getRawClass(ofType);
+ 
+         if (rawClass != null) {
+             Map<String, Type> typeArgumentsMap = null;
+             Type              currentType      = ofType;
+ 
+             while (currentType != null && rawClass != null) {
+ 
+                 retVal.add(currentType);
+ 
+                 addAllGenericInterfaces(rawClass, currentType, retVal);
+ 
+                 if (typeArgumentsMap == null && currentType instanceof ParameterizedType){
+                     typeArgumentsMap = getTypeArguments(rawClass, (ParameterizedType) currentType);
+                 }
+ 
+                 currentType = rawClass.getGenericSuperclass();
+                 if (currentType != null) {
+                     rawClass = ReflectionHelper.getRawClass(currentType);
+ 
+                    if (currentType instanceof ParameterizedType){
+                         currentType = fixTypeVariables((ParameterizedType) currentType, typeArgumentsMap);
+                     }
+                 }
+             }
+         }
+         return retVal;
+     }
+ 
+     /**
+      * Returns the type closure, as restricted by the classes listed in the
+      * set of contracts implemented
+      * 
+      * @param ofType The type to check
+      * @param contracts The contracts this type is allowed to handle
+      * @return The type closure restricted to the contracts
+      */
+     public static Set<Type> getTypeClosure(Type ofType, Set<String> contracts) {
+         Set<Type> closure = getTypeClosure(ofType);
+         
+         HashSet<Type> retVal = new HashSet<Type>();
+         for (Type t : closure) {
+             Class<?> rawClass = ReflectionHelper.getRawClass(t);
+             if (rawClass == null) continue;
+             
+             if (contracts.contains(rawClass.getName())) {
+                 retVal.add(t);
+             }
+         }
+         
+         return retVal;
+     }
+ 
+     /**
+      * Returns the set of types this class advertises
+      * @param type The outer type to analyze
+      * @param markerAnnotation The annotation to use to discover the advertised types
+      * @return The type itself and the contracts it implements
+      */
+     public static Set<Type> getAdvertisedTypesFromClass(Type type, Class<? extends Annotation> markerAnnotation) {
+         Set<Type> retVal = new LinkedHashSet<Type>();
+         if (type == null) return retVal;
+         
+         retVal.add(type);
+         
+         Class<?> originalRawClass = getRawClass(type);
+         if (originalRawClass == null) return retVal;
+         
+         Type genericSuperclass = originalRawClass.getGenericSuperclass();
+         while (genericSuperclass != null) {
+             Class<?> rawClass = getRawClass(genericSuperclass);
+             if (rawClass == null) break;
+             
+             if (rawClass.isAnnotationPresent(markerAnnotation)) {
+                 retVal.add(genericSuperclass);
+             }
+             
+             genericSuperclass = rawClass.getGenericSuperclass();
+         }
+         
+         Set<Class<?>> alreadyHandled = new HashSet<Class<?>>();
+         while (originalRawClass != null) {
+             getAllContractsFromInterfaces(originalRawClass,
+                 markerAnnotation,
+                 retVal,
+                 alreadyHandled);
+             
+             originalRawClass = originalRawClass.getSuperclass();
+         }
+         
+         return retVal;
+     }
+     
+     private static void getAllContractsFromInterfaces(Class<?> clazzOrInterface,
+             Class<? extends Annotation> markerAnnotation,
+             Set<Type> addToMe,
+             Set<Class<?>> alreadyHandled) {
+         Type interfacesAsType[] = clazzOrInterface.getGenericInterfaces();
+         
+         for (Type interfaceAsType : interfacesAsType) {
+             Class<?> interfaceAsClass = getRawClass(interfaceAsType);
+             if (interfaceAsClass == null) continue;
+             if (alreadyHandled.contains(interfaceAsClass)) continue;
+             alreadyHandled.add(interfaceAsClass);
+             
+             if (interfaceAsClass.isAnnotationPresent(markerAnnotation)) {
+                 addToMe.add(interfaceAsType);
+             }
+             
+             getAllContractsFromInterfaces(interfaceAsClass, markerAnnotation, addToMe, alreadyHandled);
+         }
+     }
+     
+     /**
+      * Returns the set of types this class advertises
+      * @param t the object we are analyzing
+      * @param markerAnnotation The annotation to use to discover the advertised types
+      * @return The type itself and the contracts it implements
+      */
+     public static Set<Type> getAdvertisedTypesFromObject(Object t, Class<? extends Annotation> markerAnnotation) {
+         if (t == null) return Collections.emptySet();
+         
+         return getAdvertisedTypesFromClass(t.getClass(), markerAnnotation);
+     }
+     
+     /**
+      * Returns the set of types this class advertises
+      * @param clazz the class we are analyzing
+      * @param markerAnnotation The annotation to use to discover annotated types
+      * @return The type itself and the contracts it implements
+      */
+     public static Set<String> getContractsFromClass(Class<?> clazz, Class<? extends Annotation> markerAnnotation) {
+         Set<String> retVal = new LinkedHashSet<String>();
+         if (clazz == null) return retVal;
+         
+         retVal.add(clazz.getName());
+         
+         Class<?> extendsClasses = clazz.getSuperclass();
+         while (extendsClasses != null) {
+             if (extendsClasses.isAnnotationPresent(markerAnnotation)) {
+                 retVal.add(extendsClasses.getName());
+             }
+             
+             extendsClasses = extendsClasses.getSuperclass();
+         }
+         
+         while (clazz != null) {
+             Class<?> interfaces[] = clazz.getInterfaces();
+             for (Class<?> iFace : interfaces) {
+                 if (iFace.isAnnotationPresent(markerAnnotation)) {
+                     retVal.add(iFace.getName());
+                 }
+             }
+             
+             clazz = clazz.getSuperclass();
+         }
+         
+         return retVal;
+     }
+     
+     /**
+      * Gets the scope annotation from the object
+      * @param t The object to analyze
+      * @return The class of the scope annotation
+      */
+     public static Annotation getScopeAnnotationFromObject(Object t) {
+         if (t == null) throw new IllegalArgumentException();
+         
+         
+         return getScopeAnnotationFromClass(t.getClass());
+     }
+     
+     /**
+      * Gets the scope annotation from the object
+      * @param clazz The class to analyze
+      * @return The class of the scope annotation
+      */
+     public static Annotation getScopeAnnotationFromClass(Class<?> clazz) {
+         if (clazz == null) throw new IllegalArgumentException();
+         
+         for (Annotation annotation : clazz.getAnnotations()) {
+             Class<? extends Annotation> annoClass = annotation.annotationType();
+             
+             if (annoClass.isAnnotationPresent(Scope.class)) {
+                 return annotation;
+             }
+             
+         }
+         
+         return null;
+     }
+     
+     /**
+      * Gets the scope annotation from the object
+      * @param t The object to analyze
+      * @param annoDefault The default that this should have if no scope could be found
+      * @return The class of the scope annotation
+      */
+     public static Class<? extends Annotation> getScopeFromObject(Object t, Class<? extends Annotation> annoDefault) {
+         if (t == null) return annoDefault;
+         
+         return getScopeFromClass(t.getClass(), annoDefault);
+     }
+     
+     /**
+      * Gets the scope annotation from the object
+      * @param clazz The class to analyze
+      * @param annoDefault The scope that should be returned if no scope could be found
+      * @return The class of the scope annotation
+      */
+     public static Class<? extends Annotation> getScopeFromClass(Class<?> clazz, Class<? extends Annotation> annoDefault) {
+         if (clazz == null) return annoDefault;
+         
+         for (Annotation annotation : clazz.getAnnotations()) {
+             Class<? extends Annotation> annoClass = annotation.annotationType();
+             
+             if (annoClass.isAnnotationPresent(Scope.class)) {
+                 return annoClass;
+             }
+             
+         }
+         
+         return annoDefault;
+     }
+     
+     /**
+      * Returns true if the given annotation is a qualifier
+      * @param anno The annotation to check
+      * @return true if this is an annotation
+      */
+     public static boolean isAnnotationAQualifier(Annotation anno) {
+         Class<? extends Annotation> annoType = anno.annotationType();
+         return annoType.isAnnotationPresent(Qualifier.class);
+     }
+     
+     /**
+      * Gets all the qualifiers from the object
+      * 
+      * @param t The object to analyze
+      * @return The set of qualifiers.  Will not return null but may return an empty set
+      */
+     public static Set<Annotation> getQualifiersFromObject(Object t) {
+         if (t == null) return Collections.emptySet();
+         
+         return getQualifierAnnotations(t.getClass());
+     }
+     
+     /**
+      * Gets all the qualifiers from the object
+      * 
+      * @param clazz The class to analyze
+      * @return The set of qualifiers.  Will not return null but may return an empty set
+      */
+     public static Set<String> getQualifiersFromClass(Class<?> clazz) {
+         Set<String> retVal = new LinkedHashSet<String>();
+         if (clazz == null) return retVal;
+         
+         for (Annotation annotation : clazz.getAnnotations()) {
+             if (isAnnotationAQualifier(annotation)) {
+                 retVal.add(annotation.annotationType().getName());
+             }
+             
+         }
+         
+         while (clazz != null) {
+             for (Class<?> iFace : clazz.getInterfaces()) {
+                 for (Annotation annotation : iFace.getAnnotations()) {
+                     if (isAnnotationAQualifier(annotation)) {
+                         retVal.add(annotation.annotationType().getName());
+                     }
+                 }
+             }
+             
+             clazz = clazz.getSuperclass();
+         }
+         
+         return retVal;
+     }
+     
+     private static Set<Annotation> internalGetQualifierAnnotations(AnnotatedElement annotatedGuy) {
+         Set<Annotation> retVal = new LinkedHashSet<Annotation>();
+         if (annotatedGuy == null) return retVal;
+         
+         for (Annotation annotation : annotatedGuy.getAnnotations()) {
+             if (isAnnotationAQualifier(annotation)) {
+                 retVal.add(annotation);
+             }
+         }
+         
+         if (!(annotatedGuy instanceof Class)) return retVal;
+         
+         Class<?> clazz = (Class<?>) annotatedGuy;
+         while (clazz != null) {
+             for (Class<?> iFace : clazz.getInterfaces()) {
+                 for (Annotation annotation : iFace.getAnnotations()) {
+                     if (isAnnotationAQualifier(annotation)) {
+                         retVal.add(annotation);
+                     }
+                 }
+             }
+             
+             clazz = clazz.getSuperclass();
+         }
+         
+         return retVal;
+         
+     }
+     
+     /**
+      * Gets all the qualifier annotations from the object
+      * 
+      * @param annotatedGuy The thing to analyze
+      * @return The set of qualifiers.  Will not return null but may return an empty set
+      */
+     public static Set<Annotation> getQualifierAnnotations(final AnnotatedElement annotatedGuy) {
+         Set<Annotation> retVal = AccessController.doPrivileged(new PrivilegedAction<Set<Annotation>>() {
+ 
+             @Override
+             public Set<Annotation> run() {
+                 return internalGetQualifierAnnotations(annotatedGuy);
+             }
+             
+         });
+         
+         return retVal;
+     }
+     
+     /**
+      * Writes a set in a way that can be read from an input stream as well
+      * 
+      * @param set The set to write
+      * @return a representation of a list
+      */
+     public static String writeSet(Set<?> set) {
+         if (set == null) return "{}";
+         
+         StringBuffer sb = new StringBuffer("{");
+         
+         boolean first = true;
+         for (Object writeMe : set) {
+             if (first) {
+                 first = false;
+                 sb.append(escapeString(writeMe.toString()));
+             }
+             else {
+                 sb.append("," + escapeString(writeMe.toString()));
+             }
+         }
+         
+         sb.append("}");
+         
+         return sb.toString();
+     }
+     
+     /**
+      * Writes a set in a way that can be read from an input stream as well.  The values in
+      * the set may not contain the characters "{},"
+      * 
+      * @param line The line to read
+      * @param addToMe The set to add the strings to
+      * @throws IOException On a failure
+      */
+     public static void readSet(String line, Collection<String> addToMe) throws IOException {
+         char asChars[] = new char[line.length()];
+         line.getChars(0, line.length(), asChars, 0);
+         
+         internalReadSet(asChars, 0, addToMe);
+     }
+     
+     /**
+      * Writes a set in a way that can be read from an input stream as well.  The values in
+      * the set may not contain the characters "{},"
+      * 
+      * @param asChars The line to read
+      * @param addToMe The set to add the strings to
+      * @return The number of characters read until the end of the set
+      * @throws IOException On a failure
+      */
+     private static int internalReadSet(char asChars[], int startIndex, Collection<String> addToMe) throws IOException {
+         int dot = startIndex;
+         int startOfSet = -1;
+         while (dot < asChars.length) {
+             if (asChars[dot] == '{') {
+                 startOfSet = dot;
+                 dot++;
+                 break;
+             }
+             dot++;
+         }
+         
+         if (startOfSet == -1) {
+             throw new IOException("Unknown set format, no initial { character : " + new String(asChars));
+         }
+         
+         StringBuffer elementBuffer = new StringBuffer();
+         int endOfSet = -1;
+         while (dot < asChars.length) {
+             char dotChar = asChars[dot];
+             
+             if (dotChar == '}') {
+                 addToMe.add(elementBuffer.toString());
+                 
+                 endOfSet = dot;
+                 break;  // Done!
+             }
+             
+             if (dotChar == ',') {
+                 // Terminating a single element
+                 addToMe.add(elementBuffer.toString());
+                 
+                 elementBuffer = new StringBuffer();
+             }
+             else {
+                 // This character is either an escape character or a real character
+                 if (dotChar != '\\') {
+                     elementBuffer.append(dotChar);
+                 }
+                 else {
+                     // This is an escape character
+                     if (dot + 1 >= asChars.length) {
+                         // This is an error, escape at end of buffer
+                         break;
+                     }
+                     
+                     dot++;  // Moves it forward
+                     dotChar = asChars[dot];
+                     
+                     if (dotChar == 'n') {
+                         elementBuffer.append('\n');
+                     }
+                     else if (dotChar == 'r') {
+                         elementBuffer.append('\r');
+                     }
+                     else {
+                         elementBuffer.append(dotChar);
+                     }
+                 }
+                 
+             }
+             
+             dot++;
+         }
+         
+         if (endOfSet == -1) {
+             throw new IOException("Unknown set format, no ending } character : " + new String(asChars));
+         }
+         
+         return dot - startIndex;
+     }
+     
+     private static int readKeyStringListLine(char asChars[], int startIndex, Map<String, List<String>> addToMe) throws IOException {
+         int dot = startIndex;
+         
+         int equalsIndex = -1;
+         while (dot < asChars.length) {
+             char dotChar = asChars[dot];
+             
+             if (dotChar == '=') {
+                 equalsIndex = dot;
+                 break;
+             }
+             
+             dot++;
+         }
+         
+         if (equalsIndex < 0) {
+             throw new IOException("Unknown key-string list format, no equals: " + new String(asChars));
+         }
+         
+         String key = new String(asChars, startIndex, (equalsIndex - startIndex));  // Does not include the =
+         dot++;  // Move it past the equals
+         
+         if (dot >= asChars.length) {
+             // Key with no values, this is illegal
+             throw new IOException("Found a key with no value, " + key + " in line " + new String(asChars));
+             
+         }
+         
+         LinkedList<String> listValues = new LinkedList<String>();
+         
+         int addOn = internalReadSet(asChars, dot, listValues);
+         if (!listValues.isEmpty()) {
+             addToMe.put(key, listValues);
+         }
+         
+         dot += addOn + 1;
+         if (dot < asChars.length) {
+             char skipComma = asChars[dot];
+             if (skipComma == ',') {
+                 dot++;
+             }
+         }
+         
+         return dot - startIndex;  // The +1 gets us to the next character in the stream
+     }
+     
+     /**
+      * Writes a set in a way that can be read from an input stream as well
+      * @param line The line to read
+      * @param addToMe The set to add the strings to
+      * @throws IOException On a failure
+      */
+     public static void readMetadataMap(String line, Map<String, List<String>> addToMe) throws IOException {
+         char asChars[] = new char[line.length()];
+         line.getChars(0, line.length(), asChars, 0);
+         
+         int dot = 0;
+         while (dot < asChars.length) {
+             int addMe = readKeyStringListLine(asChars, dot, addToMe);
+             dot += addMe;
+         }
+     }
+     
+     private static String escapeString(String escapeMe) {
+         char asChars[] = new char[escapeMe.length()];
+         
+         escapeMe.getChars(0, escapeMe.length(), asChars, 0);
+         
+         StringBuffer sb = new StringBuffer();
+         for (int lcv = 0; lcv < asChars.length; lcv++) {
+             char candidateChar = asChars[lcv];
+             
+             if (ESCAPE_CHARACTERS.contains(candidateChar)) {
+                 sb.append('\\');
+                 sb.append(candidateChar);
+             }
+             else if (REPLACE_CHARACTERS.containsKey(candidateChar)) {
+                 char replaceWithMe = REPLACE_CHARACTERS.get(candidateChar);
+                 sb.append('\\');
+                 sb.append(replaceWithMe);
+             }
+             else {
+                 sb.append(candidateChar);
+             }
+         }
+         
+         return sb.toString();
+     }
+     
+     private static String writeList(List<String> list) {
+         StringBuffer sb = new StringBuffer("{");
+         
+         boolean first = true;
+         for (String writeMe : list) {
+             if (first) {
+                 first = false;
+                 sb.append(escapeString(writeMe.toString()));
+             }
+             else {
+                 sb.append("," + escapeString(writeMe.toString()));
+             }
+         }
+         
+         sb.append("}");
+         
+         return sb.toString();
+     }
+     
+     /**
+      * Used to write the metadata out
+      * 
+      * @param metadata The metadata to externalize
+      * @return The metadata in an externalizable format
+      */
+     public static String writeMetadata(Map<String, List<String>> metadata) {
+         StringBuffer sb = new StringBuffer();
+         
+         boolean first = true;
+         for (Map.Entry<String, List<String>> entry : metadata.entrySet()) {
+             if (first) {
+                 first = false;
+                 sb.append(entry.getKey() + '=');
+             }
+             else {
+                 sb.append("," + entry.getKey() + '=');
+             }
+             
+             sb.append(writeList(entry.getValue()));
+         }
+         
+         return sb.toString();
+     }
+ 
+     /**
+      * Adds a value to the list of values associated with this key
+      * 
+      * @param metadatas The base metadata object
+      * @param key The key to which to add the value.  May not be null
+      * @param value The value to add.  May not be null
+      */
+     public static void addMetadata(Map<String, List<String>> metadatas, String key, String value) {
+         if (key == null || value == null) return;
+         if (key.indexOf('=') >= 0) {
+             throw new IllegalArgumentException("The key field may not have an = in it:" + key);
+         }
+         
+         List<String> inner = metadatas.get(key);
+         if (inner == null) {
+             inner = new LinkedList<String>();
+             metadatas.put(key, inner);
+         }
+         
+         inner.add(value);
+     }
+     
+     /**
+      * Removes the given value from the given key
+      * 
+      * @param metadatas The base metadata object
+      * @param key The key of the value to remove.  May not be null
+      * @param value The value to remove.  May not be null
+      * @return true if the value was removed
+      */
+     public static boolean removeMetadata(Map<String, List<String>> metadatas, String key, String value) {
+         if (key == null || value == null) return false;
+         
+         List<String> inner = metadatas.get(key);
+         if (inner == null) return false;
+         
+         boolean retVal = inner.remove(value);
+         if (inner.size() <= 0) metadatas.remove(key);
+         
+         return retVal;
+     }
+     
+     /**
+      * Removes all the metadata values associated with key
+      * 
+      * @param metadatas The base metadata object
+      * @param key The key of the metadata values to remove
+      * @return true if any value was removed
+      */
+     public static boolean removeAllMetadata(Map<String, List<String>> metadatas, String key) {
+         List<String> values = metadatas.remove(key);
+         return (values != null && values.size() > 0);
+     }
+     
+     /**
+      * This method does a deep copy of the incoming meta-data, (which basically means we will
+      * also make copies of the value list)
+      * 
+      * @param copyMe The guy to copy (if null, null will be returned)
+      * @return A deep copy of the metadata
+      */
+     public static Map<String, List<String>> deepCopyMetadata(Map<String, List<String>> copyMe) {
+         if (copyMe == null) return null;
+         
+         Map<String, List<String>> retVal = new LinkedHashMap<String, List<String>>();
+         
+         for (Map.Entry<String, List<String>> entry : copyMe.entrySet()) {
+             String key = entry.getKey();
+             if (key.indexOf('=') >= 0) {
+                 throw new IllegalArgumentException("The key field may not have an = in it:" + key);
+             }
+             
+             List<String> values = entry.getValue();
+             LinkedList<String> valuesCopy = new LinkedList<String>();
+             for (String value : values) {
+                 valuesCopy.add(value);
+             }
+             
+             retVal.put(key, valuesCopy);
+         }
+         
+         return retVal;
+     }
+     
+     /**
+      * This version of invoke is CCL neutral (it will return with the
+      * same CCL as what it went in with)
+      * 
+      * @param m the method to invoke
+      * @param o the object on which to invoke it
+      * @param args The arguments to invoke (may not be null)
+      * @return The return from the invocation
+      * @throws Throwable The unwrapped throwable thrown by the method
+      */
+     public static Object invoke(Object o, Method m, Object args[])
+             throws Throwable {
+         if (isStatic(m)) {
+             o = null;
+         }
+         
+         ClassLoader currentCCL = Thread.currentThread().getContextClassLoader();
+         
+         try {
+             return m.invoke(o, args);
+         }
+         catch (InvocationTargetException ite) {
+             throw ite.getTargetException();
+         }
+         finally {
+             setContextClassLoader(Thread.currentThread(), currentCCL);
+         }
+     }
+     
+     /**
+      * Returns true if the underlying member is static
+      * 
+      * @param member The non-null member to test
+      * @return true if the member is static
+      */
+     public static boolean isStatic(Member member) {
+         int modifiers = member.getModifiers();
+         
+         return ((modifiers & Modifier.STATIC) != 0);
+     }
+     
+     /**
+      * Sets the context classloader under the privileged of this class
+      * @param t The thread on which to set the classloader
+      * @param l The classloader to set
+      */
+     public static void setContextClassLoader(final Thread t, final ClassLoader l) {
+         AccessController.doPrivileged(new PrivilegedAction<Object>() {
+ 
+             @Override
+             public Object run() {
+                 t.setContextClassLoader(l);
+                 return null;
+             }
+             
+         });
+         
+     }
+ 
+ }

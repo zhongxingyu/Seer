@@ -1,0 +1,108 @@
+ package org.doube.geometry;
+ 
+ /**
+  * Provides simple trigonometric calculations
+  * 
+  * @author Michael Doube
+  */
+ public class Trig {
+ 
+ 	/**
+ 	 * <p>
+ 	 * Calculate the distance between 2 3D points p and q using Pythagoras'
+ 	 * theorem, <i>a</i><sup>2</sup> = <i>b</i><sup>2</sup> +
+ 	 * <i>c</i><sup>2</sup>
+ 	 * </p>
+ 	 * 
+ 	 * @param p
+ 	 *            a 3 element array
+ 	 * @param q
+ 	 *            another 3 element array
+ 	 * @return distance between <i>p</i> and <i>q</i>
+ 	 */
+ 	public static double distance3D(double[] p, double[] q) {
+ 		return distance3D(p[0], p[1], p[2], q[0], q[1], q[2]);
+ 	}
+ 
+ 	/**
+ 	 * <p>
+ 	 * Calculate the distance between 2 3D points <i>p</i>(x, y, z) and
+ 	 * <i>q</i>(x, y, z) using Pythagoras' theorem
+ 	 * </p>
+ 	 * 
+ 	 * @param px
+ 	 *            x-coordinate of first point
+ 	 * @param py
+ 	 *            y-coordinate of first point
+ 	 * @param pz
+ 	 *            z-coordinate of first point
+ 	 * @param qx
+ 	 *            x-coordinate of second point
+ 	 * @param qy
+ 	 *            y-coordinate of second point
+ 	 * @param qz
+ 	 *            z-coordinate of second point
+ 	 * @return
+ 	 */
+ 	public static double distance3D(double px, double py, double pz, double qx,
+ 			double qy, double qz) {
+ 		final double pqx = px - qx;
+ 		final double pqy = py - qy;
+ 		final double pqz = pz - qz;
+ 		return Math.sqrt(pqx * pqx + pqy * pqy + pqz * pqz);
+ 	}
+ 
+ 	/**
+ 	 * <p>
+ 	 * Calculate the distance to the origin, (0,0,0). Given 3 orthogonal
+ 	 * vectors, calculates the vector sum
+ 	 * </p>
+ 	 * 
+ 	 * @param x
+ 	 * @param y
+ 	 * @param z
+ 	 * @return
+ 	 */
+ 	public static double distance3D(double x, double y, double z) {
+ 		return distance3D(x, y, z, 0, 0, 0);
+ 	}
+ 
+ 	public static double distance3D(double[] v) {
+ 		return distance3D(v[0], v[1], v[2], 0, 0, 0);
+ 	}
+ 
+ 	/**
+ 	 * Caculate the angle between two vectors joined at their tails at the point
+ 	 * (xv, yv, zv)
+ 	 * 
+ 	 * @param x0
+ 	 * @param y0
+ 	 * @param z0
+ 	 * @param x1
+ 	 * @param y1
+ 	 * @param z1
+ 	 * @param xv
+ 	 * @param yv
+ 	 * @param zv
+ 	 * @return
+ 	 */
+ 	public static double angle3D(double x0, double y0, double z0, double x1,
+ 			double y1, double z1, double xv, double yv, double zv) {
+ 
+ 		x0 -= xv;
+ 		y0 -= yv;
+ 		z0 -= zv;
+ 		x1 -= xv;
+ 		y1 -= yv;
+ 		z1 -= zv;
+ 
+ 		double dot = x0 * x1 + y0 * y1 + z0 * z1;
+		double d0 = distance3D(x0, y0, z0);
+		double d1 = distance3D(x1, y1, z1);
+ 
+ 		double cosTheta = dot / (d0 * d1);
+ 
+ 		return Math.acos(cosTheta);
+ 	}
+ 
+ }

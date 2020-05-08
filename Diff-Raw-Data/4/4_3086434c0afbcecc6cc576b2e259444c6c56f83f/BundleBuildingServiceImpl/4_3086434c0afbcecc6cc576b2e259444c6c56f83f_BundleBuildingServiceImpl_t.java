@@ -1,0 +1,493 @@
+ package org.onebusaway.nyc.admin.service.bundle.impl;
+ 
+ import org.onebusaway.container.ContainerLibrary;
+ import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
+ import org.onebusaway.nyc.admin.model.BundleBuildRequest;
+ import org.onebusaway.nyc.admin.model.BundleBuildResponse;
+ import org.onebusaway.nyc.admin.service.FileService;
+ import org.onebusaway.nyc.admin.service.bundle.BundleBuildingService;
+ import org.onebusaway.nyc.admin.util.FileUtils;
+ import org.onebusaway.nyc.admin.util.ProcessUtil;
+ import org.onebusaway.nyc.transit_data_federation.bundle.model.NycFederatedTransitDataBundle;
+ import org.onebusaway.nyc.transit_data_federation.bundle.tasks.stif.StifTask;
+ import org.onebusaway.nyc.util.configuration.ConfigurationService;
+ import org.onebusaway.transit_data_federation.bundle.FederatedTransitDataBundleCreator;
+ import org.onebusaway.transit_data_federation.bundle.model.GtfsBundle;
+ import org.onebusaway.transit_data_federation.bundle.model.GtfsBundles;
+ import org.onebusaway.transit_data_federation.bundle.model.TaskDefinition;
+ import org.onebusaway.transit_data_federation.services.FederatedTransitDataBundle;
+ 
+ import org.apache.log4j.Layout;
+ import org.apache.log4j.SimpleLayout;
+ import org.apache.log4j.WriterAppender;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.beans.factory.config.BeanDefinition;
+ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+ import org.springframework.context.ConfigurableApplicationContext;
+ import org.springframework.remoting.RemoteConnectFailureException;
+ 
+ import java.io.File;
+ import java.io.FileOutputStream;
+ import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.io.PrintStream;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
+ public class BundleBuildingServiceImpl implements BundleBuildingService {
+   private static final String BUNDLE_RESOURCE = "classpath:org/onebusaway/transit_data_federation/bundle/application-context-bundle-admin.xml";
+   private static final String DEFAULT_STIF_CLEANUP_URL = "https://github.com/camsys/onebusaway-nyc/raw/master/onebusaway-nyc-stif-loader/fix-stif-date-codes.py";
+   private static final String DEFAULT_AGENCY = "MTA";
+   private static final String DATA_DIR = "data";
+   private static final String OUTPUT_DIR = "outputs";
+   private static final String INPUTS_DIR = "inputs";
+ 
+   private static Logger _log = LoggerFactory.getLogger(BundleBuildingServiceImpl.class);
+   private FileService _fileService;
+   private ConfigurationService configurationService;
+   
+   @Autowired
+   public void setFileService(FileService service) {
+     _fileService = service;
+   }
+ 
+  	/**
+ 	 * @param configurationService the configurationService to set
+ 	 */
+  	@Autowired
+ 	public void setConfigurationService(ConfigurationService configurationService) {
+ 		this.configurationService = configurationService;
+ 	}
+ 
+   @Override
+   public void setup() {
+ 
+   }
+ 
+   @Override
+   public void doBuild(BundleBuildRequest request, BundleBuildResponse response) {
+     response.setId(request.getId());
+     download(request, response);
+     prepare(request, response);
+     build(request, response);
+     assemble(request, response);
+     upload(request, response);
+     response.addStatusMessage("Bundle build process complete");
+   }
+   /**
+    * download from S3 and stage for building 
+    */
+   @Override
+   public void download(BundleBuildRequest request, BundleBuildResponse response) {
+ 
+     String bundleDir = request.getBundleDirectory();
+     String tmpDirectory = request.getTmpDirectory();
+     if (tmpDirectory == null) { 
+       tmpDirectory = new FileUtils().createTmpDirectory();
+       request.setTmpDirectory(tmpDirectory);
+     }
+     response.setTmpDirectory(tmpDirectory);
+ 
+     // download gtfs
+     List<String> gtfs = _fileService.list(
+         bundleDir + "/" + _fileService.getGtfsPath(), -1);
+     for (String file : gtfs) {
+       response.addStatusMessage("downloading gtfs " + file);
+       response.addGtfsFile(_fileService.get(file, tmpDirectory));
+     }
+     // download stifs
+     List<String> stif = _fileService.list(
+         bundleDir + "/" + _fileService.getStifPath(), -1);
+     for (String file : stif) {
+       response.addStatusMessage("downloading stif " + file);
+       response.addStifZipFile(_fileService.get(file, tmpDirectory));
+     }
+ 
+   }
+ 
+   /**
+    * stage file locations for bundle building.
+    */
+   @Override
+   public void prepare(BundleBuildRequest request, BundleBuildResponse response) {
+     response.addStatusMessage("preparing for build");
+     FileUtils fs = new FileUtils();
+     // copy source data to inputs
+     String rootPath = request.getTmpDirectory() + File.separator + request.getBundleName();
+     response.setBundleRootDirectory(rootPath);
+     File rootDir = new File(rootPath);
+     rootDir.mkdirs();
+     
+     String inputsPath = request.getTmpDirectory() + File.separator + request.getBundleName() 
+         + File.separator + INPUTS_DIR;
+     response.setBundleInputDirectory(inputsPath);
+     File inputsDir = new File(inputsPath);
+     inputsDir.mkdirs();
+     String outputsPath = request.getTmpDirectory() + File.separator + request.getBundleName()
+         + File.separator + OUTPUT_DIR;
+     response.setBundleOutputDirectory(outputsPath);
+     File outputsDir = new File(outputsPath);
+     outputsDir.mkdirs();
+ 
+     String dataPath = request.getTmpDirectory() + File.separator + request.getBundleName()
+         + File.separator + DATA_DIR;
+     
+     // create STIF dir as well
+     String stifPath = request.getTmpDirectory() + File.separator + "stif";
+     File stifDir = new File(stifPath);
+     _log.info("creating stif directory=" + stifPath);
+     stifDir.mkdirs();
+     
+     File dataDir = new File(dataPath);
+     response.setBundleDataDirectory(dataPath);
+     dataDir.mkdirs();
+ 
+     
+     for (String gtfs : response.getGtfsList()) {
+       String outputFilename = inputsPath + File.separator + fs.parseFileName(gtfs); 
+       fs.copyFiles(new File(gtfs), new File(outputFilename));
+     }
+     for (String stif: response.getStifZipList()) {
+       String outputFilename = inputsPath + File.separator + fs.parseFileName(stif); 
+       fs.copyFiles(new File(stif), new File(outputFilename));
+     }
+     
+     for (String stifZip : response.getStifZipList()) {
+       _log.info("stif copying " + stifZip + " to " + request.getTmpDirectory() + File.separator
+           + "stif");
+       new FileUtils().unzip(stifZip, request.getTmpDirectory() + File.separator
+           + "stif");
+     }
+     
+     // stage baseLocations
+     InputStream baseLocationsStream = this.getClass().getResourceAsStream("/BaseLocations.txt");
+     new FileUtils().copy(baseLocationsStream, dataPath + File.separator + "BaseLocations.txt");
+     
+     // clean stifs via STIF_PYTHON_CLEANUP_SCRIPT
+     try {
+       File[] stifDirectories = stifDir.listFiles();
+       if (stifDirectories != null) {
+         
+         fs = new FileUtils(request.getTmpDirectory());
+           String stifUtilUrl = getStifCleanupUrl();
+           response.addStatusMessage("downloading " + stifUtilUrl + " to clean stifs");
+           fs.wget(stifUtilUrl);
+           String stifUtilName = fs.parseFileName(stifUtilUrl);
+           // make executable
+           fs.chmod("500", request.getTmpDirectory() + File.separator + stifUtilName);
+ 
+         // for each subdirectory of stif, run the script 
+         for (File stifSubDir : stifDirectories) {
+           String cmd = request.getTmpDirectory() + File.separator + stifUtilName + " " 
+             + stifSubDir.getCanonicalPath();
+           
+           // kick off process and collect output
+           ProcessUtil pu = new ProcessUtil(cmd);
+           pu.exec();
+           if (pu.getReturnCode() == null || !pu.getReturnCode().equals(0)) {
+             // obanyc-1692, do not send to client
+             String returnCodeMessage = stifUtilName + " exited with return code " + pu.getReturnCode();
+             _log.info(returnCodeMessage);
+             _log.info("output=" + pu.getOutput());
+             _log.info("error=" + pu.getError());
+           }
+           if (pu.getException() != null) {
+             response.setException(pu.getException());
+           }
+         }
+         response.addStatusMessage("stif cleaning complete");
+       } 
+     } catch (Exception any) {
+       response.setException(any);
+     }
+   }
+ 
+   private String getStifCleanupUrl() {
+     if (configurationService != null) {
+       try {
+         return configurationService.getConfigurationValueAsString("admin.stif_cleanup_url", DEFAULT_STIF_CLEANUP_URL);
+       } catch (RemoteConnectFailureException e){
+         _log.error("stifCleanupUrl failed:", e);
+         return DEFAULT_STIF_CLEANUP_URL;
+       }
+     }
+     return DEFAULT_STIF_CLEANUP_URL;
+   }
+   
+   /**
+    * call FederatedTransitDataBundleCreator
+    */
+   @Override
+   public int build(BundleBuildRequest request, BundleBuildResponse response) {
+     /*
+      * this follows the example from FederatedTransitDataBundleCreatorMain
+      */
+     PrintStream stdOut = System.out;
+     PrintStream logFile = null;
+     // pass a mini spring context to the bundle builder so we can cleanup
+     ConfigurableApplicationContext context = null;
+     try {
+       
+       File outputPath = new File(response.getBundleDataDirectory());
+ 
+       // beans assume bundlePath is set -- this will be where files are written!
+       System.setProperty("bundlePath", outputPath.getAbsolutePath());
+       
+       String logFilename = outputPath + File.separator + "bundleBuilder.out.txt";
+       logFile = new PrintStream(new FileOutputStream(new File(logFilename)));
+       // swap standard out for logging
+       System.setOut(logFile);
+       configureLogging(System.out);
+       
+       FederatedTransitDataBundleCreator creator = new FederatedTransitDataBundleCreator();
+ 
+       Map<String, BeanDefinition> beans = new HashMap<String, BeanDefinition>();
+       creator.setContextBeans(beans);
+ 
+       List<GtfsBundle> gtfsBundles = createGtfsBundles(response);
+       List<String> contextPaths = new ArrayList<String>();
+       contextPaths.add(BUNDLE_RESOURCE);
+       
+       BeanDefinitionBuilder bean = BeanDefinitionBuilder.genericBeanDefinition(GtfsBundles.class);
+       bean.addPropertyValue("bundles", gtfsBundles);
+       beans.put("gtfs-bundles", bean.getBeanDefinition());
+ 
+       bean = BeanDefinitionBuilder.genericBeanDefinition(GtfsRelationalDaoImpl.class);
+       beans.put("gtfsRelationalDaoImpl", bean.getBeanDefinition());
+ 
+       // configure for NYC specifics
+       BeanDefinitionBuilder bundle = BeanDefinitionBuilder.genericBeanDefinition(FederatedTransitDataBundle.class);
+       bundle.addPropertyValue("path", outputPath);
+       beans.put("bundle", bundle.getBeanDefinition());
+       
+       BeanDefinitionBuilder nycBundle = BeanDefinitionBuilder.genericBeanDefinition(NycFederatedTransitDataBundle.class);
+       nycBundle.addPropertyValue("path", outputPath);
+       beans.put("nycBundle", nycBundle.getBeanDefinition());
+ 
+       BeanDefinitionBuilder stifLoaderTask = BeanDefinitionBuilder.genericBeanDefinition(StifTask.class);
+       stifLoaderTask.addPropertyValue("stifPath", request.getTmpDirectory()
+           + File.separator + "stif");// TODO this is a convention, pull out into config?
+       String notInServiceFilename = request.getTmpDirectory() + File.separator
+           + "NotInServiceDSCs.txt";
+       new FileUtils().createFile(notInServiceFilename,
+           listToFile(request.getNotInServiceDSCList()));
+       stifLoaderTask.addPropertyValue("notInServiceDscPath",
+           notInServiceFilename);
+       stifLoaderTask.addPropertyValue("fallBackToStifBlocks", Boolean.TRUE);
+       stifLoaderTask.addPropertyValue("logPath", response.getBundleOutputDirectory());
+       beans.put("stifLoaderTask", stifLoaderTask.getBeanDefinition());
+ 
+       BeanDefinitionBuilder task = BeanDefinitionBuilder.genericBeanDefinition(TaskDefinition.class);
+       task.addPropertyValue("taskName", "stif");
+       task.addPropertyValue("afterTaskName", "gtfs");
+       task.addPropertyValue("beforeTaskName", "transit_graph");
+       task.addPropertyReference("task", "stifLoaderTask");
+       // this name is not significant, its loaded by type
+       beans.put("nycStifTask", task.getBeanDefinition());
+ 
+       _log.debug("setting outputPath=" + outputPath);
+       creator.setOutputPath(outputPath);
+       creator.setContextPaths(contextPaths);
+ 
+       // manage our own context to recover from exceptions
+       Map<String, BeanDefinition> contextBeans = new HashMap<String, BeanDefinition>();
+       contextBeans.putAll(beans);
+       context = ContainerLibrary.createContext(contextPaths, contextBeans);
+       creator.setContext(context);
+       
+       
+       response.addStatusMessage("building bundle");
+       creator.run();
+       response.addStatusMessage("bundle build complete");
+       return 0;
+ 
+     } catch (Exception e) {
+       _log.error(e.toString(), e);
+       response.setException(e);
+       return 1;
+     } catch (Throwable t) {
+       _log.error(t.toString(), t);
+       response.setException(new RuntimeException(t.toString()));
+       return -1;
+     } finally {
+       if (context != null) {
+         try {
+           /*
+            * here we cleanup the spring context so we can process follow on requests.
+            */
+         context.stop();
+         context.close();
+         } catch (Throwable t) {
+           _log.error("buried context close:", t);
+         }
+       }
+       // restore standard out
+       deconfigureLogging(System.out);
+       System.setOut(stdOut);
+       
+       if (logFile != null) {
+         logFile.close();
+       }
+     }
+ 
+   }
+   
+   /**
+    * tear down the logger for the bundle building activity. 
+    */
+   private void deconfigureLogging(OutputStream os) {
+     _log.info("deconfiguring logging");
+     try {
+       os.flush();
+       os.close();
+     } catch (Exception any) {
+       _log.error("deconfigure logging failed:", any);
+     }
+ 
+     org.apache.log4j.Logger logger = org.apache.log4j.Logger.getRootLogger();
+     logger.removeAppender("bundlebuilder.out");
+   }
+ 
+   /**
+    * setup a logger just for the bundle building activity. 
+    */
+   private void configureLogging(OutputStream os) {
+     Layout layout = new SimpleLayout();
+     WriterAppender wa = new WriterAppender(layout, os);
+     wa.setName("bundlebuilder.out");
+     // introducing log4j dependency here
+     org.apache.log4j.Logger logger = org.apache.log4j.Logger.getRootLogger();
+     logger.addAppender(wa);
+     _log.info("configuring logging");
+ 
+   }
+ 
+   /**
+    * arrange files for tar'ing into bundle format
+    */
+   @Override
+   public void assemble(BundleBuildRequest request, BundleBuildResponse response) {
+     response.addStatusMessage("compressing results");
+ 
+     FileUtils fs = new FileUtils();
+     // build BundleMetaData.json
+    new BundleBuildingUtil().generateJsonMetadata(request, response);
+ 
+     String[] paths = {request.getBundleName()};
+     String filename = request.getTmpDirectory() + File.separator + request.getBundleName() + ".tar.gz";
+     response.setBundleTarFilename(filename);
+     response.addStatusMessage("creating bundle=" + filename + " for root dir=" + request.getTmpDirectory());
+     String baseDir = request.getTmpDirectory();
+     fs.tarcvf(baseDir, paths, filename);
+     
+     // now copy inputs and outputs to root for easy access
+     // inputs
+     String inputsPath = request.getTmpDirectory() + File.separator + INPUTS_DIR;
+     File inputsDestDir = new File(inputsPath);
+     inputsDestDir.mkdir();
+     File inputsDir = new File(response.getBundleInputDirectory());
+     
+     File[] inputFiles = inputsDir.listFiles();
+     if (inputFiles != null) {
+       for (File input : inputFiles) {
+         fs.copyFiles(input, new File(inputsPath + File.separator + input.getName()));
+       }
+     }
+ 
+     // outputs
+     String outputsPath = request.getTmpDirectory() + File.separator + OUTPUT_DIR;
+     File outputsDestDir = new File(outputsPath);
+     outputsDestDir.mkdir();
+ 
+     // copy log file to outputs
+     File outputPath = new File(response.getBundleDataDirectory());
+     String logFilename = outputPath + File.separator + "bundleBuilder.out.txt";
+     fs.copyFiles(new File(logFilename), new File(response.getBundleOutputDirectory() + File.separator + "bundleBuilder.out.txt"));
+ 
+     // copy the rest of the bundle content to outputs directory
+     File outputsDir = new File(response.getBundleOutputDirectory());
+     File[] outputFiles = outputsDir.listFiles();
+     if (outputFiles != null) {
+       for (File output : outputFiles) {
+         response.addOutputFile(output.getName());
+         fs.copyFiles(output, new File(outputsPath + File.separator + output.getName()));
+       }
+     }
+     
+   }
+ 
+   private StringBuffer listToFile(List<String> notInServiceDSCList) {
+     StringBuffer sb = new StringBuffer();
+     for (String s : notInServiceDSCList) {
+       sb.append(s).append("\n");
+     }
+     return sb;
+   }
+ 
+   private List<GtfsBundle> createGtfsBundles(BundleBuildResponse response) {
+     List<String> gtfsList = response.getGtfsList();
+     final String gtfsMsg = "constructing configuration for bundles=" + gtfsList; 
+     response.addStatusMessage(gtfsMsg);
+     _log.info(gtfsMsg);
+     
+     List<GtfsBundle> bundles = new ArrayList<GtfsBundle>(gtfsList.size());
+     String defaultAgencyId = getDefaultAgencyId();
+    response.addStatusMessage("default agency configured to be |" + defaultAgencyId + "|");
+     for (String path : gtfsList) {
+       GtfsBundle gtfsBundle = new GtfsBundle();
+       gtfsBundle.setPath(new File(path));
+      if (defaultAgencyId != null && defaultAgencyId.length() > 0) {
+         final String msg = "for bundle " + path + " setting defaultAgencyId='" + defaultAgencyId + "'";
+         response.addStatusMessage(msg);
+         _log.info(msg);
+         gtfsBundle.setDefaultAgencyId(defaultAgencyId);
+       }
+       bundles.add(gtfsBundle);
+     }
+     return bundles;
+   }
+ 
+   @Override
+   public String getDefaultAgencyId() {
+     return configurationService.getConfigurationValueAsString("admin.default_agency", DEFAULT_AGENCY);
+ 
+   }
+ 
+   @Override
+   /**
+    * push it back to S3
+    */
+   public void upload(BundleBuildRequest request, BundleBuildResponse response) {
+     String versionString = createVersionString(request, response);
+     response.setVersionString(versionString);
+     response.addStatusMessage("uploading to " + versionString);
+     _log.info("uploading " + response.getBundleOutputDirectory() + " to " + versionString);
+     _fileService.put(versionString + File.separator + INPUTS_DIR, response.getBundleInputDirectory());
+     response.setRemoteInputDirectory(versionString + File.separator + INPUTS_DIR);
+     _fileService.put(versionString + File.separator + OUTPUT_DIR, response.getBundleOutputDirectory());
+     response.setRemoteOutputDirectory(versionString + File.separator + OUTPUT_DIR);
+     _fileService.put(versionString + File.separator + request.getBundleName() + ".tar.gz", 
+         response.getBundleTarFilename());
+ 
+     /* TODO implement delete 
+      * for now we rely on cloud restart to delete volume for us, but that is lazy 
+      */
+   }
+ 
+   private String createVersionString(BundleBuildRequest request,
+       BundleBuildResponse response) {
+     String bundleName = request.getBundleName();
+     _log.info("createVersionString found bundleName=" + bundleName);
+     if (bundleName == null || bundleName.length() == 0) {
+       bundleName = "b" + System.currentTimeMillis();
+     }
+     return request.getBundleDirectory() + File.separator + 
+         _fileService.getBuildPath() +  File.separator +
+         bundleName;
+   }
+ 
+ }

@@ -1,0 +1,237 @@
+ /******************************************************************************************************************************
+  * Copyright (c) 2011 Christopher Haines, Dale Scheppler, Nicholas Skaggs, Stephen V. Williams, James Pence, Michael Barbieri.
+  * All rights reserved.
+  * This program and the accompanying materials are made available under the terms of the new BSD license which accompanies this
+  * distribution, and is available at http://www.opensource.org/licenses/bsd-license.html
+  * Contributors:
+  * Christopher Haines, Dale Scheppler, Nicholas Skaggs, Stephen V. Williams, James Pence, Michael Barbieri
+  * - initial API and implementation
+  *****************************************************************************************************************************/
+ package org.vivoweb.harvester.util;
+ 
+ import java.io.File;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.sql.Connection;
+ import java.sql.DriverManager;
+ import java.sql.ResultSet;
+ import java.sql.ResultSetMetaData;
+ import java.sql.SQLException;
+ import java.sql.Statement;
+ import java.util.ArrayList;
+ import java.util.List;
+ import org.apache.commons.vfs.FileSystemException;
+ import org.apache.commons.vfs.VFS;
+ import org.h2.tools.Csv;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.vivoweb.harvester.util.args.ArgDef;
+ import org.vivoweb.harvester.util.args.ArgList;
+ import org.vivoweb.harvester.util.args.ArgParser;
+ 
+ /**
+  * This Class takes the data from a csv file and places it into a database
+  * @author James Pence jrpence@ufl.edu
+  */
+ public class CSVtoJDBC {
+ 	/**
+ 	 * SLF4J Logger
+ 	 */
+ 	private static Logger log = LoggerFactory.getLogger(CSVtoJDBC.class);
+ 	/**
+ 	 * CSV to read from
+ 	 */
+ 	private InputStream csvStream;
+ 	/**
+ 	 * DBconnection into which to output
+ 	 */
+ 	private Connection output;
+ 	/**
+ 	 * Table name into which to output
+ 	 */
+ 	private String tableName;
+ 	/**
+ 	 * Field names into which to output
+ 	 */
+ 	private List<String> fieldNames;
+ 	
+ 	/**
+ 	 * Library style initialyzer 
+ 	 * @param fileStream CSV inputStream to read from
+ 	 * @param output The database connection for the output
+ 	 * @param tableName table name into which to output
+ 	 */
+ 	public CSVtoJDBC(InputStream fileStream, Connection output, String tableName) {
+ 		this.init(fileStream, output, tableName);
+ 	}
+ 	
+ 	/**
+ 	 * Library style Constructor
+ 	 * @param filename CSV to read from
+ 	 * @param output The database connection for the output
+ 	 * @param tableName table name into which to output
+ 	 * @throws FileSystemException error establishing connection to file
+ 	 */
+ 	public CSVtoJDBC(String filename, Connection output, String tableName) throws FileSystemException {
+ 		InputStream is = VFS.getManager().resolveFile(new File("."), filename).getContent().getInputStream();
+ 		this.init(is, output, tableName);
+ 	}
+ 	
+ 	/**
+ 	 * Library style Constructor
+ 	 * @param filename CSV to read from
+ 	 * @param jdbcDriverClass jdbc driver class
+ 	 * @param connLine the jdbc connection line
+ 	 * @param username username with which to connect
+ 	 * @param password password with which to connect
+ 	 * @param tableName table name into which to output
+ 	 * @throws IOException error establishing connection to database or file
+ 	 */
+ 	public CSVtoJDBC(String filename, String jdbcDriverClass, String connLine, String username, String password, String tableName) throws IOException {
+ 		InputStream  is = VFS.getManager().resolveFile(new File("."), filename).getContent().getInputStream();
+ 		Connection conn = null;
+ 		try {
+ 			Class.forName(jdbcDriverClass);
+ 			conn = DriverManager.getConnection(connLine, username, password);
+ 		} catch(ClassNotFoundException e) {
+ 			throw new IOException(e.getMessage(), e);
+ 		} catch(SQLException e) {
+ 			throw new IOException(e.getMessage(), e);
+ 		}
+ 		this.init(is,conn,tableName);
+ 	}
+ 
+ 	
+ 	/**
+ 	 * Command line Constructor
+ 	 * @param args command line arguments
+ 	 * @throws IOException error establishing connection to database or file
+ 	 */
+ 	public CSVtoJDBC(String[] args) throws IOException {
+ 		this(new ArgList(getParser(), args));
+ 	}
+ 	
+ 	/**
+ 	 * ArgList Constructor
+ 	 * @param argList option set of parsed args
+ 	 * @throws IOException error establishing connection to database or file
+ 	 */
+ 	public CSVtoJDBC(ArgList argList) throws IOException {
+ 		this(argList.get("i"), argList.get("d"), argList.get("c"), argList.get("u"), argList.get("p"), argList.get("t"));
+ 	}
+ 	
+ 	/**
+ 	 * Library style initialyzer 
+ 	 * @param fileStream CSV inputStream to read from
+ 	 * @param outConn The database connection for the output
+ 	 * @param tablename table name into which to output
+ 	 */
+ 	public void  init(InputStream fileStream, Connection outConn, String tablename) {
+ 		this.csvStream = fileStream;
+ 		this.output = outConn;
+ 		this.tableName = tablename;
+ 		this.fieldNames = new ArrayList<String>();
+ 	}
+ 	
+ 	/**
+ 	 * Move CSV data into a recordHandler
+ 	 * @throws IOException error reading from database or file
+ 	 */
+ 	public void execute() throws IOException {
+ 		try {
+ 			ResultSet rs = Csv.getInstance().read(new InputStreamReader(this.csvStream), null);
+ 			ResultSetMetaData meta = rs.getMetaData();
+ 			Statement cursor = this.output.createStatement();
+ 			int rowID = 0;
+ 			StringBuilder createTable = new StringBuilder("CREATE TABLE ");
+ 			createTable.append(this.tableName);
+ 			createTable.append("( ROWID int, ");
+ 			this.fieldNames.add("ROWID");
+ 			StringBuilder columnNames = new StringBuilder("( ROWID, ");
+ 			for(int i = 0; i < meta.getColumnCount(); i++) {
+ 				String colLbl = meta.getColumnLabel(i + 1);
+ 				createTable.append("\n");
+ 				createTable.append( colLbl);
+ 				this.fieldNames.add( colLbl);
+ 				createTable.append((i == (meta.getColumnCount() - 1)) ? " TEXT )" : " TEXT ,");
+ 				
+ 				columnNames.append(colLbl);
+ 				columnNames.append((i == (meta.getColumnCount() - 1)) ? " )" : ", ");
+ 			}
+ 			log.info("Create table command: \n" + createTable.toString());
+ 			cursor.execute(createTable.toString());
+ 			while(rs.next()) {
+ 				
+ 				StringBuilder insertCommand = new StringBuilder("INSERT INTO ");
+ 				insertCommand.append(this.tableName);
+ 				insertCommand.append(" ");
+ 				insertCommand.append(columnNames.toString());
+ 				insertCommand.append("\nVALUES (");
+ 				insertCommand.append(rowID);
+ 				insertCommand.append(", '");
+ 				for(int i = 0; i < meta.getColumnCount(); i++) {
+ 					insertCommand.append(rs.getString(i + 1));
+ 					insertCommand.append((i == (meta.getColumnCount() - 1)) ? "')" : "', '");
+ 				}
+ 				log.info("Insert command: \n" + insertCommand.toString());
+ 				cursor.executeUpdate(insertCommand.toString());
+ 				rowID++;
+ 			}
+ 		} catch(FileSystemException e) {
+ 			throw new IOException(e.getMessage(), e);
+ 		} catch(SQLException e) {
+ 			throw new IOException(e.getMessage(), e);
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Returns the list of fields from the recent CSV
+	 * @return
+ 	 */
+ 	public List<String> getFields(){
+ 		return this.fieldNames;
+ 		
+ 	}
+ 	
+ 	/**
+ 	 * Get the ArgParser for this task
+ 	 * @return the ArgParser
+ 	 */
+ 	private static ArgParser getParser() {
+ 		ArgParser parser = new ArgParser("CSVtoJDBC");
+ 		parser.addArgument(new ArgDef().setShortOption('i').setLongOpt("inputFile").withParameter(true, "FILENAME").setDescription("csv file to be read into the database").setRequired(true));
+ 		parser.addArgument(new ArgDef().setShortOption('d').setLongOpt("driver").withParameter(true, "JDBC_DRIVER").setDescription("jdbc driver class for output database").setRequired(true));
+ 		parser.addArgument(new ArgDef().setShortOption('c').setLongOpt("connection").withParameter(true, "JDBC_CONN").setDescription("jdbc connection string for output database").setRequired(true));
+ 		parser.addArgument(new ArgDef().setShortOption('u').setLongOpt("username").withParameter(true, "USERNAME").setDescription("database username for output database").setRequired(true));
+ 		parser.addArgument(new ArgDef().setShortOption('p').setLongOpt("password").withParameter(true, "PASSWORD").setDescription("database password for output database").setRequired(true));
+ 		parser.addArgument(new ArgDef().setShortOption('t').setLongOpt("tableName").withParameter(true, "TABLE_NAME").setDescription("a single database table name").setRequired(true));
+ 		return parser;
+ 	}
+ 	
+ 	/**
+ 	 * Main method
+ 	 * @param args commandline arguments
+ 	 */
+ 	public static void main(String... args) {
+ 		Exception error = null;
+ 		try {
+ 			InitLog.initLogger(args, getParser());
+ 			log.info(getParser().getAppName() + ": Start");
+ 			new CSVtoJDBC(args).execute();
+ 		} catch(IllegalArgumentException e) {
+ 			log.error(e.getMessage(), e);
+ 			System.out.println(getParser().getUsage());
+ 			error = e;
+ 		} catch(Exception e) {
+ 			log.error(e.getMessage(), e);
+ 			error = e;
+ 		} finally {
+ 			log.info(getParser().getAppName() + ": End");
+ 			if(error != null) {
+ 				System.exit(1);
+ 			}
+ 		}
+ 	}
+ 	
+ }

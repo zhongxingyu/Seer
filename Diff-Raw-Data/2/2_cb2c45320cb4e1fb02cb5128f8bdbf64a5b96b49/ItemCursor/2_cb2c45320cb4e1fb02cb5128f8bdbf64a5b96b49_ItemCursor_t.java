@@ -1,0 +1,86 @@
+ package openblocks.common.item;
+ 
+ import net.minecraft.block.Block;
+ import net.minecraft.client.renderer.texture.IconRegister;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.item.Item;
+ import net.minecraft.item.ItemStack;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.world.World;
+ import openblocks.Config;
+ import openblocks.OpenBlocks;
+ import openmods.utils.EnchantmentUtils;
+ import openmods.utils.ItemUtils;
+ import cpw.mods.fml.relauncher.Side;
+ import cpw.mods.fml.relauncher.SideOnly;
+ 
+ public class ItemCursor extends Item {
+ 
+ 	public ItemCursor() {
+ 		super(Config.itemCursorId);
+ 		setCreativeTab(OpenBlocks.tabOpenBlocks);
+ 		setMaxStackSize(1);
+ 	}
+ 
+ 	@Override
+ 	@SideOnly(Side.CLIENT)
+ 	public void registerIcons(IconRegister registry) {
+ 		itemIcon = registry.registerIcon("openblocks:cursor");
+ 	}
+ 
+ 	@Override
+ 	public int getMaxItemUseDuration(ItemStack par1ItemStack) {
+ 		return 50;
+ 	}
+ 
+ 	@Override
+ 	public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ) {
+ 		NBTTagCompound tag = ItemUtils.getItemTag(stack);
+ 		tag.setInteger("dimension", world.provider.dimensionId);
+ 		tag.setInteger("x", x);
+ 		tag.setInteger("y", y);
+ 		tag.setInteger("z", z);
+ 		tag.setInteger("side", side);
+ 		return true;
+ 	}
+ 
+ 	@Override
+ 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
+ 		if (world.isRemote) return itemStack;
+ 
+ 		NBTTagCompound tag = itemStack.getTagCompound();
+		if (tag != null && tag.hasKey("x") && tag.hasKey("y") && tag.hasKey("z") && tag.hasKey("dimension")) {
+ 			final int x = tag.getInteger("x");
+ 			final int y = tag.getInteger("y");
+ 			final int z = tag.getInteger("z");
+ 			final int dimension = tag.getInteger("dimension");
+ 
+ 			if (world.provider.dimensionId == dimension && world.blockExists(x, y, z)) clickBlock(world, player, x, y, z, tag.getInteger("side"));
+ 		}
+ 		return itemStack;
+ 	}
+ 
+ 	private static void clickBlock(World world, EntityPlayer player, final int x, final int y, final int z, int side) {
+ 		int blockId = world.getBlockId(x, y, z);
+ 		Block block = Block.blocksList[blockId];
+ 		if (block != null) {
+ 			if (player.capabilities.isCreativeMode) block.onBlockActivated(world, x, y, z, player, side, 0, 0, 0);
+ 			else {
+ 				final int cost = (int)Math.max(0, getDistanceToLinkedBlock(player, x, y, z) - 10);
+ 				final int playerExperience = EnchantmentUtils.getPlayerXP(player);
+ 				if (cost <= playerExperience) {
+ 					block.onBlockActivated(world, x, y, z, player, side, 0, 0, 0);
+ 					EnchantmentUtils.drainPlayerXP(player, cost);
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+ 	private static double getDistanceToLinkedBlock(EntityPlayer player, double x, double y, double z) {
+ 		double xd = player.posX - x;
+ 		double yd = player.posY - y;
+ 		double zd = player.posZ - z;
+ 		return Math.sqrt(xd * xd + yd * yd + zd * zd);
+ 	}
+ 
+ }

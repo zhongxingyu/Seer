@@ -1,0 +1,125 @@
+ package hr.fer.zemris.vhdllab.applets.texteditor;
+ 
+ import hr.fer.zemris.vhdllab.entity.File;
+ import hr.fer.zemris.vhdllab.platform.manager.editor.impl.AbstractEditor;
+ 
+ import java.awt.Color;
+ import java.io.PrintWriter;
+ import java.io.StringWriter;
+ 
+ import javax.swing.JComponent;
+ import javax.swing.JOptionPane;
+ import javax.swing.JTextPane;
+ import javax.swing.event.CaretEvent;
+ import javax.swing.event.CaretListener;
+ import javax.swing.event.DocumentEvent;
+ import javax.swing.event.DocumentListener;
+ import javax.swing.text.BadLocationException;
+ import javax.swing.text.DefaultHighlighter;
+ import javax.swing.text.Highlighter;
+ 
+ import org.springframework.binding.value.CommitTrigger;
+ import org.springframework.richclient.text.TextComponentPopup;
+ 
+ public class TextEditor extends AbstractEditor implements DocumentListener,
+         CaretListener {
+ 
+     private JTextPane textPane;
+     private CommitTrigger commitTrigger;
+ 
+     private Object highlighted;
+ 
+     @Override
+     protected JComponent doInitWithoutData() {
+         textPane = new JTextPane();
+         textPane.getDocument().addDocumentListener(this);
+         textPane.addCaretListener(this);
+         commitTrigger = new CommitTrigger();
+         TextComponentPopup.attachPopup(textPane, commitTrigger);
+ 
+         return textPane;
+     }
+ 
+     @Override
+     protected void doInitWithData(File f) {
+         textPane.setText(f.getData());
+         commitTrigger.commit();
+     }
+ 
+     @Override
+     protected String getData() {
+         return textPane.getText();
+     }
+ 
+     @Override
+     protected void doDispose() {
+     }
+ 
+     @Override
+     public void setEditable(boolean flag) {
+         textPane.setEditable(flag);
+     }
+ 
+     @Override
+     public void highlightLine(int line) {
+         int caret = textPane.getCaretPosition();
+         Highlighter h = textPane.getHighlighter();
+         h.removeAllHighlights();
+         String content = textPane.getText();
+         textPane.setCaretPosition(caret);
+ 
+         int pos = 0;
+         line--;
+        while (line != 0) {
+             pos = content.indexOf('\n', pos) + 1;
+             line--;
+         }
+         int last = content.indexOf('\n', pos) + 1;
+         if (last == 0) {
+             last = content.length();
+         }
+         try {
+             highlighted = h.addHighlight(pos, last,
+                     new DefaultHighlighter.DefaultHighlightPainter(new Color(
+                             180, 210, 238)));
+         } catch (BadLocationException e) {
+             e.printStackTrace();
+             StringWriter sw = new StringWriter();
+             PrintWriter pw = new PrintWriter(sw);
+             e.printStackTrace(pw);
+             JOptionPane.showMessageDialog(null, sw.toString());
+         }
+     }
+ 
+     //
+     // DocumentListener implementation
+     //
+ 
+     @Override
+     public void changedUpdate(DocumentEvent e) {
+         setModified(true);
+     }
+ 
+     @Override
+     public void insertUpdate(DocumentEvent e) {
+         setModified(true);
+     }
+ 
+     @Override
+     public void removeUpdate(DocumentEvent e) {
+         setModified(true);
+     }
+ 
+     //
+     // CaretListener implementation
+     //
+ 
+     @Override
+     public void caretUpdate(CaretEvent e) {
+         if (highlighted != null) {
+             textPane.getHighlighter().removeHighlight(highlighted);
+             highlighted = null;
+         }
+     }
+ 
+ }

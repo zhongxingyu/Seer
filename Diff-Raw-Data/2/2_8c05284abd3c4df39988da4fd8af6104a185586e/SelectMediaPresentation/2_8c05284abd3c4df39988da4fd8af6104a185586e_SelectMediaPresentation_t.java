@@ -1,0 +1,211 @@
+ package hs.mediasystem.screens.selectmedia;
+ 
+ import hs.mediasystem.framework.MediaItem;
+ import hs.mediasystem.framework.MediaRoot;
+ import hs.mediasystem.media.Media;
+ import hs.mediasystem.screens.MediaNode;
+ import hs.mediasystem.screens.MediaNodeEvent;
+ import hs.mediasystem.screens.Navigator;
+ import hs.mediasystem.screens.Navigator.Destination;
+ import hs.mediasystem.screens.ProgramController;
+ import hs.mediasystem.screens.SelectMediaView;
+ import hs.mediasystem.screens.StandardLayout;
+ import hs.mediasystem.screens.optiondialog.ActionOption;
+ import hs.mediasystem.screens.optiondialog.BooleanOption;
+ import hs.mediasystem.screens.optiondialog.ListOption;
+ import hs.mediasystem.screens.optiondialog.Option;
+ import hs.mediasystem.util.Callable;
+ import hs.mediasystem.util.ImageCache;
+ import hs.mediasystem.util.StateCache;
+ import hs.mediasystem.util.StringBinding;
+ 
+ import java.util.List;
+ 
+ import javafx.application.Platform;
+ import javafx.beans.InvalidationListener;
+ import javafx.beans.Observable;
+ import javafx.collections.FXCollections;
+ import javafx.event.ActionEvent;
+ import javafx.event.EventHandler;
+ import javafx.scene.Node;
+ import javafx.scene.input.KeyCode;
+ import javafx.scene.input.KeyCodeCombination;
+ import javafx.scene.input.KeyCombination;
+ import javafx.scene.input.KeyEvent;
+ 
+ import javax.inject.Inject;
+ 
+ public class SelectMediaPresentation {
+   private static final KeyCombination KEY_O = new KeyCodeCombination(KeyCode.O);
+   private final Navigator navigator;
+   private final StandardLayout layout = new StandardLayout();
+   private final StateCache stateCache;
+ 
+   private SelectMediaView view;
+ 
+   @Inject
+   public SelectMediaPresentation(final ProgramController controller, final SelectMediaView view, final StateCache stateCache) {
+     this.stateCache = stateCache;
+     this.navigator = new Navigator(controller.getNavigator());
+     this.view = view;
+ 
+     if(this.view != null) {
+       this.view.onBack().set(null);
+       this.view.onNodeSelected().set(null);
+       this.view.onNodeAlternateSelect().set(null);
+     }
+ 
+     this.view = view;
+ 
+     view.onBack().set(new EventHandler<ActionEvent>() {
+       @Override
+       public void handle(ActionEvent event) {
+         navigator.back();
+         event.consume();
+       }
+     });
+ 
+     view.onNodeSelected().set(new EventHandler<MediaNodeEvent>() {
+       @Override
+       public void handle(MediaNodeEvent event) {
+         if(event.getMediaNode().getMediaItem() instanceof MediaRoot) {
+           setTreeRoot((MediaRoot)event.getMediaNode().getMediaItem());
+         }
+         else {
+           controller.play(event.getMediaNode().getMediaItem());
+         }
+         event.consume();
+       }
+     });
+ 
+     view.onNodeAlternateSelect().set(new EventHandler<MediaNodeEvent>() {
+       @Override
+       public void handle(MediaNodeEvent event) {
+         final MediaItem mediaItem = event.getMediaNode().getMediaItem();
+         List<? extends Option> options = FXCollections.observableArrayList(
+           new BooleanOption("Viewed", mediaItem.viewedProperty(), new StringBinding(mediaItem.viewedProperty()) {
+             @Override
+             protected String computeValue() {
+               return mediaItem.viewedProperty().get() ? "Yes" : "No";
+             }
+           }),
+           new ActionOption("Reload meta data", new Callable<Boolean>() {
+             @Override
+             public Boolean call() {
+              mediaItem.reloadMetaData();
+ 
+               Media media = mediaItem.get(Media.class);
+ 
+               ImageCache.expunge(media.getBanner());
+               ImageCache.expunge(media.getImage());
+               ImageCache.expunge(media.getBackground());
+ 
+               return true;
+             }
+           })
+         );
+ 
+         controller.showOptionScreen("Options: " + mediaItem.getTitle(), options);
+         event.consume();
+       }
+     });
+ 
+     getView().setOnKeyPressed(new EventHandler<KeyEvent>() {
+       @Override
+       public void handle(KeyEvent event) {
+         if(KEY_O.match(event)) {
+           @SuppressWarnings("unchecked")
+           List<? extends Option> options = FXCollections.observableArrayList(
+             new ListOption<>("Group by", layout.groupSetProperty(), layout.availableGroupSetsProperty(), new StringBinding(layout.groupSetProperty()) {
+               @Override
+               protected String computeValue() {
+                 return layout.groupSetProperty().get().getTitle();
+               }
+             }),
+             new ListOption<>("Order by", layout.sortOrderProperty(), layout.availableSortOrdersProperty(), new StringBinding(layout.sortOrderProperty()) {
+               @Override
+               protected String computeValue() {
+                 return layout.sortOrderProperty().get().getTitle();
+               }
+             }),
+             new ListOption<>("View", view.layoutExtensionProperty(), view.availableLayoutExtensionsList(), new StringBinding(view.layoutExtensionProperty()) {
+               @Override
+               protected String computeValue() {
+                 return view.layoutExtensionProperty().get().getTitle();
+               }
+             })
+           );
+ 
+           controller.showOptionScreen("Media - Options", options);
+           event.consume();
+         }
+       }
+     });
+ 
+     layout.sortOrderProperty().addListener(new InvalidationListener() {
+       @Override
+       public void invalidated(Observable observable) {
+         view.setRoot(layout.createRootNode(currentRoot));
+       }
+     });
+   }
+ 
+   public Node getView() {
+     return (Node)view;
+   }
+ 
+   private MediaRoot currentRoot;
+ 
+   private void setTreeRoot(final MediaRoot root) {
+     currentRoot = root;
+     navigator.navigateTo(new Destination(root.getRootName()) {
+       @Override
+       public void execute() {
+         final MediaNode mediaNode = layout.createRootNode(root);
+ 
+         view.setRoot(mediaNode);
+ 
+         Platform.runLater(new Runnable() {
+           @Override
+           public void run() {
+             String key = createKeyFromTrail();
+             String id = stateCache.getState(key);
+             MediaNode nodeToSelect = null;
+ 
+             if(id != null) {
+               nodeToSelect = mediaNode.findMediaNode(id);
+             }
+ 
+             view.setSelectedNode(nodeToSelect);
+           }
+         });
+       }
+ 
+       @Override
+       protected void outro() {
+         MediaNode selectedNode = view.getSelectedNode();
+ 
+         if(selectedNode != null) {
+           stateCache.putState(createKeyFromTrail(), selectedNode.getId());
+         }
+       }
+ 
+       private String createKeyFromTrail() {
+         String key = "";
+ 
+         for(Destination destination : navigator.getTrail()) {
+           if(!key.isEmpty()) {
+             key += ";";
+           }
+           key += destination.getDescription();
+         }
+ 
+         return key;
+       }
+     });
+   }
+ 
+   public void setMediaTree(final MediaRoot mediaRoot) {
+     setTreeRoot(mediaRoot);
+   }
+ }

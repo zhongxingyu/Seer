@@ -1,0 +1,604 @@
+ //
+ // $Id$
+ //
+ // Clyde library - tools for developing networked games
+ // Copyright (C) 2005-2010 Three Rings Design, Inc.
+ //
+ // Redistribution and use in source and binary forms, with or without modification, are permitted
+ // provided that the following conditions are met:
+ //
+ // 1. Redistributions of source code must retain the above copyright notice, this list of
+ //    conditions and the following disclaimer.
+ // 2. Redistributions in binary form must reproduce the above copyright notice, this list of
+ //    conditions and the following disclaimer in the documentation and/or other materials provided
+ //    with the distribution.
+ //
+ // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ // INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ // PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ // INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ // TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ package com.threerings.config;
+ 
+ import java.io.IOException;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.Comparator;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Properties;
+ 
+ import com.google.common.collect.Lists;
+ 
+ import com.samskivert.util.ArrayUtil;
+ import com.samskivert.util.ListUtil;
+ import com.samskivert.util.ObserverList;
+ import com.samskivert.util.PropertiesUtil;
+ import com.samskivert.util.QuickSort;
+ import com.samskivert.util.SoftCache;
+ import com.samskivert.util.StringUtil;
+ 
+ import com.threerings.resource.ResourceManager;
+ 
+ import com.threerings.export.BinaryImporter;
+ import com.threerings.export.Exportable;
+ import com.threerings.export.Exporter;
+ import com.threerings.export.Importer;
+ import com.threerings.expr.Scope;
+ import com.threerings.util.Copyable;
+ 
+ import static com.threerings.ClydeLog.*;
+ 
+ /**
+  * Manages the set of loaded configurations.
+  */
+ public class ConfigManager
+     implements Copyable, Exportable
+ {
+     /**
+      * Creates a new global configuration manager.
+      *
+      * @param configPath the resource path of the configurations.
+      */
+     public ConfigManager (ResourceManager rsrcmgr, String configPath)
+     {
+         _type = "global";
+         _rsrcmgr = rsrcmgr;
+         _configPath = configPath + (configPath.endsWith("/") ? "" : "/");
+     }
+ 
+     /**
+      * No-arg constructor for deserialization.
+      */
+     public ConfigManager ()
+     {
+     }
+ 
+     /**
+      * Determines whether the config manager has been initialized.
+      */
+     public boolean isInitialized ()
+     {
+         return (_resources != null);
+     }
+ 
+     /**
+      * Initialization method for the global configuration manager.
+      */
+     public void init ()
+     {
+         // load the manager properties
+         try {
+             loadManagerProperties();
+         } catch (IOException e) {
+             log.warning("Failed to load manager properties.", e);
+             return;
+         }
+ 
+         // create the resource cache
+         _resources = new SoftCache<String, ManagedConfig>();
+ 
+         // register the global groups
+         Class[] classes = _classes.get("global");
+         if (classes == null) {
+             return;
+         }
+         for (Class clazz : classes) {
+             @SuppressWarnings("unchecked") Class<? extends ManagedConfig> cclass =
+                     (Class<? extends ManagedConfig>)clazz;
+             registerGroup(cclass);
+         }
+     }
+ 
+     /**
+      * Initialization method for child configuration managers.
+      */
+     public void init (String type, ConfigManager parent)
+     {
+         _type = type;
+         _parent = parent;
+         _rsrcmgr = parent._rsrcmgr;
+         _resources = parent._resources;
+         _classes = parent._classes;
+ 
+         // copy the groups over (any group not in the list will be silently discarded)
+         HashMap<Class, ConfigGroup> ogroups = _groups;
+         _groups = new HashMap<Class, ConfigGroup>();
+         Class[] classes = _classes.get(type);
+         if (classes == null) {
+             return;
+         }
+         for (Class clazz : classes) {
+             ConfigGroup group = ogroups.get(clazz);
+             if (group == null) {
+                 @SuppressWarnings("unchecked") Class<ManagedConfig> cclass =
+                     (Class<ManagedConfig>)clazz;
+                 group = new ConfigGroup<ManagedConfig>(cclass);
+             }
+             group.init(this);
+             _groups.put(clazz, group);
+         }
+     }
+ 
+     /**
+      * Returns the type of this manager.
+      */
+     public String getType ()
+     {
+         return _type;
+     }
+ 
+     /**
+     * Returns a reference to the parent of this manager, or <code>null</code> if this is the root.
+      */
+     public ConfigManager getParent ()
+     {
+         return _parent;
+     }
+ 
+     /**
+      * Returns a reference to the root of the manager hierarchy.
+      */
+     public ConfigManager getRoot ()
+     {
+         return (_parent == null) ? this : _parent.getRoot();
+     }
+ 
+     /**
+      * Returns a reference to the resource manager used to load configurations.
+      */
+     public ResourceManager getResourceManager ()
+     {
+         return _rsrcmgr;
+     }
+ 
+     /**
+      * Returns the resource path from which configurations are loaded, or <code>null</code> if
+      * configurations aren't loaded directly.
+      */
+     public String getConfigPath ()
+     {
+         return _configPath;
+     }
+ 
+     /**
+      * Determines whether configurations of the specified class are loaded from individual
+      * resources.
+      */
+     public boolean isResourceClass (Class clazz)
+     {
+         return ListUtil.contains(getResourceClasses(), clazz);
+     }
+ 
+     /**
+      * Returns the array of classes representing configurations loaded from individual resources.
+      */
+     public Class[] getResourceClasses ()
+     {
+         return _classes.get("resource");
+     }
+ 
+     /**
+      * Retrieves a configuration by class and reference.  If the configuration is not found in this
+      * manager, the request will be forwarded to the parent, and so on.
+      *
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (Class<T> clazz, ConfigReference<T> ref)
+     {
+         return getConfig(clazz, ref, null);
+     }
+ 
+     /**
+      * Retrieves a configuration by class and reference.  If the configuration is not found in this
+      * manager, the request will be forwarded to the parent, and so on.
+      *
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (
+         Class<T> clazz, ConfigReference<T> ref, Scope scope)
+     {
+         return (ref == null) ? null : getConfig(clazz, ref.getName(), scope, ref.getArguments());
+     }
+ 
+     /**
+      * Retrieves a configuration by class, name, and arguments.  If the configuration is not found
+      * in this manager, the request will be forwarded to the parent, and so on.
+      *
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (
+         Class<T> clazz, String name, String firstKey, Object firstValue, Object... otherArgs)
+     {
+         return getConfig(clazz, name, null, firstKey, firstValue, otherArgs);
+     }
+ 
+     /**
+      * Retrieves a configuration by class, name, and arguments.  If the configuration is not found
+      * in this manager, the request will be forwarded to the parent, and so on.
+      *
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (
+         Class<T> clazz, String name, Scope scope,
+         String firstKey, Object firstValue, Object... otherArgs)
+     {
+         return getConfig(clazz, name, scope, new ArgumentMap(firstKey, firstValue, otherArgs));
+     }
+ 
+     /**
+      * Retrieves a configuration by class, name, and scope.  If the configuration is not found in
+      * this manager, the request will be forwarded to the parent, and so on.
+      *
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (Class<T> clazz, String name, Scope scope)
+     {
+         return getConfig(clazz, name, scope, null);
+     }
+ 
+     /**
+      * Retrieves a configuration by class, name, and arguments.  If the configuration is not found
+      * in this manager, the request will be forwarded to the parent, and so on.
+      *
+      * @param args the configuration arguments, or <code>null</code> for none.
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (Class<T> clazz, String name, ArgumentMap args)
+     {
+         return getConfig(clazz, name, null, args);
+     }
+ 
+     /**
+      * Retrieves a configuration by class, name, scope, and arguments.  If the configuration is not
+      * found in this manager, the request will be forwarded to the parent, and so on.
+      *
+      * @param scope the scope in which to create the config, or <code>null</code> for none.
+      * @param args the configuration arguments, or <code>null</code> for none.
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (
+         Class<T> clazz, String name, Scope scope, ArgumentMap args)
+     {
+         T config = getConfig(clazz, name);
+         return (config == null) ? null : clazz.cast(config.getInstance(scope, args));
+     }
+ 
+     /**
+      * Retrieves a configuration by class and name.  If the configuration is not found in this
+      * manager, the request will be forwarded to the parent, and so on.
+      *
+      * @return the requested configuration, or <code>null</code> if not found.
+      */
+     public <T extends ManagedConfig> T getConfig (Class<T> clazz, String name)
+     {
+         // check for a null name
+         if (name == null) {
+             return null;
+         }
+ 
+         // for resource-loaded configs, go through the cache
+         if (isResourceClass(clazz)) {
+             return clazz.cast(getResourceConfig(name));
+         }
+ 
+         // otherwise, look for a group of the desired type
+         ConfigGroup<T> group = getGroup(clazz);
+         if (group != null) {
+             T config = group.getConfig(name);
+             if (config != null) {
+                 return config;
+             }
+         }
+         return (_parent == null) ? null : _parent.getConfig(clazz, name);
+     }
+ 
+     /**
+      * Attempts to fetch a resource config through the cache.
+      */
+     public ManagedConfig getResourceConfig (String name)
+     {
+         ManagedConfig config = _resources.get(name);
+         if (config == null) {
+             try {
+                 BinaryImporter in = new BinaryImporter(_rsrcmgr.getResource(name));
+                 _resources.put(name, config = (ManagedConfig)in.readObject());
+                 config.setName(name);
+                 config.init(getRoot());
+                 in.close();
+             } catch (IOException e) {
+                 log.warning("Failed to load config from resource.", "name", name, e);
+                 return null;
+             }
+         }
+         return config;
+     }
+ 
+     /**
+      * Retrieves the groups registered for the specified class in this manager and all of its
+      * ancestors.
+      */
+     public <T extends ManagedConfig> ConfigGroup<T>[] getGroups (Class<T> clazz)
+     {
+         ArrayList<ConfigGroup<T>> groups = new ArrayList<ConfigGroup<T>>();
+         for (ConfigManager cfgmgr = this; cfgmgr != null; cfgmgr = cfgmgr.getParent()) {
+             ConfigGroup<T> group = cfgmgr.getGroup(clazz);
+             if (group != null) {
+                 groups.add(group);
+             }
+         }
+         @SuppressWarnings("unchecked") ConfigGroup<T>[] array =
+             (ConfigGroup<T>[])new ConfigGroup[groups.size()];
+         return groups.toArray(array);
+     }
+ 
+     /**
+      * Retrieves the group registered for the specified class.
+      */
+     public <T extends ManagedConfig> ConfigGroup<T> getGroup (Class<T> clazz)
+     {
+         @SuppressWarnings("unchecked") ConfigGroup<T> group = (ConfigGroup<T>)_groups.get(clazz);
+         return group;
+     }
+ 
+     /**
+      * Retrieves the groups with the specified name in this manager and all of its ancestors.
+      */
+     public ConfigGroup[] getGroups (String name)
+     {
+         ArrayList<ConfigGroup> groups = new ArrayList<ConfigGroup>();
+         for (ConfigManager cfgmgr = this; cfgmgr != null; cfgmgr = cfgmgr.getParent()) {
+             ConfigGroup group = cfgmgr.getGroup(name);
+             if (group != null) {
+                 groups.add(group);
+             }
+         }
+         return groups.toArray(new ConfigGroup[groups.size()]);
+     }
+ 
+     /**
+      * Returns the configuration group with the specified name.  If the group is not found in
+      * this manager, the request will be forwarded to the parent, and so on.
+      */
+     public ConfigGroup getGroup (String name)
+     {
+         for (ConfigGroup group : _groups.values()) {
+             if (group.getName().equals(name)) {
+                 return group;
+             }
+         }
+         return (_parent == null) ? null : _parent.getGroup(name);
+     }
+ 
+     /**
+      * Returns the collection of all registered groups.
+      */
+     public Collection<ConfigGroup> getGroups ()
+     {
+         return _groups.values();
+     }
+ 
+     /**
+      * Adds a listener that will be notified on all config updates.
+      */
+     public void addUpdateListener (ConfigUpdateListener listener)
+     {
+         if (_updateListeners == null) {
+             _updateListeners = ObserverList.newFastUnsafe();
+         }
+         @SuppressWarnings("unchecked") ConfigUpdateListener<ManagedConfig> mlistener =
+             (ConfigUpdateListener<ManagedConfig>)listener;
+         _updateListeners.add(mlistener);
+     }
+ 
+     /**
+      * Removes an update listener.
+      */
+     public void removeUpdateListener (ConfigUpdateListener listener)
+     {
+         if (_updateListeners != null) {
+             _updateListeners.remove(listener);
+             if (_updateListeners.isEmpty()) {
+                 _updateListeners = null;
+             }
+         }
+     }
+ 
+     /**
+      * Saves the configurations in all groups.
+      */
+     public void saveAll ()
+     {
+         for (ConfigGroup group : _groups.values()) {
+             group.save();
+         }
+     }
+ 
+     /**
+      * Reverts the configurations in all groups to their last saved state.
+      */
+     public void revertAll ()
+     {
+         for (ConfigGroup group : _groups.values()) {
+             group.revert();
+         }
+     }
+ 
+     /**
+      * Updates a resource-loaded configuration through the cache.  If the configuration is not in
+      * the cache, the provided configuration will be stored under the specified name and returned.
+      * Otherwise, the cached version will be updated to reflect the provided configuration and
+      * returned.
+      */
+     public ManagedConfig updateResourceConfig (String name, ManagedConfig config)
+     {
+         ManagedConfig oconfig = _resources.get(name);
+         if (oconfig == null) {
+             _resources.put(name, config);
+             return config;
+         } else {
+             config.copy(oconfig);
+             oconfig.wasUpdated();
+             return oconfig;
+         }
+     }
+ 
+     /**
+      * Writes the fields of this object.
+      */
+     public void writeFields (Exporter out)
+         throws IOException
+     {
+         // write out the non-empty groups as a sorted array
+         List<ConfigGroup> list = Lists.newArrayList();
+         for (ConfigGroup group : _groups.values()) {
+             if (!group.getConfigs().isEmpty()) {
+                 list.add(group);
+             }
+         }
+         ConfigGroup[] groups = list.toArray(new ConfigGroup[list.size()]);
+         QuickSort.sort(groups, new Comparator<ConfigGroup>() {
+             public int compare (ConfigGroup g1, ConfigGroup g2) {
+                 return g1.getName().compareTo(g2.getName());
+             }
+         });
+         out.write("groups", groups, new ConfigGroup[0], ConfigGroup[].class);
+     }
+ 
+     /**
+      * Reads the fields of this object.
+      */
+     public void readFields (Importer in)
+         throws IOException
+     {
+         // read in the groups and populate the map
+         ConfigGroup[] groups = in.read("groups", new ConfigGroup[0], ConfigGroup[].class);
+         for (ConfigGroup group : groups) {
+             _groups.put(group.getConfigClass(), group);
+         }
+     }
+ 
+     // documentation inherited from interface Copyable
+     public Object copy (Object dest)
+     {
+         return copy(dest, null);
+     }
+ 
+     // documentation inherited from interface Copyable
+     public Object copy (Object dest, Object outer)
+     {
+         ConfigManager other = (dest instanceof ConfigManager) ?
+             (ConfigManager)dest : new ConfigManager();
+         for (ConfigGroup group : _groups.values()) {
+             Class clazz = group.getConfigClass();
+             ConfigGroup ogroup = other._groups.get(clazz);
+             other._groups.put(clazz, (ConfigGroup)group.copy(ogroup));
+         }
+         return other;
+     }
+ 
+     /**
+      * Loads the manager properties.
+      */
+     protected void loadManagerProperties ()
+         throws IOException
+     {
+         Properties props = new Properties();
+         props.load(_rsrcmgr.getResource(_configPath + "manager.properties"));
+ 
+         // initialize the types
+         _classes = new HashMap<String, Class[]>();
+         String[] types = StringUtil.parseStringArray(props.getProperty("types", ""));
+         types = ArrayUtil.append(types, "resource");
+         for (String type : types) {
+             Properties tprops = PropertiesUtil.getSubProperties(props, type);
+             String[] names = StringUtil.parseStringArray(tprops.getProperty("classes", ""));
+             Class[] classes = new Class[names.length];
+             for (int ii = 0; ii < names.length; ii++) {
+                 try {
+                     classes[ii] = Class.forName(names[ii]);
+                 } catch (ClassNotFoundException e) {
+                     throw (IOException)new IOException("Error initializing manager.").initCause(e);
+                 }
+             }
+             _classes.put(type, classes);
+         }
+     }
+ 
+     /**
+      * Registers a new config group.
+      */
+     protected <T extends ManagedConfig> void registerGroup (Class<T> clazz)
+     {
+         ConfigGroup<T> group = new ConfigGroup<T>(clazz);
+         group.init(this);
+         _groups.put(clazz, group);
+     }
+ 
+     /**
+      * Fires a configuration updated event.
+      */
+     protected void fireConfigUpdated (ManagedConfig config)
+     {
+         if (_updateListeners != null) {
+             final ConfigEvent<ManagedConfig> event = new ConfigEvent<ManagedConfig>(this, config);
+             _updateListeners.apply(
+                 new ObserverList.ObserverOp<ConfigUpdateListener<ManagedConfig>>() {
+                 public boolean apply (ConfigUpdateListener<ManagedConfig> listener) {
+                     listener.configUpdated(event);
+                     return true;
+                 }
+             });
+         }
+     }
+ 
+     /** The type of this manager. */
+     protected String _type;
+ 
+     /** The parent of this manager, if any. */
+     protected ConfigManager _parent;
+ 
+     /** The resource manager used to load configurations. */
+     protected ResourceManager _rsrcmgr;
+ 
+     /** The resource path of the managed configurations. */
+     protected String _configPath;
+ 
+     /** Registered configuration groups mapped by config class. */
+     protected HashMap<Class, ConfigGroup> _groups = new HashMap<Class, ConfigGroup>();
+ 
+     /** Resource-loaded configs mapped by path. */
+     protected SoftCache<String, ManagedConfig> _resources;
+ 
+     /** Maps manager types to their classes (as read from the manager properties). */
+     protected HashMap<String, Class[]> _classes;
+ 
+     /** Config update listeners. */
+     protected ObserverList<ConfigUpdateListener<ManagedConfig>> _updateListeners;
+ }

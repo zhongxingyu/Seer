@@ -1,0 +1,439 @@
+ package models;
+ 
+ import java.io.Serializable;
+ import java.util.Date;
+ import java.util.Set;
+ 
+ import javax.persistence.Cacheable;
+ 
+ import org.apache.commons.lang.builder.EqualsBuilder;
+ import org.apache.commons.lang.builder.HashCodeBuilder;
+ import org.w3c.dom.Document;
+ 
+ import play.Logger;
+ import play.Play;
+ import play.exceptions.UnexpectedException;
+ import play.libs.Crypto;
+ import play.libs.XML;
+ import play.libs.XPath;
+ 
+ import box.BoxAccount;
+ 
+ import com.google.appengine.api.datastore.Entity;
+ import com.google.appengine.api.datastore.FetchOptions;
+ import com.google.appengine.api.datastore.Key;
+ import com.google.appengine.api.datastore.KeyFactory;
+ import com.google.appengine.api.datastore.Query;
+ import com.google.appengine.repackaged.com.google.common.collect.ImmutableSet;
+ import com.google.common.base.Objects;
+ 
+ import dropbox.Dropbox;
+ import dropbox.gson.DbxAccount;
+ 
+ @Cacheable
+ public class User implements Serializable {
+     public static enum AccountType {
+         DROPBOX,
+         BOX;
+         
+ 	    public static AccountType fromDbValue(String dbValue) {
+ 	        for (AccountType type : AccountType.values()) {
+ 	            if (type.name().equals(dbValue)) return type;
+ 	        }
+ 
+ 	        return null;
+ 	    }
+     }
+ 	
+     private static final long serialVersionUID = 45L;
+     
+     public static final Mapper<User> MAPPER = new UserMapper();
+ 
+     private static final Set<Long> ADMINS = getAdmins();
+ 
+     public static final String KIND = "User";
+ 
+     public Long id;
+     private String name;
+     private String nameLower;
+     public String email;
+     public Boolean periodicSort;
+     public Integer fileMoves;
+     public String sortingFolder;
+ 
+     public Date created;
+     public Date modified;
+     public Date lastSync;
+     public Date lastLogin;
+ 
+     public AccountType accountType;
+     
+     private String token;
+     private String secret;
+     
+     
+     public User(AccountType at) {
+         this.modified = this.created = this.lastLogin = new Date();
+         this.periodicSort = true;
+         this.fileMoves = 0;
+         this.accountType = at;
+         this.sortingFolder = Dropbox.getSortboxPath();
+     }
+ 
+     public User(DbxAccount account, String token, String secret) {
+         this(AccountType.DROPBOX);
+         this.id = account.uid;
+         sync(account, token, secret);
+     }
+     
+     public User(Entity entity) {
+         this.id = entity.getKey().getId();
+         this.name = (String) entity.getProperty("name");
+         this.nameLower = (String) entity.getProperty("nameLower");
+         if (this.nameLower == null) {
+             this.nameLower = this.name.toLowerCase();
+         }
+         this.email = (String) entity.getProperty("email");
+         this.periodicSort = (Boolean) entity.getProperty("periodicSort");
+         this.created = (Date) entity.getProperty("created");
+         this.modified = (Date) entity.getProperty("modified");
+         this.lastSync = (Date) entity.getProperty("lastSync");
+         this.lastLogin = (Date) entity.getProperty("lastLogin");
+         this.token = (String) entity.getProperty("token");
+         this.secret = (String) entity.getProperty("secret");
+         Long tmpFileMoves = (Long) entity.getProperty("fileMoves");
+         this.fileMoves = tmpFileMoves == null ? 0 : tmpFileMoves.intValue();
+         this.sortingFolder = (String) entity.getProperty("sortingFolder");
+ 		if (this.sortingFolder == null) {
+ 			this.sortingFolder = Dropbox.getOldSortboxPath();
+ 		}
+ 
+         this.accountType = AccountType.fromDbValue((String) entity.getProperty("accountType"));
+         if (this.accountType == null) {
+             this.accountType = AccountType.DROPBOX;
+         }
+     }
+ 
+     private static Set<Long> getAdmins() {
+         String ids= Play.configuration.getProperty("sortbox.admins", "").trim();
+         ImmutableSet.Builder<Long> builder = ImmutableSet.builder();
+         for (String id : ids.split(",")) {
+             if (id.isEmpty()) continue;
+             builder.add(Long.valueOf(id));
+         }
+         return builder.build();
+     }
+ 
+     public String getName() {
+         return this.name;
+     }
+     
+     public void setName(String name) {
+         this.name = name;
+         this.nameLower = name.toLowerCase();
+     }
+     
+     
+     /**
+      * Only for testing.
+      */
+     public void setTokenRaw(String token) {
+         assert Play.runingInTestMode();
+         this.token = token;
+     }
+     
+     /**
+      * Only for testing.
+      */
+     public void setSecretRaw(String secret) {
+         assert Play.runingInTestMode();
+         this.secret = secret;
+     }
+ 
+     public void setToken(String token) {
+         this.token = Crypto.encryptAES(token);
+     }
+     
+     public void setSecret(String secret) {
+         this.secret = Crypto.encryptAES(secret);
+     }
+     
+     public String getToken() {
+         try {
+             return Crypto.decryptAES(this.token);
+         } catch (UnexpectedException e) {
+             String tmp = this.token;
+             setToken(this.token);
+             return tmp;
+         }
+     }
+     
+     public String getSecret() {
+         try {
+             return Crypto.decryptAES(this.secret);
+         } catch (UnexpectedException e) {
+             String tmp = this.secret;
+             setSecret(this.secret);
+             return tmp;
+         }
+     }
+ 
+     public boolean isAdmin() {
+         return ADMINS.contains(id);
+     }
+ 
+     public void updateLastSyncDate() {
+         lastSync = new Date();
+         save();
+     }
+ 
+     public void incrementFileMoves(int count) {
+         fileMoves += count;
+         save();
+     }
+     
+     /**
+      * Update this user with Dropbox credentials
+      */
+     public void sync(DbxAccount account, String token, String secret) {
+         setName(account.name);
+         setToken(token);
+         setSecret(secret);
+     }
+ 
+     public Key save() {
+         this.modified = new Date();
+         return DatastoreUtil.put(this, MAPPER);
+     }
+ 
+     public void delete() {
+         DatastoreUtil.delete(this, MAPPER);
+     }
+ 
+     /**
+      * @param accountType account type of the user
+      * @param id the user id
+      * @return fully loaded user for the given id, null if not found.
+      */
+     public static User findById(AccountType accountType, long id) {
+         return DatastoreUtil.get(key(accountType, id), MAPPER);
+     }
+ 
+     public static boolean isValidId(String userId) {
+         // check input is not null and not empty
+         if (userId == null || userId.isEmpty()) {
+             return false;
+         }
+     
+         // check input is a valid user id
+         try {
+             Long.parseLong(userId);
+         } catch (NumberFormatException e) {
+             return false;
+         }
+         
+         return true;
+     }
+ 
+     public static Key key(AccountType accountType, long id) {
+         // Handle null AccountTypes gracefully for tests.
+         if (accountType == null && Play.runingInTestMode()) {
+             accountType = AccountType.DROPBOX;
+         }
+ 
+         switch (accountType) {
+         case BOX:
+             String strId = AccountType.BOX.name() + ":" + id;
+             return KeyFactory.createKey(KIND, strId);
+         case DROPBOX:
+             return KeyFactory.createKey(KIND, id);
+         }
+         
+         throw new IllegalStateException("Cannot create User key for AccountType: " + accountType);
+     }
+     
+     public static Key key(long id) {
+         return key(AccountType.DROPBOX, id);
+     }
+ 
+     public static Query all() {
+         return new Query(KIND);
+     }
+ 
+     public static Iterable<User> query(Query q) {
+         return query(q, -1);
+     }
+ 
+     public static Iterable<User> query(Query q, int limit) {
+         assert q.getKind().equals(KIND) : "Query kind must be User";
+         FetchOptions fo;
+         if (limit < 0) {
+             fo = FetchOptions.Builder.withDefaults();
+         } else {
+             fo = FetchOptions.Builder.withLimit(limit);
+         }
+ 
+         return DatastoreUtil.query(q, fo, MAPPER);
+     }
+ 
+     public static Iterable<Key> queryKeys(Query q) {
+         assert q.getKind().equals(KIND) : "Query kind must be User";
+         return DatastoreUtil.queryKeys(q, FetchOptions.Builder.withDefaults(), MAPPER);
+     }
+ 
+     /**
+      * Upsert a Box user into the datastore.
+      */
+     public static User upsert(BoxAccount account) {
+         if (account == null) {
+             return null;
+         }
+ 
+         User user = findById(AccountType.BOX, account.id);
+         if (user == null) {
+             user = new User(AccountType.BOX);
+            user.id = account.id;
+             Logger.info("Box user not found in datastore, creating new one: %s", user);
+        }
+ 
+         user.setToken(account.token);
+         user.email = account.email;
+         // TODO handle null name
+         user.name = account.email;
+         user.lastLogin = new Date();
+         user.save();
+         
+         return user;
+     }
+ 
+     public static User upsert(DbxAccount account, String token, String secret) {
+         if (account == null || !account.notNull()) {
+             return null;
+         }
+     
+         User user = findById(AccountType.DROPBOX, account.uid);
+         if (user == null) {
+             user = new User(account, token, secret);
+             Logger.info("Dropbox user not found in datastore, creating new one: %s", user);
+         } else {
+             if (! user.equals(account, token, secret)) {
+                 Logger.info("User has new Dropbox oauth credentials: %s", user);
+                 user.sync(account, token, secret);
+             }
+             
+             user.lastLogin = new Date();
+         }
+ 
+         user.save();
+         return user;
+     }
+ 
+     @Override
+     public int hashCode() {
+         return new HashCodeBuilder()
+             .append(this.id)
+             .append(this.name)
+             .append(this.nameLower)
+             .append(this.secret)
+             .append(this.token)
+             .append(this.email)
+             .append(this.periodicSort)
+             .append(this.created)
+             .append(this.modified)
+             .append(this.lastSync)
+             .append(this.lastLogin)
+             .append(this.sortingFolder)
+             .append(this.accountType)
+             .hashCode();
+     }
+ 
+     @Override
+     public boolean equals(Object obj) {
+         if (this == obj)
+             return true;
+         if (getClass() != obj.getClass())
+             return false;
+         User other = (User) obj;
+         return new EqualsBuilder()
+             .append(this.id, other.id)
+             .append(this.name, other.name)
+             .append(this.nameLower, other.nameLower)            
+             .append(this.secret, other.secret)
+             .append(this.token, other.token)
+             .append(this.email, other.email)
+             .append(this.periodicSort, other.periodicSort)
+             .append(this.created, other.created)
+             .append(this.modified, other.modified)
+             .append(this.lastSync, other.lastSync)
+             .append(this.lastLogin, other.lastLogin)
+             .append(this.sortingFolder, other.sortingFolder)
+             .append(this.accountType, other.accountType)
+             .isEquals();
+     }
+     
+     public boolean equals(DbxAccount account, String secret, String token) {
+         return new EqualsBuilder()
+             .append(this.name, account.name)
+             .append(this.getSecret(), secret)
+             .append(this.getToken(), token)
+             .isEquals();
+     }
+     
+     @Override
+     public String toString() {
+         return Objects.toStringHelper(User.class)
+             .add("id", id)
+             .add("accountType", accountType)
+             .add("name", name)
+             .add("nameLower", nameLower)
+             .add("email", email)
+             .add("periodicSort", periodicSort)
+             .add("created_date", created)
+             .add("last_update", modified)
+             .add("last_sync", lastSync)
+             .add("last_login", lastLogin)
+             .add("sortingFolder", sortingFolder)
+             .toString();
+     }
+ 
+     private static class UserMapper implements Mapper<User> {
+         @Override
+         public Entity toEntity(User model) {
+             Entity entity = new Entity(toKey(model));
+ 
+             entity.setProperty("name", model.name);
+             entity.setProperty("nameLower", model.nameLower);
+             entity.setProperty("email", model.email);
+             entity.setProperty("periodicSort", model.periodicSort);
+             entity.setProperty("created", model.created);
+             entity.setProperty("modified", model.modified);
+             entity.setProperty("lastSync", model.lastSync);
+             entity.setProperty("token", model.token);
+             entity.setProperty("secret", model.secret);
+             entity.setProperty("fileMoves", model.fileMoves);
+             entity.setProperty("lastLogin", model.lastLogin);
+             entity.setProperty("sortingFolder", model.sortingFolder);
+             if (model.accountType != null) {
+                 entity.setProperty("accountType", model.accountType.name());
+             }
+             return entity;
+         }
+ 
+         @Override
+         public User toModel(Entity entity) {
+             return new User(entity);
+         }
+ 
+         @Override
+         public Class<User> getType() {
+             return User.class;
+         }
+ 
+         @Override
+         public Key toKey(User model) {
+             return key(model.accountType, model.id);
+         }
+     }
+ 
+ }
+ 

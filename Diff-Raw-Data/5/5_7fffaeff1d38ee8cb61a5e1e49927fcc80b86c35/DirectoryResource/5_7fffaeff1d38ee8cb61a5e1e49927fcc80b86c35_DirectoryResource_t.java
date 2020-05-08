@@ -1,0 +1,241 @@
+ /*
+  * Copyright 2006 Wyona
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *      http://www.wyona.org/licenses/APACHE-LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations under the License.
+  */
+ 
+ package org.wyona.yanel.impl.resources;
+ 
+ import org.wyona.yanel.core.Path;
+ import org.wyona.yanel.core.Resource;
+ import org.wyona.yanel.core.api.attributes.ViewableV2;
+ import org.wyona.yanel.core.attributes.viewable.View;
+ import org.wyona.yanel.core.attributes.viewable.ViewDescriptor;
+ 
+ import javax.servlet.http.HttpServletRequest;
+ 
+ import org.wyona.yarep.core.NoSuchNodeException;
+ import org.wyona.yarep.core.RepositoryException;
+ import org.wyona.yarep.core.Repository;
+ import org.wyona.yarep.core.RepositoryFactory;
+ import org.wyona.yarep.util.RepoPath;
+ import org.wyona.yanel.core.util.PathUtil;
+ 
+ import org.apache.log4j.Category;
+ 
+ import java.io.ByteArrayInputStream;
+ import java.io.File;
+ 
+ import javax.xml.transform.Transformer;
+ import javax.xml.transform.TransformerFactory;
+ import javax.xml.transform.TransformerConfigurationException;
+ import javax.xml.transform.stream.StreamSource;
+ import javax.xml.transform.stream.StreamResult;
+ 
+ import javax.xml.transform.sax.SAXTransformerFactory;
+ import javax.xml.transform.sax.TransformerHandler;
+ import javax.xml.transform.sax.SAXResult;
+ import javax.xml.transform.sax.SAXSource;
+ 
+ import java.util.Iterator;
+ import java.util.LinkedHashSet;
+ 
+ /**
+  * 
+  */
+ public class DirectoryResource extends Resource implements ViewableV2 {
+ 
+     private static Category log = Category.getInstance(DirectoryResource.class);
+ 
+     /**
+      * 
+      */
+     public DirectoryResource() {
+     }
+ 
+     /**
+      * 
+      */
+     public ViewDescriptor[] getViewDescriptors() {
+         return null;
+     }
+ 
+     /**
+      * 
+      */
+     public View getView(String viewId) {
+         View defaultView = new View();
+         StringBuffer sb = new StringBuffer("<?xml version=\"1.0\"?>");
+ 
+         // sb.append("<?xml-stylesheet type=\"text/xsl\"
+         // href=\"yanel/resources/directory/xslt/dir2xhtml.xsl\"?>");
+ 
+         Repository contentRepo = null;
+         try {
+             contentRepo = getRealm().getRepository();
+             org.wyona.yarep.core.Path p = new org.wyona.yarep.core.Path(getPath());
+ 
+             // TODO: This doesn't seem to work ... (check on Yarep ...)
+             if (contentRepo.isResource(p)) {
+                 log.warn("Path is a resource instead of a collection: " + p);
+                 // p = p.getParent();
+             }
+ 
+             // TODO: Implement org.wyona.yarep.core.Path.getParent()
+             if (!contentRepo.isCollection(p)) {
+                 log.warn("Path is not a collection: " + p);
+                 p = new org.wyona.yarep.core.Path(new org.wyona.commons.io.Path(p.toString()).getParent().toString());
+                 log.warn("Use parent of path: " + p);
+             }
+ 
+             // TODO: Add realm prefix, e.g. realm-prefix="ulysses-demo"
+             // NOTE: The schema is according to
+             // http://cocoon.apache.org/2.1/userdocs/directory-generator.html
+            sb.append("<dir:directory yanel:path=\"" + getPath() + "\" dir:name=\"" + p.getName() + "\" dir:path=\"" + p + "\" xmlns:dir=\"http://apache.org/cocoon/directory/2.0\" xmlns:yanel=\"http://www.wyona.org/yanel/resource/directory/1.0\">");
+             // TODO: Do not show the children with suffix .yanel-rti resp. make
+             // this configurable!
+             // NOTE: Do not hardcode the .yanel-rti, but rather use
+             // Path.getRTIPath ...
+             org.wyona.yarep.core.Path[] children = contentRepo.getChildren(p);
+             for (int i = 0; i < children.length; i++) {
+                 if (contentRepo.isResource(children[i])) {
+                     sb.append("<dir:file path=\"" + children[i] + "\" name=\"" + children[i].getName() + "\"/>");
+                 } else if (contentRepo.isCollection(children[i])) {
+                     sb.append("<dir:directory path=\"" + children[i] + "\" name=\"" + children[i].getName() + "\"/>");
+                 } else {
+                     sb.append("<yanel:exception yanel:path=\"" + children[i] + "\"/>");
+                 }
+             }
+         } catch (Exception e) {
+             log.error(e.getMessage(), e);
+         }
+         sb.append("</dir:directory>");
+ 
+         if (viewId != null && viewId.equals("source")) {
+             defaultView.setMimeType("application/xml");
+             defaultView.setInputStream(new java.io.StringBufferInputStream(sb.toString()));
+             return defaultView;
+         }
+ 
+         try {
+             String assetPath = "";
+             if (getPath().endsWith("/") && !isRoot(getPath())) {
+                 assetPath = "../";
+             }
+             
+             TransformerFactory tfactory = TransformerFactory.newInstance();
+             String[] xsltTransformers = getXSLTprop();
+             
+             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+             
+             Transformer transformerIntern = tfactory.newTransformer(getXSLTStreamSource( contentRepo));
+             StreamSource orig = new StreamSource(new java.io.StringBufferInputStream(sb.toString()));
+             
+             transformerIntern.setParameter("yanel.path.name", PathUtil.getName(getPath()));
+             transformerIntern.setParameter("yanel.path", getPath().toString());
+             transformerIntern.setParameter("yanel.back2context", backToRoot(getPath(), assetPath));
+             transformerIntern.setParameter("yarep.back2realm", backToRoot(getPath(), assetPath));
+             transformerIntern.transform(orig, new StreamResult(baos));
+             
+             if (xsltTransformers != null) {
+                 //StreamSource orig = new StreamSource(new java.io.StringBufferInputStream(sb.toString()));
+                 for (int i = 0; i < xsltTransformers.length; i++) {
+                     orig = new StreamSource(new ByteArrayInputStream(baos.toByteArray()));
+                     baos = new java.io.ByteArrayOutputStream();
+                     Transformer transformer = tfactory.newTransformer(new StreamSource(contentRepo.getInputStream(new org.wyona.yarep.core.Path(new Path(xsltTransformers[i]).toString()))));
+                     transformer.setParameter("yanel.path.name", PathUtil.getName(getPath()));
+                     transformer.setParameter("yanel.path", getPath().toString());
+                     transformer.setParameter("yanel.back2context", backToRoot(getPath(), assetPath));
+                     transformer.setParameter("yarep.back2realm", backToRoot(getPath(), assetPath));
+                     transformer.transform(orig, new StreamResult(baos));
+                 }
+             }
+             // TODO: Is this the best way to generate an InputStream from an OutputStream?
+             defaultView.setMimeType(getMimeType());
+             defaultView.setInputStream(new java.io.ByteArrayInputStream(baos.toByteArray()));
+         } catch (Exception e) {
+             log.error(e);
+         }
+ 
+         return defaultView;
+     }
+ 
+     /**
+      * 
+      */
+     public boolean exists() throws Exception {
+         log.warn("Not implemented yet!");
+         return true; 
+     }
+     
+     /**
+      * 
+      */
+     public long getSize() throws Exception {
+         // TODO: not implemented yet
+         log.warn("TODO: Method is not implemented yet");
+         return -1;
+     }
+ 
+     /**
+      * 
+      */
+     private StreamSource getXSLTStreamSource(Repository repo) throws RepositoryException {
+ 
+             File xsltFile = org.wyona.commons.io.FileUtil.file(rtd.getConfigFile().getParentFile().getAbsolutePath(),
+                     "xslt" + File.separator + "dir2xhtml.xsl");
+             log.error("DEBUG: XSLT file: " + xsltFile);
+             return new StreamSource(xsltFile);
+         
+     }
+ 
+     /**
+      * Get XSLT
+      */
+     private String[] getXSLTprop() {
+         String xslt = getRTI().getProperty("xslt");
+         if (xslt != null) return xslt.split(",");
+         return null;
+     }
+ 
+     /**
+      * Get mime type
+      */
+     private String getMimeType() {
+         String mimeType = getRTI().getProperty("mime-type");
+         if (mimeType != null) return mimeType;
+ 
+         // NOTE: Assuming fallback re dir2xhtml.xsl ...
+         return "application/xhtml+xml";
+     }
+     
+     
+     /**
+     *
+     */
+    private String backToRoot(String path, String backToRoot) {
+        String parent = PathUtil.getParent(path);
+        if (parent != null && !isRoot(parent)) {
+            return backToRoot(parent, backToRoot + "../");
+        }
+        return backToRoot;
+    }
+ 
+    /**
+    *
+    */
+   private boolean isRoot(String path) {
+       if (path.equals(File.separator)) return true;
+       return false;
+   }
+ }

@@ -1,0 +1,203 @@
+ //$HeadURL: svn+ssh://aschmitz@wald.intevation.org/deegree/base/trunk/resources/eclipse/files_template.xml $
+ /*----------------------------------------------------------------------------
+  This file is part of deegree, http://deegree.org/
+  Copyright (C) 2001-2011 by:
+  - Department of Geography, University of Bonn -
+  and
+  - lat/lon GmbH -
+ 
+  This library is free software; you can redistribute it and/or modify it under
+  the terms of the GNU Lesser General Public License as published by the Free
+  Software Foundation; either version 2.1 of the License, or (at your option)
+  any later version.
+  This library is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+  details.
+  You should have received a copy of the GNU Lesser General Public License
+  along with this library; if not, write to the Free Software Foundation, Inc.,
+  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ 
+  Contact information:
+ 
+  lat/lon GmbH
+  Aennchenstr. 19, 53177 Bonn
+  Germany
+  http://lat-lon.de/
+ 
+  Department of Geography, University of Bonn
+  Prof. Dr. Klaus Greve
+  Postfach 1147, 53001 Bonn
+  Germany
+  http://www.geographie.uni-bonn.de/deegree/
+ 
+  e-mail: info@deegree.org
+  ----------------------------------------------------------------------------*/
+ package org.deegree.layer;
+ 
+ import static java.lang.Integer.parseInt;
+ import static org.deegree.commons.utils.MapUtils.DEFAULT_PIXEL_SIZE;
+ 
+ import java.util.List;
+ import java.util.Map;
+ 
+ import org.deegree.filter.OperatorFilter;
+ import org.deegree.geometry.Envelope;
+ import org.deegree.geometry.GeometryFactory;
+ import org.deegree.protocol.oldwms.Utils;
+ import org.deegree.rendering.r2d.RenderHelper;
+ import org.deegree.rendering.r2d.context.MapOptionsMaps;
+ import org.deegree.style.StyleRef;
+ 
+ /**
+  * 
+  * @author <a href="mailto:schmitz@lat-lon.de">Andreas Schmitz</a>
+  * @author last edited by: $Author: stranger $
+  * 
+  * @version $Revision: $, $Date: $
+  */
+ public class LayerQuery {
+ 
+     private final Envelope envelope;
+ 
+     private final int width, height;
+ 
+     private final Map<String, String> parameters;
+ 
+     private int x, y, featureCount;
+ 
+     private final Map<String, StyleRef> styles;
+ 
+     private final Map<String, OperatorFilter> filters;
+ 
+     private double scale;
+ 
+     private final Map<String, List<?>> dimensions;
+ 
+     private double resolution;
+ 
+     private final MapOptionsMaps options;
+ 
+     /**
+      * @param envelope
+      * @param width
+      * @param height
+      * @param styles
+      * @param filters
+      * @param parameters
+      * @param dimensions
+      * @param pixelSize
+      *            must be in meter, not mm
+      * @param options
+      */
+     public LayerQuery( Envelope envelope, int width, int height, Map<String, StyleRef> styles,
+                        Map<String, OperatorFilter> filters, Map<String, String> parameters,
+                        Map<String, List<?>> dimensions, double pixelSize, MapOptionsMaps options ) {
+         this.envelope = envelope;
+         this.width = width;
+         this.height = height;
+         this.styles = styles;
+         this.filters = filters;
+         this.parameters = parameters;
+         this.dimensions = dimensions;
+         this.options = options;
+         this.scale = RenderHelper.calcScaleWMS130( width, height, envelope, envelope.getCoordinateSystem(), pixelSize );
+         this.resolution = Utils.calcResolution( envelope, width, height );
+     }
+ 
+     public LayerQuery( Envelope envelope, int width, int height, int x, int y, int featureCount,
+                        Map<String, OperatorFilter> filters, Map<String, StyleRef> styles,
+                        Map<String, String> parameters, Map<String, List<?>> dimensions, MapOptionsMaps options ) {
+         this.envelope = envelope;
+         this.width = width;
+         this.height = height;
+         this.x = x;
+         this.y = y;
+         this.featureCount = featureCount;
+         this.filters = filters;
+         this.styles = styles;
+         this.parameters = parameters;
+         this.dimensions = dimensions;
+         this.options = options;
+         this.scale = RenderHelper.calcScaleWMS130( width, height, envelope, envelope.getCoordinateSystem(),
+                                                    DEFAULT_PIXEL_SIZE );
+         this.resolution = Utils.calcResolution( envelope, width, height );
+     }
+ 
+     public Envelope getEnvelope() {
+         return envelope;
+     }
+ 
+     public int getWidth() {
+         return width;
+     }
+ 
+     public int getHeight() {
+         return height;
+     }
+ 
+     public Map<String, String> getParameters() {
+         return parameters;
+     }
+ 
+     public int getX() {
+         return x;
+     }
+ 
+     public int getY() {
+         return y;
+     }
+ 
+     public OperatorFilter getFilter( String name ) {
+         return filters.get( name );
+     }
+ 
+     public StyleRef getStyle( String name ) {
+         return styles.get( name );
+     }
+ 
+     public Map<String, List<?>> getDimensions() {
+         return dimensions;
+     }
+ 
+     public int getFeatureCount() {
+         return featureCount;
+     }
+ 
+     public double getScale() {
+         return scale;
+     }
+ 
+     public double getResolution() {
+         return resolution;
+     }
+ 
+     public MapOptionsMaps getRenderingOptions() {
+         return options;
+     }
+ 
+     public Envelope calcClickBox( int radius ) {
+         radius = parameters.get( "RADIUS" ) == null ? radius : parseInt( parameters.get( "RADIUS" ) );
+         GeometryFactory fac = new GeometryFactory();
+         double dw = envelope.getSpan0() / width;
+         double dh = envelope.getSpan1() / height;
+         int r2 = radius / 2;
+        r2 = r2 <= 0 ? 1 : r2;
+         return fac.createEnvelope( new double[] { envelope.getMin().get0() + ( x - r2 ) * dw,
+                                                  envelope.getMax().get1() - ( y + r2 ) * dh },
+                                    new double[] { envelope.getMin().get0() + ( x + r2 ) * dw,
+                                                  envelope.getMax().get1() - ( y - r2 ) * dh },
+                                    envelope.getCoordinateSystem() );
+     }
+ 
+     // public Envelope calcClickBox( int radius ) {
+     // TODO again: re-implement this properly
+     // TODO implement all this per layer also if more than one layer is requested
+     // if ( layers.size() == 1 && service.getDefaultFeatureInfoRadius().get( layers.getFirst() ) != null ) {
+     // radius = service.getDefaultFeatureInfoRadius().get( layers.getFirst() );
+     // }
+     // radius = parameters.get( "RADIUS" ) == null ? radius : parseInt( parameters.get( "RADIUS" ) );
+     // return calcClickBox( radius );
+     // }
+ 
+ }

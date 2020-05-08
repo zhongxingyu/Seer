@@ -1,0 +1,144 @@
+ /*
+  * Copyright 2006-2007 the original author or authors.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ package org.springframework.batch.sample.launch;
+ 
+ import static org.junit.Assert.assertEquals;
+ import static org.junit.Assert.assertTrue;
+ import static org.junit.Assert.fail;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ import javax.management.MBeanServerConnection;
+ import javax.management.MalformedObjectNameException;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.springframework.batch.core.launch.JobOperator;
+ import org.springframework.batch.core.launch.NoSuchJobException;
+ import org.springframework.batch.core.launch.support.JobRegistryBackgroundJobRunner;
+ import org.springframework.jmx.MBeanServerNotFoundException;
+ import org.springframework.jmx.access.InvalidInvocationException;
+ import org.springframework.jmx.access.MBeanProxyFactoryBean;
+ import org.springframework.jmx.support.MBeanServerConnectionFactoryBean;
+ 
+ /**
+  * @author Dave Syer
+  * 
+  */
+ public class RemoteLauncherTests {
+ 	
+ 	private static Log logger = LogFactory.getLog(RemoteLauncherTests.class);
+ 
+ 	private static List<Exception> errors = new ArrayList<Exception>();
+ 
+ 	private static JobOperator launcher;
+ 
+ 	private static JobLoader loader;
+ 
+ 	@Test
+ 	public void testConnect() throws Exception {
+ 		String message = errors.isEmpty() ? "" : errors.get(0).getMessage();
+ 		assertEquals(message, 0, errors.size());
+ 		assertTrue(isConnected());
+ 	}
+ 
+ 	@Test
+ 	public void testLaunchBadJob() throws Exception {
+ 		assertEquals(0, errors.size());
+ 		assertTrue(isConnected());
+ 		try {
+			launcher.start("foo", "");
+ 			fail("Expected NoSuchJobException");
+ 		} catch (NoSuchJobException e) {
+ 			//expected;
+ 		}
+ 	}
+ 
+ 	@Test
+ 	public void testAvailableJobs() throws Exception {
+ 		assertEquals(0, errors.size());
+ 		assertTrue(isConnected());
+ 		assertTrue(launcher.getJobNames().contains("loopJob"));
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * @see junit.framework.TestCase#setUp()
+ 	 */
+ 	@Before
+ 	public void setUp() throws Exception {
+ 		if (launcher != null) {
+ 			return;
+ 		}
+ 		System.setProperty("com.sun.management.jmxremote", "");
+ 		Thread thread = new Thread(new Runnable() {
+ 			public void run() {
+ 				try {
+ 					JobRegistryBackgroundJobRunner.main("adhoc-job-launcher-context.xml", "jobs/adhocLoopJob.xml");
+ 				}
+ 				catch (Exception e) {
+ 					errors.add(e);
+ 				}
+ 			}
+ 		});
+ 		thread.start();
+ 		int count = 0;
+ 		while (!isConnected() && count++ < 10) {
+ 			Thread.sleep(1000);
+ 		}
+ 	}
+ 
+ 	private static boolean isConnected() throws Exception {
+ 		boolean connected = false;
+ 		if (!JobRegistryBackgroundJobRunner.getErrors().isEmpty()) {
+ 			throw JobRegistryBackgroundJobRunner.getErrors().get(0);
+ 		}
+ 		if (launcher == null) {
+ 			MBeanServerConnectionFactoryBean connectionFactory = new MBeanServerConnectionFactoryBean();
+ 			try {
+ 				launcher = (JobOperator) getMBean(connectionFactory, "spring:service=batch,bean=jobOperator", JobOperator.class);
+ 				loader = (JobLoader) getMBean(connectionFactory, "spring:service=batch,bean=jobLoader", JobLoader.class);
+ 			}
+ 			catch (MBeanServerNotFoundException e) {
+ 				// ignore
+ 				return false;
+ 			}
+ 		}
+ 		try {
+ 			launcher.getJobNames();
+ 			connected = loader.getConfigurations().size()>0;
+ 			logger.info("Configurations loaded: " + loader.getConfigurations());
+ 		}
+ 		catch (InvalidInvocationException e) {
+ 			// ignore
+ 		}
+ 		return connected;
+ 	}
+ 
+ 	private static Object getMBean(MBeanServerConnectionFactoryBean connectionFactory, String objectName, Class<?> interfaceType)
+ 			throws MalformedObjectNameException {
+ 		MBeanProxyFactoryBean factory = new MBeanProxyFactoryBean();
+ 		factory.setObjectName(objectName);
+ 		factory.setProxyInterface(interfaceType);
+ 		factory.setServer((MBeanServerConnection) connectionFactory.getObject());
+ 		factory.afterPropertiesSet();
+ 		return factory.getObject();
+ 	}
+ 
+ }

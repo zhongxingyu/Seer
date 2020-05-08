@@ -1,0 +1,942 @@
+ package ru.regenix.jphp.runtime.memory;
+ 
+ import ru.regenix.jphp.exceptions.RecursiveException;
+ import ru.regenix.jphp.runtime.lang.ForeachIterator;
+ import ru.regenix.jphp.runtime.lang.spl.Traversable;
+ import ru.regenix.jphp.runtime.memory.helper.ArrayKeyMemory;
+ import ru.regenix.jphp.runtime.memory.helper.ArrayValueMemory;
+ import ru.regenix.jphp.runtime.memory.support.Memory;
+ import ru.regenix.jphp.runtime.memory.support.MemoryStringUtils;
+ import ru.regenix.jphp.runtime.memory.support.MemoryUtils;
+ 
+ import java.util.*;
+ 
+ public class ArrayMemory extends Memory implements Iterable<ReferenceMemory>, Traversable {
+ 
+     protected long lastLongIndex;
+     protected int size;
+     protected int copies;
+     protected ArrayMemory original;
+ 
+     protected List<ReferenceMemory> list;
+     protected Map<Object, ReferenceMemory> map;
+ 
+     protected ThreadLocal<ForeachIterator> foreachIterator = new ThreadLocal<ForeachIterator>();
+ 
+     public ArrayMemory() {
+         super(Type.ARRAY);
+         list = new ArrayList<ReferenceMemory>();
+         lastLongIndex = -1;
+     }
+ 
+     public ArrayMemory(Collection collection){
+         this();
+         for(Object el : collection){
+             add(MemoryUtils.valueOf(el));
+         }
+     }
+ 
+     public ArrayMemory(Object... array){
+         this();
+         for(Object el : array){
+             list.add(new ReferenceMemory(MemoryUtils.valueOf(el)));
+         }
+         size = array.length;
+         lastLongIndex = size - 1;
+     }
+ 
+     public ArrayMemory(boolean toImmutable, Memory... array){
+         this();
+         for(Memory el : array){
+             list.add(new ReferenceMemory(toImmutable ? el.toImmutable() : el));
+         }
+         size = array.length;
+         lastLongIndex = size - 1;
+     }
+ 
+     public ArrayMemory(String[] array){
+         this();
+         for(String el : array) {
+             list.add(new ReferenceMemory(new StringMemory(el)));
+         }
+         size = array.length;
+         lastLongIndex = size - 1;
+     }
+ 
+     public ArrayMemory(Map map){
+         this();
+         for(Object key : map.keySet()){
+             Object el = map.get(key);
+             put(ArrayMemory.toKey(MemoryUtils.valueOf(key)), MemoryUtils.valueOf(el));
+         }
+     }
+ 
+     public static Memory valueOf(){
+         return new ArrayMemory();
+     }
+ 
+     public static ArrayMemory valueOfRef(ArrayMemory value){
+         if (value == null)
+             return new ArrayMemory();
+         else
+             return value;
+     }
+ 
+     public ArrayMemory duplicate(){
+         ArrayMemory result = new ArrayMemory();
+         result.lastLongIndex = lastLongIndex;
+         result.size = size;
+         if (list != null){
+             for(ReferenceMemory item : list){
+                 result.list.add(item.duplicate());
+             }
+         } else {
+             result.list = null;
+             result.map = new LinkedHashMap<Object, ReferenceMemory>(map);
+             for(Map.Entry<Object, ReferenceMemory> entry : map.entrySet()){
+                 result.map.put(entry.getKey(), entry.getValue().duplicate());
+             }
+         }
+ 
+         return result;
+     }
+ 
+     public ArrayMemory checkCopied(){
+         if (original != null || copies > 0) {
+             ArrayMemory dup = duplicate();
+             this.map  = dup.map;
+             this.list = dup.list;
+             this.lastLongIndex = dup.lastLongIndex;
+ 
+             if (this.original == null){
+                 this.copies--;
+             } else {
+                 this.original.copies--;
+                 this.original = null;
+                 this.copies = 0;
+             }
+             return dup;
+         }
+         return null;
+     }
+ 
+     public static Object toKey(Memory key){
+         switch (key.type){
+             case STRING: {
+                 String key1 = key.toString();
+                 Memory number = StringMemory.toLong(key1);
+                 if (number == null)
+                     return key1;
+                 else
+                     return number;
+             }
+             case INT: return key;
+             case NULL: return Memory.CONST_INT_0;
+             case REFERENCE: return toKey(key.toValue());
+             default:
+                 return LongMemory.valueOf(key.toLong());
+         }
+     }
+ 
+     private void convertToMap(){
+         map = new LinkedHashMap<Object, ReferenceMemory>();
+         int i = 0;
+         for(ReferenceMemory memory : list){
+             if (memory != null){
+                 map.put(LongMemory.valueOf(i), memory);
+             }
+             i++;
+         }
+         list = null;
+     }
+ 
+     public void renameKey(Memory oldKey, Memory newKey){
+         checkCopied();
+         if (list != null)
+             convertToMap();
+ 
+         Object key1 = toKey(oldKey);
+         Object key2 = toKey(newKey);
+ 
+         map.put(key2, map.remove(key1));
+     }
+ 
+     public ReferenceMemory get(Memory key){
+         return getByScalar(toKey(key));
+     }
+ 
+     public ReferenceMemory getOrCreate(Memory key){
+         return getByScalarOrCreate(toKey(key));
+     }
+ 
+     public ReferenceMemory getByScalarOrCreate(Object sKey, Memory initValue){
+         ReferenceMemory value = getByScalar(sKey);
+         if (value == null)
+             return put(sKey, initValue);
+ 
+         return value;
+     }
+ 
+     public ReferenceMemory getByScalarOrCreate(Object sKey){
+         return getByScalarOrCreate(sKey, NULL);
+     }
+ 
+     public ReferenceMemory getByScalar(Object key){
+         if (list != null){
+             if (key instanceof Memory){
+                 int index = (int)((Memory) key).toLong();
+                 if (index < list.size()){
+                     return list.get(index);
+                 } else
+                     return null;
+             } else
+                 return null;
+         } else {
+             return map.get(key);
+         }
+     }
+ 
+     public ReferenceMemory add(Memory value){
+         if (value instanceof KeyValueMemory){
+             KeyValueMemory keyValue = (KeyValueMemory)value;
+             return put(toKey(keyValue.key), keyValue.value);
+         }
+ 
+         ReferenceMemory ref;
+         if (list != null){
+             lastLongIndex++;
+             ref = new ReferenceMemory(value);
+             list.add(ref);
+             size++;
+         } else {
+             ref = put(LongMemory.valueOf(++lastLongIndex), value);
+         }
+         return ref;
+     }
+ 
+     /**
+      * Recursion is not detected...!!!
+      * @param array
+      * @param recursive
+      */
+     public void merge(ArrayMemory array, boolean recursive, Set<Integer> done){
+         checkCopied();
+         if (recursive && done == null)
+             done = new HashSet<Integer>();
+ 
+         if (list != null && array.list != null){
+             for(ReferenceMemory reference : array.list)
+                 list.add(new ReferenceMemory(reference.toImmutable()));
+ 
+             size = list.size();
+             lastLongIndex = size - 1;
+         } else {
+             if (list != null)
+                 convertToMap();
+ 
+             if (array.list != null){
+                 for(ReferenceMemory reference : array.list){
+                     add(reference.toImmutable());
+                 }
+             } else {
+                 for(Map.Entry<Object, ReferenceMemory> entry : array.map.entrySet()){
+                     Object key = entry.getKey();
+                     if (key instanceof LongMemory){
+                         add(entry.getValue().toImmutable());
+                     } else {
+                         Memory value = entry.getValue();
+                         if (recursive && value.isArray()) {
+                             if (done.contains(value.getPointer()))
+                                 throw new RecursiveException();
+ 
+                             Memory current = getByScalar(key).toImmutable();
+                             if (current.isArray()) {
+                                 value = value.toImmutable();
+ 
+                                 int pointer = value.getPointer();
+                                 done.add(pointer); // for check recursive
+ 
+                                 ArrayMemory result = (ArrayMemory)value; // already array immutable above
+                                 result.merge((ArrayMemory)current, recursive, done);
+                                 put(key, result);
+ 
+                                 done.remove(pointer);
+                             } else
+                                 put(key, value.toImmutable());
+                         } else {
+                             put(key, value.toImmutable());
+                         }
+                     }
+                 }
+             }
+         }
+     }
+ 
+     public void putAll(ArrayMemory array){
+         if (array.list != null){
+             int i = 0;
+             for(ReferenceMemory memory : array.list){
+                 if (memory != null)
+                     put(LongMemory.valueOf(i), memory.toImmutable());
+                 i++;
+             }
+         } else {
+             if (list != null)
+                 convertToMap();
+ 
+             if (array.lastLongIndex > lastLongIndex)
+                 lastLongIndex = array.lastLongIndex;
+ 
+             for(Map.Entry<Object, ReferenceMemory> entry : array.map.entrySet()){
+                 put(entry.getKey(), entry.getValue().toImmutable());
+             }
+         }
+     }
+ 
+     public void putAllRef(ArrayMemory array){
+         if (array.list != null){
+             int i = 0;
+             for(ReferenceMemory memory : array.list){
+                 if (memory != null)
+                     put(LongMemory.valueOf(i), memory);
+                 i++;
+             }
+         } else {
+             if (list != null)
+                 convertToMap();
+ 
+             if (array.lastLongIndex > lastLongIndex)
+                 lastLongIndex = array.lastLongIndex;
+ 
+             map.putAll(array.map);
+         }
+     }
+ 
+     public ReferenceMemory put(Object key, Memory value) {
+         ReferenceMemory mem = new ReferenceMemory(value);
+ 
+         if (key instanceof LongMemory){
+             int index = (int)((LongMemory)key).value;
+ 
+             if (index > lastLongIndex)
+                 lastLongIndex = index;
+ 
+             if (list != null){
+                 int size  = list.size();
+                 if (index >= 0){
+                     if (index < size){
+                         list.set(index, mem);
+                         this.size++;
+                         return mem;
+                     } else if (index == size){
+                         list.add(mem);
+                         this.size++;
+                         return mem;
+                     } else {
+                         convertToMap();
+                     }
+                 }
+             }
+         } else {
+             if (list != null)
+                 convertToMap();
+         }
+ 
+         Memory last = map.put(key, mem);
+         if (last == null){
+             size++;
+         }
+         return mem;
+     }
+ 
+     public Memory removeByScalar(Object key){
+         if (list != null){
+             int index = -1;
+             if (key instanceof Long)
+                 index = ((Long) key).intValue();
+             else if (key instanceof Integer)
+                 index = ((Integer) key);
+             else if (key instanceof String){
+                 Memory tmp = StringMemory.toLong((String)key);
+                 if (tmp != null)
+                     index = (int) tmp.toLong();
+             }
+ 
+             if (index < 0 || index >= list.size())
+                 return null;
+ 
+             if (index == size - 1) {
+                 size--;
+                 lastLongIndex = size - 1;
+                 return list.remove(index);
+             } else {
+                 key = (long)index;
+                 convertToMap();
+             }
+         }
+ 
+         {
+             if (key instanceof Long)
+                 key = LongMemory.valueOf((Long)key);
+             else if (key instanceof Integer)
+                 key = LongMemory.valueOf((Integer)key);
+             else if (key instanceof String){
+                 Memory tmp = StringMemory.toLong((String)key);
+                 if (tmp != null)
+                     key = tmp;
+             }
+ 
+             Memory memory = map.remove(key);
+             if (memory != null)
+                 size--;
+ 
+             return memory;
+         }
+     }
+ 
+     public Memory remove(Memory key){
+         Object _key = toKey(key);
+         if (list != null){
+             int index = _key instanceof LongMemory ? (int) key.toLong() : -1;
+             if (index < 0 || index >= list.size())
+                 return null;
+ 
+             if (index == size - 1){
+                 size--;
+                 lastLongIndex = index - 1;
+                 return list.remove(index);
+             }
+ 
+             //key = LongMemory.valueOf(index);
+             convertToMap();
+         }
+ 
+         {
+             Memory memory = map.remove(_key);
+             if (memory != null)
+                 size--;
+ 
+             return memory;
+         }
+     }
+ 
+     public int size(){
+         return size;
+     }
+ 
+     public void shuffle(Random rnd){
+         checkCopied();
+         if (list != null){
+             Collections.shuffle(list, rnd);
+         } else {
+             Set<Object> keys = map.keySet();
+ 
+             List<ReferenceMemory> values = new ArrayList<ReferenceMemory>(map.values());
+             Collections.shuffle(values, rnd);
+ 
+             int i = 0;
+             for(Object key : keys){
+                 map.put(key, values.get(i));
+                 i++;
+             }
+         }
+     }
+ 
+     public void clear(){
+         if (list != null){
+             list = new ArrayList<ReferenceMemory>();
+         }
+ 
+         if (map != null){
+             map = new LinkedHashMap<Object, ReferenceMemory>();
+         }
+ 
+         size = 0;
+     }
+ 
+     public int compare(ArrayMemory otherRef) throws UncomparableArrayException {
+         int size1 = size(),
+             size2 = otherRef.size();
+ 
+         if (size1 < size2)
+             return -1;
+         else if (size1 > size2)
+             return 1;
+ 
+         //Iterator<ReferenceMemory> iterator = this.iterator();
+         // TODO
+         /*while (iterator.hasNext()){
+             ReferenceMemory value1 = iterator.next();
+             //Object key    = value1.key;
+             Memory value2 = otherRef.getByScalar(key);
+ 
+             if (value2 == null)
+                 throw new UncomparableArrayException();
+ 
+             if (value1.smaller(value2))
+                 return -1;
+             else
+                 return 1;
+         }*/
+         return 0;
+     }
+ 
+     @Override
+     public Memory toImmutable() {
+         if (copies >= 0){
+             ArrayMemory mem = new ArrayMemory();
+             mem.list = list;
+             mem.original = this;
+             mem.size = size;
+             mem.list = list;
+             mem.map  = map;
+             mem.lastLongIndex = lastLongIndex;
+             copies++;
+             return mem;
+         } else {
+             copies++;
+             return this;
+         }
+     }
+ 
+     public ArrayMemory toConstant(){
+         if (copies == 0)
+             copies--;
+         else
+             throw new RuntimeException("Cannot convert array to a constant value with copies != 0");
+         return this;
+     }
+ 
+     public Memory[] values(boolean asImmutable){
+         Memory[] result = new Memory[size];
+         int i = 0;
+         for(ReferenceMemory el : this){
+             result[i++] = asImmutable ? el.toImmutable() : el.toValue();
+         }
+         return result;
+     }
+ 
+     public Memory[] values(){
+         return values(false);
+     }
+ 
+     @Override
+     public long toLong() {
+         return size == 0 ? 0 : 1;
+     }
+ 
+     @Override
+     public double toDouble() {
+         return size == 0 ? 0 : 1;
+     }
+ 
+     @Override
+     public boolean toBoolean() {
+         return size != 0;
+     }
+ 
+     @Override
+     public Memory toNumeric() {
+         return size == 0 ? CONST_INT_0 : CONST_INT_1;
+     }
+ 
+     @Override
+     public String toString() {
+         return "Array";
+     }
+ 
+     @Override
+     public Memory inc() {
+         return toNumeric().inc();
+     }
+ 
+     @Override
+     public Memory dec() {
+         return toNumeric().dec();
+     }
+ 
+     @Override
+     public Memory negative() {
+         return toNumeric().negative();
+     }
+ 
+     @Override
+     public Memory plus(Memory memory) {
+         return toNumeric().plus(memory);
+     }
+ 
+     @Override
+     public Memory minus(Memory memory) {
+         return toNumeric().minus(memory);
+     }
+ 
+     @Override
+     public Memory mul(Memory memory) {
+         return toNumeric().mul(memory);
+     }
+ 
+     @Override
+     public Memory div(Memory memory) {
+         return toNumeric().div(memory);
+     }
+ 
+     @Override
+     public Memory mod(Memory memory) {
+         return toNumeric().mod(memory);
+     }
+ 
+     @Override
+     public boolean equal(Memory memory) {
+         if (memory.type == Type.ARRAY){
+             try {
+                 return compare((ArrayMemory)memory) == 0;
+             } catch (UncomparableArrayException e) {
+                 return false;
+             }
+         }
+         return false;
+     }
+ 
+     @Override
+     public boolean notEqual(Memory memory) {
+         return !equals(memory);
+     }
+ 
+     @Override
+     public boolean smaller(Memory memory) {
+         if (memory.type == Type.ARRAY){
+             try {
+                 return compare((ArrayMemory)memory) < 0;
+             } catch (UncomparableArrayException e) {
+                 return false;
+             }
+         }
+         return false;
+     }
+ 
+     @Override
+     public boolean smallerEq(Memory memory) {
+         if (memory.type == Type.ARRAY){
+             try {
+                 return compare((ArrayMemory)memory) <= 0;
+             } catch (UncomparableArrayException e) {
+                 return false;
+             }
+         }
+         return false;
+     }
+ 
+     @Override
+     public boolean greater(Memory memory) {
+         if (memory.type == Type.ARRAY){
+             try {
+                 return compare((ArrayMemory)memory) > 0;
+             } catch (UncomparableArrayException e) {
+                 return false;
+             }
+         }
+         return true;
+     }
+ 
+     @Override
+     public boolean greaterEq(Memory memory) {
+         if (memory.type == Type.ARRAY){
+             try {
+                 return compare((ArrayMemory)memory) >= 0;
+             } catch (UncomparableArrayException e) {
+                 return false;
+             }
+         }
+         return true;
+     }
+ 
+     @Override
+     public int hashCode() {
+         return toString().hashCode();
+     }
+ 
+     @Override
+     public void unset() {
+         if (original != null){
+             original.copies--;
+             original = null;
+         } else
+             copies--;
+ 
+         if (list != null){
+             for(ReferenceMemory memory : list)
+                 if (memory.type == type)
+                     memory.unset();
+         }
+ 
+         if (map != null){
+             for(ReferenceMemory memory : map.values())
+                 if (memory.type == type)
+                     memory.unset();
+         }
+ 
+         clear();
+     }
+ 
+     @Override
+     public Memory valueOfIndex(Memory index) {
+         Memory e = get(index);
+         return e == null ? NULL : e;
+     }
+ 
+     @Override
+     public Memory valueOfIndex(long index) {
+         Memory e = getByScalar(LongMemory.valueOf(index));
+         return e == null ? NULL : e;
+     }
+ 
+     @Override
+     public Memory valueOfIndex(double index) {
+         Memory e = getByScalar(LongMemory.valueOf((long) index));
+         return e == null ? NULL : e;
+     }
+ 
+     @Override
+     public Memory valueOfIndex(boolean index) {
+         Memory e = getByScalar(index ? CONST_INT_0 : CONST_INT_1);
+         return e == null ? NULL : e;
+     }
+ 
+     @Override
+     public Memory valueOfIndex(String index) {
+         Memory e = getByScalar(index);
+         return e == null ? NULL : e;
+     }
+ 
+     @Override
+     public void unsetOfIndex(Memory index) {
+         checkCopied();
+         remove(index);
+     }
+ 
+     @Override
+     public Memory refOfPush(){
+         checkCopied();
+         return add(NULL);
+     }
+ 
+     @Override
+     public Memory refOfIndex(Memory index) {
+         checkCopied();
+         return getOrCreate(index);
+     }
+ 
+     @Override
+     public Memory refOfIndex(long index) {
+         checkCopied();
+         return getOrCreate(LongMemory.valueOf(index));
+     }
+ 
+     @Override
+     public Memory refOfIndex(double index) {
+         return refOfIndex(LongMemory.valueOf((long) index));
+     }
+ 
+     @Override
+     public Memory refOfIndex(boolean index) {
+         checkCopied();
+         return getOrCreate(index ? CONST_INT_1 : CONST_INT_0);
+     }
+ 
+     @Override
+     public Memory refOfIndex(String index) {
+         checkCopied();
+         Memory number = StringMemory.toLong(index);
+         return number == null ? getByScalarOrCreate(index) : getByScalarOrCreate(number);
+     }
+ 
+     @Override
+     public boolean identical(Memory memory) {
+         return memory.type == Type.ARRAY; // TODO
+     }
+ 
+     @Override
+     public boolean identical(long value) {
+         return false;
+     }
+ 
+     @Override
+     public boolean identical(double value) {
+         return false;
+     }
+ 
+     @Override
+     public boolean identical(boolean value) {
+         return false;
+     }
+ 
+     @Override
+     public boolean identical(String value) {
+         return false;
+     }
+ 
+     @Override
+     public Iterator<ReferenceMemory> iterator() {
+         if (list != null) {
+             return list.iterator();
+         } else
+             return map.values().iterator();
+     }
+ 
+     public ForeachIterator foreachIterator(boolean getReferences, boolean withPrevious) {
+         return foreachIterator(getReferences, false, withPrevious);
+     }
+ 
+     public ForeachIterator foreachIterator(boolean getReferences, boolean getKeyReferences, boolean withPrevious) {
+         return new ForeachIterator(getReferences, getKeyReferences, withPrevious){
+             protected int cursor = 0;
+             protected Iterator<Object> keys;
+ 
+             @Override
+             protected boolean init() {
+                 if (getKeyReferences && list != null)
+                     ArrayMemory.this.convertToMap();
+ 
+                 if (list == null) {
+                     if (withPrevious || getKeyReferences)
+                         keys = new ArrayList<Object>(map.keySet()).listIterator();
+                     else
+                         keys = map.keySet().iterator();
+                 }
+                 return true;
+             }
+ 
+             private void setCurrentValue(ReferenceMemory value){
+                 if (getReferences)
+                     currentValue = new ArrayValueMemory(getCurrentMemoryKey(), ArrayMemory.this, value);
+                 else
+                     currentValue = value.toValue();
+ 
+                 if (getKeyReferences) {
+                     currentKeyMemory = new ArrayKeyMemory(ArrayMemory.this, getCurrentMemoryKey());
+                 }
+             }
+ 
+             @Override
+             public boolean end() {
+                 if (ArrayMemory.this.size == 0)
+                     return false;
+ 
+                 if (ArrayMemory.this.list != null){
+                     cursor = ArrayMemory.this.size - 1;
+                     currentKey = (long)cursor;
+                     setCurrentValue(list.get(cursor));
+                     return true;
+                 } else {
+                     ArrayList<Object> tmp = new ArrayList<Object>(map.keySet());
+                     keys = tmp.listIterator(tmp.size() - 1);
+                     return true;
+                 }
+             }
+ 
+             @Override
+             protected boolean prevValue() {
+                 if (ArrayMemory.this.list != null) {
+                     if (cursor <= 0){
+                         currentKey = null;
+                         currentValue = null;
+                         cursor--;
+                         keys = null;
+                         return false;
+                     } else {
+                         cursor--;
+                         currentKey = (long)cursor;
+                         setCurrentValue(list.get(cursor));
+                         return true;
+                     }
+                 } else {
+                     ListIterator<Object> keyIterator = (ListIterator) keys;
+                     if (keyIterator.hasPrevious()) {
+                         currentKey = keyIterator.previous();
+                         setCurrentValue(map.get(currentKey));
+                         return true;
+                     } else {
+                         currentKey = null;
+                         currentValue = null;
+                         keys = null;
+                         cursor = -1;
+                         return false;
+                     }
+                 }
+             }
+ 
+             @Override
+             protected boolean nextValue() {
+                 if (withPrevious && (keys == null && cursor < 0))
+                     return false;
+ 
+                 if (ArrayMemory.this.list != null) {
+                     if (cursor >= size) {
+                         currentKey = null;
+                         currentValue = null;
+                         return false;
+                     }
+ 
+                     currentKey = (long)cursor;
+                     setCurrentValue(list.get(cursor));
+                     cursor++;
+                     return true;
+                 } else {
+                     if (keys == null) {
+                        keys = map.keySet().iterator();
+                        for(int i = 0; i < cursor; i++)
+                            keys.next();
+                     }
+ 
+                     if (keys.hasNext()){
+                         currentKey = keys.next();
+                         setCurrentValue(map.get(currentKey));
+                         return true;
+                     } else {
+                         currentKey = null;
+                         currentValue = null;
+                         return false;
+                     }
+                 }
+             }
+         };
+     }
+ 
+     @Override
+     public ForeachIterator getNewIterator(boolean getReferences, boolean getKeyReferences) {
+         return foreachIterator(getReferences, getKeyReferences, false);
+     }
+ 
+     public ForeachIterator getCurrentIterator() {
+         if (foreachIterator.get() == null) {
+             ForeachIterator iterator = foreachIterator(false, true);
+             foreachIterator.set(iterator);
+         }
+ 
+         return foreachIterator.get();
+     }
+ 
+     public Memory resetCurrentIterator(){
+         foreachIterator.set(null);
+         ForeachIterator iterator = getCurrentIterator();
+         if (size == 0)
+             return FALSE;
+         else {
+             iterator.next();
+             Memory tmp = iterator.getCurrentValue();
+             iterator.prev();
+             return tmp;
+         }
+     }
+ 
+     @Override
+     public byte[] getBinaryBytes() {
+         return MemoryStringUtils.getBinaryBytes(this);
+     }
+ 
+     public boolean isList(){
+         return list != null;
+     }
+ 
+     public static class UncomparableArrayException extends Exception {}
+ }

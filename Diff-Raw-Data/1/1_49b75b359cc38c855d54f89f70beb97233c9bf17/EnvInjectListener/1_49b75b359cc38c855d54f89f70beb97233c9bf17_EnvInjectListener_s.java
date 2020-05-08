@@ -1,0 +1,490 @@
+ package org.jenkinsci.plugins.envinject;
+ 
+ import hudson.EnvVars;
+ import hudson.Extension;
+ import hudson.FilePath;
+ import hudson.Launcher;
+ import hudson.matrix.MatrixBuild;
+ import hudson.matrix.MatrixProject;
+ import hudson.maven.MavenModuleSet;
+ import hudson.model.*;
+ import hudson.model.listeners.RunListener;
+ import hudson.remoting.Callable;
+ import hudson.slaves.EnvironmentVariablesNodeProperty;
+ import hudson.slaves.NodeProperty;
+ import hudson.tasks.BuildWrapper;
+ import hudson.tasks.BuildWrapperDescriptor;
+ import hudson.util.DescribableList;
+ import org.jenkinsci.lib.envinject.EnvInjectException;
+ import org.jenkinsci.lib.envinject.EnvInjectLogger;
+ import org.jenkinsci.plugins.envinject.buildwrapper.EnvInjectPasswordWrapper;
+ import org.jenkinsci.plugins.envinject.model.EnvInjectJobPropertyContributor;
+ import org.jenkinsci.plugins.envinject.service.EnvInjectActionSetter;
+ import org.jenkinsci.plugins.envinject.service.EnvInjectEnvVars;
+ import org.jenkinsci.plugins.envinject.service.EnvInjectGlobalPasswordRetriever;
+ import org.jenkinsci.plugins.envinject.service.EnvInjectVariableGetter;
+ 
+ import java.io.IOException;
+ import java.io.Serializable;
+ import java.util.*;
+ 
+ /**
+  * @author Gregory Boissinot
+  */
+ @Extension
+ public class EnvInjectListener extends RunListener<Run> implements Serializable {
+ 
+     @Override
+     public Environment setUpEnvironment(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+         if (!(build instanceof MatrixBuild)) {
+             EnvInjectLogger logger = new EnvInjectLogger(listener);
+             logger.info("Preparing an environment for the build.");
+             try {
+ 
+                 //Process environment variables at node level
+                 Node buildNode = build.getBuiltOn();
+                 if (buildNode != null) {
+                     loadEnvironmentVariablesNode(build, buildNode, listener);
+                 }
+ 
+                 //Load job envinject job property
+                 if (isEnvInjectJobPropertyActive(build)) {
+                     return setUpEnvironmentJobPropertyObject(build, launcher, listener);
+                 } else {
+                     return setUpEnvironmentWithoutJobPropertyObject(build, launcher, listener);
+                 }
+ 
+             } catch (Run.RunnerAbortedException rre) {
+                 logger.info("Fail the build.");
+                 throw new Run.RunnerAbortedException();
+             } catch (Throwable throwable) {
+                 logger.error("SEVERE ERROR occurs: " + throwable.getMessage());
+                 throw new Run.RunnerAbortedException();
+             }
+         }
+ 
+         return new Environment() {
+         };
+     }
+ 
+     private void loadEnvironmentVariablesNode(AbstractBuild build, Node buildNode, BuildListener listener) throws EnvInjectException {
+ 
+         if (buildNode == null) {
+             return;
+         }
+ 
+         FilePath nodePath = buildNode.getRootPath();
+         if (nodePath == null) {
+             return;
+         }
+ 
+         try {
+             EnvInjectLogger logger = new EnvInjectLogger(listener);
+             //Default node envVars
+             Map<String, String> configNodeEnvVars = new HashMap<String, String>();
+ 
+             //Get env vars for the current node
+             Map<String, String> nodeEnvVars = nodePath.act(
+                     new Callable<Map<String, String>, IOException>() {
+                         public Map<String, String> call() throws IOException {
+                             return EnvVars.masterEnvVars;
+                         }
+                     }
+             );
+ 
+
+             for (NodeProperty<?> nodeProperty : Hudson.getInstance().getGlobalNodeProperties()) {
+                 if (nodeProperty instanceof EnvironmentVariablesNodeProperty) {
+                     EnvironmentVariablesNodeProperty variablesNodeProperty = (EnvironmentVariablesNodeProperty) nodeProperty;
+                     EnvVars envVars = variablesNodeProperty.getEnvVars();
+                     EnvInjectEnvVars envInjectEnvVars = new EnvInjectEnvVars(logger);
+                     configNodeEnvVars.putAll(envVars);
+                     envInjectEnvVars.resolveVars(configNodeEnvVars, nodeEnvVars);
+                 }
+             }
+ 
+             for (NodeProperty<?> nodeProperty : buildNode.getNodeProperties()) {
+                 if (nodeProperty instanceof EnvironmentVariablesNodeProperty) {
+                     EnvironmentVariablesNodeProperty variablesNodeProperty = (EnvironmentVariablesNodeProperty) nodeProperty;
+                     EnvVars envVars = variablesNodeProperty.getEnvVars();
+                     EnvInjectEnvVars envInjectEnvVars = new EnvInjectEnvVars(logger);
+                     configNodeEnvVars.putAll(envVars);
+                     envInjectEnvVars.resolveVars(configNodeEnvVars, nodeEnvVars);
+                 }
+             }
+ 
+             EnvInjectActionSetter envInjectActionSetter = new EnvInjectActionSetter(nodePath);
+             envInjectActionSetter.addEnvVarsToEnvInjectBuildAction(build, configNodeEnvVars);
+ 
+         } catch (IOException ioe) {
+             throw new EnvInjectException(ioe);
+         } catch (InterruptedException ie) {
+             throw new EnvInjectException(ie);
+         }
+     }
+ 
+     @SuppressWarnings("unchecked")
+     private void addBuildWrapper(AbstractBuild build, BuildWrapper buildWrapper, EnvInjectLogger logger) throws EnvInjectException {
+         try {
+             if (buildWrapper != null) {
+                 AbstractProject abstractProject = build.getProject();
+                 if (abstractProject instanceof MatrixProject) {
+                     MatrixProject project = (MatrixProject) abstractProject;
+                     project.getBuildWrappersList().add(buildWrapper);
+                 } else if (abstractProject instanceof FreeStyleProject) {
+                     Project project = (Project) abstractProject;
+                     project.getBuildWrappersList().add(buildWrapper);
+                 } else if (abstractProject instanceof MavenModuleSet) {
+                     MavenModuleSet moduleSet = (MavenModuleSet) abstractProject;
+                     moduleSet.getBuildWrappersList().add(buildWrapper);
+                 } else {
+                     logger.error(String.format("Job type %s is not supported by the EnvInject plugin.", abstractProject));
+                 }
+             }
+         } catch (IOException ioe) {
+             throw new EnvInjectException(ioe);
+         }
+     }
+ 
+     private boolean isEnvInjectJobPropertyActive(AbstractBuild build) {
+         EnvInjectVariableGetter variableGetter = new EnvInjectVariableGetter();
+         EnvInjectJobProperty envInjectJobProperty = variableGetter.getEnvInjectJobProperty(build);
+         return envInjectJobProperty != null;
+     }
+ 
+     public static class JobSetupEnvironmentWrapper extends BuildWrapper {
+ 
+         @SuppressWarnings("unused")
+         @Extension
+         public static class JobSetupEnvironmentWrapperDescriptor extends BuildWrapperDescriptor {
+ 
+             public JobSetupEnvironmentWrapperDescriptor() {
+             }
+ 
+             public JobSetupEnvironmentWrapperDescriptor(Class<? extends BuildWrapper> clazz) {
+                 super(JobSetupEnvironmentWrapper.class);
+             }
+ 
+             @Override
+             public boolean isApplicable(AbstractProject<?, ?> item) {
+                 return false;
+             }
+ 
+             @Override
+             public String getDisplayName() {
+                 return null;
+             }
+         }
+ 
+         @Override
+         public void preCheckout(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+ 
+             EnvInjectLogger envInjectLogger = new EnvInjectLogger(listener);
+             EnvInjectVariableGetter variableGetter = new EnvInjectVariableGetter();
+             EnvInjectJobProperty envInjectJobProperty = variableGetter.getEnvInjectJobProperty(build);
+ 
+             assert envInjectJobProperty != null;
+ 
+             if (envInjectJobProperty.isKeepBuildVariables()) {
+                 try {
+                     //Get previous
+                     Map<String, String> previousEnvVars = variableGetter.getEnvVarsPreviousSteps(build, envInjectLogger);
+                     //Add workspace
+                     FilePath ws = build.getWorkspace();
+                     previousEnvVars.put("WORKSPACE", ws.getRemote());
+                     //Set new env vars
+                     new EnvInjectActionSetter(build.getBuiltOn().getRootPath()).addEnvVarsToEnvInjectBuildAction(build, previousEnvVars);
+                 } catch (EnvInjectException e) {
+                     throw new IOException(e);
+                 }
+             }
+         }
+ 
+         @Override
+         public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+             return new Environment() {
+             };
+         }
+     }
+ 
+     private Environment setUpEnvironmentJobPropertyObject(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, EnvInjectException {
+ 
+         EnvInjectVariableGetter variableGetter = new EnvInjectVariableGetter();
+         EnvInjectJobProperty envInjectJobProperty = variableGetter.getEnvInjectJobProperty(build);
+         assert envInjectJobProperty != null;
+         EnvInjectJobPropertyInfo info = envInjectJobProperty.getInfo();
+         assert envInjectJobProperty != null && envInjectJobProperty.isOn();
+ 
+         EnvInjectLogger logger = new EnvInjectLogger(listener);
+ 
+         //Init infra env vars
+         Map<String, String> previousEnvVars = variableGetter.getEnvVarsPreviousSteps(build, logger);
+         Map<String, String> infraEnvVarsNode = new LinkedHashMap<String, String>(previousEnvVars);
+         Map<String, String> infraEnvVarsMaster = new LinkedHashMap<String, String>(previousEnvVars);
+ 
+         //Add Jenkins System variables
+         if (envInjectJobProperty.isKeepJenkinsSystemVariables()) {
+             logger.info("Keep Jenkins system variables.");
+             infraEnvVarsMaster.putAll(variableGetter.getJenkinsSystemVariables(true));
+             infraEnvVarsNode.putAll(variableGetter.getJenkinsSystemVariables(false));
+         }
+ 
+         //Add build variables
+         if (envInjectJobProperty.isKeepBuildVariables()) {
+             logger.info("Keep Jenkins build variables.");
+             Map<String, String> buildVariables = variableGetter.getBuildVariables(build, logger);
+             infraEnvVarsMaster.putAll(buildVariables);
+             infraEnvVarsNode.putAll(buildVariables);
+         }
+ 
+         //Inject Passwords
+         injectPasswords(build, envInjectJobProperty, logger);
+ 
+         //Add build parameters (or override)
+         Map<String, String> parametersVariables = variableGetter.overrideParametersVariablesWithSecret(build);
+         infraEnvVarsNode.putAll(parametersVariables);
+ 
+         final FilePath rootPath = getNodeRootPath();
+         if (rootPath != null) {
+ 
+             EnvInjectEnvVars envInjectEnvVarsService = new EnvInjectEnvVars(logger);
+ 
+             //Execute script
+             int resultCode = envInjectEnvVarsService.executeScript(info.isLoadFilesFromMaster(),
+                     info.getScriptContent(),
+                     rootPath, info.getScriptFilePath(), infraEnvVarsMaster, infraEnvVarsNode, launcher, listener);
+             if (resultCode != 0) {
+                 build.setResult(Result.FAILURE);
+                 throw new Run.RunnerAbortedException();
+             }
+ 
+             //Evaluate Groovy script
+             Map<String, String> groovyMapEnvVars = envInjectEnvVarsService.executeAndGetMapGroovyScript(info.getGroovyScriptContent(), infraEnvVarsNode);
+ 
+             final Map<String, String> propertiesVariables = envInjectEnvVarsService.getEnvVarsPropertiesJobProperty(rootPath,
+                     logger, info.isLoadFilesFromMaster(),
+                     info.getPropertiesFilePath(), info.getPropertiesContentMap(),
+                     infraEnvVarsMaster, infraEnvVarsNode);
+ 
+             //Get variables get by contribution
+             Map<String, String> contributionVariables = getEnvVarsByContribution(build, envInjectJobProperty, listener);
+ 
+             final Map<String, String> resultVariables = envInjectEnvVarsService.getMergedVariables(
+                     infraEnvVarsNode,
+                     propertiesVariables,
+                     groovyMapEnvVars,
+                     contributionVariables);
+ 
+             //Add an action
+             new EnvInjectActionSetter(rootPath).addEnvVarsToEnvInjectBuildAction(build, resultVariables);
+ 
+             addBuildWrapper(build, new JobSetupEnvironmentWrapper(), logger);
+ 
+             return new Environment() {
+                 @Override
+                 public void buildEnvVars(Map<String, String> env) {
+                     env.putAll(resultVariables);
+                 }
+             };
+         }
+         return new Environment() {
+         };
+     }
+ 
+     private Environment setUpEnvironmentWithoutJobPropertyObject(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, EnvInjectException {
+ 
+         final Map<String, String> resultVariables = new HashMap<String, String>();
+ 
+         EnvInjectVariableGetter variableGetter = new EnvInjectVariableGetter();
+         EnvInjectLogger logger = new EnvInjectLogger(listener);
+         Map<String, String> previousEnvVars = variableGetter.getEnvVarsPreviousSteps(build, logger);
+         resultVariables.putAll(previousEnvVars);
+ 
+         resultVariables.putAll(variableGetter.getJenkinsSystemVariables(false));
+         resultVariables.putAll(variableGetter.getBuildVariables(build, logger));
+ 
+         final FilePath rootPath = getNodeRootPath();
+         if (rootPath != null) {
+             new EnvInjectActionSetter(rootPath).addEnvVarsToEnvInjectBuildAction(build, resultVariables);
+         }
+ 
+         return new Environment() {
+             @Override
+             public void buildEnvVars(Map<String, String> env) {
+                 env.putAll(resultVariables);
+             }
+         };
+     }
+ 
+     private void injectPasswords(AbstractBuild build, EnvInjectJobProperty envInjectJobProperty, EnvInjectLogger logger) throws EnvInjectException {
+ 
+         //--Process global passwords
+         List<EnvInjectPasswordEntry> passwordList = new ArrayList<EnvInjectPasswordEntry>();
+         if (envInjectJobProperty.isInjectGlobalPasswords()) {
+             logger.info("Inject global passwords.");
+             EnvInjectGlobalPasswordRetriever globalPasswordRetriever = new EnvInjectGlobalPasswordRetriever();
+             EnvInjectGlobalPasswordEntry[] passwordEntries = globalPasswordRetriever.getGlobalPasswords();
+             if (passwordEntries != null) {
+                 for (EnvInjectGlobalPasswordEntry entry : passwordEntries) {
+                     passwordList.add(entry);
+                 }
+             }
+         }
+ 
+         //--Process job passwords
+         if (envInjectJobProperty.getPasswordEntries() != null && envInjectJobProperty.getPasswordEntries().length != 0) {
+             passwordList.addAll(Arrays.asList(envInjectJobProperty.getPasswordEntries()));
+         }
+         //--Inject passwords
+         if (passwordList.size() != 0) {
+             addBuildWrapper(build, new EnvInjectPasswordWrapper(passwordList), logger);
+         }
+ 
+     }
+ 
+     private Node getNode() {
+         Computer computer = Computer.currentComputer();
+         if (computer == null) {
+             return null;
+         }
+         return computer.getNode();
+     }
+ 
+     private FilePath getNodeRootPath() {
+         Node node = getNode();
+         if (node != null) {
+             return node.getRootPath();
+         }
+         return null;
+     }
+ 
+     private Map<String, String> getEnvVarsByContribution(AbstractBuild build, EnvInjectJobProperty envInjectJobProperty, BuildListener listener) throws EnvInjectException {
+ 
+         assert envInjectJobProperty != null;
+         Map<String, String> contributionVariables = new HashMap<String, String>();
+ 
+         EnvInjectJobPropertyContributor[] contributors = envInjectJobProperty.getContributors();
+         if (contributors != null) {
+             for (EnvInjectJobPropertyContributor contributor : contributors) {
+                 contributionVariables.putAll(contributor.getEnvVars(build, listener));
+             }
+         }
+         return contributionVariables;
+     }
+ 
+     @Override
+     public void onCompleted(Run run, TaskListener listener) {
+ 
+         AbstractBuild build = (AbstractBuild) run;
+         if (!(build instanceof MatrixBuild)) {
+             EnvVars envVars = new EnvVars();
+             EnvInjectLogger logger = new EnvInjectLogger(listener);
+ 
+             EnvInjectPluginAction envInjectAction = run.getAction(EnvInjectPluginAction.class);
+             if (envInjectAction != null) {
+ 
+                 //Remove technical wrappers
+                 try {
+                     removeTechnicalBuildWrappers(build, JobSetupEnvironmentWrapper.class, EnvInjectPasswordWrapper.class);
+                 } catch (EnvInjectException e) {
+                     logger.error("SEVERE ERROR occurs: " + e.getMessage());
+                     throw new Run.RunnerAbortedException();
+                 }
+ 
+             } else {
+                 //Keep classic injected env vars
+                 AbstractBuild abstractBuild = (AbstractBuild) run;
+                 try {
+                     envVars.putAll(abstractBuild.getEnvironment(listener));
+                 } catch (IOException e) {
+                     logger.error("SEVERE ERROR occurs: " + e.getMessage());
+                     throw new Run.RunnerAbortedException();
+                 } catch (InterruptedException e) {
+                     logger.error("SEVERE ERROR occurs: " + e.getMessage());
+                     throw new Run.RunnerAbortedException();
+                 }
+             }
+ 
+             //Mask passwords
+             maskPasswordsIfAny(build, logger, envVars);
+ 
+             //Add or override EnvInject Action
+             EnvInjectActionSetter envInjectActionSetter = new EnvInjectActionSetter(getNodeRootPath());
+             try {
+                 envInjectActionSetter.addEnvVarsToEnvInjectBuildAction((AbstractBuild<?, ?>) run, envVars);
+             } catch (EnvInjectException e) {
+                 logger.error("SEVERE ERROR occurs: " + e.getMessage());
+                 throw new Run.RunnerAbortedException();
+             } catch (IOException e) {
+                 logger.error("SEVERE ERROR occurs: " + e.getMessage());
+                 throw new Run.RunnerAbortedException();
+             } catch (InterruptedException e) {
+                 logger.error("SEVERE ERROR occurs: " + e.getMessage());
+                 throw new Run.RunnerAbortedException();
+             }
+         }
+     }
+ 
+     @SuppressWarnings("unchecked")
+     private void removeTechnicalBuildWrappers(AbstractBuild build, Class<JobSetupEnvironmentWrapper> jobSetupEnvironmentWrapperClass, Class<EnvInjectPasswordWrapper> envInjectPasswordWrapperClass) throws EnvInjectException {
+ 
+         AbstractProject abstractProject = build.getProject();
+         DescribableList<BuildWrapper, Descriptor<BuildWrapper>> wrappersProject;
+         if (abstractProject instanceof MatrixProject) {
+             MatrixProject project = (MatrixProject) abstractProject;
+             wrappersProject = project.getBuildWrappersList();
+         } else if (abstractProject instanceof FreeStyleProject) {
+             Project project = (Project) abstractProject;
+             wrappersProject = project.getBuildWrappersList();
+         } else if (abstractProject instanceof MavenModuleSet) {
+             MavenModuleSet moduleSet = (MavenModuleSet) abstractProject;
+             wrappersProject = moduleSet.getBuildWrappersList();
+         } else {
+             throw new EnvInjectException(String.format("Job type %s is not supported", abstractProject));
+         }
+ 
+         Iterator<BuildWrapper> iterator = wrappersProject.iterator();
+         while (iterator.hasNext()) {
+             BuildWrapper buildWrapper = iterator.next();
+             if ((((jobSetupEnvironmentWrapperClass.getName()).equals(buildWrapper.getClass().getName()))
+                     || ((envInjectPasswordWrapperClass.getName()).equals(buildWrapper.getClass().getName())))) {
+                 try {
+                     wrappersProject.remove(buildWrapper);
+                 } catch (IOException ioe) {
+                     throw new EnvInjectException(ioe);
+                 }
+             }
+         }
+     }
+ 
+     private void maskPasswordsIfAny(AbstractBuild build, EnvInjectLogger logger, Map<String, String> envVars) {
+         try {
+ 
+             //Global passwords
+             EnvInjectGlobalPasswordRetriever globalPasswordRetriever = new EnvInjectGlobalPasswordRetriever();
+             EnvInjectGlobalPasswordEntry[] globalPasswordEntries = globalPasswordRetriever.getGlobalPasswords();
+             if (globalPasswordEntries != null) {
+                 for (EnvInjectGlobalPasswordEntry globalPasswordEntry : globalPasswordEntries) {
+                     envVars.put(globalPasswordEntry.getName(),
+                             globalPasswordEntry.getValue().getEncryptedValue());
+                 }
+             }
+ 
+             //Job passwords
+             if (isEnvInjectJobPropertyActive(build)) {
+                 EnvInjectVariableGetter variableGetter = new EnvInjectVariableGetter();
+                 EnvInjectJobProperty envInjectJobProperty = variableGetter.getEnvInjectJobProperty(build);
+                 EnvInjectPasswordEntry[] passwordEntries = envInjectJobProperty.getPasswordEntries();
+                 if (passwordEntries != null) {
+                     for (EnvInjectPasswordEntry passwordEntry : passwordEntries) {
+                         envVars.put(passwordEntry.getName(), passwordEntry.getValue().getEncryptedValue());
+                     }
+                 }
+             }
+ 
+         } catch (EnvInjectException ee) {
+             logger.error("Can't mask global password :" + ee.getMessage());
+         }
+     }
+ 
+ }

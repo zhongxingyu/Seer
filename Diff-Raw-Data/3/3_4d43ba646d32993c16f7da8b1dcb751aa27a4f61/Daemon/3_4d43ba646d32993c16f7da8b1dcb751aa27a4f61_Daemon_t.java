@@ -1,0 +1,484 @@
+ package com.parc.ccn.network.daemons;
+ 
+ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.FileNotFoundException;
+ import java.io.FileOutputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.io.ObjectInputStream;
+ import java.io.ObjectOutputStream;
+ import java.io.PrintStream;
+ import java.io.Serializable;
+ import java.rmi.NoSuchObjectException;
+ import java.rmi.Remote;
+ import java.rmi.RemoteException;
+ import java.rmi.server.RemoteObject;
+ import java.rmi.server.UnicastRemoteObject;
+ import java.util.Date;
+ 
+ import com.parc.ccn.Library;
+ import com.parc.ccn.network.CCNNetworkManager;
+ 
+ /**
+  * Wrapper class for things that run as daemons. Based
+  * on the CA issuer daemon.
+  * @author smetters
+  *
+  */
+ public class Daemon {
+ 
+ 	protected enum Mode {MODE_UNKNOWN, MODE_START, MODE_STOP, MODE_INTERACTIVE, MODE_DAEMON};
+ 
+ 	protected String _daemonName = null;
+ 	protected static DaemonListenerClass _daemonListener = null;
+ 
+ 	/**
+ 	 * Interface describing the RMI server object sitting inside
+ 	 * the daemon 
+ 	 */
+ 	public interface DaemonListener extends Remote {
+ 		public boolean startLoop() throws RemoteException;
+ 		public void shutDown() throws RemoteException;
+ 	}
+ 
+ 	/**
+ 	 * The thread that runs inside the daemon, doing work
+ 	 */
+ 	protected static class WorkerThread extends Thread implements Serializable {
+ 
+ 		private static final long serialVersionUID = -4969812722104756329L;
+ 		boolean _keepGoing;
+ 		String _daemonName;
+ 
+ 		protected WorkerThread(String daemonName) {
+ 			_daemonName = daemonName;
+ 		}
+ 
+ 		public void run() {
+ 			_keepGoing = true;		
+ 
+ 			System.out.println("Initializing daemon thread " + new Date().toString() +".");
+ 			Library.logger().info("Initializing daemon thread " + new Date().toString() +".");
+ 
+ 			initialize();
+ 			
+ 			System.out.println("Daemon thread started " + new Date().toString() +".");
+ 			Library.logger().info("Daemon thread started " + new Date().toString() +".");
+ 
+ 			do {
+ 
+ 				try {
+ 					work();
+ 				} catch (Exception e) {
+ 					Library.logger().warning("Error in daemon thread: " + e.getMessage());
+ 					Library.warningStackTrace(e);
+ 				}
+ 
+ 				try {
+ 					Thread.sleep(10000);
+ 				} catch (InterruptedException e) {
+ 				}
+ 			} while (_keepGoing);
+ 
+ 			// ok, we were asked to shut down
+ 			System.out.println("Shutting down the daemon.");	
+ 			Library.logger().info("Shutting down the daemon.");	
+ 
+ 			try {
+ 				UnicastRemoteObject.unexportObject(_daemonListener, true);
+ 			} catch (NoSuchObjectException e) {
+ 			}
+ 
+ 			getRMIFile(_daemonName).delete();		
+ 			System.exit(0);
+ 		}			
+ 
+ 		public void shutDown() {
+ 			_keepGoing = false;
+ 			finish();
+ 			interrupt();
+ 		}
+ 		
+ 		/**
+ 		 * Specialized by subclasses, called by worker thread.
+ 		 *
+ 		 */
+ 		public void work() {
+ 			Library.logger().info("Should not be here, in WorkerThread.work().");			
+ 		}
+ 		public void initialize() {
+ 			Library.logger().info("Should not be here, in WorkerThread.initialize().");
+ 		}
+ 		public void finish() {
+ 			Library.logger().info("Should not be here, in WorkerThread.finish().");
+ 		}
+ 
+ 	}
+ 
+ 	protected static class DaemonListenerClass extends UnicastRemoteObject implements DaemonListener {
+ 
+ 		private static final long serialVersionUID = -9217344397211709762L;
+ 		protected WorkerThread _daemonThread;
+ 
+ 		public DaemonListenerClass(WorkerThread daemonThread) throws RemoteException {
+ 			_daemonThread = daemonThread;
+ 		}
+ 
+ 		public void shutDown() throws RemoteException {
+ 			_daemonThread.shutDown();			
+ 		}
+ 
+ 		public boolean startLoop() throws RemoteException {
+ 
+ 			System.out.println("Starting the daemon loop.");
+ 			Library.logger().info("Starting the daemon loop.");
+ 
+ 			try {
+ 				_daemonThread.start();
+ 
+ 				return true;
+ 
+ 			} catch(Exception e) {
+ 				throw new RemoteException(e.getMessage(), e);
+ 			}
+ 		}
+ 	}
+ 	
+ 	public Daemon() {_daemonName = "namelessDaemon";}
+ 	
+ 	public String daemonName() { return _daemonName; }
+ 	
+ 	/**
+ 	 * Overridden by subclasses.
+ 	 *
+ 	 */
+ 	protected void usage() {
+ 		try {
+ 			System.out.println("usage: " + this.getClass().getName() + " [-start | -stop | -interactive]");
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
+ 		}
+ 		System.exit(0);
+ 	}
+ 	
+ 	/**
+ 	 * Overridden by subclasses
+ 	 */
+ 	protected void initialize(String[] args, Daemon daemon) {
+ 		System.out.println("Unknown option " + args[1]);
+ 		daemon.usage();
+ 	}
+ 
+ 	/**
+ 	 * overridden by subclasses to make right type of thread.
+ 	 * @return
+ 	 */
+ 	protected WorkerThread createWorkerThread() {
+ 		return new WorkerThread(daemonName());
+ 	}
+ 
+ 	protected static void runAsDaemon(Daemon daemon) throws RemoteException, FileNotFoundException, IOException {
+ 		Library.logger().info(daemon.daemonName() + " started in background " + new Date());
+ 
+ 		_daemonListener = new DaemonListenerClass(daemon.createWorkerThread());
+ 
+ 		Remote stub = RemoteObject.toStub(_daemonListener);		
+ 
+ 		File tempFile = getRMITempFile(daemon.daemonName());
+ 
+ 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(tempFile));
+ 
+ 		out.writeObject(stub);
+ 		out.flush();
+ 		out.close();
+ 
+ 		// this is atomic
+ 		tempFile.renameTo(getRMIFile(daemon.daemonName()));
+ 	}
+ 
+ 	private static void startDaemon(String daemonName, String daemonClass, String args[]) throws IOException, ClassNotFoundException {
+ 
+ 		if (getRMIFile(daemonName).exists()) {
+ 			System.out.println("Daemon already running. Use '" + daemonName + " -stop' to kill the daemon.");
+ 			return;
+ 		}
+ 
+ 		String cmd = "java ";
+ 		// Need to put quotes around individual items, to cope with spaces in path names.
+ 		// paul r. - the above seems to break on my Mac anyway.  Commented awaiting further testing...
+ 		//
+ 		String classPath = System.getProperty("java.class.path");
+ 		String [] directories = null;
+ 		String sep = null;
+ 		if (classPath.contains(":")) {
+ 			sep = ":";
+ 			directories = classPath.split(":");
+ 		} else if (classPath.contains(";")) {
+ 			sep = ";"; // do we need to escape?
+ 			directories = classPath.split(";");
+ 		}
+ 		StringBuffer cp = new StringBuffer(
+ 							((null != directories) &&
+ 							  (directories.length > 0)) ?
+ 									  directories[0] : "");
+ 		if (null != directories) {
+ 			for (int i=1; i < directories.length; ++i) {
+ 				cp.append(sep);
+ 				//cp.append("\"");
+ 				cp.append(directories[i]);
+ 				//cp.append("\"");
+ 			}
+ 		}
+ 		
+ 	    /**
+ 	     * Add properties
+ 	     * TODO - we might want to add them all but for now this is
+ 	     * the critical one
+ 	     */
+ 		String portval = System.getProperty(CCNNetworkManager.PROP_AGENT_PORT);
+		if (portval != null)
+			cmd += "-D" + CCNNetworkManager.PROP_AGENT_PORT + "=" + portval;
+ 		
+ 		cmd += " -cp " + cp.toString() + " ";
+ 
+ 		cmd += daemonClass + " ";
+ 		cmd += "-daemon";
+ 		for (int i=1; i < args.length; ++i) {
+ 			cmd += " ";
+ 			cmd += args[i];
+ 		}
+ 		Library.logger().info("Starting daemon with command line: " + cmd);
+ 
+ 		FileOutputStream fos = new FileOutputStream("daemon_cmd.txt");
+ 		fos.write(cmd.getBytes());
+ 		fos.flush();
+ 		fos.close();
+ 		
+ 		Process child = Runtime.getRuntime().exec(cmd);
+ 
+ 		while (!getRMIFile(daemonName).exists()) {
+ 			try {
+ 				Thread.sleep(200);
+ 				
+ 				// this should throw an exception
+ 				try {
+ 					InputStream childMsgs = child.getErrorStream();
+ 					int exitValue = child.exitValue();
+ 					// if we get here, the child has exited
+ 					Library.logger().warning("Could not launch daemon " + daemonName + ". Daemon exit value is " + exitValue + ".");
+ 					System.err.println("Could not launch daemon " + daemonName + ". Daemon exit value is " + exitValue + ".");
+ 					byte[] childMsgBytes = new byte[childMsgs.available()];
+ 					childMsgs.read(childMsgBytes);;
+ 					String childOutput = new String(childMsgBytes);
+ 					System.err.println("Messages from the child were: \"" + childOutput + "\"");
+ 					return;
+ 				} catch (IllegalThreadStateException e) {
+ 				}
+ 
+ 			} catch (InterruptedException e) {
+ 			}
+ 		}
+ 
+ 		ObjectInputStream in = new ObjectInputStream(new FileInputStream(getRMIFile(daemonName)));
+ 
+ 		DaemonListener l = (DaemonListener)in.readObject();		
+ 
+ 		boolean b = false;
+ 		b = l.startLoop();
+ 		// use of b is to deflect warnings
+ 		System.out.println("Started daemon " + daemonName + "." + (b ? "" : ""));
+ 		Library.logger().info("Started daemon " + daemonName + ".");
+ 	}
+ 
+ 	protected static void stopDaemon(String daemonName) throws FileNotFoundException, IOException, ClassNotFoundException {
+ 
+ 		if (!getRMIFile(daemonName).exists()) {
+ 			System.out.println("Daemon " + daemonName + " does not appear to be running.");
+ 			Library.logger().info("Daemon " + daemonName + " does not appear to be running.");
+ 			return;
+ 		}
+ 
+ 		ObjectInputStream in = new ObjectInputStream(new FileInputStream(getRMIFile(daemonName)));
+ 
+ 		DaemonListener l = (DaemonListener)in.readObject();		
+ 
+ 		in.close();
+ 
+ 		try {
+ 			l.shutDown();
+ 			System.out.println("Daemon " + daemonName + " is shut down.");
+ 			Library.logger().info("Daemon " + daemonName + " is shut down.");
+ 		} catch(RemoteException e) {
+ 			// looks like the RMI file is still here, but the daemon is gone. let's delete the file, then,
+ 			System.out.println("Daemon " + daemonName + " seems to have died some other way, cleaning up state...");
+ 			Library.logger().info("Daemon " + daemonName + " seems to have died some other way, cleaning up state...");
+ 			getRMIFile(daemonName).delete();
+ 		}
+ 
+ 	}
+ 
+ 	protected static File getRMIFile(String daemonName) {
+ 		String name = ".rmi-server-" + daemonName + ".obj";
+ 		return new File(System.getProperty("user.home"), name);
+ 	}
+ 
+ 	protected static File getRMITempFile(String daemonName) throws IOException {
+ 		String prefix = ".rmi-server-" + daemonName;
+ 
+ 		return File.createTempFile(prefix, null, new File(System.getProperty("user.home")));
+ 	}
+ 
+ 	protected static void runDaemon(Daemon daemon, String args[]) throws IOException {
+ 		
+ 		Mode mode = Mode.MODE_UNKNOWN;
+ 
+ 		if (0 == args.length) {
+ 			mode = Mode.MODE_INTERACTIVE;
+ 		} else if (args[0].equals("-start")) {
+ 			mode = Mode.MODE_START;
+ 		} else if (args[0].equals("-stop")) {
+ 			mode = Mode.MODE_STOP;
+ 		} else if (args[0].equals("-daemon")) {
+ 			daemon.initialize(args, daemon);
+ 			mode = Mode.MODE_DAEMON;
+ 		} else {
+ 			daemon.initialize(args, daemon);
+ 			mode = Mode.MODE_INTERACTIVE;
+ 		} 
+ 
+ 		try {
+ 			switch (mode) {
+ 			  case MODE_INTERACTIVE:
+ 				Library.logger().info("Running " + daemon.daemonName() + " in the foreground.");
+ 				WorkerThread wt = daemon.createWorkerThread();
+ 				wt.start();
+ 				wt.join();
+ 				System.exit(0);
+ 			  case MODE_START:
+ 				startDaemon(daemon.daemonName(), daemon.getClass().getName(), args);
+ 				System.exit(0);
+ 			  case MODE_STOP:
+ 				stopDaemon(daemon.daemonName());
+ 				System.exit(0);
+ 			  case MODE_DAEMON:
+ 				// this will sit in a loop
+ 				runAsDaemon(daemon);
+ 				break;
+ 			  default:
+ 				daemon.usage();
+ 			}
+ 			
+ 		} catch (Exception e) {
+ 			Library.logger().warning(e.getClass().getName() + " in daemon startup: " + e.getMessage());
+ 			Library.warningStackTrace(e);
+ 		}							
+ 		Library.logger().info("Daemon runner finished.");
+ 	}
+ 
+ 	public static void main(String[] args) {
+ 		
+ 		// Need to override in each subclass to make proper class.
+ 		Daemon daemon = null;
+ 		try {
+ 			daemon = new Daemon();
+ 			runDaemon(daemon, args);
+ 		} catch (Exception e) {
+ 			Library.logger().warning("Error attempting to start daemon.");
+ 			Library.warningStackTrace(e);
+ 			System.err.println("Error attempting to start daemon.");
+ 		}
+ 	}
+ 
+ 
+ 	/**
+ 	 * Utility classes if your daemon requires a password.
+ 	 * @param target
+ 	 * @return
+ 	 */
+ 	protected static String getPassword(String target) {
+ 
+ 		System.out.print("Password for " + target);
+ 
+ 		String password = readOnePassword(); // in.readLine();
+ 
+ 		return password;
+ 	}
+ 
+ 
+ 	protected static class Eraser extends Thread {
+ 		PrintStream out;
+ 		boolean finish = false;
+ 		public Eraser(PrintStream out) {
+ 			this.out = out;
+ 		}
+ 		public void run() {
+ 			while (!finish) {
+ 				out.print("\010 ");
+ 				try {
+ 					sleep(10);
+ 				} catch (InterruptedException inte) {
+ 					finish = true;
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * reads one password.
+ 	 */
+ 	public static String readOnePassword() {
+ 		// System.out.print("\033[00;40;30m");
+ 
+ 		Eraser eraser = new Eraser(System.out);
+ 		eraser.start();
+ 
+ 		BufferedReader in =
+ 			new BufferedReader(new InputStreamReader(System.in));
+ 		String password = "";
+ 
+ 		try {
+ 			password = in.readLine();
+ 		} catch (IOException ioe) {
+ 		}
+ 
+ 		eraser.interrupt();
+ 		try {
+ 			Thread.sleep(100);
+ 		} catch (InterruptedException inte) {
+ 		}
+ 
+ 		// System.out.print("\033[0m");
+ 
+ 		return password;
+ 	}
+ 
+ 	/**
+ 	 * reads a password, and then prompts to re-enter
+ 	 * password. makes sure both entered passwords are the same
+ 	 */
+ 	public static String readNewPassword() {
+ 
+ 		boolean newtry = false;
+ 		boolean done = false;
+ 		String password1, password2;
+ 
+ 		do {		
+ 			if(newtry) {
+ 				System.out.print("Oops. The passwords didn't match. Type your password again: ");
+ 			}
+ 			password1 = readOnePassword();
+ 			System.out.print("Reenter password: ");
+ 			password2 = readOnePassword();
+ 			if (password1.equals(password2)) {
+ 				done = true;
+ 			} else {
+ 				newtry = true;
+ 			}
+ 		} while(!done);
+ 
+ 		return password2;
+ 	}
+ }

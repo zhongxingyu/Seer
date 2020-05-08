@@ -1,0 +1,922 @@
+ /*******************************************************************************
+  * Copyright (c) 2004 Actuate Corporation.
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+  *  Actuate Corporation  - initial API and implementation
+  *******************************************************************************/
+ 
+ package org.eclipse.birt.report.engine.api.impl;
+ 
+ import java.io.DataInputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ 
+ import org.eclipse.birt.core.archive.IDocArchiveReader;
+ import org.eclipse.birt.core.archive.RAInputStream;
+ import org.eclipse.birt.core.exception.BirtException;
+ import org.eclipse.birt.core.util.IOUtil;
+ import org.eclipse.birt.report.engine.api.EngineConfig;
+ import org.eclipse.birt.report.engine.api.EngineException;
+ import org.eclipse.birt.report.engine.api.IReportDocument;
+ import org.eclipse.birt.report.engine.api.IReportDocumentLock;
+ import org.eclipse.birt.report.engine.api.IReportDocumentLockManager;
+ import org.eclipse.birt.report.engine.api.IReportEngine;
+ import org.eclipse.birt.report.engine.api.IReportRunnable;
+ import org.eclipse.birt.report.engine.api.InstanceID;
+ import org.eclipse.birt.report.engine.api.TOCNode;
+ import org.eclipse.birt.report.engine.internal.document.IPageHintReader;
+ import org.eclipse.birt.report.engine.internal.document.v1.PageHintReaderV1;
+ import org.eclipse.birt.report.engine.internal.document.v2.PageHintReaderV2;
+ import org.eclipse.birt.report.engine.internal.util.EngineIOUtil;
+ import org.eclipse.birt.report.engine.presentation.IPageHint;
+ import org.eclipse.birt.report.engine.toc.TOCBuilder;
+ import org.eclipse.birt.report.model.api.IResourceLocator;
+ 
+ public class ReportDocumentReader
+ 		implements
+ 			IReportDocument,
+ 			ReportDocumentConstants
+ {
+ 
+ 	static private Logger logger = Logger.getLogger( ReportDocumentReader.class
+ 			.getName( ) );
+ 
+ 	private IReportEngine engine;
+ 	private IDocArchiveReader archive;
+ 	private IReportRunnable reportRunnable;
+ 	private IResourceLocator locator;
+ 	/*
+ 	 * version, paramters, globalVariables are loaded from core stream.
+ 	 */
+ 	private String version;
+ 	private HashMap parameters;
+ 	private HashMap globalVariables;
+ 	/**
+ 	 * bookmark is loadded from bookmark stream.
+ 	 */
+ 	private HashMap bookmarks;
+ 	/**
+ 	 * used to load the page hints
+ 	 */
+ 	private IPageHintReader pageHintReader;
+ 	/** root TOC, id is "/" */
+ 	private TOCNode tocRoot;
+ 	/** tocId, TOCNode map */
+ 	private HashMap tocMapByID;
+ 	/** Map from TOC name to a list of TOCNodes */
+ 	private HashMap tocMapByName;
+ 	/** Map from the id to offset */
+ 	private HashMap reportletsIndexById;
+ 	/** Map from the bookmark to offset */
+ 	private HashMap reportletsIndexByBookmark;
+ 	/** Design name */
+ 	private String systemId;
+ 	
+ 	private int checkpoint = CHECKPOINT_INIT;
+ 	
+ 	private long pageCount;
+ 
+ 	public ReportDocumentReader( IReportEngine engine, IDocArchiveReader archive ) throws EngineException
+ 	{
+ 		this( null, engine, archive );
+ 	}
+ 
+ 	public ReportDocumentReader( String systemId, IReportEngine engine, IDocArchiveReader archive ) throws EngineException
+ 	{
+ 		this.engine = engine;
+ 		this.archive = archive;
+ 		this.systemId = systemId;
+ 		try
+ 		{
+ 			archive.open( );
+ 		}
+ 		catch ( Exception e )
+ 		{
+ 			throw new EngineException( "Failed to open the report document", e );
+ 		}
+ 		try
+ 		{
+ 			doRefresh( );
+ 		}
+ 		catch ( EngineException ee )
+ 		{
+ 			try
+ 			{
+ 				archive.close(); 
+ 			}
+ 			catch(Exception ex)
+ 			{
+ 			}
+ 			throw ee; 
+ 		}
+ 	}
+ 
+ 	
+ 	void setResourceLocator( IResourceLocator locator )
+ 	{
+ 		this.locator = locator;
+ 	}
+ 	
+ 	
+ 	public IDocArchiveReader getArchive( )
+ 	{
+ 		return this.archive;
+ 	}
+ 
+ 	public String getVersion( )
+ 	{
+ 		return version;
+ 	}
+ 
+ 	/**
+ 	 * create a locker used to lock the report document
+ 	 * 
+ 	 * @return
+ 	 * @throws BirtException
+ 	 */
+ 	protected IReportDocumentLock lock( String documentName )
+ 			throws BirtException
+ 	{
+ 		IReportDocumentLockManager manager = null;
+ 		if ( engine != null )
+ 		{
+ 			EngineConfig config = engine.getConfig( );
+ 			if ( config != null )
+ 			{
+ 				manager = config.getReportDocumentLockManager( );
+ 			}
+ 		}
+ 		if ( manager == null )
+ 		{
+ 			manager = ReportDocumentLockManager.getInstance( );
+ 		}
+ 		return manager.lock( documentName );
+ 	}
+ 
+ 	protected class ReportDocumentCoreInfo
+ 	{
+ 		String version;
+ 		HashMap globalVariables;
+ 		HashMap parameters;
+ 		String systemId;
+ 		int checkpoint;			
+ 		long pageCount;
+ 	}
+ 	
+ 	public void refresh()
+ 	{
+ 		if ( checkpoint == CHECKPOINT_END )
+ 		{
+ 			return;
+ 		}
+ 		try
+ 		{
+ 			doRefresh();
+ 		}
+ 		catch( EngineException ee )
+ 		{
+ 			logger.log( Level.SEVERE, "Failed to refresh", ee ); //$NON-NLS-1$
+ 		}
+ 	}
+ 	
+ 	protected void doRefresh( ) throws EngineException
+ 	{
+ 		IReportDocumentLock lock = null;
+ 		try
+ 		{
+ 			lock = lock( getName( ) );
+ 			synchronized ( lock )
+ 			{
+ 				// load info into a document info object
+ 				ReportDocumentCoreInfo documentInfo = new ReportDocumentCoreInfo( );
+ 				documentInfo.checkpoint = CHECKPOINT_INIT;
+ 				documentInfo.pageCount = PAGECOUNT_INIT;
+ 				RAInputStream in = archive.getStream( CHECKPOINT_STREAM );
+ 				if ( in == null )
+ 				{
+ 					// no check point stream, old version, return -1
+ 					documentInfo.checkpoint = CHECKPOINT_END;
+ 					if ( pageHintReader == null )
+ 					{
+ 						createPageHintReader( );
+ 					}
+ 					if ( pageHintReader != null )
+ 					{
+ 						documentInfo.pageCount = pageHintReader.getTotalPage( );
+ 					}
+ 				}
+ 				else
+ 				{
+ 					try
+ 					{
+ 						DataInputStream di = new DataInputStream( in );
+ 						documentInfo.checkpoint = IOUtil.readInt( di );
+ 						documentInfo.pageCount = IOUtil.readLong( di );
+ 					}
+ 					finally
+ 					{
+ 						if ( in != null )
+ 						{
+ 							in.close( );
+ 						}
+ 					}
+ 					if ( documentInfo.checkpoint == checkpoint )
+ 					{
+ 						return;
+ 					}
+ 				}
+ 
+ 				in = archive.getStream( CORE_STREAM );
+ 				try
+ 				{
+ 					DataInputStream di = new DataInputStream( in );
+ 
+ 					// check the design name
+ 					documentInfo.version = checkVersion( di );
+ 
+ 					// load the report design name
+ 					String orgSystemId = IOUtil.readString( di );
+ 					if ( systemId == null )
+ 					{
+ 						documentInfo.systemId = orgSystemId;
+ 					}
+					else
+					{
+						documentInfo.systemId = systemId;
+					}
+ 					// load the report paramters
+ 					documentInfo.parameters = convertToCompatibleParameter( EngineIOUtil
+ 							.readMap( di ) );
+ 					// load the persistence object
+ 					documentInfo.globalVariables = (HashMap) IOUtil
+ 							.readMap( di );
+ 
+ 				}
+ 				finally
+ 				{
+ 					if ( in != null )
+ 					{
+ 						in.close( );
+ 					}
+ 				}		
+ 				
+ 				// save the document info into the object.
+ 				checkpoint = documentInfo.checkpoint;
+ 				pageCount = documentInfo.pageCount;
+ 				version = documentInfo.version;
+ 				systemId = documentInfo.systemId;
+ 				globalVariables = documentInfo.globalVariables;
+ 				parameters = documentInfo.parameters;
+ 			}
+ 		}
+ 		catch ( EngineException ee )
+ 		{
+ 			throw ee;
+ 		}
+ 		catch ( Exception ex )
+ 		{
+ 			throw new EngineException( "document refresh failed", ex );
+ 		}
+ 		finally
+ 		{
+ 			lock.unlock();
+ 		}
+ 	}
+ 
+ 
+ 	private HashMap convertToCompatibleParameter( Map parameters )
+ 	{
+ 		if ( parameters == null )
+ 		{
+ 			return null;
+ 		}
+ 		HashMap result = new HashMap( );
+ 		Iterator iterator = parameters.entrySet( ).iterator( );
+ 		while ( iterator.hasNext( ) )
+ 		{
+ 			Map.Entry entry = (Map.Entry) iterator.next( );
+ 			Object key = entry.getKey( );
+ 			Object valueObj = entry.getValue( );
+ 			ParameterAttribute paramAttr = null;
+ 			if ( valueObj instanceof ParameterAttribute )
+ 			{
+ 				paramAttr = (ParameterAttribute) valueObj;
+ 			}
+ 			else if ( valueObj instanceof Object[] )
+ 			{
+ 				Object[] values = (Object[]) valueObj;
+ 				if ( values.length == 2 )
+ 				{
+ 					Object value = values[0];
+ 					String displayText = (String) values[1];
+ 					paramAttr = new ParameterAttribute( value, displayText );
+ 				}
+ 			}
+ 			if ( paramAttr == null )
+ 			{
+ 				paramAttr = new ParameterAttribute( valueObj, null );
+ 			}
+ 			result.put( key, paramAttr );
+ 		}
+ 		return result;
+ 	}
+ 
+ 	protected String checkVersion( DataInputStream di ) throws IOException, EngineException
+ 	{
+ 		String tag = IOUtil.readString( di );
+ 		String version = IOUtil.readString( di );
+ 		if ( !REPORT_DOCUMENT_TAG.equals( tag )
+ 				|| !( REPORT_DOCUMENT_VERSION_1_2_1.equals( version ) || REPORT_DOCUMENT_VERSION_2_1_0
+ 						.equals( version ) ) )
+ 		{
+ 			throw new EngineException( "unsupport report document tag" + tag + " version " + version ); //$NON-NLS-1$
+ 		}
+ 		return version;		
+ 	}
+ 
+ 	public void close( )
+ 	{
+ 		try
+ 		{
+ 			if ( pageHintReader != null )
+ 			{
+ 				pageHintReader.close( );
+ 			}
+ 			pageHintReader = null;
+ 			archive.close( );
+ 		}
+ 		catch ( IOException e )
+ 		{
+ 			logger.log( Level.SEVERE, "Failed to close the archive", e ); //$NON-NLS-1$
+ 		}
+ 	}
+ 
+ 	public InputStream getDesignStream( )
+ 	{
+ 		try
+ 		{
+ 			return archive.getStream( DESIGN_STREAM );
+ 		}
+ 		catch ( Exception ex )
+ 		{
+ 			logger.log( Level.SEVERE, "Failed to open the design!", ex ); //$NON-NLS-1$
+ 			return null;
+ 		}
+ 	}
+ 
+ 	public IReportRunnable getReportRunnable( )
+ 	{
+ 		if ( reportRunnable == null )
+ 		{
+ 			String name = null;
+ 			if ( systemId == null )
+ 			{
+ 				name = archive.getName( );
+ 			}
+ 			else
+ 			{
+ 				name = systemId;
+ 			}
+ 			InputStream stream = getDesignStream( );
+ 			if ( stream != null )
+ 			{
+ 				try
+ 				{
+ 					reportRunnable = engine.openReportDesign( name, stream, locator );
+ 				}
+ 				catch ( Exception ex )
+ 				{
+ 					logger.log( Level.SEVERE,
+ 							"Failed to get the report runnable", //$NON-NLS-1$
+ 							ex );
+ 				}
+ 				finally
+ 				{
+ 					try
+ 					{
+ 						stream.close( );
+ 					}
+ 					catch ( IOException ex )
+ 					{
+ 					}
+ 				}
+ 			}
+ 		}
+ 		return reportRunnable;
+ 	}
+ 
+ 	public Map getParameterValues( )
+ 	{
+ 		Map result = new HashMap( );
+ 		if ( parameters != null )
+ 		{
+ 			Iterator iterator = parameters.entrySet( ).iterator( );
+ 			while ( iterator.hasNext( ) )
+ 			{
+ 				Map.Entry entry = (Map.Entry) iterator.next( );
+ 				String name = (String) entry.getKey( );
+ 				ParameterAttribute value = (ParameterAttribute) entry
+ 						.getValue( );
+ 				result.put( name, value.getValue( ) );
+ 			}
+ 		}
+ 		return result;
+ 	}
+ 	
+ 	public Map getParameterDisplayTexts( )
+ 	{
+ 		Map result = new HashMap( );
+ 		if ( parameters != null )
+ 		{
+ 			Iterator iterator = parameters.entrySet( ).iterator( );
+ 			while ( iterator.hasNext( ) )
+ 			{
+ 				Map.Entry entry = (Map.Entry) iterator.next( );
+ 				String name = (String) entry.getKey( );
+ 				ParameterAttribute value = (ParameterAttribute) entry
+ 						.getValue( );
+ 				result.put( name, value.getDisplayText( ) );
+ 			}
+ 		}
+ 		return result;
+ 	}
+ 
+ 	public long getPageCount( )
+ 	{
+ 		return pageCount;
+ 	}
+ 
+ 	public IPageHint getPageHint( long pageNumber )
+ 	{
+ 		if ( pageHintReader == null )
+ 		{
+ 			createPageHintReader( );
+ 		}
+ 		if (pageHintReader != null)
+ 		{
+ 			try
+ 			{
+ 				return pageHintReader.getPageHint( pageNumber );
+ 			}
+ 			catch(IOException ex)
+ 			{
+ 				logger.log( Level.WARNING, "Failed to load page hint "
+ 						+ pageNumber, ex );
+ 			}
+ 		}
+ 		return null;
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#getPageNumber(java.lang.String)
+ 	 */
+ 	public long getPageNumber( String bookmark )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return -1;
+ 		}
+ 	
+ 		if ( bookmarks == null )
+ 		{
+ 			loadBookmarks( );
+ 		}
+ 		Object number = bookmarks.get( bookmark );
+ 		if ( number instanceof Number )
+ 		{
+ 			return ( (Number) number ).intValue( );
+ 		}
+ 		return -1;
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#getBookmarks()
+ 	 */
+ 	public List getBookmarks( )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return null;
+ 		}
+ 		if ( bookmarks == null )
+ 		{
+ 			loadBookmarks( );
+ 		}
+ 		ArrayList list = new ArrayList( );
+ 		Set bookmarkSet = bookmarks.keySet( );
+ 		Iterator iterator = bookmarkSet.iterator( );
+ 		while ( iterator.hasNext( ) )
+ 		{
+ 			String bookmark = (String)iterator.next( );
+ 			if ( bookmark != null
+ 					&& !bookmark.startsWith( TOCBuilder.TOC_PREFIX ) )
+ 			{
+ 				list.add( bookmark );
+ 			}
+ 		}
+ 		return list;
+ 	}
+ 
+ 	/**
+ 	 * @param bookmark
+ 	 *            the bookmark that a page number is to be retrieved upon
+ 	 * @return the page number that the bookmark appears
+ 	 */
+ 	public long getBookmark( String bookmark )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return -1;
+ 		}
+ 		if ( bookmarks == null )
+ 		{
+ 			loadBookmarks( );
+ 		}
+ 		Long pageNumber = (Long) bookmarks.get( bookmark );
+ 		if ( pageNumber == null )
+ 		{
+ 			return 0;
+ 		}
+ 		return pageNumber.longValue( );
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#findTOC(java.lang.String)
+ 	 */
+ 	public TOCNode findTOC( String tocNodeId )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return null;
+ 		}
+ 		if ( tocRoot == null )
+ 		{
+ 			loadTOC( );
+ 		}
+ 		if ( tocNodeId == null || "/".equals( tocNodeId ) ) //$NON-NLS-1$
+ 		{
+ 			return tocRoot;
+ 		}
+ 		return (TOCNode) tocMapByID.get( tocNodeId );
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#findTOCByName(java.lang.String)
+ 	 */
+ 	public List findTOCByName( String tocName )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return null;
+ 		}
+ 		if ( tocName == null )
+ 		{
+ 			return null;
+ 		}
+ 		if ( tocRoot == null )
+ 		{
+ 			loadTOC( );
+ 		}
+ 		return (List) tocMapByName.get( tocName );
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#getChildren(java.lang.String)
+ 	 */
+ 	public List getChildren( String tocNodeId )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return null;
+ 		}
+ 		TOCNode node = findTOC( tocNodeId );
+ 		if ( node != null )
+ 		{
+ 			return node.getChildren( );
+ 		}
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * load the TOC from the stream.
+ 	 */
+ 	protected void loadTOC( )
+ 	{
+ 		tocRoot = new TOCNode( );
+ 		if ( archive.exists( TOC_STREAM ) )
+ 		{
+ 			InputStream in = null;
+ 			try
+ 			{
+ 				in = archive.getStream( TOC_STREAM );
+ 				DataInputStream input = new DataInputStream( in );
+ 				TOCBuilder.read( tocRoot, input );
+ 			}
+ 			catch ( Exception ex )
+ 			{
+ 				logger.log( Level.SEVERE, "Failed to load the TOC", ex ); //$NON-NLS-1$
+ 			}
+ 			finally
+ 			{
+ 				if ( in != null )
+ 				{
+ 					try
+ 					{
+ 						in.close( );
+ 					}
+ 					catch ( IOException ex )
+ 					{
+ 					}
+ 				}
+ 			}
+ 		}
+ 		tocMapByID = new HashMap( );
+ 		tocMapByName = new HashMap( );
+ 		generateTOCIndex( tocRoot );
+ 	}
+ 
+ 	/**
+ 	 * add the TOC node into the map for search.
+ 	 * 
+ 	 * @param node
+ 	 *            TOC cache.
+ 	 * @param map
+ 	 *            map contains the (id, TOC) pair.
+ 	 */
+ 	private void generateTOCIndex( TOCNode node )
+ 	{
+ 		tocMapByID.put( node.getNodeID( ), node );
+ 		addTOCNameEntry( node, tocMapByName );
+ 		Iterator iter = node.getChildren( ).iterator( );
+ 		while ( iter.hasNext( ) )
+ 		{
+ 			TOCNode child = (TOCNode) iter.next( );
+ 			generateTOCIndex( child );
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Add a toc node into the map which cache the map from toc display string
+ 	 * to nodes.
+ 	 * 
+ 	 * @param node
+ 	 *            the node.
+ 	 * @param map
+ 	 *            the map.
+ 	 */
+ 	private void addTOCNameEntry( TOCNode node, HashMap map )
+ 	{
+ 		List tocs = (List) map.get( node.getDisplayString( ) );
+ 		if ( tocs == null )
+ 		{
+ 			tocs = new ArrayList( );
+ 			map.put( node.getDisplayString( ), tocs );
+ 		}
+ 		tocs.add( node );
+ 	}
+ 
+ 	private void loadBookmarks( )
+ 	{
+ 		bookmarks = new HashMap( );
+ 		if ( !archive.exists( BOOKMARK_STREAM ) )
+ 		{
+ 			return;
+ 		}
+ 		RAInputStream in = null;
+ 		try
+ 		{
+ 			in = archive.getStream( BOOKMARK_STREAM );
+ 			DataInputStream di = new DataInputStream( in );
+ 			long count = IOUtil.readLong( di );
+ 			for ( long i = 0; i < count; i++ )
+ 			{
+ 				String bookmark = IOUtil.readString( di );
+ 				long pageNumber = IOUtil.readLong( di );
+ 				bookmarks.put( bookmark, new Long( pageNumber ) );
+ 			}
+ 		}
+ 		catch ( Exception ex )
+ 		{
+ 			logger.log( Level.SEVERE, "failed to load the bookmarks", ex ); //$NON-NLS-1$
+ 		}
+ 		finally
+ 		{
+ 			if ( in != null )
+ 			{
+ 				try
+ 				{
+ 					in.close( );
+ 				}
+ 				catch ( Exception ex )
+ 				{
+ 				};
+ 			}
+ 		}
+ 	}
+ 
+ 	private void createPageHintReader( )
+ 	{
+ 		if ( REPORT_DOCUMENT_VERSION_1_0_0.equals( getVersion( ) ) )
+ 		{
+ 			pageHintReader = new PageHintReaderV1( this );
+ 		}
+ 		else
+ 		{
+ 			pageHintReader = new PageHintReaderV2( this );
+ 		}
+ 		try
+ 		{
+ 			pageHintReader.open( );
+ 		}
+ 		catch ( IOException ex )
+ 		{
+ 			logger.log( Level.SEVERE, "can't open the page hint stream", ex );
+ 			if ( pageHintReader != null )
+ 			{
+ 				pageHintReader.close( );
+ 			}
+ 			pageHintReader = null;
+ 		}
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#getName()
+ 	 */
+ 	public String getName( )
+ 	{
+ 		return archive.getName( );
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#getGlobalVariables()
+ 	 */
+ 	public Map getGlobalVariables( String option )
+ 	{
+ 		return globalVariables;
+ 	}
+ 
+ 	public long getPageNumber( InstanceID iid )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return -1;
+ 		}
+ 		// version 1.0.0 don't support this feature
+ 		if ( REPORT_DOCUMENT_VERSION_1_0_0.equals( getVersion( ) ) )
+ 		{
+ 			return -1;
+ 		}
+ 		long offset = getInstanceOffset( iid );
+ 		if ( offset != -1 )
+ 		{
+ 			if ( pageHintReader == null )
+ 			{
+ 				createPageHintReader( );
+ 			}
+ 			if ( pageHintReader != null )
+ 			{
+ 				try
+ 				{
+ 					return pageHintReader.findPage( offset );
+ 				}
+ 				catch ( IOException ex )
+ 				{
+ 					logger.log( Level.WARNING,
+ 							"Failed to find page which contains " + iid, ex );
+ 				}
+ 			}
+ 		}
+ 		return -1;
+ 	}
+ 
+ 	public long getInstanceOffset( InstanceID iid )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return -1l;
+ 		}
+ 		if ( iid == null )
+ 		{
+ 			return -1l;
+ 		}
+ 		if ( reportletsIndexById == null )
+ 		{
+ 			loadReportletStream( );
+ 		}
+ 		return getOffset( reportletsIndexById, iid.toString( ) );
+ 	}
+ 
+ 	public long getBookmarkOffset( String bookmark )
+ 	{
+ 		if ( !isComplete() )
+ 		{
+ 			return -1;
+ 		}
+ 		if ( bookmark == null )
+ 		{
+ 			return -1l;
+ 		}
+ 		if ( reportletsIndexByBookmark == null )
+ 		{
+ 			loadReportletStream( );
+ 		}
+ 		return getOffset( reportletsIndexByBookmark, bookmark );
+ 	}
+ 
+ 	private long getOffset( Map index, String key )
+ 	{
+ 		// version 1.0.0 don't support this feature
+ 		if ( REPORT_DOCUMENT_VERSION_1_0_0.equals( getVersion( ) ) )
+ 		{
+ 			return -1;
+ 		}
+ 		Long offset = (Long) index.get( key );
+ 		if ( offset != null )
+ 		{
+ 			return offset.longValue( );
+ 		}
+ 		return -1;
+ 	}
+ 
+ 	private void loadReportletStream( )
+ 	{
+ 		reportletsIndexById = new HashMap( );
+ 		reportletsIndexByBookmark = new HashMap( );
+ 		loadReportletStream( reportletsIndexById, REPORTLET_ID_INDEX_STREAM );
+ 		loadReportletStream( reportletsIndexByBookmark,
+ 				REPORTLET_BOOKMARK_INDEX_STREAM );
+ 	}
+ 
+ 	private void loadReportletStream( Map index, String streamName )
+ 	{
+ 		RAInputStream in = null;
+ 		try
+ 		{
+ 			in = archive.getStream( streamName );
+ 			DataInputStream di = new DataInputStream( in );
+ 			long count = IOUtil.readLong( di );
+ 			for ( long i = 0; i < count; i++ )
+ 			{
+ 				String key = IOUtil.readString( di );
+ 				long offset = IOUtil.readLong( di );
+ 				index.put( key, new Long( offset ) );
+ 			}
+ 			in.close( );
+ 		}
+ 		catch ( Exception ex )
+ 		{
+ 			logger
+ 					.log( Level.SEVERE,
+ 							"Failed to load the reportlet stream", ex ); //$NON-NLS-1$
+ 		}
+ 		finally
+ 		{
+ 			if ( in != null )
+ 			{
+ 				try
+ 				{
+ 					in.close( );
+ 				}
+ 				catch ( Exception ex )
+ 				{
+ 				};
+ 			}
+ 		}
+ 	}
+ 	
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.birt.report.engine.api.IReportDocument#isComplete()
+ 	 */
+ 	public boolean isComplete( )
+ 	{
+ 		return checkpoint == CHECKPOINT_END;
+ 	}
+ }

@@ -1,0 +1,531 @@
+ package org.yaba.entity.script;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.Map;
+ import java.util.concurrent.TimeUnit;
+ 
+ import no.priv.garshol.duke.Cleaner;
+ import no.priv.garshol.duke.Comparator;
+ import no.priv.garshol.duke.Record;
+ import no.priv.garshol.duke.RecordImpl;
+ import no.priv.garshol.duke.comparators.Levenshtein;
+ import no.priv.garshol.duke.utils.ObjectUtils;
+ import no.priv.garshol.duke.utils.Utils;
+ 
+ import org.elasticsearch.ElasticSearchException;
+ import org.elasticsearch.ElasticSearchIllegalArgumentException;
+ import org.elasticsearch.action.get.GetResponse;
+ import org.elasticsearch.client.Client;
+ import org.elasticsearch.common.Nullable;
+ import org.elasticsearch.common.cache.Cache;
+ import org.elasticsearch.common.cache.CacheBuilder;
+ import org.elasticsearch.common.component.AbstractComponent;
+ import org.elasticsearch.common.inject.Inject;
+ import org.elasticsearch.common.settings.Settings;
+ import org.elasticsearch.common.unit.ByteSizeValue;
+ import org.elasticsearch.common.unit.TimeValue;
+ import org.elasticsearch.index.fielddata.ScriptDocValues;
+ import org.elasticsearch.node.Node;
+ import org.elasticsearch.script.AbstractSearchScript;
+ import org.elasticsearch.script.ExecutableScript;
+ import org.elasticsearch.script.NativeScriptFactory;
+ import org.elasticsearch.search.lookup.DocLookup;
+ 
+ /**
+  * 
+  */
+ @SuppressWarnings("unchecked")
+ /**
+  * Entity Resolution Script for Elasticsearch
+  * @author Yann Barraud
+  *
+  */
+ public final class EntityResolutionScript extends AbstractSearchScript {
+     /**
+      * . Average score
+      */
+     private static final double AVERAGE_SCORE = 0.5;
+ 
+     /**
+      * . The record to be compared to
+      */
+     private Record comparedRecord = null;
+ 
+     /**
+      * . Script parameters
+      */
+     private HashMap<String, HashMap<String, Object>> entityParams;
+ 
+     /**
+      * . Cache to store configuration
+      */
+     private final Cache<String, HashMap<String, HashMap<String, Object>>> cache;
+ 
+     /**
+      * . Elasticsearch client
+      */
+     private final Client client;
+ 
+     /**
+      * . Index name where to get configuration
+      */
+     private String configIndex = "entity-index";
+ 
+     /**
+      * . Type name where to get configuration
+      */
+     private String configType = "configuration";
+ 
+     /**
+      * . Type ID where to get configuration
+      */
+     private String configName = "configuration";
+ 
+     /**
+      * Factory
+      */
+     public static class Factory extends AbstractComponent implements
+             NativeScriptFactory {
+         /**
+          * . Node where the plugin is instantiated
+          */
+         private final Node node;
+ 
+         /**
+          * . Cache to store configuration
+          */
+         private final Cache<String, HashMap<String, HashMap<String, Object>>> cache;
+ 
+         /**
+          * . This constructor will be called by guice during initialization
+          * 
+          * @param aNode
+          *            node reference injecting the reference to current node to
+          *            get access to node's client
+          * @param settings
+          *            cluster settings
+          */
+         @Inject
+         public Factory(final Node aNode, final Settings settings) {
+             super(settings);
+             // Node is not fully initialized here
+             // All we can do is save a reference to it for future use
+             this.node = aNode;
+ 
+             TimeValue expire =
+                     settings.getAsTime("entity-resolution.cache.expire",
+                             new TimeValue(1L, TimeUnit.HOURS));
+             ByteSizeValue size =
+                     settings.getAsBytesSize(
+                            "entity-resolution.cache.size", null);
+             CacheBuilder<Object, Object> cacheBuilder =
+                     CacheBuilder.newBuilder();
+             cacheBuilder.expireAfterAccess(expire.seconds(), TimeUnit.SECONDS);
+             if (size != null) {
+                 cacheBuilder.maximumSize(size.bytes());
+             }
+             cache = cacheBuilder.build();
+         }
+ 
+         /**
+          * This method is called for every search on every shard.
+          * 
+          * @param params
+          *            list of script parameters passed with the query
+          * @return new native script
+          */
+         @Override
+         public ExecutableScript newScript(
+                 @Nullable final Map<String, Object> params) {
+             if (params.get("entity") == null) {
+                 throw new ElasticSearchIllegalArgumentException(
+                         "Missing the parameters");
+             }
+ 
+             return new EntityResolutionScript(
+                     (Map<String, Object>) params.get("entity"), cache,
+                     node.client());
+         }
+ 
+     }
+ 
+     /**
+      * . Script class
+      * 
+      * @param params
+      *            params from JSON payload
+      * @param aCache
+      *            a cache to store config
+      * @param aClient
+      *            Elasticsearch client to read config from cluster
+      */
+     private EntityResolutionScript(
+             final Map<String, Object> params,
+             final Cache<String, HashMap<String, HashMap<String, Object>>> aCache,
+             final Client aClient) {
+ 
+         if (params.get("fields") == null)
+             throw new ElasticSearchIllegalArgumentException(
+                     "Missing the 'fields' parameters");
+ 
+         this.cache = aCache;
+         this.client = aClient;
+ 
+         if (params.get("configuration") == null) {
+             comparedRecord =
+                     configureWithFieldsOnly((ArrayList<Map<String, Object>>) params
+                             .get("fields"));
+         } else {
+             comparedRecord =
+                     configureWithFieldsAndConfiguration(
+                             (Map<String, Object>) params.get("configuration"),
+                             (ArrayList<Map<String, Object>>) params
+                                     .get("fields"));
+         }
+ 
+     }
+ 
+     /**
+      * . Configures with data within ES index
+      * 
+      * @param configuration
+      *            configuration from JSON request
+      * @param fields
+      *            fields from JSON request
+      * @return the record to compare others with
+      */
+     private Record configureWithFieldsAndConfiguration(
+             final Map<String, Object> configuration,
+             final ArrayList<Map<String, Object>> fields) {
+ 
+         configIndex = (String) configuration.get("index");
+         configType = (String) configuration.get("type");
+         configName = (String) configuration.get("name");
+ 
+         entityParams =
+                 cache.getIfPresent(configIndex + "." + configType + "."
+                         + configName);
+ 
+         if (entityParams == null) {
+             GetResponse response =
+                     client.prepareGet(configIndex, configType, configName)
+                             .setPreference("_local").execute().actionGet();
+ 
+             if (response.isExists()) {
+                 Map<String, Object> entityConf =
+                         (Map<String, Object>) response.getSource()
+                                 .get("entity");
+                 entityParams = new HashMap<String, HashMap<String, Object>>();
+                 if (entityConf == null) {
+                     throw new ElasticSearchIllegalArgumentException(
+                             "No conf found in " + configIndex + "/"
+                                     + configType + "/" + configName);
+                 }
+ 
+                 ArrayList<Map<String, Object>> confFields =
+                         (ArrayList<Map<String, Object>>) entityConf
+                                 .get("fields");
+ 
+                 if (confFields == null) {
+                     throw new ElasticSearchIllegalArgumentException(
+                             "Bad conf found in " + configIndex + "/"
+                                     + configType + "/" + configName);
+                 }
+ 
+                 Iterator<Map<String, Object>> it = confFields.iterator();
+ 
+                 while (it.hasNext()) {
+                     HashMap<String, Object> map = new HashMap<String, Object>();
+                     Map<String, Object> value = it.next();
+ 
+                     String field = (String) value.get("field");
+                     ArrayList<Cleaner> cleanList =
+                             getCleaners((ArrayList<String>) value
+                                     .get("cleaners"));
+ 
+                     map.put("cleaners", cleanList);
+ 
+                     Double maxValue = 0.0;
+                     if (value.get("high") != null) {
+                         maxValue = Double.valueOf(((Double) value.get("high")));
+                     }
+ 
+                     Double minValue = 0.0;
+                     if (value.get("low") != null) {
+                         minValue = Double.valueOf(((Double) value.get("low")));
+                     }
+ 
+                     Comparator comp = getComparator(value);
+                     map.put("high", maxValue);
+                     map.put("low", minValue);
+                     map.put("comparator", comp);
+ 
+                     entityParams.put(field, map);
+                 }
+                 cache.put(configIndex + "." + configType + "." + configName,
+                         entityParams);
+             }
+         }
+ 
+         HashMap<String, Collection<String>> props =
+                 new HashMap<String, Collection<String>>();
+ 
+         Iterator<Map<String, Object>> it = fields.iterator();
+         while (it.hasNext()) {
+             Map<String, Object> value = it.next();
+ 
+             String field = (String) value.get("field");
+             String fieldValue = (String) value.get("value");
+             props.put(field, Collections.singleton(fieldValue));
+ 
+         }
+         return new RecordImpl(props);
+     }
+ 
+     /**
+      * . Configures with data from JSON payload only
+      * 
+      * @param fieldsParams
+      *            fields parameters from JSON
+      * @return the record for comparison
+      */
+     private Record configureWithFieldsOnly(
+             final ArrayList<Map<String, Object>> fieldsParams) {
+ 
+         HashMap<String, Collection<String>> props =
+                 new HashMap<String, Collection<String>>();
+         entityParams = new HashMap<String, HashMap<String, Object>>();
+ 
+         Iterator<Map<String, Object>> it = fieldsParams.iterator();
+         while (it.hasNext()) {
+             Map<String, Object> value = it.next();
+             HashMap<String, Object> map = new HashMap<String, Object>();
+ 
+             String field = (String) value.get("field");
+             String fieldValue = (String) value.get("value");
+ 
+             ArrayList<Cleaner> cleanList =
+                     getCleaners((ArrayList<String>) value.get("cleaners"));
+ 
+             map.put("cleaners", cleanList);
+ 
+             props.put(field, Collections.singleton(fieldValue));
+ 
+             Double maxValue = 0.0;
+             if (value.get("high") != null) {
+                 maxValue = (Double) value.get("high");
+             }
+ 
+             Double minValue = 0.0;
+             if (value.get("low") != null) {
+                 minValue = (Double) value.get("low");
+             }
+ 
+             Comparator comp = getComparator(value);
+             map.put("high", maxValue);
+             map.put("low", minValue);
+             map.put("comparator", comp);
+ 
+             entityParams.put(field, map);
+         }
+         return new RecordImpl(props);
+     }
+ 
+     /**
+      * . Reads & instantiates cleaners
+      * 
+      * @param arrayList
+      *            array of cleaners from JSON
+      * @return the list of instanciated cleaners
+      */
+     private static ArrayList<Cleaner> getCleaners(
+             final ArrayList<String> arrayList) {
+         ArrayList<Cleaner> cleanList = new ArrayList<Cleaner>();
+         Iterator<String> cleanIt = arrayList.iterator();
+ 
+         while (cleanIt.hasNext()) {
+             String cleanerName = cleanIt.next();
+ 
+             Cleaner cleaner = (Cleaner) ObjectUtils.instantiate(cleanerName);
+             cleanList.add(cleaner);
+         }
+         return cleanList;
+     }
+ 
+     /**
+      * @param value
+      *            from JSON payload
+      * @return instantiated Comparator
+      */
+     private static Comparator getComparator(final Map<String, Object> value) {
+         String comparatorName =
+                 (value.get("comparator") == null
+                         ? Levenshtein.class.getName()
+                         : (String) value.get("comparator"));
+ 
+         Comparator comp = (Comparator) ObjectUtils.instantiate(comparatorName);
+         return comp;
+     }
+ 
+     /**
+      * . Computes probability that objects are the same
+      * 
+      * @return float the computed score
+      */
+     @Override
+     public float runAsFloat() {
+         HashMap<String, Collection<String>> props2 =
+                 new HashMap<String, Collection<String>>();
+ 
+         DocLookup doc = doc();
+         Collection<String> docKeys = comparedRecord.getProperties();
+         Iterator<String> it = docKeys.iterator();
+ 
+         while (it.hasNext()) {
+             String key = it.next();
+ 
+             if (doc.containsKey(key)) {
+                 String value = getFieldValue(doc.get(key));
+                 props2.put(key, value == null
+                         ? Collections.singleton("")
+                         : Collections.singleton(value));
+             }
+         }
+         Record r2 = new RecordImpl(props2);
+         return new Double(compare(comparedRecord, r2, entityParams))
+                 .floatValue();
+     }
+ 
+     /**
+      * . Reads field value & returns it as String
+      * 
+      * @param field
+      *            the object to cast
+      * @return String object String value
+      */
+     private static String getFieldValue(final Object field) {
+         String result = "";
+ 
+         if (field instanceof ScriptDocValues.Strings)
+             result = ((ScriptDocValues.Strings) field).getValue();
+         if (field instanceof ScriptDocValues.Doubles)
+             result =
+                     Double.toString(((ScriptDocValues.Doubles) field)
+                             .getValue());
+         if (field instanceof ScriptDocValues.Longs)
+             result = Long.toString(((ScriptDocValues.Longs) field).getValue());
+         if (field instanceof ScriptDocValues.GeoPoints)
+             throw new ElasticSearchException(
+                     "No comparator implemented for GeoPoints");
+ 
+         return result;
+     }
+ 
+     /**
+      * Compares two records and returns the probability that they represent the
+      * same real-world entity.
+      * 
+      * @param r1
+      *            1st Record
+      * @param r2
+      *            2nd Record
+      * @param params
+      *            Parameters for comparison
+      * @return Bayesian probability
+      */
+     private static double compare(
+             final Record r1,
+             final Record r2,
+             final HashMap<String, HashMap<String, Object>> params) {
+         double prob = AVERAGE_SCORE;
+ 
+         for (String propname : r1.getProperties()) {
+             Collection<String> vs1 = r1.getValues(propname);
+             Collection<String> vs2 = r2.getValues(propname);
+ 
+             Comparator comp =
+                     (Comparator) params.get(propname).get("comparator");
+             ArrayList<Cleaner> cleanersList =
+                     (ArrayList<Cleaner>) params.get(propname).get("cleaners");
+ 
+             Double max = (Double) params.get(propname).get("high");
+             Double min = (Double) params.get(propname).get("low");
+ 
+             if (vs1 == null || vs1.isEmpty() || vs2 == null || vs2.isEmpty()) {
+                 continue; // no values to compare, so skip
+             }
+ 
+             double high = 0.0;
+             v1fieldloop: for (String v1 : vs1) {
+                 if (v1.equals(""))
+                     continue;
+ 
+                 v2fieldloop: for (String v2 : vs2) {
+                     if (v2.equals(""))
+                         continue;
+ 
+                     Iterator<Cleaner> clIt = cleanersList.iterator();
+ 
+                     while (clIt.hasNext()) {
+                         Cleaner cl = clIt.next();
+                         v1 = cl.clean(v1);
+                         if ((v1 == null) || v1.equals(""))
+                             continue v1fieldloop;
+                         v2 = cl.clean(v2);
+                         if ((v2 == null) || v2.equals(""))
+                             continue v2fieldloop;
+                     }
+                     double p = compare(v1, v2, max, min, comp);
+                     high = Math.max(high, p);
+                 }
+             }
+             prob = Utils.computeBayes(prob, high);
+         }
+         return prob;
+     }
+ 
+     /**
+ 
+      */
+     /**
+      * Returns the probability that the records v1 and v2 came from represent
+      * the same entity, based on high and low probability settings etc.
+      * 
+      * @param v1
+      *            1st String
+      * @param v2
+      *            2nd String
+      * @param high
+      *            max probability
+      * @param low
+      *            min probability
+      * @param comparator
+      *            the comparator to use
+      * @return the computed probability
+      */
+     private static double compare(
+             final String v1,
+             final String v2,
+             final double high,
+             final double low,
+             final Comparator comparator) {
+ 
+         if (comparator == null)
+             return AVERAGE_SCORE; // we ignore properties with no comparator
+ 
+         double sim = comparator.compare(v1, v2);
+         if (sim >= AVERAGE_SCORE)
+             return ((high - AVERAGE_SCORE) * (sim * sim)) + AVERAGE_SCORE;
+         else
+             return low;
+     }
+ 
+     @Override
+     public Object run() {
+         return null;
+     }
+ }

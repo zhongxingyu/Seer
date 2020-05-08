@@ -1,0 +1,284 @@
+ /*
+  * Copyright 2012 ios-driver committers.
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+  * in compliance with the License. You may obtain a copy of the License at
+  * 
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License
+  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+  * or implied. See the License for the specific language governing permissions and limitations under
+  * the License.
+  */
+ package org.uiautomation.ios.client.uiamodels.impl;
+ 
+ import com.google.common.collect.ImmutableMap;
+ 
+ import org.apache.commons.codec.binary.Base64;
+ import org.json.JSONObject;
+ import org.openqa.selenium.NoSuchElementException;
+ import org.openqa.selenium.Point;
+ import org.openqa.selenium.WebDriverException;
+ import org.openqa.selenium.WebElement;
+ import org.openqa.selenium.remote.RemoteWebDriver;
+ import org.uiautomation.ios.UIAModels.UIAElement;
+ import org.uiautomation.ios.UIAModels.UIAPoint;
+ import org.uiautomation.ios.UIAModels.UIARect;
+ import org.uiautomation.ios.UIAModels.predicate.AndCriteria;
+ import org.uiautomation.ios.UIAModels.predicate.Criteria;
+ import org.uiautomation.ios.UIAModels.predicate.TypeCriteria;
+ import org.uiautomation.ios.communication.Path;
+ import org.uiautomation.ios.communication.WebDriverLikeCommand;
+ import org.uiautomation.ios.communication.WebDriverLikeRequest;
+ 
+ import java.io.File;
+ import java.io.FileOutputStream;
+ import java.util.List;
+ import java.util.Map;
+ 
+ /**
+  * Main object for all the UIAutomation stuff. Implement part of the Apple API. Some methods are not
+  * implemented as the findElement(s) are covering multiple cases.
+  *
+  * {@link <a href="http://developer.apple.com/library/ios/#documentation/ToolsLanguages/Reference/UIAElementClassReference/UIAElement/UIAElement.html">
+  * Apple doc</a> for UIAElement }
+  */
+ public class RemoteUIAElement extends RemoteIOSObject implements UIAElement {
+ 
+   public RemoteUIAElement(RemoteWebDriver driver, String reference) {
+     super(driver, reference);
+   }
+ 
+   @Override
+   public String getLabel() {
+     return getAttribute("label");
+   }
+ 
+   @Override
+   public String getName() {
+     return getAttribute("name");
+   }
+ 
+   @Override
+   public String getValue() {
+     return getAttribute("value");
+   }
+ 
+   @Override
+   public <T extends UIAElement> T findElement(Class<T> type, Criteria c)
+       throws NoSuchElementException {
+     Criteria newOne = new AndCriteria(new TypeCriteria(type), c);
+     return (T) findElement(newOne);
+   }
+ 
+   @Override
+   public <T extends UIAElement> T findElement(Criteria c) throws NoSuchElementException {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.ELEMENT,
+                                                 ImmutableMap
+                                                     .of("depth", -1, "criteria", c.stringify()));
+     return commandExecutor.execute(request);
+   }
+ 
+   @Override
+   @SuppressWarnings("unchecked")
+   public List<UIAElement> findElements(Criteria c) {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.ELEMENTS,
+                                                 ImmutableMap
+                                                     .of("depth", -1, "criteria", c.stringify()));
+     return commandExecutor.execute(request);
+   }
+ 
+   @Override
+   protected WebElement findElement(String by, String using) {
+     if (using == null) {
+       throw new IllegalArgumentException("Cannot find elements when the selector is null.");
+     }
+ 
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.ELEMENT,
+                                                 ImmutableMap.of("using", by, "value", using));
+     return commandExecutor.execute(request);
+ 
+   }
+ 
+   @Override
+   protected List<WebElement> findElements(String by, String using) {
+     if (using == null) {
+       throw new IllegalArgumentException("Cannot find elements when the selector is null.");
+     }
+ 
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.ELEMENTS,
+                                                 ImmutableMap.of("using", by, "value", using));
+     return commandExecutor.execute(request);
+   }
+ 
+   protected WebDriverLikeRequest buildRequest(WebDriverLikeCommand command, Map<String, ?> params) {
+     return commandExecutor.buildRequest(command, this, params);
+   }
+ 
+   @Override
+   public void tap() {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.CLICK);
+     commandExecutor.execute(request);
+   }
+ 
+   protected WebDriverLikeRequest buildRequest(WebDriverLikeCommand command) {
+     return buildRequest(command, null);
+   }
+ 
+   @Override
+   public void touchAndHold(int durationInSecs) {
+     WebDriverLikeRequest
+         request =
+         buildRequest(WebDriverLikeCommand.NATIVE_TOUCH_AND_HOLD,
+                      ImmutableMap.of("duration", durationInSecs));
+     commandExecutor.execute(request);
+ 
+   }
+ 
+   @Override
+   public void doubleTap() {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.DOUBLE_TAP);
+     commandExecutor.execute(request);
+   }
+ 
+   @Override
+   public void twoFingerTap() {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.TWO_FINGER_TAP);
+     commandExecutor.execute(request);
+ 
+   }
+ 
+   @Override
+   public void scrollToVisible() {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.ELEMENT_SCROLL,
+                                                 ImmutableMap.of("toVisible", "true"));
+     commandExecutor.execute(request);
+ 
+   }
+ 
+   @Override
+   public JSONObject logElementTree(File screenshot, boolean translation) throws Exception {
+     WebDriverLikeCommand command = WebDriverLikeCommand.TREE;
+     Path
+         p =
+         new Path(command).withSession(getDriver().getSessionId()).withReference(getReference());
+     return logElementTree(screenshot, translation, p, command, getDriver());
+   }
+ 
+   public JSONObject logElementTree(File screenshot, boolean translation, Path path,
+                                    WebDriverLikeCommand command,
+                                    RemoteWebDriver driver) {
+ 
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.TREE,
+                                                 ImmutableMap
+                                                     .of("attachScreenshot", screenshot != null,
+                                                         "translation", translation));
+     JSONObject log = commandExecutor.execute(request);
+     if (screenshot != null) {
+       JSONObject screen = log.optJSONObject("screenshot");
+       String content = screen.optString("64encoded");
+       createFileFrom64EncodedString(screenshot, content);
+     }
+     log.remove("screenshot");
+     return log;
+ 
+   }
+ 
+   public static void createFileFrom64EncodedString(File f, String encoded64) {
+     try {
+       byte[] img64 = Base64.decodeBase64(encoded64);
+       FileOutputStream os = new FileOutputStream(f);
+       os.write(img64);
+       os.close();
+     } catch (Exception e) {
+       throw new WebDriverException("cannot extract screenshot" + e.getMessage());
+     }
+   }
+ 
+   // TODO freynaud fix that server side.
+   @Override
+   public boolean isDisplayed() {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.DISPLAYED);
+     return (Boolean) commandExecutor.execute(request);
+   }
+ 
+   @Override
+   public String getAttribute(String name) {
+     /*WebDriverLikeCommand command = WebDriverLikeCommand.ATTRIBUTE;
+     Path p = new Path(WebDriverLikeCommand.ATTRIBUTE).withSession(driver.getSessionId()).withReference(getReference());
+     p.validateAndReplace(":name", name);
+     //WebDriverLikeRequest request = new WebDriverLikeRequest(command.method(), p);
+     return driver.execute(request); */
+     WebDriverLikeRequest
+         request =
+         commandExecutor.buildRequest(WebDriverLikeCommand.ATTRIBUTE, this, null,
+                                      ImmutableMap.of("name", name));
+    return String.valueOf(commandExecutor.execute(request));
+   }
+ 
+   @Override
+   public UIARect getRect() {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.RECT);
+     Map<String, Object> rect = commandExecutor.execute(request);
+     Map<String, Long> origin = (Map<String, Long>) rect.get("origin");
+     Map<String, Long> size = (Map<String, Long>) rect.get("size");
+ 
+     Long x = origin.get("x");
+     Long y = origin.get("y");
+ 
+     Long height = size.get("height");
+     Long width = size.get("width");
+ 
+     UIARect res = new UIARect(x.intValue(), y.intValue(), height.intValue(), width.intValue());
+     return res;
+   }
+ 
+   @Override
+   public String toString() {
+     StringBuilder builder = new StringBuilder();
+     builder.append(getClass().getSimpleName());
+     builder.append("int. key:" + getReference());
+     builder.append(",name:" + getName());
+     builder.append(",value:" + getValue());
+     builder.append(",label:" + getLabel());
+     return builder.toString();
+   }
+ 
+ 
+   public void flickInsideWithOptions(int touchCount, UIAPoint startOffset, UIAPoint endOffset) {
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.FLICK_INSIDE_WITH_OPTIONS,
+                                                 ImmutableMap.of("touchCount", touchCount, "xstart",
+                                                                 startOffset.getX(), "ystart",
+                                                                 startOffset.getY(),
+                                                                 "xend", endOffset.getX(), "yend",
+                                                                 endOffset.getY()));
+     commandExecutor.execute(request);
+   }
+ 
+   public static RemoteUIAElement getFrontMostApp(RemoteIOSDriver driver) {
+     return new RemoteUIAElement(driver, "1");
+ 
+   }
+ 
+   public static RemoteUIAElement target(RemoteIOSDriver driver) {
+     return new RemoteUIAElement(driver, "2");
+   }
+ 
+   @Override
+   public Point getLocation() {
+     System.out.println("getLocation in RemoteUIAElement");
+ 
+     WebDriverLikeRequest request = buildRequest(WebDriverLikeCommand.RECT);
+     Map<String, Object> rect = commandExecutor.execute(request);
+     Map<String, Long> origin = (Map<String, Long>) rect.get("origin");
+ 
+     Long x = origin.get("x");
+     Long y = origin.get("y");
+ 
+     Point res = new Point(x.intValue(), y.intValue());
+     return res;
+ 
+   }
+ 
+ }

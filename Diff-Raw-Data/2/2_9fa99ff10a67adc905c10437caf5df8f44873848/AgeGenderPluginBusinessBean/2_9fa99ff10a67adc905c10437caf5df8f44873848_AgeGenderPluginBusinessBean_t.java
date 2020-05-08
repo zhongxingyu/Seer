@@ -1,0 +1,267 @@
+ package is.idega.idegaweb.member.business.plugins;
+ 
+ import is.idega.idegaweb.member.presentation.GroupAgeGenderTab;
+ 
+ import java.rmi.RemoteException;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.List;
+ 
+ import javax.ejb.CreateException;
+ import javax.ejb.FinderException;
+ import javax.ejb.RemoveException;
+ import javax.transaction.SystemException;
+ import javax.transaction.UserTransaction;
+ 
+ import com.idega.business.IBOServiceBean;
+ import com.idega.data.GenericEntity;
+ import com.idega.presentation.PresentationObject;
+ import com.idega.user.business.UserGroupPlugInBusiness;
+ import com.idega.user.data.Gender;
+ import com.idega.user.data.GenderHome;
+ import com.idega.user.data.Group;
+ import com.idega.user.data.User;
+ 
+ /**
+  *@author     <a href="mailto:thomas@idega.is">Thomas Hilbig</a>
+  *@version    1.0
+  */
+ public class AgeGenderPluginBusinessBean extends IBOServiceBean implements  AgeGenderPluginBusiness, UserGroupPlugInBusiness {
+   
+   private static final String NULL = "null";
+   
+   private static final int LOWER_AGE_LIMIT_DEFAULT = 0;
+   private static final int UPPER_AGE_LIMIT_DEFAULT = 110;
+   
+   private static final String LOWER_AGE_LIMIT_META_DATA_KEY = "lowerAgeLimit";
+   private static final String UPPER_AGE_LIMIT_META_DATA_KEY = "upperAgeLimit";
+   private static final String GENDER_META_DATA_KEY = "gender";
+   private static final String AGE_LIMIT_IS_STRINGENT_CONDITION_META_DATA_KEY = "ageLimitIsStringentCondition";
+   private static final String KEY_DATE_FOR_AGE_META_DATA_KEY = "keyDateForAge";
+   
+   private static final int FEMALE = 0;
+   private static final int MALE = 1;
+   private static final int NEUTRAL = 2;
+   
+   
+   private void setGender(Group group, int gender){
+     
+     // choose NEUTRAL if either both are true or both values are false  
+     if (NEUTRAL == gender) {
+       // remove meta data does not work  
+       // ((GenericEntity) group).removeMetaData(GENDER_META_DATA_KEY);
+       group.setMetaData(GENDER_META_DATA_KEY, NULL);
+       return;
+     }
+     try {
+ 			GenderHome home = (GenderHome) this.getIDOHome(Gender.class);
+       if (MALE == gender) {
+         String maleId = ((Integer) home.getMaleGender().getPrimaryKey()).toString();
+         group.setMetaData(GENDER_META_DATA_KEY, maleId);
+       } 
+       else  {
+         String femaleId = ((Integer) home.getFemaleGender().getPrimaryKey()).toString();
+         group.setMetaData(GENDER_META_DATA_KEY, femaleId);
+       }
+     }
+ 		catch (RemoteException e) {
+       System.err.println("[GeneralGroupInfoTab] remote error, GroupId : " + group.getPrimaryKey().toString());
+       e.printStackTrace(System.err);
+ 		}
+     catch (FinderException e) {
+       System.err.println("[GeneralGroupInfoTab] find error, GroupId : " + group.getPrimaryKey().toString());
+       e.printStackTrace(System.err);
+     }
+   }  
+   
+   public void setMale(Group group)  {
+     setGender(group, MALE);
+   }
+   
+   public void setFemale(Group group)  {
+     setGender(group, FEMALE);
+   }
+   
+   public void setNeutral(Group group) {
+     setGender(group, NEUTRAL);
+   }
+   
+   private int getGender(Group group) throws RemoteException, FinderException {
+     String genderIdString = (String) group.getMetaData(GENDER_META_DATA_KEY);
+     if (genderIdString == null || NULL.equals(genderIdString))
+       // meta data was not set
+       // return NEUTRAL
+       return NEUTRAL;
+     Integer genderId = new Integer(genderIdString);
+     GenderHome home = (GenderHome) this.getIDOHome(Gender.class);
+     Integer maleId = ((Integer) home.getMaleGender().getPrimaryKey());
+     if (genderId.equals(maleId))
+       return MALE;
+     else  {
+       Integer femaleId = ((Integer) home.getFemaleGender().getPrimaryKey()); 
+       if (genderId.equals(femaleId))
+         return FEMALE;
+     }
+     throw new FinderException("Id of gender was not found"); 
+   }
+   
+   public boolean isFemale(Group group) throws RemoteException, FinderException  {
+     return FEMALE == getGender(group);    
+   }
+   
+   public boolean isNeutral(Group group) throws RemoteException, FinderException {
+     return NEUTRAL == getGender(group);
+   }
+   
+   public boolean isMale(Group group) throws RemoteException, FinderException {
+     return MALE == getGender(group);
+   }
+   
+   public void setAgeLimitIsStringentCondition(Group group, boolean ageLimitIsStringentCondition) {
+     if (ageLimitIsStringentCondition)
+       group.setMetaData( AGE_LIMIT_IS_STRINGENT_CONDITION_META_DATA_KEY, new Boolean(true).toString());
+     else
+       // remove meta data does not work, set false
+       group.setMetaData( AGE_LIMIT_IS_STRINGENT_CONDITION_META_DATA_KEY, new Boolean(false).toString());
+   }
+   
+   public boolean isAgeLimitStringentCondition(Group group) {
+     String ageLimitIsStringentConditionString = (String) group.getMetaData(AGE_LIMIT_IS_STRINGENT_CONDITION_META_DATA_KEY);
+     return !(ageLimitIsStringentConditionString == null || 
+               NULL.equals(ageLimitIsStringentConditionString) ||
+               ! (new Boolean(ageLimitIsStringentConditionString).booleanValue()));
+   }
+     
+   public void setLowerAgeLimit(Group group, int lowerAgeLimit)  {
+     if (lowerAgeLimit == LOWER_AGE_LIMIT_DEFAULT)
+       // remove meta data does not work
+       // ((GenericEntity) group).removeMetaData(LOWER_AGE_LIMIT_META_DATA_KEY);
+       group.setMetaData(LOWER_AGE_LIMIT_META_DATA_KEY, NULL);
+     else
+       group.setMetaData(LOWER_AGE_LIMIT_META_DATA_KEY, Integer.toString(lowerAgeLimit));   
+   }
+   
+   public int getLowerAgeLimit(Group group)  {
+     String lowerAgeLimitString = (String) group.getMetaData(LOWER_AGE_LIMIT_META_DATA_KEY);
+     if (lowerAgeLimitString == null || NULL.equals(lowerAgeLimitString))
+       return LOWER_AGE_LIMIT_DEFAULT;
+     else
+       return Integer.parseInt(lowerAgeLimitString); 
+   }
+   
+   public void setUpperAgeLimit(Group group, int upperAgeLimit)  {
+     if (upperAgeLimit == UPPER_AGE_LIMIT_DEFAULT)
+       // remove meta data does not work
+       group.setMetaData(UPPER_AGE_LIMIT_META_DATA_KEY, NULL);
+     else
+       group.setMetaData(UPPER_AGE_LIMIT_META_DATA_KEY, Integer.toString(upperAgeLimit));
+   }
+  
+   public int getUpperAgeLimit(Group group)  {
+     String upperAgeLimitString = (String) group.getMetaData(UPPER_AGE_LIMIT_META_DATA_KEY);
+     if (upperAgeLimitString == null || NULL.equals(upperAgeLimitString))
+       return UPPER_AGE_LIMIT_DEFAULT;
+     else
+       return Integer.parseInt(upperAgeLimitString); 
+   }
+   
+   public int getLowerAgeLimitDefault()  {
+     return LOWER_AGE_LIMIT_DEFAULT;
+   }
+   
+   public int getUpperAgeLimitDefault()  {
+     return UPPER_AGE_LIMIT_DEFAULT;
+   }
+   
+   public void setKeyDateForAge(Group group, String keyDateForAge)  {
+     if (keyDateForAge == null || keyDateForAge.length() == 0)
+       // remove does not work
+       group.setMetaData(KEY_DATE_FOR_AGE_META_DATA_KEY, NULL);
+     else 
+       group.setMetaData(KEY_DATE_FOR_AGE_META_DATA_KEY, keyDateForAge);   
+   }
+   
+   public String getKeyDateForAge(Group group)  {
+     String keyDateForAgeString = (String) group.getMetaData(KEY_DATE_FOR_AGE_META_DATA_KEY);
+     if (keyDateForAgeString == null || NULL.equals(keyDateForAgeString))
+       return "";
+     else
+       return keyDateForAgeString; 
+   }  
+   
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#afterGroupCreate(com.idega.user.data.Group)
+ 	 */
+ 	public void afterGroupCreate(Group group) throws CreateException, RemoteException {
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#afterUserCreate(com.idega.user.data.User)
+ 	 */
+ 	public void afterUserCreate(User user) throws CreateException, RemoteException {
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#beforeGroupRemove(com.idega.user.data.Group)
+ 	 */
+ 	public void beforeGroupRemove(Group group) throws RemoveException, RemoteException {
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#beforeUserRemove(com.idega.user.data.User)
+ 	 */
+ 	public void beforeUserRemove(User user) throws RemoveException, RemoteException {
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#findGroupsByFields(java.util.Collection, java.util.Collection, java.util.Collection)
+ 	 */
+ 	public Collection findGroupsByFields(Collection listViewerFields, Collection finderOperators, Collection listViewerFieldValues) throws RemoteException {
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#getGroupPropertiesTabs(com.idega.user.data.Group)
+ 	 */
+ 	public List getGroupPropertiesTabs(Group group) throws RemoteException {
+     List list = new ArrayList();
+     list.add(new GroupAgeGenderTab(group));  
+     return list;  
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#getListViewerFields()
+ 	 */
+ 	public Collection getListViewerFields() throws RemoteException {
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#getPresentationObjectClass()
+ 	 */
+ 	public Class getPresentationObjectClass() throws RemoteException {
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#getUserPropertiesTabs(com.idega.user.data.User)
+ 	 */
+ 	public List getUserPropertiesTabs(User user) throws RemoteException {
+		return new ArrayList();
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#instanciateEditor(com.idega.user.data.Group)
+ 	 */
+ 	public PresentationObject instanciateEditor(Group group) throws RemoteException {
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * @see com.idega.user.business.UserGroupPlugInBusiness#instanciateViewer(com.idega.user.data.Group)
+ 	 */
+ 	public PresentationObject instanciateViewer(Group group) throws RemoteException {
+ 		return null;
+ 	}
+ 
+ }

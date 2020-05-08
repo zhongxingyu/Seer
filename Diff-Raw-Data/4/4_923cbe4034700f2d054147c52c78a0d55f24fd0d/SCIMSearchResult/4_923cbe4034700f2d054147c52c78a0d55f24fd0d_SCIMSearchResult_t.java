@@ -1,0 +1,60 @@
+ package org.osiam.resources.scim;
+ 
+import java.util.ArrayList;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
+ 
+ import com.fasterxml.jackson.annotation.JsonProperty;
+ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+ 
+ @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+ public class SCIMSearchResult<T> {
+ 
+     private long totalResults;
+     private long itemsPerPage;
+     private long startIndex;
+     private Set<String> schemas;
+    private List<T> resources = new ArrayList<>();
+ 
+     public SCIMSearchResult() {}
+ 
+     public SCIMSearchResult(List<T> resources, long totalResults, long itemsPerPage, long startIndex, String schema) {
+         this.resources = resources;
+         this.totalResults = totalResults;
+         this.itemsPerPage = itemsPerPage;
+         this.startIndex = startIndex;
+ 
+         this.schemas = new HashSet<>();
+         this.schemas.add(schema);
+     }
+ 
+     public SCIMSearchResult(List<T> resources, long totalResults, long itemsPerPage, long startIndex, Set<String> schemas) {
+         this.resources = resources;
+         this.totalResults = totalResults;
+         this.itemsPerPage = itemsPerPage;
+         this.startIndex = startIndex;
+         this.schemas = schemas;
+     }
+ 
+     @JsonProperty("Resources")
+     public List<T> getResources() {
+         return resources;
+     }
+ 
+     public long getTotalResults() {
+         return totalResults;
+     }
+ 
+     public Set<String> getSchemas() {
+         return schemas;
+     }
+ 
+     public long getItemsPerPage() {
+         return itemsPerPage;
+     }
+ 
+     public long getStartIndex() {
+         return startIndex;
+     }
+ }

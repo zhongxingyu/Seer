@@ -1,0 +1,1769 @@
+ /*
+  * Copyright (C) 2010 Felix Bechstein, Lado Kumsiashvili
+  * 
+  * This file is part of WebSMS.
+  * 
+  * This program is free software; you can redistribute it and/or modify it under
+  * the terms of the GNU General Public License as published by the Free Software
+  * Foundation; either version 3 of the License, or (at your option) any later
+  * version.
+  * 
+  * This program is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+  * details.
+  * 
+  * You should have received a copy of the GNU General Public License along with
+  * this program; If not, see <http://www.gnu.org/licenses/>.
+  */
+ package de.ub0r.android.websms;
+ 
+ import java.io.BufferedInputStream;
+ import java.io.BufferedOutputStream;
+ import java.io.BufferedReader;
+ import java.io.ByteArrayInputStream;
+ import java.io.ByteArrayOutputStream;
+ import java.io.File;
+ import java.io.FileReader;
+ import java.io.IOException;
+ import java.io.ObjectInputStream;
+ import java.io.ObjectOutputStream;
+ import java.security.KeyFactory;
+ import java.security.PublicKey;
+ import java.security.Signature;
+ import java.security.spec.X509EncodedKeySpec;
+ import java.util.ArrayList;
+ import java.util.Calendar;
+ import java.util.List;
+ 
+ import android.app.Activity;
+ import android.app.AlertDialog;
+ import android.app.DatePickerDialog;
+ import android.app.Dialog;
+ import android.app.DatePickerDialog.OnDateSetListener;
+ import android.app.TimePickerDialog.OnTimeSetListener;
+ import android.content.ActivityNotFoundException;
+ import android.content.DialogInterface;
+ import android.content.Intent;
+ import android.content.SharedPreferences;
+ import android.content.SharedPreferences.Editor;
+ import android.content.pm.ResolveInfo;
+ import android.net.Uri;
+ import android.os.Bundle;
+ import android.preference.PreferenceManager;
+ import android.telephony.TelephonyManager;
+ import android.telephony.gsm.SmsMessage;
+ import android.text.Editable;
+ import android.text.TextWatcher;
+ import android.util.Log;
+ import android.view.Menu;
+ import android.view.MenuInflater;
+ import android.view.MenuItem;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.view.Window;
+ import android.view.View.OnClickListener;
+ import android.widget.AdapterView;
+ import android.widget.BaseAdapter;
+ import android.widget.Button;
+ import android.widget.CheckBox;
+ import android.widget.DatePicker;
+ import android.widget.EditText;
+ import android.widget.GridView;
+ import android.widget.ImageView;
+ import android.widget.MultiAutoCompleteTextView;
+ import android.widget.TextView;
+ import android.widget.TimePicker;
+ import android.widget.Toast;
+ import android.widget.AdapterView.OnItemClickListener;
+ import de.ub0r.android.websms.connector.common.Connector;
+ import de.ub0r.android.websms.connector.common.ConnectorCommand;
+ import de.ub0r.android.websms.connector.common.ConnectorSpec;
+ import de.ub0r.android.websms.connector.common.Utils;
+ import de.ub0r.android.websms.connector.common.ConnectorSpec.SubConnectorSpec;
+ 
+ /**
+  * Main Activity.
+  * 
+  * @author flx
+  */
+ @SuppressWarnings("deprecation")
+ public class WebSMS extends Activity implements OnClickListener,
+ 		OnDateSetListener, OnTimeSetListener {
+ 	/** Tag for output. */
+ 	private static final String TAG = "WebSMS";
+ 
+ 	/** Static reference to running Activity. */
+ 	private static WebSMS me;
+ 	/** Preference's name: last version run. */
+ 	private static final String PREFS_LAST_RUN = "lastrun";
+ 	/** Preference's name: user's phonenumber. */
+ 	static final String PREFS_SENDER = "sender";
+ 	/** Preference's name: default prefix. */
+ 	static final String PREFS_DEFPREFIX = "defprefix";
+ 	/** Preference's name: update balace on start. */
+ 	private static final String PREFS_AUTOUPDATE = "autoupdate";
+ 	/** Preference's name: exit after sending. */
+ 	private static final String PREFS_AUTOEXIT = "autoexit";
+ 	/** Preference's name: show mobile numbers only. */
+ 	private static final String PREFS_MOBILES_ONLY = "mobiles_only";
+ 	/** Preference's name: vibrate on failed sending. */
+ 	static final String PREFS_FAIL_VIBRATE = "fail_vibrate";
+ 	/** Preference's name: sound on failed sending. */
+ 	static final String PREFS_FAIL_SOUND = "fail_sound";
+ 	/** Preferemce's name: enable change connector button. */
+ 	private static final String PREFS_HIDE_CHANGE_CONNECTOR_BUTTON = // .
+ 	"hide_change_connector_button";
+ 	/** Preferemce's name: hide select recipients button. */
+ 	private static final String PREFS_HIDE_SELECT_RECIPIENTS_BUTTON = // .
+ 	"hide_select_recipients_button";
+ 	/** Preferemce's name: hide clear recipients button. */
+ 	private static final String PREFS_HIDE_CLEAR_RECIPIENTS_BUTTON = // .
+ 	"hide_clear_recipients_button";
+ 	/** Preference's name: hide send menu item. */
+ 	private static final String PREFS_HIDE_SEND_IN_MENU = "hide_send_in_menu";
+ 	/** Preferemce's name: hide emoticons button. */
+ 	private static final String PREFS_HIDE_EMO_BUTTON = "hide_emo_button";
+ 	/** Preferemce's name: hide cancel button. */
+ 	private static final String PREFS_HIDE_CANCEL_BUTTON = "hide_cancel_button";
+ 	/** Cache {@link ConnectorSpec}s. */
+ 	private static final String PREFS_CONNECTORS = "connectors";
+ 	/** Preference's name: hide ads. */
+ 	private static final String PREFS_HIDEADS = "hideads";
+ 
+ 	/** Preference's name: default recipient. */
+ 	private static final String PREFS_DEFAULT_RECIPIENT = "default_recipient";
+ 
+ 	/** Path to file containing signatures of UID Hash. */
+ 	private static final String NOADS_SIGNATURES = "/sdcard/websms.noads";
+ 
+ 	/** Preference's name: to. */
+ 	private static final String PREFS_TO = "to";
+ 	/** Preference's name: text. */
+ 	private static final String PREFS_TEXT = "text";
+ 	/** Preference's name: selected {@link ConnectorSpec} ID. */
+ 	private static final String PREFS_CONNECTOR_ID = "connector_id";
+ 	/** Preference's name: selected {@link SubConnectorSpec} ID. */
+ 	private static final String PREFS_SUBCONNECTOR_ID = "subconnector_id";
+ 
+ 	/** Sleep before autoexit. */
+ 	private static final int SLEEP_BEFORE_EXIT = 75;
+ 
+ 	/** Buffersize for saving and loading Connectors. */
+ 	private static final int BUFSIZE = 4096;
+ 
+ 	/** Preferences: hide ads. */
+ 	private static boolean prefsNoAds = false;
+ 	/** Show AdView on top. */
+ 	private boolean onTop = false;
+ 	/** Hashed IMEI. */
+ 	private static String imeiHash = null;
+ 	/** Preferences: selected {@link ConnectorSpec}. */
+ 	private static ConnectorSpec prefsConnectorSpec = null;
+ 	/** Preferences: selected {@link SubConnectorSpec}. */
+ 	private static SubConnectorSpec prefsSubConnectorSpec = null;
+ 	/** Save prefsConnectorSpec.getPackage() here. */
+ 	private static String prefsConnectorID = null;
+ 
+ 	/** List of available {@link ConnectorSpec}s. */
+ 	private static final ArrayList<ConnectorSpec> CONNECTORS = // .
+ 	new ArrayList<ConnectorSpec>();
+ 
+ 	/** Crypto algorithm for signing UID hashs. */
+ 	private static final String ALGO = "RSA";
+ 	/** Crypto hash algorithm for signing UID hashs. */
+ 	private static final String SIGALGO = "SHA1with" + ALGO;
+ 	/** My public key for verifying UID hashs. */
+ 	private static final String KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNAD"
+ 			+ "CBiQKBgQCgnfT4bRMLOv3rV8tpjcEqsNmC1OJaaEYRaTHOCC"
+ 			+ "F4sCIZ3pEfDcNmrZZQc9Y0im351ekKOzUzlLLoG09bsaOeMd"
+ 			+ "Y89+o2O0mW9NnBch3l8K/uJ3FRn+8Li75SqoTqFj3yCrd9IT"
+ 			+ "sOJC7PxcR5TvNpeXsogcyxxo3fMdJdjkafYwIDAQAB";
+ 
+ 	/** true if preferences got opened. */
+ 	static boolean doPreferences = false;
+ 
+ 	/** Dialog: updates. */
+ 	private static final int DIALOG_UPDATE = 2;
+ 	/** Dialog: custom sender. */
+ 	private static final int DIALOG_CUSTOMSENDER = 3;
+ 	/** Dialog: send later: date. */
+ 	private static final int DIALOG_SENDLATER_DATE = 4;
+ 	/** Dialog: send later: time. */
+ 	private static final int DIALOG_SENDLATER_TIME = 5;
+ 	/** Dialog: pre donate. */
+ 	private static final int DIALOG_PREDONATE = 6;
+ 	/** Dialog: post donate. */
+ 	private static final int DIALOG_POSTDONATE = 7;
+ 	/** Dialog: emo. */
+ 	private static final int DIALOG_EMO = 8;
+ 
+ 	/** {@link Activity} result request. */
+ 	private static final int ARESULT_PICK_PHONE = 1;
+ 
+ 	/** Size of the emoticons png. */
+ 	private static final int EMOTICONS_SIZE = 30;
+ 
+ 	/** Intent's extra for error messages. */
+ 	static final String EXTRA_ERRORMESSAGE = // .
+ 	"de.ub0r.android.intent.extra.ERRORMESSAGE";
+ 
+ 	/** Persistent Message store. */
+ 	private static String lastMsg = null;
+ 	/** Persistent Recipient store. */
+ 	private static String lastTo = null;
+ 	/** Backup for params: custom sender. */
+ 	private static String lastCustomSender = null;
+ 	/** Backup for params: send later. */
+ 	private static long lastSendLater = -1;
+ 
+ 	/** {@link MultiAutoCompleteTextView} holding recipients. */
+ 	private MultiAutoCompleteTextView etTo;
+ 	/** {@link EditText} holding text. */
+ 	private EditText etText;
+ 	/** {@link TextView} holding balances. */
+ 	private TextView tvBalances;
+ 
+ 	/** {@link View} holding extras. */
+ 	private View vExtras;
+ 	/** {@link View} holding custom sender. */
+ 	private View vCustomSender;
+ 	/** {@link View} holding flashsms. */
+ 	private View vFlashSMS;
+ 	/** {@link View} holding send later. */
+ 	private View vSendLater;
+ 
+ 	/** Text's label. */
+ 	private TextView etTextLabel;
+ 
+ 	/** Show extras. */
+ 	private boolean showExtras = false;
+ 
+ 	/** TextWatcher updating char count on writing. */
+ 	private TextWatcher textWatcher = new TextWatcher() {
+ 		/**
+ 		 * {@inheritDoc}
+ 		 */
+ 		public void afterTextChanged(final Editable s) {
+ 			int[] l = SmsMessage.calculateLength(s, false);
+ 			WebSMS.this.etTextLabel.setText(l[0] + "/" + l[2]);
+ 		}
+ 
+ 		/** Needed dummy. */
+ 		public void beforeTextChanged(final CharSequence s, final int start,
+ 				final int count, final int after) {
+ 		}
+ 
+ 		/** Needed dummy. */
+ 		public void onTextChanged(final CharSequence s, final int start,
+ 				final int before, final int count) {
+ 		}
+ 	};
+ 
+ 	/**
+ 	 * Parse data pushed by {@link Intent}.
+ 	 * 
+ 	 * @param intent
+ 	 *            {@link Intent}
+ 	 */
+ 	private void parseIntent(final Intent intent) {
+ 		final String action = intent.getAction();
+ 		if (action == null) {
+ 			return;
+ 		}
+ 		final Uri uri = intent.getData();
+ 		if (uri != null) {
+ 			// launched by clicking a sms: link, target number is in URI.
+ 			final String scheme = uri.getScheme();
+ 			if (scheme != null
+ 					&& (scheme.equals("sms") || scheme.equals("smsto"))) {
+ 				final String s = uri.getSchemeSpecificPart();
+ 				this.parseSchemeSpecificPart(s);
+ 				this.displayAds(true);
+ 			}
+ 		}
+ 		final Bundle extras = intent.getExtras();
+ 		if (extras != null) {
+ 			CharSequence s = extras.getCharSequence(Intent.EXTRA_TEXT);
+ 			if (s != null) {
+ 				((EditText) this.findViewById(R.id.text)).setText(s);
+ 				lastMsg = s.toString();
+ 			}
+ 			s = extras.getString(EXTRA_ERRORMESSAGE);
+ 			if (s != null) {
+ 				Toast.makeText(this, s, Toast.LENGTH_LONG).show();
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * parseSchemeSpecificPart from {@link Uri} and initialize WebSMS
+ 	 * properties.
+ 	 * 
+ 	 * @param part
+ 	 *            scheme specific part
+ 	 */
+ 	private void parseSchemeSpecificPart(final String part) {
+ 		String s = part;
+ 		if (s == null) {
+ 			return;
+ 		}
+ 		s = s.trim();
+ 		if (s.endsWith(",")) {
+ 			s = s.substring(0, s.length() - 1).trim();
+ 		}
+ 		if (s.indexOf('<') < 0) {
+ 			// try to fetch recipient's name from phonebook
+ 			String n = ContactsWrapper.getInstance().getNameForNumber(this, s);
+ 			if (n != null) {
+ 				s = n + " <" + s + ">, ";
+ 			}
+ 		}
+ 		((EditText) this.findViewById(R.id.to)).setText(s);
+ 		lastTo = s;
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@SuppressWarnings("unchecked")
+ 	@Override
+ 	public final void onCreate(final Bundle savedInstanceState) {
+ 		super.onCreate(savedInstanceState);
+ 		this.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+ 
+ 		// save ref to me.
+ 		me = this;
+ 		// Restore preferences
+ 		final SharedPreferences p = PreferenceManager
+ 				.getDefaultSharedPreferences(this);
+ 		// inflate XML
+ 		this.setContentView(R.layout.main);
+ 
+ 		this.etTo = (MultiAutoCompleteTextView) this.findViewById(R.id.to);
+ 		this.etText = (EditText) this.findViewById(R.id.text);
+ 		this.etTextLabel = (TextView) this.findViewById(R.id.text_);
+ 		this.tvBalances = (TextView) this.findViewById(R.id.freecount);
+ 
+ 		this.vExtras = this.findViewById(R.id.extras);
+ 		this.vCustomSender = this.findViewById(R.id.custom_sender);
+ 		this.vFlashSMS = this.findViewById(R.id.flashsms);
+ 		this.vSendLater = this.findViewById(R.id.send_later);
+ 
+ 		// display changelog?
+ 		String v0 = p.getString(PREFS_LAST_RUN, "");
+ 		String v1 = this.getString(R.string.app_version);
+ 		if (!v0.equals(v1)) {
+ 			SharedPreferences.Editor editor = p.edit();
+ 			editor.putString(PREFS_LAST_RUN, v1);
+ 			editor.remove(PREFS_CONNECTORS); // remove cache
+ 			editor.commit();
+ 			this.showDialog(DIALOG_UPDATE);
+ 		}
+ 		v0 = null;
+ 		v1 = null;
+ 
+ 		// get cached Connectors
+ 		String s = p.getString(PREFS_CONNECTORS, "");
+ 		if (s.length() == 0) {
+ 			this.updateConnectors();
+ 		} else if (CONNECTORS.size() == 0) {
+ 			// skip static remaining connectors
+ 			try {
+ 				ArrayList<ConnectorSpec> cache;
+ 				cache = (ArrayList<ConnectorSpec>) (new ObjectInputStream(
+ 						new BufferedInputStream(new ByteArrayInputStream(
+ 								Base64Coder.decode(s)), BUFSIZE))).readObject();
+ 				CONNECTORS.addAll(cache);
+ 				if (p.getBoolean(PREFS_AUTOUPDATE, false)) {
+ 					final String defPrefix = p
+ 							.getString(PREFS_DEFPREFIX, "+49");
+ 					final String defSender = p.getString(PREFS_SENDER, "");
+ 					for (ConnectorSpec c : CONNECTORS) {
+ 						runCommand(me, c, ConnectorCommand.update(defPrefix,
+ 								defSender));
+ 					}
+ 				}
+ 			} catch (Exception e) {
+ 				Log.d(TAG, "error loading connectors", e);
+ 			}
+ 		}
+ 		s = null;
+ 		Log.d(TAG, "loaded connectors: " + CONNECTORS.size());
+ 
+ 		this.reloadPrefs();
+ 
+ 		lastTo = p.getString(PREFS_TO, "");
+ 		lastMsg = p.getString(PREFS_TEXT, "");
+ 
+ 		// register Listener
+ 		this.findViewById(R.id.send_).setOnClickListener(this);
+ 		this.findViewById(R.id.cancel).setOnClickListener(this);
+ 		this.findViewById(R.id.change_connector).setOnClickListener(this);
+ 		this.vExtras.setOnClickListener(this);
+ 		this.vCustomSender.setOnClickListener(this);
+ 		this.vSendLater.setOnClickListener(this);
+ 		this.findViewById(R.id.select).setOnClickListener(this);
+ 		this.findViewById(R.id.clear).setOnClickListener(this);
+ 		this.findViewById(R.id.emo).setOnClickListener(this);
+ 		this.tvBalances.setOnClickListener(this);
+ 		this.etText.addTextChangedListener(this.textWatcher);
+ 		this.etTo.setAdapter(new MobilePhoneAdapter(this));
+ 		this.etTo.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+ 		this.etTo.requestFocus();
+ 
+ 		this.parseIntent(this.getIntent());
+ 
+ 		// check default prefix
+ 		if (!p.getString(PREFS_DEFPREFIX, "").startsWith("+")) {
+ 			WebSMS.this.log(R.string.log_wrong_defprefix);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@Override
+ 	protected final void onActivityResult(final int requestCode,
+ 			final int resultCode, final Intent data) {
+ 		if (requestCode == ARESULT_PICK_PHONE) {
+ 			if (resultCode == RESULT_OK) {
+ 				final Uri u = data.getData();
+ 				if (u == null) {
+ 					return;
+ 				}
+ 				final String phone = ContactsWrapper.getInstance()
+ 						.getNameAndNumber(this, u)
+ 						+ ", ";
+ 				String t = this.etTo.getText().toString().trim();
+ 				if (t.length() == 0) {
+ 					t = phone;
+ 				} else if (t.endsWith(",")) {
+ 					t += " " + phone;
+ 				} else {
+ 					t += ", " + phone;
+ 				}
+ 				lastTo = t;
+ 				this.etTo.setText(t);
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@Override
+ 	protected final void onNewIntent(final Intent intent) {
+ 		super.onNewIntent(intent);
+ 		this.parseIntent(intent);
+ 	}
+ 
+ 	/**
+ 	 * Update {@link ConnectorSpec}s.
+ 	 */
+ 	private void updateConnectors() {
+ 		// query for connectors
+ 		final Intent i = new Intent(Connector.ACTION_CONNECTOR_UPDATE);
+ 		Log.d(TAG, "send broadcast: " + i.getAction());
+ 		this.sendBroadcast(i);
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@Override
+ 	protected final void onResume() {
+ 		super.onResume();
+ 		// set accounts' balance to gui
+ 		this.updateBalance();
+ 
+ 		// if coming from prefs..
+ 		if (doPreferences) {
+ 			this.reloadPrefs();
+ 			this.updateConnectors();
+ 			doPreferences = false;
+ 			final SharedPreferences p = PreferenceManager
+ 					.getDefaultSharedPreferences(this);
+ 			final String defPrefix = p.getString(PREFS_DEFPREFIX, "+49");
+ 			final String defSender = p.getString(PREFS_SENDER, "");
+ 			final ConnectorSpec[] css = getConnectors(
+ 					ConnectorSpec.CAPABILITIES_BOOTSTRAP, // .
+ 					(short) (ConnectorSpec.STATUS_ENABLED | // .
+ 					ConnectorSpec.STATUS_READY));
+ 			for (ConnectorSpec cs : css) {
+ 				runCommand(this, cs, ConnectorCommand.bootstrap(defPrefix,
+ 						defSender));
+ 			}
+ 		} else {
+ 			// check is count of connectors changed
+ 			final List<ResolveInfo> ri = this.getPackageManager()
+ 					.queryBroadcastReceivers(
+ 							new Intent(Connector.ACTION_CONNECTOR_UPDATE), 0);
+ 			final int s1 = ri.size();
+ 			final int s2 = CONNECTORS.size();
+ 			if (s1 != s2) {
+ 				Log.d(TAG, "clear connector cache (" + s1 + "/" + s2 + ")");
+ 				CONNECTORS.clear();
+ 				this.updateConnectors();
+ 			}
+ 		}
+ 
+ 		this.setButtons();
+ 
+ 		if (lastTo == null || lastTo.length() == 0) {
+ 			final SharedPreferences p = PreferenceManager
+ 					.getDefaultSharedPreferences(this);
+ 			lastTo = p.getString(PREFS_DEFAULT_RECIPIENT, null);
+ 		}
+ 
+ 		// reload text/recipient from local store
+ 		if (lastMsg != null) {
+ 			this.etText.setText(lastMsg);
+ 		} else {
+ 			this.etText.setText("");
+ 		}
+ 		if (lastTo != null) {
+ 			this.etTo.setText(lastTo);
+ 		} else {
+ 			this.etTo.setText("");
+ 		}
+ 
+ 		if (lastTo != null && lastTo.length() > 0) {
+ 			this.etText.requestFocus();
+ 		} else {
+ 			this.etTo.requestFocus();
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Update balance.
+ 	 */
+ 	private void updateBalance() {
+ 		final StringBuilder buf = new StringBuilder();
+ 		final ConnectorSpec[] css = getConnectors(
+ 				ConnectorSpec.CAPABILITIES_UPDATE, // .
+ 				ConnectorSpec.STATUS_ENABLED);
+ 		for (ConnectorSpec cs : css) {
+ 			final String b = cs.getBalance();
+ 			if (b == null || b.length() == 0) {
+ 				continue;
+ 			}
+ 			if (buf.length() > 0) {
+ 				buf.append(", ");
+ 			}
+ 			buf.append(cs.getName());
+ 			buf.append(": ");
+ 			buf.append(b);
+ 		}
+ 
+ 		this.tvBalances.setText(this.getString(R.string.free_) + " "
+ 				+ buf.toString() + " "
+ 				+ this.getString(R.string.click_for_update));
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@Override
+ 	protected final void onPause() {
+ 		super.onPause();
+ 		// store input data to persitent stores
+ 		lastMsg = this.etText.getText().toString();
+ 		lastTo = this.etTo.getText().toString();
+ 
+ 		// store input data to preferences
+ 		final Editor editor = PreferenceManager.getDefaultSharedPreferences(
+ 				this).edit();
+ 		// common
+ 		editor.putString(PREFS_TO, lastTo);
+ 		editor.putString(PREFS_TEXT, lastMsg);
+ 		// commit changes
+ 		editor.commit();
+ 
+ 		this.savePreferences();
+ 	}
+ 
+ 	@Override
+ 	protected final void onDestroy() {
+ 		super.onDestroy();
+ 		final Editor editor = PreferenceManager.getDefaultSharedPreferences(
+ 				this).edit();
+ 		try {
+ 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
+ 			ObjectOutputStream objOut = new ObjectOutputStream(
+ 					new BufferedOutputStream(out, BUFSIZE));
+ 			objOut.writeObject(CONNECTORS);
+ 			objOut.close();
+ 			final String s = String.valueOf(Base64Coder.encode(out
+ 					.toByteArray()));
+ 			Log.d(TAG, s);
+ 			editor.putString(PREFS_CONNECTORS, s);
+ 		} catch (IOException e) {
+ 			editor.remove(PREFS_CONNECTORS);
+ 			Log.e(TAG, "IO", e);
+ 		}
+ 		editor.commit();
+ 	}
+ 
+ 	/**
+ 	 * Read static variables holding preferences.
+ 	 */
+ 	private void reloadPrefs() {
+ 		final SharedPreferences p = PreferenceManager
+ 				.getDefaultSharedPreferences(this);
+ 		final boolean bShowChangeConnector = !p.getBoolean(
+ 				PREFS_HIDE_CHANGE_CONNECTOR_BUTTON, false);
+ 		final boolean bShowEmoticons = !p.getBoolean(PREFS_HIDE_EMO_BUTTON,
+ 				false);
+ 		final boolean bShowCancel = !p.getBoolean(PREFS_HIDE_CANCEL_BUTTON,
+ 				false);
+ 		final boolean bShowClearRecipients = !p.getBoolean(
+ 				PREFS_HIDE_CLEAR_RECIPIENTS_BUTTON, false);
+ 		final boolean bShowSelectRecipients = !p.getBoolean(
+ 				PREFS_HIDE_SELECT_RECIPIENTS_BUTTON, false);
+ 		View v = this.findViewById(R.id.select);
+ 		if (bShowSelectRecipients) {
+ 			v.setVisibility(View.VISIBLE);
+ 		} else {
+ 			v.setVisibility(View.GONE);
+ 		}
+ 		v = this.findViewById(R.id.clear);
+ 		if (bShowClearRecipients) {
+ 			v.setVisibility(View.VISIBLE);
+ 		} else {
+ 			v.setVisibility(View.GONE);
+ 		}
+ 		v = this.findViewById(R.id.emo);
+ 		if (bShowEmoticons) {
+ 			v.setVisibility(View.VISIBLE);
+ 		} else {
+ 			v.setVisibility(View.GONE);
+ 		}
+ 
+ 		v = this.findViewById(R.id.change_connector);
+ 		if (bShowChangeConnector) {
+ 			v.setVisibility(View.VISIBLE);
+ 		} else {
+ 			v.setVisibility(View.GONE);
+ 		}
+ 		v = this.findViewById(R.id.cancel);
+ 		if (bShowCancel) {
+ 			v.setVisibility(View.VISIBLE);
+ 		} else {
+ 			v.setVisibility(View.GONE);
+ 		}
+ 
+ 		prefsConnectorID = p.getString(PREFS_CONNECTOR_ID, "");
+ 		prefsConnectorSpec = getConnectorByID(prefsConnectorID);
+ 		if (prefsConnectorSpec != null
+ 				&& prefsConnectorSpec.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
+ 			prefsSubConnectorSpec = prefsConnectorSpec.getSubConnector(p
+ 					.getString(PREFS_SUBCONNECTOR_ID, ""));
+ 			if (prefsSubConnectorSpec == null) {
+ 				prefsSubConnectorSpec = prefsConnectorSpec.// .
+ 						getSubConnectors()[0];
+ 			}
+ 		} else {
+ 			ConnectorSpec[] connectors = getConnectors(
+ 					ConnectorSpec.CAPABILITIES_SEND,
+ 					ConnectorSpec.STATUS_ENABLED);
+ 			if (connectors.length == 1) {
+ 				prefsConnectorSpec = connectors[0];
+ 				prefsSubConnectorSpec = prefsConnectorSpec // .
+ 						.getSubConnectors()[0];
+ 				Toast.makeText(
+ 						this,
+ 						this.getString(R.string.connectors_switch) + " "
+ 								+ prefsConnectorSpec.getName(),
+ 						Toast.LENGTH_LONG).show();
+ 			} else {
+ 				prefsConnectorSpec = null;
+ 				prefsSubConnectorSpec = null;
+ 			}
+ 		}
+ 
+ 		MobilePhoneAdapter.setMoileNubersObly(p.getBoolean(PREFS_MOBILES_ONLY,
+ 				false));
+ 
+ 		prefsNoAds = this.hideAds();
+ 		this.displayAds(false);
+ 		this.setButtons();
+ 	}
+ 
+ 	/**
+ 	 * Check for signature updates.
+ 	 * 
+ 	 * @return true if ads should be hidden
+ 	 */
+ 	private boolean hideAds() {
+ 		Log.d(TAG, "hideAds()");
+ 		final SharedPreferences p = PreferenceManager
+ 				.getDefaultSharedPreferences(this);
+ 		final File f = new File(NOADS_SIGNATURES);
+ 		try {
+ 			if (f.exists()) {
+ 				Log.d(TAG, "found file " + NOADS_SIGNATURES);
+ 				final BufferedReader br = new BufferedReader(new FileReader(f));
+ 				final byte[] publicKey = Base64Coder.decode(KEY);
+ 				final KeyFactory keyFactory = KeyFactory.getInstance(ALGO);
+ 				PublicKey pk = keyFactory
+ 						.generatePublic(new X509EncodedKeySpec(publicKey));
+ 				final String h = this.getImeiHash();
+ 				Log.d(TAG, "hash: " + h);
+ 				boolean ret = false;
+ 				while (true) {
+ 					String l = br.readLine();
+ 					if (l == null) {
+ 						Log.d(TAG, "break;");
+ 						break;
+ 					}
+ 					Log.d(TAG, "read line: " + l);
+ 					try {
+ 						byte[] signature = Base64Coder.decode(l);
+ 						Signature sig = Signature.getInstance(SIGALGO);
+ 						sig.initVerify(pk);
+ 						sig.update(h.getBytes());
+ 						ret = sig.verify(signature);
+ 						Log.d(TAG, "ret: " + ret);
+ 						if (ret) {
+ 							break;
+ 						}
+ 					} catch (IllegalArgumentException e) {
+ 						Log.w(TAG, "error reading line", e);
+ 					}
+ 				}
+ 				br.close();
+ 				f.delete();
+ 				Log.d(TAG, "put: " + ret);
+ 				p.edit().putBoolean(PREFS_HIDEADS, ret).commit();
+ 			}
+ 		} catch (Exception e) {
+ 			Log.e(TAG, "error reading signatures", e);
+ 		}
+ 		Log.d(TAG, "return: " + p.getBoolean(PREFS_HIDEADS, false));
+ 		return p.getBoolean(PREFS_HIDEADS, false);
+ 	}
+ 
+ 	/**
+ 	 * Show/hide, enable/disable send buttons.
+ 	 */
+ 	private void setButtons() {
+ 		if (prefsConnectorSpec != null && prefsSubConnectorSpec != null
+ 				&& prefsConnectorSpec.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
+ 			final boolean sFlashsms = prefsSubConnectorSpec
+ 					.hasFeatures(SubConnectorSpec.FEATURE_FLASHSMS);
+ 			final boolean sCustomsender = prefsSubConnectorSpec
+ 					.hasFeatures(SubConnectorSpec.FEATURE_CUSTOMSENDER);
+ 			final boolean sSendLater = prefsSubConnectorSpec
+ 					.hasFeatures(SubConnectorSpec.FEATURE_SENDLATER);
+ 			if (sFlashsms || sCustomsender || sSendLater) {
+ 				this.vExtras.setVisibility(View.VISIBLE);
+ 			} else {
+ 				this.vExtras.setVisibility(View.GONE);
+ 			}
+ 			if (this.showExtras && sFlashsms) {
+ 				this.vFlashSMS.setVisibility(View.VISIBLE);
+ 			} else {
+ 				this.vFlashSMS.setVisibility(View.GONE);
+ 			}
+ 			if (this.showExtras && sCustomsender) {
+ 				this.vCustomSender.setVisibility(View.VISIBLE);
+ 			} else {
+ 				this.vCustomSender.setVisibility(View.GONE);
+ 			}
+ 			if (this.showExtras && sSendLater) {
+ 				this.vSendLater.setVisibility(View.VISIBLE);
+ 			} else {
+ 				this.vSendLater.setVisibility(View.GONE);
+ 			}
+ 
+ 			String t = this.getString(R.string.app_name) + " - "
+ 					+ prefsConnectorSpec.getName();
+ 			if (prefsConnectorSpec.getSubConnectorCount() > 1) {
+ 				t += " - " + prefsSubConnectorSpec.getName();
+ 			}
+ 			this.setTitle(t);
+ 			((TextView) this.findViewById(R.id.text_connector))
+ 					.setText(prefsConnectorSpec.getName());
+ 			((Button) this.findViewById(R.id.send_)).setEnabled(true);
+ 		} else {
+ 			this.setTitle(R.string.app_name);
+ 			((TextView) this.findViewById(R.id.text_connector)).setText("");
+ 			((Button) this.findViewById(R.id.send_)).setEnabled(false);
+ 			if (getConnectors(0, 0).length != 0) {
+ 				Toast.makeText(this, R.string.log_noselectedconnector,
+ 						Toast.LENGTH_SHORT).show();
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Resets persistent store.
+ 	 */
+ 	private void reset() {
+ 		this.etText.setText("");
+ 		this.etTo.setText("");
+ 		lastMsg = null;
+ 		lastTo = null;
+ 		lastCustomSender = null;
+ 		lastSendLater = -1;
+ 		// save user preferences
+ 		SharedPreferences.Editor editor = PreferenceManager
+ 				.getDefaultSharedPreferences(this).edit();
+ 		editor.putString(PREFS_TO, "");
+ 		editor.putString(PREFS_TEXT, "");
+ 		// commit changes
+ 		editor.commit();
+ 	}
+ 
+ 	/** Save prefs. */
+ 	final void savePreferences() {
+ 		if (prefsConnectorSpec != null) {
+ 			PreferenceManager.getDefaultSharedPreferences(this).edit()
+ 					.putString(PREFS_CONNECTOR_ID,
+ 							prefsConnectorSpec.getPackage()).commit();
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Run Connector.doUpdate().
+ 	 */
+ 	private void updateFreecount() {
+ 		final SharedPreferences p = PreferenceManager
+ 				.getDefaultSharedPreferences(this);
+ 		final String defPrefix = p.getString(PREFS_DEFPREFIX, "+49");
+ 		final String defSender = p.getString(PREFS_SENDER, "");
+ 		final ConnectorSpec[] css = getConnectors(
+ 				ConnectorSpec.CAPABILITIES_UPDATE, // .
+ 				(short) (ConnectorSpec.STATUS_ENABLED | // .
+ 				ConnectorSpec.STATUS_READY));
+ 		for (ConnectorSpec cs : css) {
+ 			if (cs.isRunning()) {
+ 				// skip running connectors
+ 				Log.d(TAG, "skip running connector: " + cs.getName());
+ 				continue;
+ 			}
+ 			runCommand(this, cs, ConnectorCommand.update(defPrefix, defSender));
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Send a command as broadcast.
+ 	 * 
+ 	 * @param context
+ 	 *            WebSMS required for performance issues
+ 	 * @param connector
+ 	 *            {@link ConnectorSpec}
+ 	 * @param command
+ 	 *            {@link ConnectorCommand}
+ 	 */
+ 	static final void runCommand(final WebSMS context,
+ 			final ConnectorSpec connector, final ConnectorCommand command) {
+ 		connector.setErrorMessage((String) null);
+ 		final Intent intent = command.setToIntent(null);
+ 		short t = command.getType();
+ 		switch (t) {
+ 		case ConnectorCommand.TYPE_BOOTSTRAP:
+ 			intent.setAction(connector.getPackage()
+ 					+ Connector.ACTION_RUN_BOOTSTRAP);
+ 			connector.addStatus(ConnectorSpec.STATUS_BOOTSTRAPPING);
+ 			break;
+ 		case ConnectorCommand.TYPE_SEND:
+ 			intent.setAction(connector.getPackage() // .
+ 					+ Connector.ACTION_RUN_SEND);
+ 			connector.setToIntent(intent);
+ 			connector.addStatus(ConnectorSpec.STATUS_SENDING);
+ 			break;
+ 		case ConnectorCommand.TYPE_UPDATE:
+ 			intent.setAction(connector.getPackage()
+ 					+ Connector.ACTION_RUN_UPDATE);
+ 			connector.addStatus(ConnectorSpec.STATUS_UPDATING);
+ 			break;
+ 		default:
+ 			break;
+ 		}
+ 		if (me != null && (t == ConnectorCommand.TYPE_BOOTSTRAP || // .
+ 				t == ConnectorCommand.TYPE_UPDATE)) {
+ 			me.setProgressBarIndeterminateVisibility(true);
+ 		}
+ 		Log.d(TAG, "send broadcast: " + intent.getAction());
+ 		context.sendBroadcast(intent);
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	public final void onClick(final View v) {
+ 		switch (v.getId()) {
+ 		case R.id.freecount:
+ 			this.updateFreecount();
+ 			return;
+ 		case R.id.send_:
+ 			this.send(prefsConnectorSpec, WebSMS.getSelectedSubConnectorID());
+ 			return;
+ 		case R.id.cancel:
+ 			this.reset();
+ 			return;
+ 		case R.id.select:
+ 			this.startActivityForResult(ContactsWrapper.getInstance()
+ 					.getPickPhoneIntent(), ARESULT_PICK_PHONE);
+ 			return;
+ 		case R.id.clear:
+ 			this.etTo.setText("");
+ 			lastTo = null;
+ 			return;
+ 		case R.id.change_connector:
+ 			this.changeConnectorMenu();
+ 			return;
+ 		case R.id.extras:
+ 			this.showExtras = !this.showExtras;
+ 			this.setButtons();
+ 			return;
+ 		case R.id.custom_sender:
+ 			final CheckBox cs = (CheckBox) this.vCustomSender;
+ 			if (cs.isChecked()) {
+ 				this.showDialog(DIALOG_CUSTOMSENDER);
+ 			} else {
+ 				lastCustomSender = null;
+ 			}
+ 			return;
+ 		case R.id.send_later:
+ 			final CheckBox sl = (CheckBox) this.vSendLater;
+ 			if (sl.isChecked()) {
+ 				this.showDialog(DIALOG_SENDLATER_DATE);
+ 			} else {
+ 				lastSendLater = -1;
+ 			}
+ 			return;
+ 		case R.id.emo:
+ 			this.showDialog(DIALOG_EMO);
+ 			return;
+ 		default:
+ 			return;
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@Override
+ 	public final boolean onCreateOptionsMenu(final Menu menu) {
+ 		MenuInflater inflater = this.getMenuInflater();
+ 		inflater.inflate(R.menu.menu, menu);
+ 		if (prefsNoAds) {
+ 			menu.removeItem(R.id.item_donate);
+ 		}
+ 		final SharedPreferences p = PreferenceManager
+ 				.getDefaultSharedPreferences(this);
+ 		final boolean bShowSendButton = !p.getBoolean(PREFS_HIDE_SEND_IN_MENU,
+ 				false);
+ 		if (!bShowSendButton) {
+ 			menu.removeItem(R.id.item_send);
+ 		}
+ 		return true;
+ 	}
+ 
+ 	/**
+ 	 * Display "change connector" menu.
+ 	 */
+ 	private void changeConnectorMenu() {
+ 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+ 		builder.setIcon(android.R.drawable.ic_menu_share);
+ 		builder.setTitle(R.string.change_connector_);
+ 		final ArrayList<String> items = new ArrayList<String>();
+ 		final ConnectorSpec[] css = getConnectors(
+ 				ConnectorSpec.CAPABILITIES_SEND, ConnectorSpec.STATUS_ENABLED);
+ 		SubConnectorSpec[] scs;
+ 		String n;
+ 		for (ConnectorSpec cs : css) {
+ 			scs = cs.getSubConnectors();
+ 			if (scs.length <= 1) {
+ 				items.add(cs.getName());
+ 			} else {
+ 				n = cs.getName() + " - ";
+ 				for (SubConnectorSpec sc : scs) {
+ 					items.add(n + sc.getName());
+ 				}
+ 			}
+ 		}
+ 		scs = null;
+ 		n = null;
+ 
+ 		if (items.size() == 0) {
+ 			Toast.makeText(this, R.string.log_noreadyconnector,
+ 					Toast.LENGTH_LONG).show();
+ 		}
+ 
+ 		builder.setItems(items.toArray(new String[0]),
+ 				new DialogInterface.OnClickListener() {
+ 					public void onClick(final DialogInterface d, // .
+ 							final int item) {
+ 						final SubConnectorSpec[] ret = ConnectorSpec
+ 								.getSubConnectorReturnArray();
+ 						prefsConnectorSpec = getConnectorByName(
+ 								items.get(item), ret);
+ 						prefsSubConnectorSpec = ret[0];
+ 						WebSMS.this.setButtons();
+ 						// save user preferences
+ 						final Editor e = PreferenceManager
+ 								.getDefaultSharedPreferences(WebSMS.this)
+ 								.edit();
+ 						e.putString(PREFS_CONNECTOR_ID, prefsConnectorSpec
+ 								.getPackage());
+ 						e.putString(PREFS_SUBCONNECTOR_ID,
+ 								prefsSubConnectorSpec.getID());
+ 						e.commit();
+ 					}
+ 				});
+ 		builder.create().show();
+ 	}
+ 
+ 	/**
+ 	 * Save some characters by stripping blanks.
+ 	 */
+ 	private void saveChars() {
+ 		String s = this.etText.getText().toString().trim();
+ 		if (s.length() == 0 || s.indexOf(" ") < 0) {
+ 			return;
+ 		}
+ 		StringBuilder buf = new StringBuilder();
+ 		final String[] ss = s.split(" ");
+ 		s = null;
+ 		for (String ts : ss) {
+ 			final int l = ts.length();
+ 			if (l == 0) {
+ 				continue;
+ 			}
+ 			buf.append(Character.toUpperCase(ts.charAt(0)));
+ 			if (l == 1) {
+ 				continue;
+ 			}
+ 			buf.append(ts.substring(1));
+ 		}
+ 		this.etText.setText(buf.toString());
+ 	}
+ 
+ 	/**
+ 	 *{@inheritDoc}
+ 	 */
+ 	@Override
+ 	public final boolean onOptionsItemSelected(final MenuItem item) {
+ 		switch (item.getItemId()) {
+ 		case R.id.item_send:
+ 			// send by menu item
+ 			this.send(prefsConnectorSpec, WebSMS.getSelectedSubConnectorID());
+ 			return true;
+ 		case R.id.item_savechars:
+ 			this.saveChars();
+ 			return true;
+ 		case R.id.item_settings: // start settings activity
+ 			this.startActivity(new Intent(this, Preferences.class));
+ 			return true;
+ 		case R.id.item_donate:
+ 			this.showDialog(DIALOG_PREDONATE);
+ 			return true;
+ 		case R.id.item_connector:
+ 			this.changeConnectorMenu();
+ 			return true;
+ 		default:
+ 			return false;
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Create a Emoticons {@link Dialog}.
+ 	 * 
+ 	 * @return Emoticons {@link Dialog}
+ 	 */
+ 	private Dialog createEmoticonsDialog() {
+ 		final Dialog d = new Dialog(this);
+ 		d.setTitle(R.string.emo_);
+ 		d.setContentView(R.layout.emo);
+ 		d.setCancelable(true);
+ 		final GridView gridview = (GridView) d.findViewById(R.id.gridview);
+ 		gridview.setAdapter(new BaseAdapter() {
+ 			// references to our images
+ 			private Integer[] mThumbIds = { R.drawable.emo_im_angel,
+ 					R.drawable.emo_im_cool, R.drawable.emo_im_crying,
+ 					R.drawable.emo_im_foot_in_mouth, R.drawable.emo_im_happy,
+ 					R.drawable.emo_im_kissing, R.drawable.emo_im_laughing,
+ 					R.drawable.emo_im_lips_are_sealed,
+ 					R.drawable.emo_im_money_mouth, R.drawable.emo_im_sad,
+ 					R.drawable.emo_im_surprised,
+ 					R.drawable.emo_im_tongue_sticking_out,
+ 					R.drawable.emo_im_undecided, R.drawable.emo_im_winking,
+ 					R.drawable.emo_im_wtf, R.drawable.emo_im_yelling };
+ 
+ 			@Override
+ 			public long getItemId(final int position) {
+ 				return 0;
+ 			}
+ 
+ 			@Override
+ 			public Object getItem(final int position) {
+ 				return null;
+ 			}
+ 
+ 			@Override
+ 			public int getCount() {
+ 				return this.mThumbIds.length;
+ 			}
+ 
+ 			@Override
+ 			public View getView(final int position, final View convertView,
+ 					final ViewGroup parent) {
+ 				ImageView imageView;
+ 				if (convertView == null) { // if it's not recycled,
+ 					// initialize some attributes
+ 					imageView = new ImageView(WebSMS.this);
+ 					imageView.setLayoutParams(new GridView.LayoutParams(
+ 							EMOTICONS_SIZE, EMOTICONS_SIZE));
+ 					imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+ 					// imageView.setPadding(0, 0, 0, 0);
+ 				} else {
+ 					imageView = (ImageView) convertView;
+ 				}
+ 
+ 				imageView.setImageResource(this.mThumbIds[position]);
+ 				return imageView;
+ 			}
+ 		});
+ 		gridview.setOnItemClickListener(new OnItemClickListener() {
+ 			/** Emoticon id: angel. */
+ 			private static final int EMO_ANGEL = 0;
+ 			/** Emoticon id: cool. */
+ 			private static final int EMO_COOL = 1;
+ 			/** Emoticon id: crying. */
+ 			private static final int EMO_CRYING = 2;
+ 			/** Emoticon id: foot in mouth. */
+ 			private static final int EMO_FOOT_IN_MOUTH = 3;
+ 			/** Emoticon id: happy. */
+ 			private static final int EMO_HAPPY = 4;
+ 			/** Emoticon id: kissing. */
+ 			private static final int EMO_KISSING = 5;
+ 			/** Emoticon id: laughing. */
+ 			private static final int EMO_LAUGHING = 6;
+ 			/** Emoticon id: lips are sealed. */
+ 			private static final int EMO_LIPS_SEALED = 7;
+ 			/** Emoticon id: money. */
+ 			private static final int EMO_MONEY = 8;
+ 			/** Emoticon id: sad. */
+ 			private static final int EMO_SAD = 9;
+ 			/** Emoticon id: suprised. */
+ 			private static final int EMO_SUPRISED = 10;
+ 			/** Emoticon id: tongue sticking out. */
+ 			private static final int EMO_TONGUE = 11;
+ 			/** Emoticon id: undecided. */
+ 			private static final int EMO_UNDICIDED = 12;
+ 			/** Emoticon id: winking. */
+ 			private static final int EMO_WINKING = 13;
+ 			/** Emoticon id: wtf. */
+ 			private static final int EMO_WTF = 14;
+ 			/** Emoticon id: yell. */
+ 			private static final int EMO_YELL = 15;
+ 
+ 			@Override
+ 			public void onItemClick(final AdapterView<?> adapter, final View v,
+ 					final int id, final long arg3) {
+ 				EditText et = WebSMS.this.etText;
+ 				String e = null;
+ 				switch (id) {
+ 				case EMO_ANGEL:
+ 					e = "O:-)";
+ 					break;
+ 				case EMO_COOL:
+ 					e = "8-)";
+ 					break;
+ 				case EMO_CRYING:
+ 					e = ";-)";
+ 					break;
+ 				case EMO_FOOT_IN_MOUTH:
+ 					e = ":-?";
+ 					break;
+ 				case EMO_HAPPY:
+ 					e = ":-)";
+ 					break;
+ 				case EMO_KISSING:
+ 					e = ":-*";
+ 					break;
+ 				case EMO_LAUGHING:
+ 					e = ":-D";
+ 					break;
+ 				case EMO_LIPS_SEALED:
+ 					e = ":-X";
+ 					break;
+ 				case EMO_MONEY:
+ 					e = ":-$";
+ 					break;
+ 				case EMO_SAD:
+ 					e = ":-(";
+ 					break;
+ 				case EMO_SUPRISED:
+ 					e = ":o";
+ 					break;
+ 				case EMO_TONGUE:
+ 					e = ":-P";
+ 					break;
+ 				case EMO_UNDICIDED:
+ 					e = ":-\\";
+ 					break;
+ 				case EMO_WINKING:
+ 					e = ";-)";
+ 					break;
+ 				case EMO_WTF:
+ 					e = "o.O";
+ 					break;
+ 				case EMO_YELL:
+ 					e = ":O";
+ 					break;
+ 				default:
+ 					break;
+ 				}
+ 				int i = et.getSelectionStart();
+ 				int j = et.getSelectionEnd();
+				if (i > j) {
+					int x = i;
+					i = j;
+					j = x;
+				}
+ 				String t = et.getText().toString();
+ 				StringBuilder buf = new StringBuilder();
+ 				buf.append(t.substring(0, i));
+ 				buf.append(e);
+ 				buf.append(t.substring(j));
+ 				et.setText(buf.toString());
+ 				et.setSelection(i + e.length());
+ 				d.dismiss();
+ 				et.requestFocus();
+ 			}
+ 		});
+ 		return d;
+ 	}
+ 
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	@Override
+ 	protected final Dialog onCreateDialog(final int id) {
+ 		AlertDialog.Builder builder;
+ 		switch (id) {
+ 		case DIALOG_PREDONATE:
+ 			builder = new AlertDialog.Builder(this);
+ 			builder.setIcon(R.drawable.ic_menu_star);
+ 			builder.setTitle(R.string.donate_);
+ 			builder.setMessage(R.string.predonate);
+ 			builder.setPositiveButton(R.string.donate_,
+ 					new DialogInterface.OnClickListener() {
+ 						public void onClick(final DialogInterface dialog,
+ 								final int which) {
+ 							try {
+ 								WebSMS.this.startActivity(new Intent(
+ 										Intent.ACTION_VIEW, Uri.parse(// .
+ 												WebSMS.this.getString(// .
+ 														R.string.donate_url))));
+ 							} catch (ActivityNotFoundException e) {
+ 								Log.e(TAG, "no browser", e);
+ 							} finally {
+ 								WebSMS.this.showDialog(DIALOG_POSTDONATE);
+ 							}
+ 						}
+ 					});
+ 			builder.setNegativeButton(android.R.string.cancel, null);
+ 			return builder.create();
+ 		case DIALOG_POSTDONATE:
+ 			builder = new AlertDialog.Builder(this);
+ 			builder.setIcon(R.drawable.ic_menu_star);
+ 			builder.setTitle(R.string.remove_ads_);
+ 			builder.setMessage(R.string.postdonate);
+ 			builder.setPositiveButton(R.string.send_,
+ 					new DialogInterface.OnClickListener() {
+ 						public void onClick(final DialogInterface dialog,
+ 								final int which) {
+ 							final Intent in = new Intent(Intent.ACTION_SEND);
+ 							in.putExtra(Intent.EXTRA_EMAIL, new String[] {
+ 									WebSMS.this.getString(// .
+ 											R.string.donate_mail), "" });
+ 							// FIXME: "" is a k9 hack. This is fixed in market
+ 							// on 26.01.10. wait some more time..
+ 							in.putExtra(Intent.EXTRA_TEXT, WebSMS.this
+ 									.getImeiHash());
+ 							in.putExtra(Intent.EXTRA_SUBJECT, WebSMS.this
+ 									.getString(// .
+ 									R.string.app_name)
+ 									+ " " + WebSMS.this.getString(// .
+ 											R.string.donate_subject));
+ 							in.setType("text/plain");
+ 							WebSMS.this.startActivity(in);
+ 						}
+ 					});
+ 			builder.setNegativeButton(android.R.string.cancel, null);
+ 			return builder.create();
+ 		case DIALOG_UPDATE:
+ 			builder = new AlertDialog.Builder(this);
+ 			builder.setIcon(android.R.drawable.ic_dialog_info);
+ 			builder.setTitle(R.string.changelog_);
+ 			final String[] changes = this.getResources().getStringArray(
+ 					R.array.updates);
+ 			final StringBuilder buf = new StringBuilder();
+ 			Object o = this.getPackageManager().getLaunchIntentForPackage(
+ 					"de.ub0r.android.smsdroid");
+ 			if (o == null) {
+ 				buf.append(changes[0]);
+ 			}
+ 			for (int i = 1; i < changes.length; i++) {
+ 				buf.append("\n\n");
+ 				buf.append(changes[i]);
+ 			}
+ 			builder.setIcon(android.R.drawable.ic_menu_info_details);
+ 			builder.setMessage(buf.toString().trim());
+ 			builder.setCancelable(true);
+ 			builder.setPositiveButton(android.R.string.ok, null);
+ 			if (o == null) {
+ 				builder.setNeutralButton("get SMSdroid",
+ 						new DialogInterface.OnClickListener() {
+ 							@Override
+ 							public void onClick(final DialogInterface d,
+ 									final int which) {
+ 								try {
+ 									WebSMS.this.startActivity(// .
+ 											new Intent(
+ 													Intent.ACTION_VIEW,
+ 													Uri.parse(// .
+ 															"market://search?q=pname:de.ub0r.android.smsdroid")));
+ 								} catch (ActivityNotFoundException e) {
+ 									Log.e(TAG, "no market", e);
+ 								}
+ 							}
+ 						});
+ 			}
+ 			return builder.create();
+ 		case DIALOG_CUSTOMSENDER:
+ 			builder = new AlertDialog.Builder(this);
+ 			builder.setTitle(R.string.custom_sender);
+ 			builder.setCancelable(true);
+ 			final EditText et = new EditText(this);
+ 			builder.setView(et);
+ 			builder.setPositiveButton(android.R.string.ok,
+ 					new DialogInterface.OnClickListener() {
+ 						public void onClick(final DialogInterface dialog,
+ 								final int id) {
+ 							WebSMS.lastCustomSender = et.getText().toString();
+ 						}
+ 					});
+ 			builder.setNegativeButton(android.R.string.cancel, null);
+ 			return builder.create();
+ 		case DIALOG_SENDLATER_DATE:
+ 			Calendar c = Calendar.getInstance();
+ 			return new DatePickerDialog(this, this, c.get(Calendar.YEAR), c
+ 					.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+ 		case DIALOG_SENDLATER_TIME:
+ 			c = Calendar.getInstance();
+ 			return new MyTimePickerDialog(this, this, c
+ 					.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true);
+ 		case DIALOG_EMO:
+ 			return this.createEmoticonsDialog();
+ 		default:
+ 			return null;
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Log text.
+ 	 * 
+ 	 * @param text
+ 	 *            text as resID
+ 	 */
+ 	public final void log(final int text) {
+ 		this.log(this.getString(text));
+ 	}
+ 
+ 	/**
+ 	 * Log text.
+ 	 * 
+ 	 * @param text
+ 	 *            text
+ 	 */
+ 	public final void log(final String text) {
+ 		try {
+ 			Toast.makeText(this.getApplicationContext(), text,
+ 					Toast.LENGTH_LONG).show();
+ 		} catch (RuntimeException e) {
+ 			Log.e(TAG, null, e);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Show AdView on top or on bottom.
+ 	 * 
+ 	 * @param top
+ 	 *            display ads on top.
+ 	 */
+ 	private void displayAds(final boolean top) {
+ 		if (prefsNoAds) {
+ 			// do not display any ads for donators
+ 			return;
+ 		}
+ 		if (top) {
+ 			// switch to AdView on top
+ 			this.onTop = true;
+ 		}
+ 		if (this.onTop) {
+ 			Log.d(TAG, "display ads on top");
+ 			this.findViewById(R.id.ad).setVisibility(View.VISIBLE);
+ 			this.findViewById(R.id.ad_bottom).setVisibility(View.GONE);
+ 		} else {
+ 			Log.d(TAG, "display ads on bottom");
+ 			this.findViewById(R.id.ad).setVisibility(View.GONE);
+ 			this.findViewById(R.id.ad_bottom).setVisibility(View.VISIBLE);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Send text.
+ 	 * 
+ 	 * @param connector
+ 	 *            which connector should be used.
+ 	 * @param subconnector
+ 	 *            selected {@link SubConnectorSpec} ID
+ 	 */
+ 	private void send(final ConnectorSpec connector, // .
+ 			final String subconnector) {
+ 		// fetch text/recipient
+ 		final String to = this.etTo.getText().toString();
+ 		final String text = this.etText.getText().toString();
+ 		if (to.length() == 0 || text.length() == 0) {
+ 			return;
+ 		}
+ 
+ 		this.displayAds(true);
+ 
+ 		CheckBox v = (CheckBox) this.findViewById(R.id.flashsms);
+ 		final boolean flashSMS = (v.getVisibility() == View.VISIBLE)
+ 				&& v.isEnabled() && v.isChecked();
+ 		final SharedPreferences p = PreferenceManager
+ 				.getDefaultSharedPreferences(this);
+ 		final String defPrefix = p.getString(PREFS_DEFPREFIX, "+49");
+ 		final String defSender = p.getString(PREFS_SENDER, "");
+ 
+ 		final String[] tos = Utils.parseRecipients(to);
+ 		final ConnectorCommand command = ConnectorCommand.send(subconnector,
+ 				defPrefix, defSender, tos, text, flashSMS);
+ 		command.setCustomSender(lastCustomSender);
+ 		command.setSendLater(lastSendLater);
+ 
+ 		try {
+ 			if (connector.getSubConnector(subconnector).hasFeatures(
+ 					SubConnectorSpec.FEATURE_MULTIRECIPIENTS)
+ 					|| tos.length == 1) {
+ 				runCommand(this, connector, command);
+ 			} else {
+ 				ConnectorCommand cc;
+ 				for (String t : tos) {
+ 					if (t.trim().length() < 1) {
+ 						continue;
+ 					}
+ 					cc = (ConnectorCommand) command.clone();
+ 					cc.setRecipients(t);
+ 					runCommand(this, connector, cc);
+ 				}
+ 			}
+ 		} catch (Exception e) {
+ 			Log.e(TAG, null, e);
+ 		} finally {
+ 			this.reset();
+ 			if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
+ 					PREFS_AUTOEXIT, false)) {
+ 				try {
+ 					Thread.sleep(SLEEP_BEFORE_EXIT);
+ 				} catch (InterruptedException e) {
+ 					Log.e(TAG, null, e);
+ 				}
+ 				this.finish();
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * @return ID of selected {@link SubConnectorSpec}
+ 	 */
+ 	private static String getSelectedSubConnectorID() {
+ 		if (prefsSubConnectorSpec == null) {
+ 			return null;
+ 		}
+ 		return prefsSubConnectorSpec.getID();
+ 	}
+ 
+ 	/**
+ 	 * A Date was set.
+ 	 * 
+ 	 * @param view
+ 	 *            DatePicker View
+ 	 * @param year
+ 	 *            year set
+ 	 * @param monthOfYear
+ 	 *            month set
+ 	 * @param dayOfMonth
+ 	 *            day set
+ 	 */
+ 	public final void onDateSet(final DatePicker view, final int year,
+ 			final int monthOfYear, final int dayOfMonth) {
+ 		final Calendar c = Calendar.getInstance();
+ 		if (lastSendLater > 0) {
+ 			c.setTimeInMillis(lastSendLater);
+ 		}
+ 		c.set(Calendar.YEAR, year);
+ 		c.set(Calendar.MONTH, monthOfYear);
+ 		c.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+ 		lastSendLater = c.getTimeInMillis();
+ 
+ 		MyTimePickerDialog.setOnlyQuaters(prefsSubConnectorSpec
+ 				.hasFeatures(SubConnectorSpec.FEATURE_SENDLATER_QUARTERS));
+ 		this.showDialog(DIALOG_SENDLATER_TIME);
+ 	}
+ 
+ 	/**
+ 	 * A Time was set.
+ 	 * 
+ 	 * @param view
+ 	 *            TimePicker View
+ 	 * @param hour
+ 	 *            hour set
+ 	 * @param minutes
+ 	 *            minutes set
+ 	 */
+ 	public final void onTimeSet(final TimePicker view, final int hour,
+ 			final int minutes) {
+ 		if (prefsSubConnectorSpec
+ 				.hasFeatures(SubConnectorSpec.FEATURE_SENDLATER_QUARTERS)
+ 				&& minutes % 15 != 0) {
+ 			Toast.makeText(this, R.string.error_sendlater_quater,
+ 					Toast.LENGTH_LONG).show();
+ 			return;
+ 		}
+ 
+ 		final Calendar c = Calendar.getInstance();
+ 		if (lastSendLater > 0) {
+ 			c.setTimeInMillis(lastSendLater);
+ 		}
+ 		c.set(Calendar.HOUR_OF_DAY, hour);
+ 		c.set(Calendar.MINUTE, minutes);
+ 		lastSendLater = c.getTimeInMillis();
+ 	}
+ 
+ 	/**
+ 	 * Get MD5 hash of the IMEI (device id).
+ 	 * 
+ 	 * @return MD5 hash of IMEI
+ 	 */
+ 	private String getImeiHash() {
+ 		if (imeiHash == null) {
+ 			// get imei
+ 			TelephonyManager mTelephonyMgr = (TelephonyManager) this
+ 					.getSystemService(TELEPHONY_SERVICE);
+ 			final String did = mTelephonyMgr.getDeviceId();
+ 			if (did != null) {
+ 				imeiHash = Utils.md5(did);
+ 			}
+ 		}
+ 		return imeiHash;
+ 	}
+ 
+ 	/**
+ 	 * Add or update a {@link ConnectorSpec}.
+ 	 * 
+ 	 * @param connector
+ 	 *            connector
+ 	 */
+ 	static final void addConnector(final ConnectorSpec connector) {
+ 		synchronized (CONNECTORS) {
+ 			if (connector == null || connector.getPackage() == null
+ 					|| connector.getName() == null) {
+ 				return;
+ 			}
+ 			ConnectorSpec c = getConnectorByID(connector.getPackage());
+ 			if (c != null) {
+ 				c.setErrorMessage((String) null); // fix sticky error status
+ 				c.update(connector);
+ 			} else {
+ 				final String name = connector.getName();
+ 				if (connector.getSubConnectorCount() == 0 || name == null
+ 						|| connector.getPackage() == null) {
+ 					Log.w(TAG, "skipped adding defect connector: " + name);
+ 					return;
+ 				}
+ 				Log.d(TAG, "add connector with id: " + connector.getPackage());
+ 				Log.d(TAG, "add connector with name: " + name);
+ 				boolean added = false;
+ 				final int l = CONNECTORS.size();
+ 				ConnectorSpec cs;
+ 				try {
+ 					for (int i = 0; i < l; i++) {
+ 						cs = CONNECTORS.get(i);
+ 						if (name.compareToIgnoreCase(cs.getName()) < 0) {
+ 							CONNECTORS.add(i, connector);
+ 							added = true;
+ 							break;
+ 						}
+ 					}
+ 				} catch (NullPointerException e) {
+ 					Log.e(TAG, "error while sorting", e);
+ 				}
+ 				if (!added) {
+ 					CONNECTORS.add(connector);
+ 				}
+ 				c = connector;
+ 				if (me != null) {
+ 					final SharedPreferences p = PreferenceManager
+ 							.getDefaultSharedPreferences(me);
+ 
+ 					// update connectors balance if needed
+ 					if (c.getBalance() == null && c.isReady() && !c.isRunning()
+ 							&& c.hasCapabilities(// .
+ 									ConnectorSpec.CAPABILITIES_UPDATE)
+ 							&& p.getBoolean(PREFS_AUTOUPDATE, false)) {
+ 						final String defPrefix = p.getString(PREFS_DEFPREFIX,
+ 								"+49");
+ 						final String defSender = p.getString(PREFS_SENDER, "");
+ 						runCommand(me, c, ConnectorCommand.update(defPrefix,
+ 								defSender));
+ 					}
+ 				}
+ 			}
+ 			if (me != null) {
+ 				final SharedPreferences p = PreferenceManager
+ 						.getDefaultSharedPreferences(me);
+ 
+ 				if (prefsConnectorSpec == null
+ 						&& prefsConnectorID.equals(connector.getPackage())) {
+ 					prefsConnectorSpec = connector;
+ 
+ 					prefsSubConnectorSpec = connector.getSubConnector(p
+ 							.getString(PREFS_SUBCONNECTOR_ID, ""));
+ 					me.setButtons();
+ 				}
+ 
+ 				final String b = c.getBalance();
+ 				final String ob = c.getOldBalance();
+ 				if (b != null && (ob == null || !b.equals(ob))) {
+ 					me.updateBalance();
+ 				}
+ 
+ 				boolean runningConnectors = getConnectors(
+ 						ConnectorSpec.CAPABILITIES_UPDATE,
+ 						ConnectorSpec.STATUS_ENABLED
+ 								| ConnectorSpec.STATUS_UPDATING).length != 0;
+ 				if (!runningConnectors) {
+ 					runningConnectors = getConnectors(
+ 							ConnectorSpec.CAPABILITIES_BOOTSTRAP,
+ 							ConnectorSpec.STATUS_ENABLED
+ 									| ConnectorSpec.STATUS_BOOTSTRAPPING).// .
+ 					length != 0;
+ 				}
+ 				me.setProgressBarIndeterminateVisibility(runningConnectors);
+ 				if (prefsConnectorSpec != null && // .
+ 						prefsConnectorSpec.equals(c)) {
+ 					me.setButtons();
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Get {@link ConnectorSpec} by ID.
+ 	 * 
+ 	 * @param id
+ 	 *            ID
+ 	 * @return {@link ConnectorSpec}
+ 	 */
+ 	private static ConnectorSpec getConnectorByID(final String id) {
+ 		synchronized (CONNECTORS) {
+ 			if (id == null) {
+ 				return null;
+ 			}
+ 			final int l = CONNECTORS.size();
+ 			ConnectorSpec c;
+ 			for (int i = 0; i < l; i++) {
+ 				c = CONNECTORS.get(i);
+ 				if (id.equals(c.getPackage())) {
+ 					return c;
+ 				}
+ 			}
+ 		}
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * Get {@link ConnectorSpec} by name.
+ 	 * 
+ 	 * @param name
+ 	 *            name
+ 	 * @param returnSelectedSubConnector
+ 	 *            if not null, array[0] will be set to selected
+ 	 *            {@link SubConnectorSpec}
+ 	 * @return {@link ConnectorSpec}
+ 	 */
+ 	private static ConnectorSpec getConnectorByName(final String name,
+ 			final SubConnectorSpec[] returnSelectedSubConnector) {
+ 		synchronized (CONNECTORS) {
+ 			if (name == null) {
+ 				return null;
+ 			}
+ 			final int l = CONNECTORS.size();
+ 			ConnectorSpec c;
+ 			String n;
+ 			SubConnectorSpec[] scs;
+ 			for (int i = 0; i < l; i++) {
+ 				c = CONNECTORS.get(i);
+ 				n = c.getName();
+ 				if (name.startsWith(n)) {
+ 					if (name.length() == n.length()) {
+ 						if (returnSelectedSubConnector != null) {
+ 							returnSelectedSubConnector[0] = c
+ 									.getSubConnectors()[0];
+ 						}
+ 						return c;
+ 					} else if (returnSelectedSubConnector != null) {
+ 						scs = c.getSubConnectors();
+ 						if (scs == null || scs.length == 0) {
+ 							continue;
+ 						}
+ 						for (SubConnectorSpec sc : scs) {
+ 							if (name.endsWith(sc.getName())) {
+ 								returnSelectedSubConnector[0] = sc;
+ 								return c;
+ 							}
+ 						}
+ 					}
+ 				}
+ 			}
+ 		}
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * Get {@link ConnectorSpec}s by capabilities and/or status.
+ 	 * 
+ 	 * @param capabilities
+ 	 *            capabilities needed
+ 	 * @param status
+ 	 *            status required {@link SubConnectorSpec}
+ 	 * @return {@link ConnectorSpec}s
+ 	 */
+ 	static final ConnectorSpec[] getConnectors(final int capabilities,
+ 			final int status) {
+ 		synchronized (CONNECTORS) {
+ 			final ArrayList<ConnectorSpec> ret = new ArrayList<ConnectorSpec>(
+ 					CONNECTORS.size());
+ 			final int l = CONNECTORS.size();
+ 			ConnectorSpec c;
+ 			for (int i = 0; i < l; i++) {
+ 				c = CONNECTORS.get(i);
+ 				if (c.hasCapabilities((short) capabilities)
+ 						&& c.hasStatus((short) status)) {
+ 					ret.add(c);
+ 				}
+ 			}
+ 			return ret.toArray(new ConnectorSpec[0]);
+ 		}
+ 	}
+ }

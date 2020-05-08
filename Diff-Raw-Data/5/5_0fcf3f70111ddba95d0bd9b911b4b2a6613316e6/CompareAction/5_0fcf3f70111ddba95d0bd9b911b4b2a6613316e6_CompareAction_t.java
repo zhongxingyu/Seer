@@ -1,0 +1,106 @@
+ package net.sourceforge.squirrel_sql.plugins.dbdiff.actions;
+ 
+ /*
+  * Copyright (C) 2007 Rob Manning
+  * manningr@users.sourceforge.net
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+  * as published by the Free Software Foundation; either version 2
+  * of the License, or any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  */
+ import java.awt.event.ActionEvent;
+ 
+ import net.sourceforge.squirrel_sql.client.IApplication;
+ import net.sourceforge.squirrel_sql.client.action.SquirrelAction;
+ import net.sourceforge.squirrel_sql.client.session.IObjectTreeAPI;
+ import net.sourceforge.squirrel_sql.client.session.ISession;
+ import net.sourceforge.squirrel_sql.client.session.action.ISessionAction;
+ import net.sourceforge.squirrel_sql.fw.sql.IDatabaseObjectInfo;
+ import net.sourceforge.squirrel_sql.fw.util.Resources;
+ import net.sourceforge.squirrel_sql.fw.util.log.ILogger;
+ import net.sourceforge.squirrel_sql.fw.util.log.LoggerController;
+ import net.sourceforge.squirrel_sql.plugins.dbdiff.SessionInfoProvider;
+ import net.sourceforge.squirrel_sql.plugins.dbdiff.commands.CompareCommand;
+ 
+ public class CompareAction extends SquirrelAction implements ISessionAction
+ {
+ 	private static final long serialVersionUID = 1L;
+ 
+ 	/** Current plugin. */
+ 	private final SessionInfoProvider sessionInfoProv;
+ 
+ 	/** Logger for this class. */
+ 	private final static ILogger log = LoggerController.createLogger(CompareAction.class);
+ 
+ 	/**
+ 	 * Creates a new SQuirreL action that gets fired whenever the user chooses the compare operation.
+ 	 * 
+ 	 * @param app
+ 	 * @param rsrc
+ 	 * @param plugin
+ 	 */
+ 	public CompareAction(IApplication app, Resources rsrc, SessionInfoProvider prov)
+ 	{
+ 		super(app, rsrc);
+ 		sessionInfoProv = prov;
+ 	}
+ 
+ 	/**
+ 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+ 	 */
+ 	public void actionPerformed(ActionEvent evt)
+ 	{
+ 		ISession destSession = sessionInfoProv.getDiffDestSession();
+ 		IObjectTreeAPI api = destSession.getObjectTreeAPIOfActiveSessionWindow();
+ 		if (api == null) { return; }
+ 		IDatabaseObjectInfo[] dbObjs = api.getSelectedDatabaseObjects();
+ 		sessionInfoProv.setDestSelectedDatabaseObjects(dbObjs);
+ 
+ 		if (sessionInfoProv.getDiffSourceSession() == null) { return; }
+ 		if (!sourceDestSchemasDiffer())
+ 		{
+ 			if (log.isInfoEnabled()) {
+ 				log.info("Source and destination schemas were the same schema");
+ 			}
+ 			// TODO: tell the user that the selected destination schema is
+ 			// the same as the source schema.
+ 			// monitor.showMessageDialog(...)
+ 			return;
+ 		}
+ 		new CompareCommand(sessionInfoProv).execute();
+ 	}
+ 
+ 	/**
+ 	 * Set the current session.
+ 	 * 
+ 	 * @param session
+ 	 *           The current session.
+ 	 */
+ 	public void setSession(ISession session)
+ 	{
+ 		sessionInfoProv.setDestDiffSession(session);
+ 	}
+ 
+ 	/**
+ 	 * Returns a boolean value indicating whether or not the source and destination sessions refer to the same
+ 	 * schema.
+ 	 * 
+	 * @return true if they are different sessions; false otherwise.
+ 	 */
+ 	private boolean sourceDestSchemasDiffer()
+ 	{
+ 		ISession sourceSession = sessionInfoProv.getDiffSourceSession();
+ 		ISession destSession = sessionInfoProv.getDiffDestSession();
+		return sourceSession != null && ! sourceSession.equals(destSession);
+ 	}
+ }

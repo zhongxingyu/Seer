@@ -1,0 +1,245 @@
+ /* -*- tab-width: 4 -*-
+  *
+  * Electric(tm) VLSI Design System
+  *
+  * File: ViewMenu.java
+  *
+  * Copyright (c) 2003 Sun Microsystems and Static Free Software
+  *
+  * Electric(tm) is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * Electric(tm) is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with Electric(tm); see the file COPYING.  If not, write to
+  * the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+  * Boston, Mass 02111-1307, USA.
+  */
+ package com.sun.electric.tool.user.menus;
+ 
+ import static com.sun.electric.tool.user.menus.EMenuItem.SEPARATOR;
+ 
+ import com.sun.electric.database.hierarchy.Cell;
+ import com.sun.electric.database.hierarchy.View;
+ import com.sun.electric.tool.Job;
+ import com.sun.electric.tool.user.ViewChanges;
+ import com.sun.electric.tool.user.dialogs.ViewControl;
+ import com.sun.electric.tool.user.ui.TopLevel;
+ import com.sun.electric.tool.user.ui.WindowFrame;
+ 
+ import java.util.List;
+ 
+ import javax.swing.JOptionPane;
+ 
+ /**
+  * Class to handle the commands in the "View" pulldown menu.
+  */
+ public class ViewMenu {
+ 
+ 	static EMenu makeMenu() {
+ 		/****************************** THE VIEW MENU ******************************/
+ 
+ 		// mnemonic keys available:  B DEF   J  MN PQR     X Z
+ 		return new EMenu("_View",
+ 
+ 			new EMenuItem("View _Control...") { public void run() {
+ 				viewControlCommand(); }},
+ 			new EMenuItem("Chan_ge Cell's View...") { public void run() {
+ 				changeViewCommand(); }},
+ 
+ 			SEPARATOR,
+ 
+ 			new EMenuItem("Edit La_yout View") { public void run() {
+ 				editLayoutViewCommand(); }},
+ 			new EMenuItem("Edit Schema_tic View") { public void run() {
+ 				editSchematicViewCommand(); }},
+ 			new EMenuItem("Edit Ic_on View") { public void run() {
+ 				editIconViewCommand(); }},
+ 			new EMenuItem("Edit V_HDL View") { public void run() {
+ 				editVHDLViewCommand(); }},
+ 			new EMenuItem("Edit Document_ation View") { public void run() {
+ 				editDocViewCommand(); }},
+ 			new EMenuItem("Edit S_keleton View") { public void run() {
+ 				editSkeletonViewCommand(); }},
+ 			new EMenuItem("Edit Other Vie_w...") { public void run() {
+ 				editOtherViewCommand(); }},
+ 
+ 			SEPARATOR,
+ 
+ 			new EMenuItem("Make _Icon View") { public void run() {
+ 				ViewChanges.makeIconViewCommand(); }},
+ 			new EMenuItem("Make _Schematic View") { public void run() {
+ 				ViewChanges.makeSchematicView(); }},
+ 			new EMenuItem("Make Alternate Layo_ut View...") { public void run() {
+ 				ViewChanges.makeLayoutView(); }},
+ 			new EMenuItem("Make Ske_leton View") { public void run() {
+ 				ViewChanges.makeSkeletonViewCommand(); }},
+ 			new EMenuItem("Make _VHDL View") { public void run() {
+ 				ToolMenu.makeVHDL(); }});
+ 	}
+ 
+ 	/**
+ 	 * This method implements the command to control Views.
+ 	 */
+ 	public static void viewControlCommand()
+ 	{
+ 		 ViewControl dialog = new ViewControl(TopLevel.getCurrentJFrame());
+ 		dialog.setVisible(true);
+ 	}
+ 
+ 	public static void changeViewCommand()
+ 	{
+ 		Cell cell = WindowFrame.getCurrentCell();
+ 		if (cell == null) return;
+ 
+ 		List<View> views = View.getOrderedViews();
+ 		String [] viewNames = new String[views.size()];
+ 		for(int i=0; i<views.size(); i++)
+ 			viewNames[i] = views.get(i).getFullName();
+ 		Object newName = JOptionPane.showInputDialog(TopLevel.getCurrentJFrame(), "New view for this cell",
+ 			"Choose alternate view", JOptionPane.QUESTION_MESSAGE, null, viewNames, cell.getView().getFullName());
+ 		if (newName == null) return;
+ 		String newViewName = (String)newName;
+ 		View newView = View.findView(newViewName);
+ 		if (newView != null && newView != cell.getView())
+ 		{
+ 			ViewChanges.changeCellView(cell, newView);
+ 		}
+ 	}
+ 
+ 	public static void editLayoutViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 		Cell layoutView = curCell.otherView(View.LAYOUT);
+ 		if (layoutView != null)
+ 		{
+ 			WindowFrame.createEditWindow(layoutView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no layout view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create Layout View", options, "No");
+ 		if (ret == 1) return;
+ 		new ViewChanges.CreateAndViewCell(curCell.getName() + "{lay}", curCell.getLibrary());
+ 	}
+ 
+ 	public static void editSchematicViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 		final Cell schematicView = curCell.otherView(View.SCHEMATIC);
+ 		if (schematicView != null)
+ 		{
+ 			WindowFrame.createEditWindow(schematicView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no schematic view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create Schematic View", options, "No");
+ 		if (ret == 1) return;
+ 		new ViewChanges.CreateAndViewCell(curCell.getName() + "{sch}", curCell.getLibrary());
+ 	}
+ 
+ 	public static void editIconViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 		Cell iconView = curCell.otherView(View.ICON);
+ 		if (iconView != null)
+ 		{
+ 			WindowFrame.createEditWindow(iconView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no icon view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create Icon View", options, "No");
+ 		if (ret == 1) return;
+ 		new ViewChanges.CreateAndViewCell(curCell.getName() + "{ic}", curCell.getLibrary());
+ 	}
+ 
+ 	public static void editVHDLViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 		Cell vhdlView = curCell.otherView(View.VHDL);
+ 		if (vhdlView != null)
+ 		{
+ 			WindowFrame.createEditWindow(vhdlView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no VHDL view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create VHDL View", options, "No");
+ 		if (ret == 1) return;
+ 		new ViewChanges.CreateAndViewCell(curCell.getName() + "{vhdl}", curCell.getLibrary());
+ 	}
+ 
+ 	public static void editDocViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 		Cell docView = curCell.otherView(View.DOC);
+ 		if (docView != null)
+ 		{
+ 			WindowFrame.createEditWindow(docView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no Documentation view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create Documentation View", options, "No");
+ 		if (ret == 1) return;
+ 		new ViewChanges.CreateAndViewCell(curCell.getName() + "{doc}", curCell.getLibrary());
+ 	}
+ 
+ 	public static void editSkeletonViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 		Cell skelView = curCell.otherView(View.LAYOUTSKEL);
+ 		if (skelView != null)
+ 		{
+ 			WindowFrame.createEditWindow(skelView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no Skeleton view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create Skeleton View", options, "No");
+ 		if (ret == 1) return;
+		new ViewChanges.CreateAndViewCell(curCell.getName() + "{lay.sk}", curCell.getLibrary());
+ 	}
+ 
+ 	public static void editOtherViewCommand()
+ 	{
+ 		Cell curCell = WindowFrame.needCurCell();
+ 		if (curCell == null) return;
+ 
+ 		List<View> views = View.getOrderedViews();
+ 		String [] viewNames = new String[views.size()];
+ 		for(int i=0; i<views.size(); i++)
+ 			viewNames[i] = views.get(i).getFullName();
+ 		Object newName = JOptionPane.showInputDialog(TopLevel.getCurrentJFrame(), "Which associated view do you want to see?",
+ 			"Choose alternate view", JOptionPane.QUESTION_MESSAGE, null, viewNames, curCell.getView().getFullName());
+ 		if (newName == null) return;
+ 		String newViewName = (String)newName;
+ 		View newView = View.findView(newViewName);
+ 		Cell otherView = curCell.otherView(newView);
+ 		if (otherView != null)
+ 		{
+ 			WindowFrame.createEditWindow(otherView);
+ 			return;
+ 		}
+ 		String [] options = {"Yes", "No"};
+ 		int ret = Job.getUserInterface().askForChoice("There is no " + newViewName + " view of " + curCell +
+ 			"\nDo you want to create an empty cell?", "Create " + newViewName + " View", options, "No");
+ 		if (ret == 1) return;
+ 		new ViewChanges.CreateAndViewCell(curCell.getName() + "{" + newView.getAbbreviation() + "}", curCell.getLibrary());
+ 	}
+ 
+ }

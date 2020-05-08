@@ -1,0 +1,286 @@
+ /*
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.spatial4j.core.shape.impl;
+ 
+ import com.spatial4j.core.context.SpatialContext;
+ import com.spatial4j.core.distance.DistanceUtils;
+ import com.spatial4j.core.shape.Point;
+ import com.spatial4j.core.shape.Rectangle;
+ import com.spatial4j.core.shape.Shape;
+ import com.spatial4j.core.shape.SpatialRelation;
+ 
+ /**
+  * A simple Rectangle implementation that also supports a longitudinal
+  * wrap-around. When minX > maxX, this will assume it is world coordinates that
+  * cross the date line using degrees. Immutable & threadsafe.
+  */
+ public class RectangleImpl implements Rectangle {
+ 
+   private final double minX;
+   private final double maxX;
+   private final double minY;
+   private final double maxY;
+ 
+   //TODO change to West South East North to be more consistent with OGC?
+   public RectangleImpl(double minX, double maxX, double minY, double maxY) {
+     //We assume any normalization / validation of params already occurred.
+     this.minX = minX;
+     this.maxX = maxX;
+     this.minY = minY;
+     this.maxY = maxY;
+     assert minY <= maxY;
+   }
+ 
+   /** A convenience constructor which pulls out the coordinates. */
+   public RectangleImpl(Point lowerLeft, Point upperRight) {
+     this(lowerLeft.getX(), upperRight.getX(),
+         lowerLeft.getY(), upperRight.getY());
+   }
+ 
+   /** Copy constructor. */
+   public RectangleImpl(Rectangle r) {
+     this(r.getMinX(),r.getMaxX(),r.getMinY(),r.getMaxY());
+   }
+ 
+   @Override
+   public boolean hasArea() {
+     return maxX != minX && maxY != minY;
+   }
+ 
+   @Override
+   public double getArea(SpatialContext ctx) {
+     if (ctx == null) {
+       return getWidth() * getHeight();
+     } else {
+       return ctx.getDistCalc().area(this);
+     }
+   }
+ 
+   @Override
+   public boolean getCrossesDateLine() {
+     return (minX > maxX);
+   }
+ 
+   @Override
+   public double getHeight() {
+     return maxY - minY;
+   }
+ 
+   @Override
+   public double getWidth() {
+     double w = maxX - minX;
+     if (w < 0) {//only true when minX > maxX (WGS84 assumed)
+       w += 360;
+       assert w >= 0;
+     }
+     return w;
+   }
+ 
+   @Override
+   public double getMaxX() {
+     return maxX;
+   }
+ 
+   @Override
+   public double getMaxY() {
+     return maxY;
+   }
+ 
+   @Override
+   public double getMinX() {
+     return minX;
+   }
+ 
+   @Override
+   public double getMinY() {
+     return minY;
+   }
+ 
+   @Override
+   public Rectangle getBoundingBox() {
+     return this;
+   }
+ 
+   @Override
+   public SpatialRelation relate(Shape other, SpatialContext ctx) {
+     if (other instanceof Point) {
+       return relate((Point) other, ctx);
+     }
+     if (other instanceof Rectangle) {
+       return relate((Rectangle) other, ctx);
+     }
+     return other.relate(this, ctx).transpose();
+   }
+ 
+   public SpatialRelation relate(Point point, SpatialContext ctx) {
+     if (point.getY() > getMaxY() || point.getY() < getMinY())
+       return SpatialRelation.DISJOINT;
+     //  all the below logic is rather unfortunate but some dateline cases demand it
+     double minX = this.minX;
+     double maxX = this.maxX;
+     double pX = point.getX();
+     if (ctx.isGeo()) {
+       //unwrap dateline and normalize +180 to become -180
+       double rawWidth = maxX - minX;
+       if (rawWidth < 0) {
+         maxX = minX + (rawWidth + 360);
+       }
+       //shift to potentially overlap
+       if (pX < minX) {
+         pX += 360;
+       } else if (pX > maxX) {
+         pX -= 360;
+       }
+     }
+     if (pX < minX || pX > maxX)
+       return SpatialRelation.DISJOINT;
+     return SpatialRelation.CONTAINS;
+   }
+ 
+   public SpatialRelation relate(Rectangle rect, SpatialContext ctx) {
+     SpatialRelation yIntersect = relateYRange(rect.getMinY(), rect.getMaxY(), ctx);
+     if (yIntersect == SpatialRelation.DISJOINT)
+       return SpatialRelation.DISJOINT;
+ 
+     SpatialRelation xIntersect = relateXRange(rect.getMinX(), rect.getMaxX(), ctx);
+     if (xIntersect == SpatialRelation.DISJOINT)
+       return SpatialRelation.DISJOINT;
+ 
+     if (xIntersect == yIntersect)//in agreement
+       return xIntersect;
+ 
+     //if one side is equal, return the other
+     if (getMinX() == rect.getMinX() && getMaxX() == rect.getMaxX())
+       return yIntersect;
+     if (getMinY() == rect.getMinY() && getMaxY() == rect.getMaxY())
+       return xIntersect;
+ 
+     return SpatialRelation.INTERSECTS;
+   }
+ 
+   private static SpatialRelation relate_range(double int_min, double int_max, double ext_min, double ext_max) {
+     if (ext_min > int_max || ext_max < int_min) {
+       return SpatialRelation.DISJOINT;
+     }
+ 
+     if (ext_min >= int_min && ext_max <= int_max) {
+       return SpatialRelation.CONTAINS;
+     }
+ 
+     if (ext_min <= int_min && ext_max >= int_max) {
+       return SpatialRelation.WITHIN;
+     }
+     return SpatialRelation.INTERSECTS;
+   }
+ 
+   @Override
+   public SpatialRelation relateYRange(double ext_minY, double ext_maxY, SpatialContext ctx) {
+     return relate_range(minY, maxY, ext_minY, ext_maxY);
+   }
+ 
+   @Override
+   public SpatialRelation relateXRange(double ext_minX, double ext_maxX, SpatialContext ctx) {
+     //For ext & this we have local minX and maxX variable pairs. We rotate them so that minX <= maxX
+     double minX = this.minX;
+     double maxX = this.maxX;
+     if (ctx.isGeo()) {
+       //unwrap dateline, plus do world-wrap short circuit
+       double rawWidth = maxX - minX;
+       if (rawWidth == 360)
+         return SpatialRelation.CONTAINS;
+       if (rawWidth < 0) {
+         maxX = minX + (rawWidth + 360);
+       }
+       double ext_rawWidth = ext_maxX - ext_minX;
+       if (ext_rawWidth == 360)
+         return SpatialRelation.WITHIN;
+       if (ext_rawWidth < 0) {
+         ext_maxX = ext_minX + (ext_rawWidth + 360);
+       }
+       //shift to potentially overlap
+       if (maxX < ext_minX) {
+         minX += 360;
+         maxX += 360;
+       } else if (ext_maxX < minX) {
+         ext_minX += 360;
+         ext_maxX += 360;
+       }
+     }
+ 
+     return relate_range(minX, maxX, ext_minX, ext_maxX);
+   }
+ 
+   @Override
+   public String toString() {
+     return "Rect(minX=" + minX + ",maxX=" + maxX + ",minY=" + minY + ",maxY=" + maxY + ")";
+   }
+ 
+   @Override
+   public Point getCenter() {
+     final double y = getHeight() / 2 + minY;
+     double x = getWidth() / 2 + minX;
+     if (minX > maxX)//WGS84
+       x = DistanceUtils.normLonDEG(x);//in case falls outside the standard range
+     return new PointImpl(x, y);
+   }
+ 
+   @Override
+   public boolean equals(Object obj) {
+     return equals(this,obj);
+   }
+ 
+   /**
+    * All {@link Rectangle} implementations should use this definition of {@link Object#equals(Object)}.
+    */
+   public static boolean equals(Rectangle thiz, Object o) {
+     assert thiz != null;
+     if (thiz == o) return true;
+     if (!(o instanceof Rectangle)) return false;
+ 
+     RectangleImpl rectangle = (RectangleImpl) o;
+ 
+     if (Double.compare(rectangle.getMaxX(), thiz.getMaxX()) != 0) return false;
+     if (Double.compare(rectangle.getMaxY(), thiz.getMaxY()) != 0) return false;
+     if (Double.compare(rectangle.getMinX(), thiz.getMinX()) != 0) return false;
+     if (Double.compare(rectangle.getMinY(), thiz.getMinY()) != 0) return false;
+ 
+     return true;
+   }
+ 
+   @Override
+   public int hashCode() {
+     return hashCode(this);
+   }
+ 
+   /**
+    * All {@link Rectangle} implementations should use this definition of {@link Object#hashCode()}.
+    */
+   public static int hashCode(Rectangle thiz) {
+     int result;
+     long temp;
+     temp = thiz.getMinX() != +0.0d ? Double.doubleToLongBits(thiz.getMinX()) : 0L;
+     result = (int) (temp ^ (temp >>> 32));
+     temp = thiz.getMaxX() != +0.0d ? Double.doubleToLongBits(thiz.getMaxX()) : 0L;
+     result = 31 * result + (int) (temp ^ (temp >>> 32));
+     temp = thiz.getMinY() != +0.0d ? Double.doubleToLongBits(thiz.getMinY()) : 0L;
+     result = 31 * result + (int) (temp ^ (temp >>> 32));
+     temp = thiz.getMaxY() != +0.0d ? Double.doubleToLongBits(thiz.getMaxY()) : 0L;
+     result = 31 * result + (int) (temp ^ (temp >>> 32));
+     return result;
+   }
+ }

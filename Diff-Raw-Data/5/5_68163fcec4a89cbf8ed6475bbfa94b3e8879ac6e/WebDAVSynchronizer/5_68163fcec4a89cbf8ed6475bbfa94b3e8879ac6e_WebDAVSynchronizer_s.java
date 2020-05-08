@@ -1,0 +1,213 @@
+ package com.matburt.mobileorg.Synchronizers;
+ 
+ import java.io.BufferedReader;
+ import java.io.FileNotFoundException;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.io.UnsupportedEncodingException;
+ import java.net.MalformedURLException;
+ import java.net.URL;
+ import java.util.regex.Pattern;
+ 
+ import org.apache.http.HttpResponse;
+ import org.apache.http.StatusLine;
+ import org.apache.http.auth.AuthScope;
+ import org.apache.http.auth.UsernamePasswordCredentials;
+ import org.apache.http.client.methods.HttpGet;
+ import org.apache.http.client.methods.HttpPut;
+ import org.apache.http.conn.scheme.PlainSocketFactory;
+ import org.apache.http.conn.scheme.Scheme;
+ import org.apache.http.conn.scheme.SchemeRegistry;
+ import org.apache.http.conn.ssl.SSLSocketFactory;
+ import org.apache.http.entity.StringEntity;
+ import org.apache.http.impl.client.BasicCredentialsProvider;
+ import org.apache.http.impl.client.DefaultHttpClient;
+ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+ import org.apache.http.params.CoreProtocolPNames;
+ import org.apache.http.params.HttpParams;
+ 
+ import android.content.Context;
+ import android.content.SharedPreferences;
+ import android.preference.PreferenceManager;
+ import android.util.Log;
+ import com.matburt.mobileorg.R;
+ import com.matburt.mobileorg.Parsing.MobileOrgApplication;
+ import com.matburt.mobileorg.Parsing.OrgFile;
+ 
+ public class WebDAVSynchronizer extends Synchronizer {
+ 
+ 	private String remoteIndexPath;
+ 	private String remotePath;
+ 	
+ 	private String username;
+ 	private String password;
+ 
+ 	public WebDAVSynchronizer(Context parentContext, MobileOrgApplication appInst) {
+ 		super(parentContext, appInst);
+ 
+ 		SharedPreferences sharedPreferences = PreferenceManager
+ 				.getDefaultSharedPreferences(context);
+ 
+ 		this.remoteIndexPath = sharedPreferences.getString("webUrl", "");
+ 		this.remotePath = getRootUrl();
+ 
+ 		this.username = sharedPreferences.getString("webUser", "");
+ 		this.password = sharedPreferences.getString("webPass", "");
+ 	}
+ 
+     public String testConnection(String url, String user, String pass) {
+         this.remoteIndexPath = url;
+         this.remotePath = getRootUrl();
+         this.username = user;
+         this.password = pass;
+ 
+         if (!this.isConfigured()) {
+             Log.i("MobileOrg", "Test Connection Failed for not being configured");
+             return "Invalid URL must match: 'http://url.com/path/index.org'";
+         }
+ 
+         try {
+             DefaultHttpClient dhc = this.createConnection();
+             if (dhc == null) {
+                 Log.i("MobileOrg", "Test Connection is null");
+                 return "Connection could not be established";
+             }
+ 
+             Log.i("MobileOrg", "Test Path: " + this.remoteIndexPath);
+             InputStream mainFile = this.getUrlStream(this.remoteIndexPath, dhc);
+ 
+             if (mainFile == null) {
+                 return "File '" + this.remoteIndexPath + "' doesn't appear to exist";
+             }
+         }
+         catch (Exception e) {
+             Log.i("MobileOrg", "Test Exception: " + e.getMessage());
+             return "Test Exception: " + e.getMessage();
+         }
+         return null;
+     }
+ 
+ 	public boolean isConfigured() {
+ 		if (this.remoteIndexPath.equals(""))
+ 			return false;
+ 
+ 		Pattern checkUrl = Pattern.compile("http.*\\.(?:org|txt)$");
+ 		if (!checkUrl.matcher(this.remoteIndexPath).find()) {
+ 			return false;
+ 		}
+ 
+ 		return true;
+ 	}
+ 
+ 	protected void putRemoteFile(String filename, String contents) throws IOException {
+ 		DefaultHttpClient httpC = this.createConnection();
+ 		String urlActual = this.getRootUrl() + filename;
+ 		putUrlFile(urlActual, httpC, contents);
+ 	}
+ 
+ 	protected BufferedReader getRemoteFile(String filename) throws IOException {
+ 		String orgUrl = this.remotePath + filename;
+ 		DefaultHttpClient httpC = this.createConnection();
+ 		InputStream mainFile = this.getUrlStream(orgUrl, httpC);
+ 
+ 		if (mainFile == null) {
+ 			return null;
+ 		}
+ 		return new BufferedReader(new InputStreamReader(mainFile));
+ 	}
+ 
+ 	private DefaultHttpClient createConnection() {
+ 		DefaultHttpClient httpClient = new DefaultHttpClient();
+ 		HttpParams params = httpClient.getParams();
+ 		SchemeRegistry schemeRegistry = new SchemeRegistry();
+ 		schemeRegistry.register(new Scheme("http", PlainSocketFactory
+ 				.getSocketFactory(), 80));
+ 		SSLSocketFactory sslSocketFactory = SSLSocketFactory.getSocketFactory();
+ 		sslSocketFactory
+ 				.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+ 		schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
+ 		ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(
+ 				params, schemeRegistry);
+ 
+ 		UsernamePasswordCredentials bCred = new UsernamePasswordCredentials(
+ 				username, password);
+ 		BasicCredentialsProvider cProvider = new BasicCredentialsProvider();
+ 		cProvider.setCredentials(AuthScope.ANY, bCred);
+ 
+ 		params.setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE,
+ 				false);
+ 		httpClient.setParams(params);
+ 
+ 		DefaultHttpClient nHttpClient = new DefaultHttpClient(cm, params);
+ 		nHttpClient.setCredentialsProvider(cProvider);
+ 		return nHttpClient;
+ 	}
+ 
+ 	private InputStream getUrlStream(String url, DefaultHttpClient httpClient)
+ 			throws IOException {
+ 		HttpResponse res = httpClient.execute(new HttpGet(url));
+ 		StatusLine status = res.getStatusLine();
+ 		if (status.getStatusCode() == 401) {
+ 			throw new FileNotFoundException(r.getString(
+ 					R.string.error_url_fetch_detail, url,
+ 					"Invalid username or password"));
+ 		}
+ 		if (status.getStatusCode() == 404) {
+ 			return null;
+ 		}
+ 
+ 		if (status.getStatusCode() < 200 || status.getStatusCode() > 299) {
+ 			throw new IOException(r.getString(R.string.error_url_fetch_detail,
+ 					url, status.getReasonPhrase()));
+ 		}
+ 		return res.getEntity().getContent();
+ 	}
+ 
+ 	private void putUrlFile(String url, DefaultHttpClient httpClient,
+ 			String content) throws IOException {
+ 		try {
+ 			HttpPut httpPut = new HttpPut(url);
+ 			httpPut.setEntity(new StringEntity(content, "UTF-8"));
+ 			HttpResponse response = httpClient.execute(httpPut);
+ 			StatusLine statResp = response.getStatusLine();
+ 			int statCode = statResp.getStatusCode();
+ 			if (statCode >= 400) {
+ 				throw new IOException(r.getString(
+ 						R.string.error_url_put_detail, url,
+ 						"Server returned code: " + Integer.toString(statCode)));
+ 			}
+ 			httpClient.getConnectionManager().shutdown();
+ 		} catch (UnsupportedEncodingException e) {
+ 			throw new IOException(r.getString(
+ 					R.string.error_unsupported_encoding, OrgFile.CAPTURE_FILE));
+ 		}
+ 	}
+ 
+ 	private String getRootUrl() {
+ 		URL manageUrl;
+ 		try {
+ 			manageUrl = new URL(this.remoteIndexPath);
+ 		} catch (MalformedURLException e) {
+ 			return "";
+ 		}
+ 
+ 		String urlPath = manageUrl.getPath();
+ 		String[] pathElements = urlPath.split("/");
+ 		String directoryActual = "/";
+ 
+ 		if (pathElements.length > 1) {
+ 			for (int i = 0; i < pathElements.length - 1; i++) {
+ 				if (pathElements[i].length() > 0) {
+ 					directoryActual += pathElements[i] + "/";
+ 				}
+ 			}
+ 		}
+ 		return manageUrl.getProtocol() + "://" + manageUrl.getAuthority()
+ 				+ directoryActual;
+ 	}
+ 
+ 	@Override
+ 	protected void postSynchronize() {		
+ 	}
+ }

@@ -1,0 +1,242 @@
+ package ch.cyberduck.core.dav;
+ 
+ /*
+  * Copyright 2001-2006 The Apache Software Foundation.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ import org.apache.commons.httpclient.*;
+ import org.apache.commons.httpclient.methods.GetMethod;
+ import org.apache.commons.httpclient.methods.PutMethod;
+ import org.apache.commons.httpclient.methods.RequestEntity;
+ import org.apache.commons.httpclient.util.URIUtil;
+ import org.apache.commons.lang.StringUtils;
+ import org.apache.log4j.Logger;
+ import org.apache.webdav.lib.ResponseEntity;
+ import org.apache.webdav.lib.WebdavResource;
+ 
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.util.Enumeration;
+ import java.util.zip.GZIPInputStream;
+ 
+ /**
+  * Webdav Resource adding support for Gzipped streams
+  *
+  * @author <a href="mailto:joakim@erdfelt.com">Joakim Erdfelt</a>
+  * @version $Id$
+  */
+ public class DAVResource extends WebdavResource {
+     private static Logger log = Logger.getLogger(DAVResource.class);
+ 
+     public DAVResource(String url) throws IOException {
+         super(url);
+     }
+ 
+     /**
+      * Overwritten to make sure the client and its properties are not overwritten when
+      * the credentials change. See #2974.
+      *
+      * @return true if the given httpURL is the client for this resource.
+      */
+     protected synchronized boolean isTheClient() throws URIException {
+         final HostConfiguration hostConfig = client.getHostConfiguration();
+         // Hack to enable preemptive authentication
+         client.getState().setCredentials(null, httpURL.getHost(), hostCredentials);
+         return httpURL.getHost().equalsIgnoreCase(hostConfig.getHost())
+                 && httpURL.getPort() == hostConfig.getProtocol().resolvePort(hostConfig.getPort());
+ 
+     }
+ 
+     /**
+      * Add all additionals headers that have been previously registered
+      * with addRequestHeader to the method
+      */
+     protected void generateAdditionalHeaders(HttpMethod method) {
+         for(Object o : headers.keySet()) {
+             String header = (String) o;
+             method.setRequestHeader(header, (String) headers.get(header));
+         }
+     }
+ 
+     private boolean resume;
+ 
+     public boolean isResume() {
+         return resume;
+     }
+ 
+     private boolean zipped;
+ 
+     public boolean isZipped() {
+         return zipped;
+     }
+ 
+     /**
+      * Get InputStream for the GET method for the given path.
+      *
+      * @param path the server relative path of the resource to get
+      * @return InputStream
+      * @throws IOException
+      */
+     public InputStream getMethodData(String path)
+             throws IOException {
+         setClient();
+ 
+         GetMethod method = new GetMethod(URIUtil.encodePathQuery(path));
+         method.setFollowRedirects(super.followRedirects);
+ 
+         generateTransactionHeader(method);
+         generateAdditionalHeaders(method);
+         client.executeMethod(method);
+         Header contentRange = method.getResponseHeader("Content-Range");
+         resume = contentRange != null;
+ 
+         int statusCode = method.getStatusLine().getStatusCode();
+         setStatusCode(statusCode);
+ 
+         if(isHttpSuccess(statusCode)) {
+             Header contentEncoding = method.getResponseHeader("Content-Encoding");
+             zipped = contentEncoding != null && "gzip".equalsIgnoreCase(contentEncoding.getValue());
+             if(zipped) {
+                 return new GZIPInputStream(method.getResponseBodyAsStream());
+             }
+             return method.getResponseBodyAsStream();
+         }
+         else {
+             throw new IOException("Couldn't get file");
+         }
+     }
+ 
+     /**
+      * Execute the PUT method for the given path.
+      *
+      * @param path        the server relative path to put the data
+      * @param inputStream The input stream.
+      * @return true if the method is succeeded.
+      * @throws IOException
+      */
+     public boolean putMethod(String path, RequestEntity requestEntity)
+             throws IOException {
+ 
+         setClient();
+ 
+         PutMethod method = new PutMethod(URIUtil.encodePathQuery(path));
+ 
+         // Activates 'Expect: 100-Continue' handshake. The purpose of
+         // the 'Expect: 100-Continue' handshake to allow a client that is
+         // sending a request message with a request body to determine if
+         // the origin server is willing to accept the request (based on
+         // the request headers) before the client sends the request body.
+         //
+         // Otherwise, upload will fail when using digest authentication.
+         // Fix #2268
+         method.setUseExpectHeader(true);
+ 
+         generateIfHeader(method);
+        if(getGetContentType() != null && !getGetContentType().equals("")) {
+            method.setRequestHeader("Content-Type", getGetContentType());
+        }
+         method.setRequestEntity(requestEntity);
+ 
+         generateTransactionHeader(method);
+         generateAdditionalHeaders(method);
+         int statusCode = client.executeMethod(method);
+ 
+         setStatusCode(statusCode);
+         return isHttpSuccess(statusCode);
+     }
+ 
+     /**
+      * Check if the http status code passed as argument is a success
+      *
+      * @param statusCode
+      * @return true if code represents a HTTP success
+      */
+     private boolean isHttpSuccess(int statusCode) {
+         return (statusCode >= HttpStatus.SC_OK
+                 && statusCode < HttpStatus.SC_MULTIPLE_CHOICES);
+     }
+ 
+     /**
+      * Verify whether a given string is escaped or not
+      *
+      * @param original given characters
+      * @return true if the given character array is 7 bit ASCII-compatible.
+      */
+     public static boolean verifyEscaped(char[] original) {
+         for(int i = 0; i < original.length; i++) {
+             int c = original[i];
+             if(c > 128) {
+                 return false;
+             }
+             else if(c == '%') {
+                 if(Character.digit(original[++i], 16) == -1
+                         || Character.digit(original[++i], 16) == -1) {
+                     return false;
+                 }
+             }
+         }
+         return true;
+     }
+ 
+     protected void setWebdavProperties(final Enumeration responses)
+             throws HttpException, IOException {
+ 
+         super.setWebdavProperties(new Enumeration() {
+             public boolean hasMoreElements() {
+                 return responses.hasMoreElements();
+             }
+ 
+             public Object nextElement() {
+                 final ResponseEntity response =
+                         (ResponseEntity) responses.nextElement();
+                 return new ResponseEntity() {
+ 
+                     public int getStatusCode() {
+                         return response.getStatusCode();
+                     }
+ 
+                     public Enumeration getProperties() {
+                         return response.getProperties();
+                     }
+ 
+                     public Enumeration getHistories() {
+                         return response.getHistories();
+                     }
+ 
+                     public Enumeration getWorkspaces() {
+                         return response.getWorkspaces();
+                     }
+ 
+                     public String getHref() {
+                         if(StringUtils.isNotBlank(response.getHref())) {
+                             // http://trac.cyberduck.ch/ticket/2223
+                             final String escaped = StringUtils.replace(response.getHref(), " ", "%20");
+                             if(!verifyEscaped(escaped.toCharArray())) {
+                                 try {
+                                     return URIUtil.encodePath(response.getHref());
+                                 }
+                                 catch(URIException e) {
+                                     log.error(e.getMessage(), e);
+                                 }
+                             }
+                             return escaped;
+                         }
+                         return response.getHref();
+                     }
+                 };
+             }
+         });
+     }
+ }

@@ -1,0 +1,219 @@
+ package edu.virginia.jinsup;
+ 
+ import java.util.HashMap;
+ 
+ import org.apache.commons.math3.distribution.PoissonDistribution;
+ 
+ /**
+  * Agent that implements a poisson trading distribution.
+  */
+ public abstract class PoissonAgent extends Agent {
+ 
+   /**
+    * Stores previously created PoissonDistributions
+    */
+   private static HashMap<Double, PoissonDistribution> distCache =
+     new HashMap<Double, PoissonDistribution>();
+ 
+   /**
+    * Poisson distribution generator for order frequency.
+    */
+   private final PoissonDistribution poissonGeneratorOrder;
+ 
+   /**
+    * Poisson distribution generator for cancellation frequency.
+    */
+   private final PoissonDistribution poissonGeneratorCancel;
+ 
+   /**
+    * Constructs a poisson trader (can only be called from a subclass).
+    * 
+    * @param matchEng
+    *          Matching engine of simulation.
+    * @param lambdaOrder
+    *          Mean order rate in seconds.
+    * @param lambdaCancel
+    *          Mean cancel rate in seconds.
+    * @param initialActTime
+    *          Length of startup period in milliseconds.
+    */
+   public PoissonAgent(MatchingEngine matchEng, double lambdaOrder,
+     double lambdaCancel, long initialActTime) {
+     super(matchEng);
+ 
+     if (distCache.containsKey(lambdaOrder)) {
+       poissonGeneratorOrder = distCache.get(lambdaOrder);
+     } else {
+       poissonGeneratorOrder = new PoissonDistribution(lambdaOrder * 1000);
+       distCache.put(lambdaOrder, poissonGeneratorOrder);
+     }
+ 
+     if (distCache.containsKey(lambdaCancel)) {
+       poissonGeneratorCancel = distCache.get(lambdaCancel);
+     } else {
+       poissonGeneratorCancel = new PoissonDistribution(lambdaCancel * 1000);
+       distCache.put(lambdaCancel, poissonGeneratorCancel);
+     }
+ 
+     // set agents to create an order before canceling one
+     setNextAction(Action.ORDER);
+     setNextActTime(initialActTime);
+ 
+     // no need for poisson determined act times for initial actions
+     super.setNextOrderTime(initialActTime);
+     super.setNextCancelTime(getStartupTime() + poissonGeneratorCancel.sample());
+   }
+ 
+   /**
+    * Performs the agent's current action and then gets the next action time.
+    * Chooses the next action to perform depending on whether order or
+    * cancellation comes first in time.
+    */
+   @Override
+   public void act() {
+     long oldOrderTime = getNextOrderTime();
+     switch (getNextAction()) {
+       case CANCEL:
+         // cancel the oldest order, if there are any available
+         if (agentHasOrders()) {
+           cancelOrder(getOldestOrder());
+         }
+         setNextCancelTime(getNextCancelTime());
+         break;
+       case ORDER:
+         makeOrder();
+         setNextOrderTime(getNextOrderTime());
+         break;
+       case NULL:
+         System.out.println("Warning: NULL action type...have all agents been"
+           + "  properly initialized?");
+         break;
+       default:
+         System.out.println("Fatal Error: Undefined action enum type...exiting");
+         System.exit(1);
+         break;
+     }
+ 
+     // make sure that both actions do not occur at the same time step
+     if (getNextCancelTime() == getNextOrderTime()) {
+       while (getNextCancelTime() == getNextOrderTime()) {
+         setNextOrderTime(oldOrderTime);
+       }
+     }
+ 
+     // select the appropriate action to perform for the next act opportunity
+     if (getNextCancelTime() > getNextOrderTime()) {
+       setNextAction(Action.ORDER);
+       setNextActTime(getNextOrderTime());
+     } else {
+       setNextAction(Action.CANCEL);
+       setNextActTime(getNextCancelTime());
+     }
+     setWillAct(false);
+   }
+ 
+   /**
+    * Calculates the next order time via a poisson distribution.
+    * 
+    * @param currOrderTime
+    *          The current order time to add to.
+    */
+   @Override
+   protected void setNextOrderTime(long currOrderTime) {
+     super.setNextOrderTime(currOrderTime + poissonGeneratorOrder.sample());
+   }
+ 
+   /**
+    * Calculates the next cancel time via a poisson distribution.
+    * 
+    * @param currCancelTime
+    *          The current cancel time to add to.
+    */
+   @Override
+   protected void setNextCancelTime(long currCancelTime) {
+     super.setNextCancelTime(currCancelTime + poissonGeneratorCancel.sample());
+   }
+ 
+   /**
+    * Manages the probabilities of creating orders. Implementations will differ
+    * depending on type of agent.
+    */
+   abstract void makeOrder();
+ 
+   /**
+    * Deals with order creation given a list of probabilities. *** The first
+    * probability supplied must be the probability of creating a market order
+    * ***. See wiki for more details.
+    * 
+    * @param isBuying
+    *          True if agent is issuing a buy order; false if issuing a sell
+    *          order.
+    * @param quantity
+    *          Number of shares to issue order for.
+    * @param probabilities
+    *          Probabilities of creating an order for a certain tick from the
+    *          last trade price. The probabilities must be listed in ascending
+    *          order with respect to the number of ticks of the last trade price,
+    *          e.g. P[1 tick], P[2 tick], etc.
+    */
+   void createPoissonOrder(boolean isBuying, int quantity,
+     double... probabilities) {
+     // make sure the probabilities add up close to 1.0
+     // TODO remove probability sum check after debugging for performance
+     // double sum = 0.0;
+     // for (double i : probabilities) {
+     // sum += i;
+     // }
+     // if (sum < 0.9999999999) {
+     // System.out
+     // .println("The probabilities do not add up close enough to 1.0. The sum of probabilities supplied was "
+     // + sum);
+     // System.exit(1);
+     // }
+ 
+     double probability = Math.random();
+ 
+     if (probability < probabilities[0]) {
+       // create a market order
+       createMarketOrder(quantity, isBuying);
+       return;
+     }
+ 
+     double cumulativeProb = probabilities[0] + probabilities[1];
+    for (int i = 1; i < probabilities.length - 1; ++i) {
+       if (probability < cumulativeProb) {
+         // create a limit order; if the agent is buying, then as the tick
+         // increases, the lower the buy price
+         createNewOrder(getLastTradePrice()
+           - ((isBuying ? 1 : -1) * TICK_SIZE * i), quantity, isBuying);
+         return;
+       }
+       cumulativeProb += probabilities[i + 1];
+     }
+   }
+ 
+   /**
+    * Calculates the probability of issuing an order for a certain quantity. See
+    * PT Extension page for more details.
+    * 
+    * @param probabilities
+    *          Probabilities of creating an order of a certain quantity. The
+    *          probabilities must be listed in ascending order with respect to
+    *          the order quantity, e.g. P[Q=1], P[Q=2], etc.
+    * @return The quantity to issue an order for.
+    */
+   int getOrderSize(double... probabilities) {
+     double probability = Math.random();
+     double cumulativeProb = 0;
+     int i = 0;
+     do {
+       cumulativeProb += probabilities[i];
+       if (probability < cumulativeProb) {
+         return i + 1;
+       }
+       ++i;
+     } while (i < probabilities.length);
+     System.out.println("Order size probabilites do not add up to 1.0");
+     return 0;
+   }
+ }

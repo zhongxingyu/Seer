@@ -1,0 +1,400 @@
+ package org.crsh.term.processor;
+ 
+ import org.crsh.cmdline.CommandCompletion;
+ import org.crsh.cmdline.Delimiter;
+ import org.crsh.cmdline.spi.ValueCompletion;
+ import org.crsh.shell.Shell;
+ import org.crsh.shell.ShellProcess;
+ import org.crsh.term.Term;
+ import org.crsh.term.TermEvent;
+ import org.crsh.util.Strings;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import java.io.Closeable;
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Map;
+ 
+ /** @author <a href="mailto:julien.viet@exoplatform.com">Julien Viet</a> */
+ public final class Processor implements Runnable {
+ 
+   /** . */
+   static final Runnable NOOP = new Runnable() {
+     public void run() {
+     }
+   };
+ 
+   /** . */
+   final Runnable WRITE_PROMPT = new Runnable() {
+     public void run() {
+       writePrompt();
+     }
+   };
+ 
+   /** . */
+   final Runnable CLOSE = new Runnable() {
+     public void run() {
+       close();
+     }
+   };
+ 
+   /** . */
+   private final Runnable READ_TERM = new Runnable() {
+     public void run() {
+       readTerm();
+     }
+   };
+ 
+   /** . */
+   final Logger log = LoggerFactory.getLogger(Processor.class);
+ 
+   /** . */
+   final Term term;
+ 
+   /** . */
+   final Shell shell;
+ 
+   /** . */
+   final LinkedList<TermEvent> queue;
+ 
+   /** . */
+   final Object lock;
+ 
+   /** . */
+   ProcessContext current;
+ 
+   /** . */
+   Status status;
+ 
+   /** A flag useful for unit testing to know when the thread is reading. */
+   volatile boolean waitingEvent;
+ 
+   /** . */
+   private final List<Closeable> listeners;
+ 
+   public Processor(Term term, Shell shell) {
+     this.term = term;
+     this.shell = shell;
+     this.queue = new LinkedList<TermEvent>();
+     this.lock = new Object();
+     this.status = Status.AVAILABLE;
+     this.listeners = new ArrayList<Closeable>();
+     this.waitingEvent = false;
+   }
+ 
+   public boolean isWaitingEvent() {
+     return waitingEvent;
+   }
+ 
+   public void run() {
+ 
+ 
+     // Display initial stuff
+     try {
+       String welcome = shell.getWelcome();
+       log.debug("Writing welcome message to term");
+       term.write(welcome);
+       log.debug("Wrote welcome message to term");
+       writePrompt();
+     }
+     catch (IOException e) {
+       e.printStackTrace();
+     }
+ 
+     //
+     while (true) {
+       try {
+         if (!iterate()) {
+           break;
+         }
+       }
+       catch (IOException e) {
+         e.printStackTrace();
+       }
+       catch (InterruptedException e) {
+         break;
+       }
+     }
+   }
+ 
+   boolean iterate() throws InterruptedException, IOException {
+ 
+     //
+     Runnable runnable;
+     synchronized (lock) {
+       switch (status) {
+         case AVAILABLE:
+           runnable =  peekProcess();
+           if (runnable != null) {
+             break;
+           }
+         case PROCESSING:
+         case CANCELLING:
+           runnable = READ_TERM;
+           break;
+         case CLOSED:
+           return false;
+         default:
+           throw new AssertionError();
+       }
+     }
+ 
+     //
+     runnable.run();
+ 
+     //
+     return true;
+   }
+ 
+   // We assume this is called under lock synchronization
+   ProcessContext peekProcess() {
+     while (true) {
+       synchronized (lock) {
+         if (status == Status.AVAILABLE) {
+           if (queue.size() > 0) {
+             TermEvent event = queue.removeFirst();
+             if (event instanceof TermEvent.Complete) {
+               complete(((TermEvent.Complete)event).getLine());
+             } else {
+               String line = ((TermEvent.ReadLine)event).getLine().toString();
+               if (line.length() > 0) {
+                 term.addToHistory(line);
+               }
+               ShellProcess process = shell.createProcess(line);
+               current =  new ProcessContext(this, process);
+               status = Status.PROCESSING;
+               return current;
+             }
+           } else {
+             break;
+           }
+         } else {
+           break;
+         }
+       }
+     }
+     return null;
+   }
+ 
+   /** . */
+   private final Object termLock = new Object();
+ 
+   private boolean reading = false;
+ 
+   void readTerm() {
+ 
+     //
+     synchronized (termLock) {
+       if (reading) {
+         try {
+           termLock.wait();
+           return;
+         }
+         catch (InterruptedException e) {
+           throw new AssertionError(e);
+         }
+       } else {
+         reading = true;
+       }
+     }
+ 
+     //
+     try {
+       TermEvent event = term.read();
+ 
+       //
+       Runnable runnable;
+       if (event instanceof TermEvent.Break) {
+         synchronized (lock) {
+           queue.clear();
+           if (status == Status.PROCESSING) {
+             status = Status.CANCELLING;
+             runnable = new Runnable() {
+               ProcessContext context = current;
+               public void run() {
+                 context.process.cancel();
+               }
+             };
+           }
+           else if (status == Status.AVAILABLE) {
+             runnable = WRITE_PROMPT;
+           } else {
+             runnable = NOOP;
+           }
+         }
+       } else if (event instanceof TermEvent.Close) {
+         synchronized (lock) {
+           queue.clear();
+           if (status == Status.PROCESSING) {
+             runnable = new Runnable() {
+               ProcessContext context = current;
+               public void run() {
+                 context.process.cancel();
+                 close();
+               }
+             };
+           } else if (status != Status.CLOSED) {
+             runnable = CLOSE;
+           } else {
+             runnable = NOOP;
+           }
+           status = Status.CLOSED;
+         }
+       } else {
+         synchronized (queue) {
+           queue.addLast(event);
+           runnable = NOOP;
+         }
+       }
+ 
+       //
+       runnable.run();
+     }
+     catch (IOException e) {
+       log.error("Error when reading term", e);
+     }
+     finally {
+       synchronized (termLock) {
+         reading = false;
+         termLock.notifyAll();
+       }
+     }
+   }
+ 
+   void close() {
+     // Make a copy
+     ArrayList<Closeable> listeners;
+     synchronized (Processor.this.listeners) {
+       listeners = new ArrayList<Closeable>(Processor.this.listeners);
+     }
+ 
+     //
+     for (Closeable listener : listeners) {
+       try {
+         log.debug("Closing " + listener.getClass().getSimpleName());
+         listener.close();
+       }
+       catch (Exception e) {
+         e.printStackTrace();
+       }
+     }
+   }
+ 
+   public void addListener(Closeable listener) {
+     if (listener == null) {
+       throw new NullPointerException();
+     }
+     synchronized (listeners) {
+       if (listeners.contains(listener)) {
+         throw new IllegalStateException("Already listening");
+       }
+       listeners.add(listener);
+     }
+   }
+ 
+   void write(String text) {
+     try {
+       term.write(text);
+     }
+     catch (IOException e) {
+       log.error("Write to term failure", e);
+     }
+   }
+ 
+   void writePrompt() {
+     String prompt = shell.getPrompt();
+     try {
+       String p = prompt == null ? "% " : prompt;
+       term.write("\r\n");
+       term.write(p);
+//      term.write(term.getBuffer());
+     } catch (IOException e) {
+       e.printStackTrace();
+     }
+   }
+ 
+   private void complete(CharSequence prefix) {
+     log.debug("About to get completions for " + prefix);
+     CommandCompletion completion = shell.complete(prefix.toString());
+     ValueCompletion completions = completion.getValue();
+     log.debug("Completions for " + prefix + " are " + completions);
+ 
+     //
+     Delimiter delimiter = completion.getDelimiter();
+ 
+     try {
+       // Try to find the greatest prefix among all the results
+       if (completions.getSize() == 0) {
+         // Do nothing
+       } else if (completions.getSize() == 1) {
+         Map.Entry<String, Boolean> entry = completions.iterator().next();
+         Appendable buffer = term.getInsertBuffer();
+         String insert = entry.getKey();
+         delimiter.escape(insert, 0, insert.length(), term.getInsertBuffer());
+         if (entry.getValue()) {
+           buffer.append(completion.getDelimiter().getValue());
+         }
+       } else {
+         String commonCompletion = Strings.findLongestCommonPrefix(completions.getSuffixes());
+         if (commonCompletion.length() > 0) {
+           delimiter.escape(commonCompletion, 0, commonCompletion.length(), term.getInsertBuffer());
+         } else {
+           // Format stuff
+           int width = term.getWidth();
+ 
+           //
+           String completionPrefix = completions.getPrefix();
+ 
+           // Get the max length
+           int max = 0;
+           for (String suffix : completions.getSuffixes()) {
+             max = Math.max(max, completionPrefix.length() + suffix.length());
+           }
+ 
+           // Separator
+           max++;
+ 
+           //
+           StringBuilder sb = new StringBuilder().append('\n');
+           if (max < width) {
+             int columns = width / max;
+             int index = 0;
+             for (String suffix : completions.getSuffixes()) {
+               sb.append(completionPrefix).append(suffix);
+               for (int l = completionPrefix.length() + suffix.length();l < max;l++) {
+                 sb.append(' ');
+               }
+               if (++index >= columns) {
+                 index = 0;
+                 sb.append('\n');
+               }
+             }
+             if (index > 0) {
+               sb.append('\n');
+             }
+           } else {
+             for (Iterator<String> i = completions.getSuffixes().iterator();i.hasNext();) {
+               String suffix = i.next();
+               sb.append(commonCompletion).append(suffix);
+               if (i.hasNext()) {
+                 sb.append('\n');
+               }
+             }
+             sb.append('\n');
+           }
+ 
+           // We propose
+           term.write(sb.toString());
+           writePrompt();
+         }
+       }
+     }
+     catch (IOException e) {
+       log.error("Could not write completion", e);
+     }
+   }
+ }

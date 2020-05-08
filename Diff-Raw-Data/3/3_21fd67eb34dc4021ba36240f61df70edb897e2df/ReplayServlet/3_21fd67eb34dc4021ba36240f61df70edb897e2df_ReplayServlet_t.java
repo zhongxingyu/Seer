@@ -1,0 +1,171 @@
+ /* WBReplayUIServlet
+  *
+  * Created on 2005/10/18 14:00:00
+  *
+  * Copyright (C) 2005 Internet Archive.
+  *
+  * This file is part of the Wayback Machine (crawler.archive.org).
+  *
+  * Wayback Machine is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU Lesser Public License as published by
+  * the Free Software Foundation; either version 2.1 of the License, or
+  * any later version.
+  *
+  * Wayback Machine is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU Lesser Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser Public License
+  * along with Wayback Machine; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  */
+ 
+ package org.archive.wayback.replay;
+ 
+ import java.io.IOException;
+ import java.text.ParseException;
+ import java.util.Iterator;
+ import java.util.logging.Logger;
+ 
+ import javax.servlet.ServletException;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ 
+ import org.archive.wayback.WaybackConstants;
+ import org.archive.wayback.ReplayRenderer;
+ import org.archive.wayback.ResultURIConverter;
+ import org.archive.wayback.ResourceIndex;
+ import org.archive.wayback.ResourceStore;
+ import org.archive.wayback.core.Resource;
+ import org.archive.wayback.core.SearchResult;
+ import org.archive.wayback.core.SearchResults;
+ import org.archive.wayback.core.Timestamp;
+ import org.archive.wayback.core.WaybackRequest;
+ import org.archive.wayback.core.WaybackServlet;
+ import org.archive.wayback.exception.ConfigurationException;
+ import org.archive.wayback.exception.ResourceNotInArchiveException;
+ import org.archive.wayback.exception.WaybackException;
+ import org.archive.wayback.query.OpenSearchQueryParser;
+ 
+ /**
+  * Servlet implementation for Wayback Replay requests.
+  * 
+  * @author Brad Tofel
+  * @version $Date$, $Revision$
+  */
+ public class ReplayServlet extends WaybackServlet {
+ 	private static final Logger LOGGER = Logger.getLogger(ReplayServlet.class
+ 			.getName());
+ 
+ 	private static final String WMREQUEST_ATTRIBUTE = "wmrequest.attribute";
+ 
+ 	private static final long serialVersionUID = 1L;
+ 
+ 	private OpenSearchQueryParser qp = new OpenSearchQueryParser();
+ 
+ 	/**
+ 	 * Constructor
+ 	 */
+ 	public ReplayServlet() {
+ 		super();
+ 	}
+ 
+ 	private SearchResult getClosest(SearchResults results,
+ 			WaybackRequest wbRequest) throws ParseException {
+ 
+ 		SearchResult closest = null;
+ 		long closestDistance = 0;
+ 		SearchResult cur = null;
+ 		Timestamp wantTimestamp;
+ 		wantTimestamp = Timestamp.parseBefore(wbRequest
+ 				.get(WaybackConstants.REQUEST_EXACT_DATE));
+ 
+ 		Iterator itr = results.iterator();
+ 		while (itr.hasNext()) {
+ 			cur = (SearchResult) itr.next();
+ 			long curDistance;
+ 			Timestamp curTimestamp = Timestamp.parseBefore(cur
+ 					.get(WaybackConstants.RESULT_CAPTURE_DATE));
+ 			curDistance = curTimestamp.absDistanceFromTimestamp(wantTimestamp);
+ 			
+ 			if ((closest == null) || (curDistance < closestDistance)) {
+ 				closest = cur;
+ 				closestDistance = curDistance;
+ 			}
+ 		}
+ 		return closest;
+ 	}
+ 
+ 	public void doGet(HttpServletRequest httpRequest,
+ 			HttpServletResponse httpResponse) throws IOException,
+ 			ServletException {
+ 
+ 		WaybackRequest wbRequest = (WaybackRequest) httpRequest
+ 				.getAttribute(WMREQUEST_ATTRIBUTE);
+ 
+ 		ReplayRenderer renderer;
+ 		try {
+ 			renderer = wayback.getReplayRenderer();
+ 		} catch (ConfigurationException e1) {
+ //			e1.printStackTrace();
+ 			throw new ServletException(e1);
+ 		}
+ 		Resource resource = null;
+ 		try {
+ 			ResourceIndex idx = wayback.getResourceIndex();
+ 			ResourceStore store = wayback.getResourceStore();
+ 			ResultURIConverter uriConverter = wayback.getURIConverter();
+ 
+ 			if (wbRequest == null) {
+ 				wbRequest = qp.parseQuery(httpRequest);
+ 			}
+ 
+ 			SearchResults results = idx.query(wbRequest);
+ 
+ 			// TODO: check which versions are actually accessible right now?
+ 			SearchResult closest = getClosest(results, wbRequest);
+			resource = store.retrieveResource(closest);
+ 
+ 			String requestedDateStr = wbRequest.get(
+ 					WaybackConstants.REQUEST_EXACT_DATE);
+ 			String closestDateStr = closest.get(
+ 					WaybackConstants.RESULT_CAPTURE_DATE);
+ 			
+ 			// some capture dates are not 14 digits, only compare as many
+ 			// dateStr digits as are in the capture date:
+ 			if(!closestDateStr.equals(
+ 					requestedDateStr.substring(0,closestDateStr.length()))) {
+ 				
+ 				// redirect to the actual date:
+ 				renderer.renderRedirect(httpRequest, httpResponse, wbRequest,
+ 						closest, resource, uriConverter);				
+ 				
+ 			} else {
+ 	
+ 				renderer.renderResource(httpRequest, httpResponse, wbRequest,
+ 						closest, resource, uriConverter);
+ 			}
+ 
+ 		} catch (ResourceNotInArchiveException nia) {
+ 
+ 			LOGGER.info("NotInArchive\t"
+ 					+ wbRequest.get(WaybackConstants.REQUEST_URL));
+ 			renderer.renderException(httpRequest, httpResponse, wbRequest, nia);
+ 
+ 		} catch (WaybackException wbe) {
+ 
+ 			renderer.renderException(httpRequest, httpResponse, wbRequest, wbe);
+ 
+ 		} catch (Exception e) {
+ 			// TODO show something Wayback'ish to the user rather than letting
+ 			// the container deal?
+ 			//e.printStackTrace();
+ 			throw new ServletException(e);
+ 		} finally {
+ 			if (resource != null) {
+ 				resource.close();
+ 			}
+ 		}
+ 	}
+ }

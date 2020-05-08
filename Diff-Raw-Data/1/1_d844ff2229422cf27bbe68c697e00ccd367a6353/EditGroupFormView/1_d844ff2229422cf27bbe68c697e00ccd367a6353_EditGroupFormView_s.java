@@ -1,0 +1,118 @@
+ /*
+  * Copyright 2009 - 2011 Sven Strickroth <email@cs-ware.de>
+  * 
+  * This file is part of the SubmissionInterface.
+  * 
+  * SubmissionInterface is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 3 as
+  * published by the Free Software Foundation.
+  * 
+  * SubmissionInterface is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  * GNU General Public License for more details.
+  * 
+  * You should have received a copy of the GNU General Public License
+  * along with SubmissionInterface. If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
+ package de.tuclausthal.submissioninterface.servlets.view;
+ 
+ import java.io.IOException;
+ import java.io.PrintWriter;
+ import java.util.Iterator;
+ 
+ import javax.servlet.ServletException;
+ import javax.servlet.http.HttpServlet;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ 
+ import de.tuclausthal.submissioninterface.persistence.dao.DAOFactory;
+ import de.tuclausthal.submissioninterface.persistence.datamodel.Group;
+ import de.tuclausthal.submissioninterface.persistence.datamodel.Participation;
+ import de.tuclausthal.submissioninterface.persistence.datamodel.ParticipationRole;
+ import de.tuclausthal.submissioninterface.servlets.RequestAdapter;
+ import de.tuclausthal.submissioninterface.template.Template;
+ import de.tuclausthal.submissioninterface.template.TemplateFactory;
+ import de.tuclausthal.submissioninterface.util.Util;
+ 
+ /**
+  * View-Servlet for displaying a form for editing a group
+  * @author Sven Strickroth
+  */
+ public class EditGroupFormView extends HttpServlet {
+ 	@Override
+ 	public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+ 		Template template = TemplateFactory.getTemplate(request, response);
+ 
+ 		PrintWriter out = response.getWriter();
+ 
+ 		Group group = (Group) request.getAttribute("group");
+ 		Participation participation = (Participation) request.getAttribute("participation");
+ 
+ 		template.addJQuery();
+ 		template.addKeepAlive();
+ 		template.printTemplateHeader(group);
+ 
+ 		out.println("<form action=\"" + response.encodeURL("?") + "\" method=post>");
+ 		out.println("<input type=hidden name=action value=editGroup>");
+ 		out.println("<input type=hidden name=groupid value=" + group.getGid() + ">");
+ 		out.println("<table class=border>");
+ 		out.println("<tr>");
+ 		out.println("<th>Gruppe:</th>");
+ 		out.println("<td><input type=text name=title value=\"" + Util.escapeHTML(group.getName()) + "\" " + ((participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) ? "" : "readonly") + "></td>");
+ 		out.println("</tr>");
+ 		out.println("<tr>");
+ 		out.println("<th>Studenten knnen sich eintragen:</th>");
+ 		out.println("<td><input type=checkbox name=allowStudentsToSignup " + (group.isAllowStudentsToSignup() ? "checked" : "") + " " + ((participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) ? "" : "disabled") + "></td>");
+ 		out.println("</tr>");
+ 		out.println("<tr>");
+ 		out.println("<th>Studenten knnen wechseln:</th>");
+ 		out.println("<td><input type=checkbox name=allowStudentsToQuit " + (group.isAllowStudentsToQuit() ? "checked" : "") + " " + ((participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) ? "" : "disabled") + "></td>");
+ 		out.println("</tr>");
+ 		out.println("<tr>");
+ 		out.println("<th>Max. Studenten:</th>");
+ 		out.println("<td><input type=text name=maxStudents value=\"" + group.getMaxStudents() + "\" " + ((participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) ? "" : "readonly") + "></td>");
+ 		out.println("</tr>");
+ 		out.println("<tr>");
+ 		out.println("<th>Abgabegruppe:</th>");
+ 		out.println("<td><input type=checkbox name=submissionGroup " + (group.isSubmissionGroup() ? "checked" : "") + " " + ((participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) ? "" : "disabled") + "> <a href=\"#\" onclick=\"$('#submissiongrouphelp').toggle(); return false;\">(?)</a><br><span style=\"display:none;\" id=submissiongrouphelp><b>Hilfe:</b><br>Wird dieses Flag gesetzt, werden alle Mitglieder dieser Gruppe bei der ersten Abgabe als Partner hinzugefgt.</span></td>");
+ 		out.println("</tr>");
+ 		out.println("<tr>");
+ 		out.println("<th>Teilnehmer hinzufgen:</th>");
+ 		out.println("<td><select multiple name=members>");
+ 		Iterator<Participation> participationIterator = DAOFactory.ParticipationDAOIf(RequestAdapter.getSession(request)).getParticipationsWithoutGroup(group.getLecture()).iterator();
+ 		while (participationIterator.hasNext()) {
+ 			Participation thisParticipation = participationIterator.next();
+ 			if (participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0 || thisParticipation.getRoleType().compareTo(ParticipationRole.NORMAL) == 0) {
+ 				out.println("<option value=" + thisParticipation.getId() + ">" + Util.escapeHTML(thisParticipation.getUser().getFullName()) + "</option>");
+ 			}
+ 		}
+ 		out.println("</select></td>");
+ 		out.println("</tr>");
+		out.println("<tr>");
+ 		if (participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) {
+ 			out.println("<tr>");
+ 			out.println("<th>Verantwortliche Tutoren hinzufgen:</th>");
+ 			out.println("<td><select multiple name=tutors>");
+ 			participationIterator = DAOFactory.ParticipationDAOIf(RequestAdapter.getSession(request)).getMarkersAvailableParticipations(group).iterator();
+ 			while (participationIterator.hasNext()) {
+ 				Participation thisParticipation = participationIterator.next();
+ 				if (!group.getTutors().contains(thisParticipation)) {
+ 					out.println("<option value=" + thisParticipation.getId() + ">" + Util.escapeHTML(thisParticipation.getUser().getFullName()) + "</option>");
+ 				}
+ 			}
+ 			out.println("</select></td>");
+ 			out.println("</tr>");
+ 		}
+ 		out.println("<tr>");
+ 		out.println("<td colspan=2 class=mid><input type=submit value=zuordnen> <a href=\"" + response.encodeURL("ShowLecture?lecture=" + group.getLecture().getId()) + "\">Abbrechen</a></td>");
+ 		out.println("</tr>");
+ 		out.println("</table>");
+ 		out.println("</form>");
+ 		if (participation.getRoleType().compareTo(ParticipationRole.ADVISOR) == 0) {
+ 			out.println("<p class=mid><a onclick=\"return confirmLink('Wirklich lschen?')\" href=\"" + response.encodeURL("AddGroup?lecture=" + group.getLecture().getId() + "&amp;action=deleteGroup&amp;gid=" + group.getGid()) + "\">Gruppe lschen</a></td>");
+ 		}
+ 		template.printTemplateFooter();
+ 	}
+ }

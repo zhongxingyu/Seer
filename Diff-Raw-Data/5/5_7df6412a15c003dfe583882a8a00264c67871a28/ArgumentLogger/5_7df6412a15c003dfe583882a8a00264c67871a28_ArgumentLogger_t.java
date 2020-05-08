@@ -1,0 +1,34 @@
+ import java.util.logging.ConsoleHandler;
+ import java.util.logging.Logger;
+ 
+ /**
+  * This class will log anything that comes in through the command line - including CRLF characters
+  * 
+  * Use the --safe flag to have it be safe (see the Makefile)
+  * 
+  * @author Andy Meneely
+  * 
+  */
+ public class ArgumentLogger {
+	private static Logger log = Logger.getLogger(ArgumentLogger.class.getName());
+ 
+ 	public static void main(String[] args) {
+ 
+ 		System.out.println("Logging commandline arguments:");
+ 		if (args.length > 0) {
+ 
+ 			// Log safely
+ 			if (args[0].equals("--safe") && args.length > 1) {
+ 
+ 				System.out.println("Safe mode enabled.");
+ 				// Encode carrage returns to avoid log forgery
+ 				String clean = args[1].replace('\n', '_').replace('\r', '_');
+				log.info(clean);
+ 
+ 			// Log unsafely 
+ 			} else {
+ 				log.info(args[0]);
+ 			}
+ 		}
+ 	}
+ }

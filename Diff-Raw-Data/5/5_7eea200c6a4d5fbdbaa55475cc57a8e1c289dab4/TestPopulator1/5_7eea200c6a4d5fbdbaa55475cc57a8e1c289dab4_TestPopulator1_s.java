@@ -1,0 +1,43 @@
+ package org.jboss.aesh.cl;
+ 
+ @CommandDefinition(name = "test", description = "a simple test")
+ public class TestPopulator1 {
+ 
+    @Option(name = "X", description = "enable X", hasValue = false)
+     private Boolean enableX;
+ 
+    @Option(hasValue = false)
+     public boolean bar;
+ 
+     @Option(shortName = 'f', name = "foo", description = "enable foo", hasValue = false)
+     public boolean foo;
+ 
+     @Option(shortName = 'e', name = "equal", description = "enable equal", required = true)
+     public String equal;
+ 
+     @Option(shortName = 'i', name = "int1", defaultValue = {"42"})
+     private Integer int1;
+ 
+     @Option(shortName = 'n')
+     public int int2;
+ 
+     /*
+     @OptionGroup(shortName = 'D', description = "define properties")
+     public Map<String, String> define;
+     */
+ 
+     public TestPopulator1() {
+     }
+ 
+     public String getEqual() {
+         return equal;
+     }
+ 
+     public Boolean getEnableX() {
+         return enableX;
+     }
+ 
+     public Integer getInt1() {
+         return int1;
+     }
+ }

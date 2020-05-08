@@ -1,0 +1,191 @@
+ package com.bretth.osmosis.core.filter.common;
+ 
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+ 
+ import com.bretth.osmosis.core.OsmosisRuntimeException;
+ 
+ 
+ /**
+  * Implements the IdTracker interface using a list of ids. The current
+  * implementation only supports 31 bit numbers, but will be enhanced if and when
+  * required.
+  * 
+  * @author Brett Henderson
+  */
+ public class ListIdTracker implements IdTracker {
+ 	/**
+ 	 * The internal list is initialised to this size.
+ 	 */
+ 	private static final int INITIAL_LIST_SIZE = 1024;
+ 	/**
+ 	 * The internal list size is multiplied by this factor when more space is
+ 	 * required.
+ 	 */
+ 	private static final double LIST_SIZE_EXTENSION_FACTOR = 1.5;
+ 	
+ 	
+ 	private int[] idList;
+ 	private int idOffset;
+ 	private int maxIdAdded;
+ 	private boolean sorted;
+ 	
+ 	
+ 	/**
+ 	 * Creates a new instance.
+ 	 */
+ 	public ListIdTracker() {
+ 		idList = new int[INITIAL_LIST_SIZE];
+ 		idOffset = 0;
+ 		maxIdAdded = Integer.MIN_VALUE;
+ 		sorted = true;
+ 	}
+ 	
+ 	
+ 	/**
+ 	 * Converts the specified long to an int and verifies that it is legal.
+ 	 * 
+ 	 * @param value
+ 	 *            The identifier to be converted.
+ 	 * @return The integer representation of the id.
+ 	 */
+ 	private int longToInt(long value) {
+ 		// Verify that the bit can be safely cast to an integer.
+ 		if (value > Integer.MAX_VALUE) {
+ 			throw new OsmosisRuntimeException("Requested value " + value + " exceeds the maximum supported size of " + Integer.MAX_VALUE + ".");
+ 		}
+ 		if (value < Integer.MIN_VALUE) {
+ 			throw new OsmosisRuntimeException("Requested value " + value + " exceeds the minimum supported size of " + Integer.MIN_VALUE + ".");
+ 		}
+ 		
+ 		return (int) value;
+ 	}
+ 	
+ 	
+ 	/**
+ 	 * Increases the size of the id list to make space for new ids.
+ 	 */
+ 	private void extendIdList() {
+ 		int[] newIdList;
+ 		int newListLength;
+ 		
+ 		newListLength = (int) (idList.length * LIST_SIZE_EXTENSION_FACTOR);
+ 		
+ 		newIdList = new int[newListLength];
+ 		
+ 		System.arraycopy(idList, 0, newIdList, 0, idList.length);
+ 		
+ 		idList = newIdList;
+ 	}
+ 	
+ 	
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	public void set(long id) {
+ 		int integerId;
+ 		
+ 		integerId = longToInt(id);
+ 		
+ 		// Increase the id list size if it is full.
+ 		if (idOffset >= idList.length) {
+ 			extendIdList();
+ 		}
+ 		
+ 		idList[idOffset++] = integerId;
+ 		
+ 		// If ids are added out of order, the list will have to be sorted before
+ 		// it can be searched using a binary search algorithm.
+ 		if (integerId < maxIdAdded) {
+ 			sorted = false;
+		} else {
+ 			maxIdAdded = integerId;
+ 		}
+ 	}
+ 	
+ 	
+ 	/**
+ 	 * {@inheritDoc}
+ 	 */
+ 	public boolean get(long id) {
+ 		int integerId;
+ 		int intervalBegin;
+ 		int intervalEnd;
+ 		boolean idFound;
+ 		
+ 		integerId = longToInt(id);
+ 		
+ 		// If the list is not sorted, it must be sorted prior to a search being
+ 		// performed.
+ 		if (!sorted) {
+ 			List<Integer> tmpList;
+ 			
+ 			tmpList = new ArrayList<Integer>(idOffset);
+ 			
+ 			for (int i = 0; i < idOffset; i++) {
+ 				tmpList.add(Integer.valueOf(idList[i]));
+ 			}
+ 			
+ 			Collections.sort(tmpList);
+ 			
+ 			for (int i = 0; i < idOffset; i++) {
+ 				idList[i] = tmpList.get(i).intValue();
+ 			}
+ 			
+ 			sorted = true;
+ 		}
+ 		
+ 		// Perform a binary search splitting the list in half each time until
+ 		// the requested id is confirmed as existing or not.
+ 		intervalBegin = 0;
+ 		intervalEnd = idOffset;
+ 		idFound = false;
+ 		for (boolean searchComplete = false; !searchComplete; ) {
+ 			int intervalSize;
+ 			
+ 			// Calculate the interval size.
+ 			intervalSize = intervalEnd - intervalBegin;
+ 			
+ 			// Divide and conquer if the size is large, otherwise commence
+ 			// linear search.
+ 			if (intervalSize >= 2) {
+ 				int intervalMid;
+ 				int currentId;
+ 				
+ 				// Split the interval in two.
+ 				intervalMid = intervalSize / 2 + intervalBegin;
+ 				
+ 				// Check whether the midpoint id is above or below the id
+ 				// required.
+ 				currentId = idList[intervalMid];
+ 				if (currentId == integerId) {
+ 					idFound = true;
+ 					searchComplete = true;
+ 				} else if (currentId < integerId) {
+ 					intervalBegin = intervalMid + 1;
+ 				} else {
+ 					intervalEnd = intervalMid;
+ 				}
+ 				
+ 			} else {
+ 				// Iterate through the entire interval.
+ 				for (int currentOffset = intervalBegin; currentOffset < intervalEnd; currentOffset++) {
+ 					int currentId;
+ 					
+ 					// Check if the current offset contains the id required.
+ 					currentId = idList[currentOffset];
+ 					
+ 					if (currentId == integerId) {
+ 						idFound = true;
+ 						break;
+ 					}
+ 				}
+ 				
+ 				searchComplete = true;
+ 			}
+ 		}
+ 		
+ 		return idFound;
+ 	}
+ }

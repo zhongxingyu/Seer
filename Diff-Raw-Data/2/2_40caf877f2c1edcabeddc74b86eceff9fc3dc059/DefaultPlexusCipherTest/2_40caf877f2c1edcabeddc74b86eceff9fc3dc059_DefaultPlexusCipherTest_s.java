@@ -1,0 +1,128 @@
+ /**
+  * Copyright (c) 2008 Sonatype, Inc. All rights reserved.
+  *
+  * This program is licensed to you under the Apache License Version 2.0,
+  * and you may not use this file except in compliance with the Apache License Version 2.0.
+  * You may obtain a copy of the Apache License Version 2.0 at http://www.apache.org/licenses/LICENSE-2.0.
+  *
+  * Unless required by applicable law or agreed to in writing,
+  * software distributed under the Apache License Version 2.0 is distributed on an
+  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
+  */
+  package org.sonatype.plexus.components.cipher;
+ 
+ 
+ import junit.framework.TestCase;
+ 
+ /**
+  * Test the Plexus Cipher container
+  * 
+  * @author Oleg Gusakov
+  * @version $Id$
+  */
+ public class DefaultPlexusCipherTest
+     extends TestCase
+ {
+   private String      passPhrase = "foofoo";
+   String              str        = "my testing phrase";
+  String              encStr     = "CGdXen9AvVeXIKx6vCMe/DqpHER+tjJ7FUUOSZgKKRFH";
+ 
+   DefaultPlexusCipher pc;
+   // -------------------------------------------------------------
+   public void setUp()
+       throws Exception
+   {
+     super.setUp();
+ 
+     pc = new DefaultPlexusCipher();
+   }
+ 
+   // -------------------------------------------------------------
+   public void testDefaultAlgorithmExists()
+       throws Exception
+   {
+     String[] res = DefaultPlexusCipher.getCryptoImpls( "Cipher" );
+     assertNotNull( "No Cipher providers found in the current environment", res );
+ 
+     System.out.println( "\n=== Available ciphers :" );
+     for( int i=0; i<res.length; i++ )
+     {
+         System.out.println( res[i] );
+     }
+     System.out.println( "====================" );
+ 
+     for( int i=0; i<res.length; i++ )
+     {
+         String provider = res[i];
+         if( PBECipher.KEY_ALG.equalsIgnoreCase( provider ) )
+             return;
+     }
+ 
+     throw new Exception( "Cannot find default algorithm " + PBECipher.KEY_ALG
+         + " in the current environment." );
+   }
+ 
+   // -------------------------------------------------------------
+   public void stestFindDefaultAlgorithm()
+       throws Exception
+   {
+     String[] res = DefaultPlexusCipher.getServiceTypes();
+     assertNotNull( "No service types found in the current environment", res );
+ 
+     String [] impls = DefaultPlexusCipher.getCryptoImpls( "Cipher" );
+     assertNotNull( "No Cipher providers found in the current environment", impls );
+ 
+     for( int i=0; i< impls.length; i++ )
+       try
+       {
+           String provider = impls[i];
+           
+         System.out.print( provider );
+         pc.encrypt( str, passPhrase );
+         System.out.println( "------------------> Success !!!!!!" );
+       }
+       catch( Exception e )
+       {
+         System.out.println( e.getMessage() );
+       }
+   }
+ 
+   // -------------------------------------------------------------
+   public void testEncrypt()
+       throws Exception
+   {
+     String xRes = pc.encrypt( str, passPhrase );
+     String res = pc.decrypt( xRes, passPhrase );
+     assertEquals( "Encryption/Decryption did not produce desired result", str, res );
+   }
+ 
+   // -------------------------------------------------------------
+   public void testDecrypt()
+       throws Exception
+   {
+     String res = pc.decrypt( encStr, passPhrase );
+     assertEquals( "Decryption did not produce desired result", str, res );
+   }
+ 
+   // -------------------------------------------------------------
+   public void testDecorate()
+       throws Exception
+   {
+     String res = pc.decorate( "aaa" );
+     assertEquals( "Decoration failed",
+         PlexusCipher.ENCRYPTED_STRING_DECORATION_START + "aaa"
+             + PlexusCipher.ENCRYPTED_STRING_DECORATION_STOP, res );
+   }
+ 
+   // -------------------------------------------------------------
+   public void testUnDecorate()
+       throws Exception
+   {
+     String res = pc.unDecorate( PlexusCipher.ENCRYPTED_STRING_DECORATION_START
+         + "aaa" + PlexusCipher.ENCRYPTED_STRING_DECORATION_STOP );
+     assertEquals( "Decoration failed", "aaa", res );
+   }
+   // -------------------------------------------------------------
+   // -------------------------------------------------------------
+ }

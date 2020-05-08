@@ -1,0 +1,148 @@
+ //idega 2000 - Eiki
+ 
+ 
+ 
+ package com.idega.core.data;
+ 
+ 
+ 
+ //import java.util.*;
+ 
+ import java.util.Collection;
+ import java.rmi.RemoteException;
+ import javax.ejb.FinderException;
+ import java.sql.*;
+ 
+ import com.idega.data.*;
+ 
+ 
+ 
+ public class PostalCodeBMPBean extends GenericEntity implements com.idega.core.data.PostalCode {
+ 
+ 	static final String TABLE_NAME="IC_POSTAL_CODE";
+ 	 
+ 	 static final String COLUMN_POSTAL_CODE_ID="IC_POSTAL_CODE_ID";
+ 	 static final String COLUMN_POSTAL_CODE="POSTAL_CODE";
+ 	 static final String COLUMN_NAME="NAME";
+ 	 static final String COLUMN_COUNTRY_ID="IC_COUNTRY_ID";
+ 
+ 	 
+ 	 
+ 
+ 
+   public PostalCodeBMPBean(){
+     super();
+   }
+ 
+ 
+ 
+   public PostalCodeBMPBean(int id)throws SQLException{
+     super(id);
+   }
+ 
+ 
+ 
+   public void initializeAttributes(){
+     addAttribute(getIDColumnName());
+     addAttribute(COLUMN_POSTAL_CODE, "Postalcode", true, true, String.class,50);
+     addAttribute(COLUMN_NAME, "Name", true, true, String.class,50);
+    addManyToOneRelationship(COLUMN_COUNTRY_ID, "Country", Country.class);
+   }
+ 
+ 
+   public void insertStartData()throws Exception{
+ /*            java.util.List countries = EntityFinder.findAllByColumn(com.idega.core.data.CountryBMPBean.getStaticInstance(),"ISO_Abbreviation","IS");
+       if (countries != null) {
+           Country country = (Country) countries.get(0);
+           PostalCode pCode;
+           pCode = ((com.idega.core.data.PostalCodeHome)com.idega.data.IDOLookup.getHomeLegacy(PostalCode.class)).createLegacy();
+             pCode.setPostalCode("101");
+             pCode.setName("Reykjavik");
+             pCode.setCountryID(country.getID());
+             pCode.insert();
+           pCode = ((com.idega.core.data.PostalCodeHome)com.idega.data.IDOLookup.getHomeLegacy(PostalCode.class)).createLegacy();
+             pCode.setPostalCode("200");
+             pCode.setName("Kpavogur");
+             pCode.setCountryID(country.getID());
+             pCode.insert();
+           pCode = ((com.idega.core.data.PostalCodeHome)com.idega.data.IDOLookup.getHomeLegacy(PostalCode.class)).createLegacy();
+             pCode.setPostalCode("201");<
+             pCode.setName("Kpavogur");
+            pCode.setCountryID(country.getID());
+             pCode.insert();
+       }
+       */
+   }
+ 
+   public String getEntityName(){
+     return TABLE_NAME;
+   }
+ 
+   public void setPostalCode(String code){
+     setColumn(COLUMN_POSTAL_CODE, code);
+   }
+ 
+   public String getPostalCode(){
+     return getStringColumnValue(COLUMN_POSTAL_CODE);
+   }
+ 
+   /**
+    * All names are stored in uppercase, uses String.toUpperCase();
+    */
+   public void setName(String name){
+     setColumn(COLUMN_NAME, name.toUpperCase());
+   }
+ 
+   public String getName(){
+     return getStringColumnValue(COLUMN_NAME);
+   }
+ 
+   public void setCountry(Country country){
+     setColumn(COLUMN_COUNTRY_ID,country);
+   }
+ 
+   public Country getCountry(){
+     return (Country)getColumnValue(COLUMN_COUNTRY_ID);
+   }
+ 
+   public void setCountryID(int country_id){
+     setColumn(COLUMN_COUNTRY_ID,country_id);
+   }
+ 
+   public int getCountryID(){
+     return getIntColumnValue(COLUMN_COUNTRY_ID);
+   }
+ 
+   public Integer ejbFindByPostalCodeAndCountryId(String code,int countryId)throws FinderException,RemoteException{
+     Collection codes = idoFindAllIDsByColumnsBySQL(COLUMN_POSTAL_CODE,code, COLUMN_COUNTRY_ID, Integer.toString(countryId));
+     if(!codes.isEmpty()){
+       return (Integer)codes.iterator().next();
+     }
+     else throw new FinderException("PostalCode not found");
+   }
+ 
+   public Collection ejbFindByPostalCodeAndCountryId(int countryId)throws FinderException,RemoteException{
+     return idoFindAllIDsByColumnBySQL(COLUMN_COUNTRY_ID, Integer.toString(countryId));
+   }
+ 
+ 
+   public Collection ejbFindAll()throws FinderException,RemoteException{
+     return idoFindAllIDsBySQL();
+   }
+   
+   public Collection ejbFindAllOrdererByCode()throws FinderException,RemoteException{
+     return super.idoFindAllIDsOrderedBySQL(COLUMN_POSTAL_CODE);
+   }
+   
+    public String getPostalAddress(){
+     	StringBuffer addr = new StringBuffer();
+     	String code = getPostalCode();
+     	if(code!=null)
+     		addr.append(code).append(" ");
+     	String name = this.getName();
+     	if(name !=null)
+     		addr.append(name);
+     	return addr.toString();
+     }
+ 
+ }

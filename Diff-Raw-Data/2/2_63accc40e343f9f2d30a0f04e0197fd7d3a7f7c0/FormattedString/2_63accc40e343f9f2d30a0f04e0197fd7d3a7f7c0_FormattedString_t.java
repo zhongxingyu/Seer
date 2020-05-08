@@ -1,0 +1,200 @@
+ /*
+  * FormattedString.java
+  * A String that can include options of the form $optionName$. Option values
+  * are maintained in a property list and getText returns the string will all
+  * options replaced by their value
+  */
+ 
+ package VASSAL.tools;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import VASSAL.build.BadDataReport;
+ import VASSAL.build.GameModule;
+ import VASSAL.build.module.properties.PropertySource;
+ import VASSAL.counters.EditablePiece;
+ import VASSAL.counters.GamePiece;
+ import VASSAL.i18n.Resources;
+ 
+ public class FormattedString {
+ 
+   protected String formatString;
+   protected Map<String,String> props = new HashMap<String,String>();
+   protected PropertySource defaultProperties;
+ 
+   public FormattedString() {
+     this("");
+   }
+ 
+   public FormattedString(String s) {
+     this(s,GameModule.getGameModule());
+   }
+   
+   public FormattedString(PropertySource defaultProperties) {
+     this("",defaultProperties);
+   }
+ 
+   public FormattedString(String formatString, PropertySource defaultProperties) {
+     this.formatString = formatString;
+     this.defaultProperties = defaultProperties;
+   }
+ 
+   public void setFormat(String s) {
+     formatString = s;
+   }
+ 
+   public String getFormat() {
+     return formatString;
+   }
+ 
+   public void setProperty(String name, String value) {
+     props.put(name, value);
+   }
+ 
+   public void clearProperties() {
+     props.clear();
+   }
+ 
+   /**
+    * Return the resulting string after substituting properties
+    * @return
+    */
+   public String getText() {
+     return getText(defaultProperties, false);
+   }
+   
+   public String getLocalizedText() {
+     return getText(defaultProperties, true);
+   }
+ 
+ //  public String getText(GamePiece piece) {  GamePiece is now a PropertySource
+ //    return getText((PropertySource)piece);
+ //  }
+   /**
+    * Return the resulting string after substituting properties
+    * Also, if any property keys match a property in the given GamePiece,
+    * substitute the value of that property
+    * @see GamePiece#getProperty
+    * @param ps
+    * @return
+    */
+   public String getText(PropertySource ps) {
+     return getText(ps, false);
+   }
+   
+   /**
+    * Return the resulting string after substituting properties
+    * Also, if any property keys match a property in the given GamePiece,
+    * substitute the value of that property. If the resulting string is 
+    * empty, then the default is returned.
+    * @see GamePiece#getProperty
+    * @param ps
+    * @param def the default if the result is otherwise empty
+    * @return
+    */
+   public String getText(PropertySource ps, String def) {
+     String s = getText(ps, false);
+     if (s == null || s.length() == 0) {
+       s = def;
+     }
+     return s;
+   }
+ 
+   public String getLocalizedText(PropertySource ps) {
+     return getText(ps, true);
+   }
+   
+   protected String getText(PropertySource ps, boolean localized) {
+     final StringBuilder buffer = new StringBuilder();
+     final SequenceEncoder.Decoder st =
+       new SequenceEncoder.Decoder(formatString, '$');
+     boolean isProperty = true;
+     while (st.hasMoreTokens()) {
+       final String token = st.nextToken();
+       isProperty = !isProperty;
+       if (token.length() > 0) {
+         /*
+          * Only even numbered tokens with at least one token after them are valid $propertName$ strings.
+          */
+         if (!isProperty || ! st.hasMoreTokens()) {
+           buffer.append(token);
+         }
+         else if (props.containsKey(token)) {
+           final String value = props.get(token);
+           if (value != null) {
+             buffer.append(value);
+           }
+         }
+         else if (ps != null) {
+           final Object value =
+             localized ? ps.getLocalizedProperty(token) : ps.getProperty(token);
+           if (value != null) {
+             buffer.append(value.toString());
+           }
+           else if (!localized) {
+             buffer.append(token);
+           } 
+         }
+         else {
+           buffer.append(token);
+         }
+       }
+     }
+ 
+     return buffer.toString();
+   }
+ 
+   /**
+    * Expand a FormattedString using the supplied propertySource and parse it as
+    * an integer. If the expanded string is not an integer, generate a Bad Data Report
+    * with debugging information and return a value of 0
+    * 
+    * @param formattedInt Formatted String
+    * @param source Property Source (Usually the outer of the piece)
+    * @param description A Description of the field
+    * @param piece The source trait
+    * @return parsed integer
+    */
+   public int getTextAsInt(PropertySource ps, String description, EditablePiece source) {
+     int result = 0;
+    final String value = getText(ps, "0");
+     try {
+       result = Integer.parseInt(value);
+     }
+     catch (NumberFormatException e) {
+       ErrorDialog.dataError(new BadDataReport(source, Resources.getString("Error.non_number_error"), debugInfo(this, value, description), e));  
+     }
+     return result;  
+   }
+   
+   /**
+    * Format a standard debug message for use in Decorator bad data reports.  
+    * 
+    *  description=value
+    *  description[format]=value
+    * 
+    * Use format 1 if the generated value is the same as the format
+    * Use format 2 if the formated contained $...$ variables that have been expanded.
+    * 
+    * @param format Formatted String
+    * @param description Description of the String
+    * @param value Value generated by the formatted string
+    * @return error message
+    */
+   public static String debugInfo(FormattedString format, String value, String description) {
+     return description + (value.equals(format.getFormat()) ? "" : "[" + format.getFormat()+ "]") + "=" + value; 
+   }
+   
+   public String debugInfo(String value, String description) {
+     return debugInfo(this, value, description);
+   }
+   
+   public PropertySource getDefaultProperties() {
+     return defaultProperties;
+   }
+ 
+   public void setDefaultProperties(PropertySource defaultProperties) {
+     this.defaultProperties = defaultProperties;
+   }
+ }

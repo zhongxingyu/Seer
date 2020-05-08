@@ -1,0 +1,59 @@
+ package de.fu_berlin.inf.dpp.ui.actions;
+ 
+ import java.awt.Toolkit;
+ 
+ import org.eclipse.jface.action.Action;
+ import org.eclipse.ui.PlatformUI;
+ 
+ import de.fu_berlin.inf.dpp.preferences.PreferenceConstants;
+ import de.fu_berlin.inf.dpp.ui.SarosUI;
+ 
+ public class IMBeepAction extends Action {
+     public IMBeepAction(String text) {
+         super(text);
+         this.updateIcon();
+         this.updateTooltip();
+     }
+ 
+     @Override
+     public void run() {
+         PlatformUI.getPreferenceStore();
+ 
+         this.setOn(!this.isOn());
+         this.updateIcon();
+     }
+ 
+     protected boolean isOn() {
+         return PlatformUI.getPreferenceStore().getBoolean(
+             PreferenceConstants.BEEP_UPON_IM);
+     }
+ 
+     protected void setOn(boolean on) {
+         PlatformUI.getPreferenceStore().setValue(
+             PreferenceConstants.BEEP_UPON_IM, on);
+ 
+         updateTooltip();
+     }
+ 
+     public void beep() {
+         if (this.isOn())
+             Toolkit.getDefaultToolkit().beep();
+     }
+ 
+     public void updateIcon() {
+         if (this.isOn()) {
+             this.setImageDescriptor(SarosUI
+                .getImageDescriptor("/icons/speakeron.png"));
+         } else {
+             this.setImageDescriptor(SarosUI
+                .getImageDescriptor("/icons/speakeroff.png"));
+         }
+     }
+ 
+     protected void updateTooltip() {
+         if (this.isOn())
+             setToolTipText("Turn beep notificaton off.");
+         else
+             setToolTipText("Turn beep notification on.");
+     }
+ }

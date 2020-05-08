@@ -1,0 +1,544 @@
+ package com.me.Roguish.Controller;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+ import java.util.Random;
+ 
+ import com.badlogic.gdx.Gdx;
+ import com.me.Roguish.Model.Entity;
+ import com.me.Roguish.Model.HeroUnit;
+ import com.me.Roguish.Model.MonsterUnit;
+ import com.me.Roguish.Model.Level;
+ import com.me.Roguish.View.LevelRenderer;
+ import com.sun.corba.se.impl.oa.poa.ActiveObjectMap.Key;
+ 
+ public class LevelController {
+ 	private Level level;
+ 	private LevelRenderer renderer;
+ 	private HeroUnit hero;
+ 
+ 	public Random Dice = new Random();
+ 	public boolean gameOver = false;
+ 	public boolean gameWon = false;
+ 	private boolean ability1 = false;
+ 	private boolean ability2 = false;
+ 	private boolean ability3 = false;
+ 	private boolean ability4 = false;
+ 	private boolean ability5 = false;
+ 	private boolean tarLeft = false;
+ 	private boolean tarRight = false;
+ 	private boolean tarUp = false;
+ 	private boolean tarDown = false;
+ 	// Index is the index in the level entity array of the current Unit whose turn it is 
+ 	private int index = 0;
+ 	
+ 	enum Keys {
+ 		LEFT, RIGHT, UP, DOWN, ONE, TWO, THREE, FOUR, FIVE
+ 	}
+ 	
+ 	static Map<Keys, Boolean> keys = new HashMap<LevelController.Keys, Boolean>();
+ 	static {
+ 		keys.put(Keys.LEFT, false);
+ 		keys.put(Keys.RIGHT, false);
+ 		keys.put(Keys.UP, false);
+ 		keys.put(Keys.DOWN, false);
+ 		keys.put(Keys.ONE, false);
+ 		keys.put(Keys.TWO, false);
+ 		keys.put(Keys.THREE, false);
+ 		keys.put(Keys.FOUR, false);
+ 		keys.put(Keys.FIVE, false);
+ 	};
+ 	
+ 	public LevelController(Level level, LevelRenderer renderer){
+ 		this.level = level;
+ 		this.renderer = renderer;
+ 		this.hero = level.getHero();
+ 		
+ 	}
+ 	
+ 	// Main update method
+ 	public void update(float delta){
+ 		// process
+ 		processInput();
+ 		// do something
+ 	}
+ 	
+ 	
+ 	private void processInput(){
+ 		if (keys.get(Keys.LEFT)){
+ 			
+ 		}
+ 		if (keys.get(Keys.RIGHT)){
+ 		}
+ 		if (keys.get(Keys.DOWN)){
+ 			
+ 		}
+ 		if (keys.get(Keys.UP)){
+ 		}
+ 	}
+ 	
+ 	// Turn Mechanics
+ 	
+ 	private void doHeroTurn(Keys direction) {
+ 		checkHeroTurn();
+ 		if(!doHeroAbility()){
+ 		switch(direction){
+ 		case UP:{
+ 			if(hero.getY() > 0 && tileOpen(hero.getX(), hero.getY() - 1)){
+ 				hero.movePosition(0, -1);
+ 				nextTurn(hero);
+ 				renderer.updateCam(0,1);
+ 			}
+ 			break;
+ 		}
+ 		case DOWN:{
+ 			if(hero.getY() < 14 && tileOpen(hero.getX(), hero.getY() + 1)){
+ 				hero.movePosition(0, 1);
+ 				nextTurn(hero);
+ 				renderer.updateCam(0,-1);
+ 			}
+ 			break;
+ 		}
+ 		case LEFT:{
+ 			if(hero.getX() > 0 && tileOpen(hero.getX() - 1, hero.getY())){
+ 				hero.movePosition(-1, 0);
+ 				nextTurn(hero);
+ 				renderer.updateCam(-1,0);
+ 			}
+ 			break;
+ 		}
+ 		case RIGHT:{
+ 			if(hero.getX() < 9 && tileOpen(hero.getX() + 1, hero.getY())){
+ 				hero.movePosition(1 , 0);
+ 				nextTurn(hero);
+ 				renderer.updateCam(1, 0);
+ 			}
+ 			break;
+ 		}
+ 			}
+ 		}
+ 		
+ 	}
+ 	// Hope this works
+ 	private boolean doHeroAbility() {
+ 		if(!ability1 && !ability2 && !ability3 && !ability4 && !ability5) return false;
+ 		else{
+ 			if(ability1){
+ 				try {
+ 					level.ability.activate(hero, level.entities.get(findId(closestToHero(getDirection(), hero.getAbilities().peek()))), hero.getAbilities().peek());
+ 				}catch(ArrayIndexOutOfBoundsException e){ System.out.println("No target");}
+ 				ability1 = false;
+ 			}
+ 			else if(ability2){
+ 				try{
+ 					level.ability.activate(hero, level.entities.get(findId(closestToHero(getDirection(), hero.getAbilities().get(1)))), hero.getAbilities().get(1));
+ 					}catch(ArrayIndexOutOfBoundsException e){ System.out.println("No target");}
+ 				ability2 = false;
+ 			}
+ 			else if(ability3){
+ 				try{
+ 					level.ability.activate(hero, level.entities.get(findId(closestToHero(getDirection(), hero.getAbilities().get(2)))), hero.getAbilities().get(2));
+ 					}catch(ArrayIndexOutOfBoundsException e){ System.out.println("No target");}
+ 				ability3 = false;
+ 			}
+ 			else if(ability4){
+ 				try{
+ 					level.ability.activate(hero, level.entities.get(findId(closestToHero(getDirection(), hero.getAbilities().get(3)))), hero.getAbilities().get(3));
+ 					}catch(ArrayIndexOutOfBoundsException e){ System.out.println("No target");}
+ 				ability4 = false;
+ 			}
+ 			else if(ability5){
+ 				try{
+ 				level.ability.activate(hero, level.entities.get(findId(closestToHero(getDirection(), hero.getAbilities().get(4)))), hero.getAbilities().get(4));
+ 				}catch(ArrayIndexOutOfBoundsException e){ System.out.println("No target");}
+ 				ability5 = false;
+ 			}
+ 			nextTurn(hero);
+ 			return true;
+ 		}
+ 	}
+ 	
+ 	private void nextTurn(HeroUnit hero){
+ 		level.queue.getNext();
+ 		hero.resetMovement();
+ 		level.queue.add(hero);
+ 		doMonsterTurn();   // Doesn't belong here but seems to make things work...?
+ 	}
+ 	private void nextTurn(){
+ 		if(level.entities.get(index).getAlive()){
+ 			level.entities.get(index).resetMovement();
+ 			level.queue.add(level.entities.get(index));
+ 		}
+ 		index = findId(level.queue.getNext());
+ 		for(Entity ent : level.entities){
+ 			System.out.println(ent.getId());
+ 		}
+ 	}
+ 	
+ 	private int closestToHero(int direction, int ability){
+ 		boolean found = false;
+ 		switch(direction){
+ 		//Up
+ 		case 0:{
+ 			for(Entity ent : level.getEntities()){
+ 				if(inRange(hero, ent, ability) && ent.getY() <= hero.getY() && !ent.equals(hero)){
+ 					return ent.getId();
+ 				}
+ 			}
+ 			break;
+ 		}
+ 		//Down
+ 		case 1:{
+ 			for(Entity ent : level.getEntities()){
+ 				if(inRange(hero, ent, ability) && ent.getY() >= hero.getY() && !ent.equals(hero)) return ent.getId();
+ 			}
+ 			break;
+ 		}
+ 		//Left
+ 		case 2:{
+ 			for(Entity ent : level.getEntities()){
+ 				if(inRange(hero, ent, ability) && ent.getX() <= hero.getX() && !ent.equals(hero)) return ent.getId();
+ 			}
+ 			break;
+ 		}
+ 		//Right
+ 		case 3:{
+ 			for(Entity ent : level.getEntities()){
+ 				if(inRange(hero, ent, ability) && ent.getX() >= hero.getX() && !ent.equals(hero)) return ent.getId();
+ 			}
+ 			break;
+ 		}
+ 		default:{
+ 			System.out.println("closestToHero params error");
+ 			return -1;
+ 		}
+ 		}
+ 		System.out.println("closestToHero params error");
+ 	return -1;
+ 	}
+ 	
+ 	private int getDirection(){
+ 		if(tarUp){
+ 			tarUp = false;
+ 			return 0;
+ 		}
+ 		else if(tarDown){
+ 			tarDown = false;
+ 			return 1;
+ 		}
+ 		else if(tarLeft){
+ 			tarLeft = false;
+ 			return 2;
+ 		}
+ 		else if(tarRight){
+ 			tarRight = false;
+ 			return 3;
+ 		}
+ 		else{
+ 			System.out.println("getDirection error");
+ 			return -1;
+ 		}
+ 	}
+ 	
+ 
+ 	public void doMonsterTurn(){
+		if (level.entities.get(index) instanceof MonsterUnit){
+ 			if(adjacentHero(level.entities.get(index).getX(), level.entities.get(index).getY())){
+ 				switch( ((MonsterUnit)level.entities.get(index)).getType()){
+ 					case MonsterUnit.RAT: doRatAttack(); break;
+ 					case MonsterUnit.BAT: doBatAttack(); break;
+ 				}
+ 				
+ 			}
+ 			else{
+ 				switch( ((MonsterUnit)level.entities.get(index)).getType()){
+ 					case MonsterUnit.RAT: doRatMovement(); break;
+ 					case MonsterUnit.BAT: doBatMovement(); break;
+ 				}	
+ 			}
+ 			
+ 		}		
+ 	}
+ 	//Iterates over NPCs and performs their turns until it is the Hero's turn
+ 	public void checkHeroTurn(){
+ 		checkLoseConditions();
+ 		checkWinConditions();
+ 		
+ 		//System.out.println(level.queue.turnCount);
+ 		while (!(level.queue.getEnt() instanceof HeroUnit)){
+ 			doMonsterTurn();
+ 			nextTurn();
+ 		}
+ 	}
+ 	
+ 
+ 	
+ 	//Location Utilities:
+ 	
+ 	public boolean heroOn(int x, int y){
+ 		return(hero.getX() == x && hero.getY() == y );
+ 	}
+ 	
+ 	// Returns true if the hero is adjacent to the inputted x,y coordinates
+ 	public boolean adjacentHero(int x, int y){
+ 		if ( (hero.getX() == x + 1 || hero.getX() == x -1)  && (hero.getY() == y))
+ 			return true;
+ 		if ( (hero.getY() == y + 1 || hero.getY() == y - 1) && (hero.getX() == x))
+ 			return true;
+ 		else return false;
+ 	}
+ 	
+ 	public void checkLoseConditions(){
+ 		if(level.getHero().getHP() <= 0) gameOver = true;
+ 	}
+ 	
+ 	public void checkWinConditions(){
+ 		for (Entity ent : level.getEntities()) {
+ 			if(ent.getId() == 1337 && heroOn(ent.getX(), ent.getY())) gameWon = true; 
+ 		}
+ 	}
+ 	
+ 	// Returns index of the entity
+ 	public int findId(int x){
+ 		for(int i = 0; i < level.entities.size; i++ ){
+ 			if(x == level.entities.get(i).getId()) return i;
+ 		}
+ 		System.out.println("findId error");
+ 		return -1;	
+ 	}
+ 	
+ 	
+ 	//Returns true if the tile at the x, y is open
+ 	public boolean tileOpen(int x, int y){
+ 		for (Entity ent : level.getEntities()) {
+ 			if (ent.getX() == x && ent.getY() == y && ent.getAlive()) return false;
+ 		}
+ 		if(level.tilePropCheck(x,y,"wall")) return false;
+ 		else return true;
+ 	}
+ 	
+ 	public boolean inRange(Entity source, Entity target, int ability ){
+ 		if( distance(source.getX(), source.getY(), target.getX(), target.getY())  <= level.ability.getRange(ability) ) return true;
+ 		else return false;
+ 	}
+ 	
+ 	//Returns Manhattan distance between two points.
+ 	private int distance(int x, int y, int x2, int y2) {
+ 		return Math.abs(x-x2) + Math.abs(y-y2);
+ 	}
+ 
+ 	//Unit AI
+ 	
+ 	
+ 	public void doRatMovement(){
+ 		moveRandom(level.entities.get(index));
+ 	}
+ 	
+ 	public void doRatAttack() {
+ 		level.ability.activate(level.entities.get(index), level.getHero(), AbilityController.BITE);	
+ 		System.out.println(level.getHero().getHP());
+ 	}
+ 	
+ 	public void doBatMovement(){
+ 		moveEntityTowardHero(level.entities.get(index));
+ 	}
+ 	
+ 	public void doBatAttack(){
+ 		level.ability.activate(level.entities.get(index), level.getHero(), AbilityController.STRONGBITE);
+ 	}
+ 	
+ 	public void moveEntityTowardHero(Entity mover){
+ 		int deltaX = mover.getX() - level.getHero().getX();
+ 		int deltaY = mover.getY() - level.getHero().getY();
+ 		if (deltaX > 0  && deltaY == 0){
+ 			if(tileOpen(mover.getX() - 1, mover.getY()))
+ 				mover.movePosition(-1, 0);
+ 			// Mover is to the right of the hero in the same y.
+ 		}
+ 		else if (deltaX < 0  && deltaY == 0){
+ 			if(tileOpen(mover.getX() + 1, mover.getY()))
+ 				mover.movePosition(1, 0);
+ 			// Mover is to the left of the hero in the same y.
+ 		}
+ 		else if (deltaY > 0 && deltaX == 0){
+ 			if(tileOpen(mover.getX(), mover.getY() - 1))
+ 				mover.movePosition(0, -1);
+ 			// Mover is below the hero.
+ 		}
+ 		else if (deltaY < 0 && deltaX == 0){
+ 			if(tileOpen(mover.getX(), mover.getY() + 1))
+ 				mover.movePosition(0, 1);
+ 			// Mover is above the hero.
+ 		}
+ 		else if (deltaX > 0 && deltaY > 0){
+ 			if(tileOpen(mover.getX(), mover.getY() + 1))
+ 				mover.movePosition(0, 1);
+ 			else if(tileOpen(mover.getX() - 1, mover.getY()))
+ 				mover.movePosition(-1, 0);
+ 			//mover is Right && Below
+ 		}
+ 		else if (deltaX < 0 && deltaY > 0){
+ 			if(tileOpen(mover.getX(), mover.getY() - 1))
+ 				mover.movePosition(0, -1);
+ 			else if(tileOpen(mover.getX() + 1, mover.getY()))
+ 				mover.movePosition(1, 0);
+ 			//mover is Left && below
+ 		}
+ 		else if (deltaX < 0 && deltaY < 0){
+ 			if(tileOpen(mover.getX(), mover.getY() + 1))
+ 				mover.movePosition(0, 1);
+ 			else if(tileOpen(mover.getX() + 1, mover.getY()))
+ 				mover.movePosition(1, 0);
+ 			//mover is Left and Above
+ 		}
+ 		else if (deltaX > 0 && deltaY < 0){
+ 			if(tileOpen(mover.getX(), mover.getY() + 1))
+ 				mover.movePosition(0, 1);
+ 			else if(tileOpen(mover.getX() -1, mover.getY()))
+ 				mover.movePosition(-1, 0);
+ 			//mover is Right and Above
+ 		}
+ 		
+ 	}
+ 	
+ 	public void moveRandom(Entity mover){
+ 		boolean moved = false;
+ 		int count = 0;
+ 		do{
+ 			switch(Dice.nextInt(4)){
+ 				case 0:{
+ 					if(tileOpen(mover.getX(), mover.getY() - 1)){
+ 						mover.movePosition(0, -1);
+ 						moved = true;
+ 					}
+ 					break;
+ 				}
+ 				case 1:{
+ 					if(tileOpen(mover.getX(), mover.getY() + 1)){
+ 						mover.movePosition(0, 1);
+ 						moved = true;
+ 					}
+ 					break;
+ 				}
+ 				case 2:{
+ 					if(tileOpen(mover.getX() - 1, mover.getY())){
+ 						mover.movePosition(-1, 0);
+ 						moved = true;
+ 					}
+ 					break;
+ 				}
+ 				case 3:{
+ 					if(tileOpen(mover.getX() + 1, mover.getY())){
+ 						mover.movePosition(1, 0);
+ 						moved = true;
+ 					}
+ 					break;
+ 				}
+ 				default: break;
+ 			}
+ 			count++;
+ 			
+ 		}while(!moved && count < 20);
+ 		
+ 	}
+ 	
+ 	// Keypresses
+ 	public void leftPressed() {
+ 		keys.get(keys.put(Keys.LEFT, true));
+ 	}
+ 	
+ 	public void leftReleased() {
+ 		keys.get(keys.put(Keys.LEFT, false));
+ 		if(!ability1 && !ability2 && !ability3 && !ability4 && !ability5)
+ 			doHeroTurn(Keys.LEFT);
+ 		else {
+ 			tarLeft = true;
+ 			System.out.println(tarLeft);
+ 			doHeroTurn(Keys.LEFT);
+ 		}
+ 
+ 	}
+ 
+ 	public void rightPressed() {
+ 		keys.get(keys.put(Keys.RIGHT, true));
+ 	}
+ 	
+ 	public void rightReleased() {
+ 		keys.get(keys.put(Keys.RIGHT, false));
+ 		if(!ability1 && !ability2 && !ability3 && !ability4 && !ability5)
+ 			doHeroTurn(Keys.RIGHT);
+ 		else {
+ 			tarRight = true;
+ 			doHeroTurn(Keys.RIGHT);
+ 		}
+ 			
+ 	}
+ 	
+ 	public void upPressed() {
+ 		keys.get(keys.put(Keys.UP, true));
+ 	}
+ 	
+ 	public void upReleased() {
+ 		keys.get(keys.put(Keys.UP, false));
+ 		if(!ability1 && !ability2 && !ability3 && !ability4 && !ability5)
+ 			doHeroTurn(Keys.UP);
+ 		else {
+ 			tarUp = true;
+ 			doHeroTurn(Keys.UP);
+ 		}
+ 			
+ 	}
+ 	
+ 	public void downPressed() {
+ 		keys.get(keys.put(Keys.DOWN, true));
+ 	}
+ 	
+ 	public void downReleased() {
+ 		keys.get(keys.put(Keys.DOWN, false));
+ 		if(!ability1 && !ability2 && !ability3 && !ability4 && !ability5)
+ 			doHeroTurn(Keys.DOWN);
+ 		else{
+ 			tarDown = true;
+ 			doHeroTurn(Keys.DOWN);
+ 		}
+ 	
+ 	}
+ 	
+ 	public void onePressed(){
+ 		keys.get(keys.put(Keys.ONE, true));
+ 	}
+ 	public void oneReleased() {
+ 		keys.get(keys.put(Keys.ONE, false));
+ 		ability1 = true;
+ 	}
+ 	public void twoPressed(){
+ 		keys.get(keys.put(Keys.TWO, true));
+ 	}
+ 	public void twoReleased() {
+ 		keys.get(keys.put(Keys.TWO, false));
+ 		ability2 = true;
+ 	}
+ 	public void threePressed(){
+ 		keys.get(keys.put(Keys.THREE, true));
+ 	}
+ 	public void threeReleased() {
+ 		keys.get(keys.put(Keys.THREE, false));
+ 		ability3 = true;
+ 	}
+ 	public void fourPressed(){
+ 		keys.get(keys.put(Keys.FOUR, true));
+ 	}
+ 	public void fourReleased() {
+ 		keys.get(keys.put(Keys.FOUR, false));
+ 		ability4 = true;
+ 	}
+ 	
+ 	public void fivePressed(){
+ 		keys.get(keys.put(Keys.FIVE, true));
+ 	}
+ 	public void fiveReleased() {
+ 		keys.get(keys.put(Keys.FIVE, false));
+ 		ability5 = true;
+ 	}
+ 	
+ }

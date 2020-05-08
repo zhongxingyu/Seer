@@ -1,0 +1,470 @@
+ /**
+  * Copyright 2002-2010 Evgeny Gryaznov
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ package org.textway.templates.types;
+ 
+ import org.textway.templates.api.SourceElement;
+ import org.textway.templates.api.TemplatesStatus;
+ import org.textway.templates.api.types.*;
+ import org.textway.templates.api.types.IDataType.Constraint;
+ import org.textway.templates.api.types.IDataType.ConstraintKind;
+ import org.textway.templates.api.types.IDataType.DataTypeKind;
+ import org.textway.templates.storage.Resource;
+ import org.textway.templates.types.TiFeature.TiMultiplicity;
+ import org.textway.templates.types.TypesTree.TypesProblem;
+ import org.textway.templates.types.ast.*;
+ 
+ import java.util.*;
+ 
+ /**
+  * Two-pass types model loader.
+  */
+ class TypesResolver {
+ 
+ 	private final String myPackage;
+ 	private final Resource myResource;
+ 	private final Map<String, TiClass> myRegistryClasses;
+ 	private final TemplatesStatus myStatus;
+ 
+ 	// 1-st stage
+ 	private TypesTree<AstInput> myTree;
+ 	private Set<String> requiredPackages = new HashSet<String>();
+ 
+ 	// 2-nd stage
+ 	List<ResolveBean> myResolveFeatureTypes = new ArrayList<ResolveBean>();
+ 	List<ResolveSuperBean> myResolveSuperTypes = new ArrayList<ResolveSuperBean>();
+ 
+ 	// 3-d stage
+ 	List<ResolveDefaultValue> myResolveDefaultValues = new ArrayList<ResolveDefaultValue>();
+ 
+ 	public TypesResolver(String package_, Resource resource, Map<String, TiClass> registryClasses,
+ 						 TemplatesStatus status) {
+ 		this.myPackage = package_;
+ 		this.myResource = resource;
+ 		this.myRegistryClasses = registryClasses;
+ 		this.myStatus = status;
+ 	}
+ 
+ 	public void build() {
+ 		final TypesTree<AstInput> tree = TypesTree.parse(new TypesTree.TextSource(myPackage, myResource.getContents().toCharArray(), 1));
+ 		if (tree.hasErrors()) {
+ 			for (final TypesProblem s : tree.getErrors()) {
+ 				myStatus.report(TemplatesStatus.KIND_ERROR, s.getMessage(), new SourceElement() {
+ 					public String getResourceName() {
+ 						return myResource.getUri().getPath();
+ 					}
+ 
+ 					public int getOffset() {
+ 						return s.getOffset();
+ 					}
+ 
+ 					public int getEndOffset() {
+ 						return s.getEndOffset();
+ 					}
+ 
+ 					public int getLine() {
+ 						return tree.getSource().lineForOffset(s.getOffset());
+ 					}
+ 				});
+ 			}
+ 			return;
+ 		}
+ 
+ 		myTree = tree;
+ 		AstInput input = tree.getRoot();
+ 		Set<String> myFoundClasses = new HashSet<String>();
+ 		for (AstTypeDeclaration td : input.getDeclarations()) {
+ 			TiClass cl = convertClass(td);
+ 			String fqName = myPackage + "." + cl.getName();
+ 			if (myRegistryClasses.containsKey(fqName)) {
+ 				myStatus.report(TemplatesStatus.KIND_ERROR,
+ 						"class is declared twice: " + fqName + (myFoundClasses.contains(fqName) ? " (in one file)" : ""),
+ 						new LocatedNodeAdapter(td));
+ 			} else {
+ 				myRegistryClasses.put(fqName, cl);
+ 			}
+ 			myFoundClasses.add(fqName);
+ 		}
+ 	}
+ 
+ 	private TiClass convertClass(AstTypeDeclaration td) {
+ 		List<IFeature> features = new ArrayList<IFeature>();
+ 		List<IMethod> methods = new ArrayList<IMethod>();
+ 		if (td.getMemberDeclarationsopt() != null) {
+ 			for (IAstMemberDeclaration memberDeclaration : td.getMemberDeclarationsopt()) {
+ 				if (memberDeclaration instanceof AstFeatureDeclaration) {
+ 					features.add(convertFeature((AstFeatureDeclaration) memberDeclaration));
+ 				} else if (memberDeclaration instanceof AstMethodDeclaration) {
+ 					methods.add(convertMethod((AstMethodDeclaration) memberDeclaration));
+ 				}
+ 			}
+ 		}
+ 		TiClass result = new TiClass(td.getName(), myPackage, new ArrayList<IClass>(), features, methods);
+ 		if (td.getExtends() != null) {
+ 			List<String> superNames = new ArrayList<String>();
+ 			for (List<String> className : td.getExtends()) {
+ 				String s = getQualifiedName(className);
+ 				if (s.indexOf('.') == -1) {
+ 					s = myPackage + "." + s;
+ 				}
+ 				superNames.add(s);
+ 			}
+ 			myResolveSuperTypes.add(new ResolveSuperBean(result, td, superNames));
+ 		}
+ 		return result;
+ 	}
+ 
+ 	private IMethod convertMethod(AstMethodDeclaration memberDeclaration) {
+ 		// TODO
+ 
+ 		return new TiMethod(memberDeclaration.getName(), null, null);
+ 	}
+ 
+ 	private TiFeature convertFeature(AstFeatureDeclaration fd) {
+ 		// constraints
+ 		List<AstStringConstraint> stringConstraints = null;
+ 		List<IMultiplicity> multiplicities = null;
+ 		if (fd.getTypeEx().getMultiplicityList() != null) {
+ 			myStatus.report(TemplatesStatus.KIND_ERROR,
+ 					"feature cannot have multiplicity in type (feature `" + fd.getName() + "`)",
+ 					new LocatedNodeAdapter(fd.getTypeEx()));
+ 		}
+ 		if (fd.getModifiersopt() != null) {
+ 			for (AstConstraint c : fd.getModifiersopt()) {
+ 				if (c.getMultiplicityList() != null) {
+ 					if (multiplicities != null) {
+ 						myStatus.report(TemplatesStatus.KIND_ERROR,
+ 								"several multiplicity constraints found (feature `" + fd.getName() + "`)",
+ 								new LocatedNodeAdapter(fd));
+ 					} else {
+ 						multiplicities = convertMultiplicities(c.getMultiplicityList());
+ 					}
+ 				} else if (c.getStringConstraint() != null) {
+ 					if (stringConstraints == null) {
+ 						stringConstraints = new ArrayList<AstStringConstraint>();
+ 					}
+ 					stringConstraints.add(c.getStringConstraint());
+ 				}
+ 			}
+ 			if (stringConstraints != null && fd.getTypeEx().getType().getKind() != AstType.LSTRING) {
+ 				myStatus.report(TemplatesStatus.KIND_ERROR,
+ 						"only string type can have constraints (feature `" + fd.getName() + "`)",
+ 						new LocatedNodeAdapter(fd));
+ 			}
+ 		}
+ 		TiFeature feature = new TiFeature(fd.getName(), fd.getTypeEx().getType().getIsReference(),
+ 				multiplicities == null
+ 						? new IMultiplicity[0]
+ 						: multiplicities.toArray(new IMultiplicity[multiplicities.size()]));
+ 		convertType(feature, fd.getTypeEx().getType(), stringConstraints);
+ 		convertDefautVal(feature, fd.getDefaultvalopt());
+ 		return feature;
+ 	}
+ 
+ 	private List<IMultiplicity> convertMultiplicities(List<AstMultiplicity> list) {
+ 		List<IMultiplicity> multiplicities = new ArrayList<IMultiplicity>();
+ 		for (AstMultiplicity multiplicity : list) {
+ 			int loBound = multiplicity.getLo();
+ 			int hiBound = multiplicity.getHasNoUpperBound() ? -1 : multiplicity.getHi() != null ? multiplicity
+ 					.getHi() : loBound;
+ 			TiMultiplicity new_ = new TiMultiplicity(loBound, hiBound);
+ 			if(list.size() > 1 && !new_.isMultiple()) {
+ 				myStatus.report(TemplatesStatus.KIND_ERROR, "cannot combine 1 or 0..1 with other multiplicities", new LocatedNodeAdapter(multiplicity));
+ 				return null;
+ 			}
+ 			multiplicities.add(new_);
+ 		}
+ 		return multiplicities;
+ 	}
+ 
+ 	private void convertDefautVal(TiFeature feature, IAstExpression defaultValue) {
+ 		if (defaultValue == null) {
+ 			return;
+ 		}
+ 		scanRequiredClasses(defaultValue);
+ 		myResolveDefaultValues.add(new ResolveDefaultValue(feature, defaultValue));
+ 	}
+ 
+ 	private void scanRequiredClasses(IAstExpression expression) {
+ 		if (expression instanceof AstStructuralExpression) {
+ 			AstStructuralExpression expr = (AstStructuralExpression) expression;
+ 			if (expr.getExpressionListopt() != null) {
+ 				for (IAstExpression inner : expr.getExpressionListopt()) {
+ 					scanRequiredClasses(inner);
+ 				}
+ 			}
+ 			if (expr.getMapEntriesopt() != null) {
+ 				for (AstMapEntriesItem item : expr.getMapEntriesopt()) {
+ 					scanRequiredClasses(item.getExpression());
+ 				}
+ 			}
+ 			if (expr.getName() != null) {
+ 				if (expr.getName().size() > 1) {
+ 					String reference = getQualifiedName(expr.getName());
+ 					int lastDot = reference.lastIndexOf('.');
+ 					if (lastDot >= 0) {
+ 						requiredPackages.add(reference.substring(0, lastDot));
+ 					}
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+ 	private void convertType(TiFeature feature, AstType type, List<AstStringConstraint> constraints) {
+ 		if (type.getKind() == 0) {
+ 			// reference
+ 			resolveLater(feature, type, getQualifiedName(type.getName()));
+ 		} else {
+ 			// datatype
+ 			DataTypeKind kind = DataTypeKind.STRING;
+ 			if (type.getKind() == AstType.LINT) {
+ 				kind = DataTypeKind.INT;
+ 			} else if (type.getKind() == AstType.LBOOL) {
+ 				kind = DataTypeKind.BOOL;
+ 			}
+ 
+ 			List<Constraint> convertedConstraints = new ArrayList<Constraint>();
+ 			if (constraints != null) {
+ 				for (AstStringConstraint c : constraints) {
+ 					Constraint convertConstraint = convertConstraint(c);
+ 					if (convertConstraint != null) {
+ 						convertedConstraints.add(convertConstraint);
+ 					}
+ 				}
+ 			}
+ 			feature.setType(new TiDataType(kind, convertedConstraints));
+ 		}
+ 	}
+ 
+ 	private Constraint convertConstraint(AstStringConstraint c) {
+ 		if (c.getKind() != 0) {
+ 			List<String> strings = new ArrayList<String>();
+ 			for (Ast_String s : c.getStrings()) {
+ 				strings.add(s.getIdentifier() != null ? s.getIdentifier() : s.getScon());
+ 			}
+ 			return new TiDataType.TiConstraint(c.getKind() == AstStringConstraint.LCHOICE ? ConstraintKind.CHOICE
+ 					: ConstraintKind.SET, strings);
+ 		}
+ 		String constraintId = c.getIdentifier();
+ 		if (constraintId.equals("notempty")) {
+ 			return new TiDataType.TiConstraint(ConstraintKind.NOTEMPTY, null);
+ 		} else if (constraintId.equals("qualified")) {
+ 			return new TiDataType.TiConstraint(ConstraintKind.QUALIFIED_IDENTIFIER, null);
+ 		} else if (constraintId.equals("identifier")) {
+ 			return new TiDataType.TiConstraint(ConstraintKind.IDENTIFIER, null);
+ 		} else {
+ 			myStatus.report(TemplatesStatus.KIND_ERROR,
+ 					"unknown string constraint: " + constraintId,
+ 					new LocatedNodeAdapter(c));
+ 			return null;
+ 		}
+ 	}
+ 
+ 	private String getQualifiedName(List<String> name) {
+ 		StringBuilder sb = new StringBuilder();
+ 		for (String s : name) {
+ 			if (sb.length() > 0) {
+ 				sb.append('.');
+ 			}
+ 			sb.append(s);
+ 		}
+ 		return sb.toString();
+ 	}
+ 
+ 	private void resolveLater(TiFeature feature, AstType decl, String reference) {
+ 		int lastDot = reference.lastIndexOf('.');
+ 		if (lastDot == -1) {
+ 			reference = myPackage + "." + reference;
+ 		} else {
+ 			String targetPackage = reference.substring(0, lastDot);
+ 			requiredPackages.add(targetPackage);
+ 		}
+ 		myResolveFeatureTypes.add(new ResolveBean(feature, decl, reference));
+ 	}
+ 
+ 	void resolve() {
+ 		for (ResolveBean entry : myResolveFeatureTypes) {
+ 			TiClass tiClass = myRegistryClasses.get(entry.getReference());
+ 			if (tiClass == null) {
+ 				myStatus.report(TemplatesStatus.KIND_ERROR,
+ 						"cannot resolve type: " + entry.getReference() + " in " + entry.getFeature().getName(),
+ 						new LocatedNodeAdapter(entry.getNode()));
+ 			} else {
+ 				entry.getFeature().setType(tiClass);
+ 			}
+ 		}
+ 
+ 		for (ResolveSuperBean entry : myResolveSuperTypes) {
+ 			TiClass source = entry.getClassifier();
+ 			for (String ref : entry.getReferences()) {
+ 				TiClass target = myRegistryClasses.get(ref);
+ 				if (target == null) {
+ 					myStatus.report(TemplatesStatus.KIND_ERROR,
+ 							"cannot resolve super type: " + ref + " for " + entry.getClassifier().getName(),
+ 							new LocatedNodeAdapter(entry.getNode()));
+ 				} else {
+ 					source.getExtends().add(target);
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+ 	void resolveExpressions() {
+ 		for (ResolveDefaultValue entry : myResolveDefaultValues) {
+ 			entry.getFeature_().setDefaultValue(convertExpression(entry.getDefaultValue(), entry.getFeature_().getType()));
+ 		}
+ 	}
+ 
+ 	private Object convertExpression(IAstExpression expression, IType type) {
+ 		return new TiExpressionBuilder<IAstExpression>() {
+ 
+ 			@Override
+ 			public IClass resolveType(String className) {
+ 				return myRegistryClasses.get(className);
+ 			}
+ 
+ 			@Override
+ 			public Object resolve(IAstExpression expression, IType type) {
+ 				if (expression instanceof AstLiteralExpression) {
+ 					AstLiteralExpression literal = (AstLiteralExpression) expression;
+ 					Object val = literal.getBcon() != null ? literal.getBcon()
+ 							: literal.getIcon() != null ? literal.getIcon()
+ 							: literal.getScon();
+ 					return convertLiteral(expression, val, type);
+ 				}
+ 				if (expression instanceof AstStructuralExpression) {
+ 					AstStructuralExpression expr = (AstStructuralExpression) expression;
+ 					if (expr.getName() != null) {
+ 						String qualifiedName = getQualifiedName(expr.getName());
+ 						if (qualifiedName.indexOf('.') == -1) {
+ 							qualifiedName = myPackage + "." + qualifiedName;
+ 						}
+ 						Map<String, IAstExpression> props = null;
+ 						if (expr.getMapEntriesopt() != null) {
+ 							props = new HashMap<String, IAstExpression>();
+ 							for (AstMapEntriesItem i : expr.getMapEntriesopt()) {
+ 								props.put(i.getIdentifier(), i.getExpression());
+ 							}
+ 						}
+ 						return convertNew(expr, qualifiedName, props, type);
+ 					} else {
+ 						return convertArray(expr, expr.getExpressionListopt(), type);
+ 					}
+ 				}
+ 				return null;
+ 			}
+ 
+ 			@Override
+ 			public void report(IAstExpression expression, String message) {
+ 				myStatus.report(TemplatesStatus.KIND_ERROR, message, new LocatedNodeAdapter((IAstNode) expression));
+ 			}
+ 		}.resolve(expression, type);
+ 	}
+ 
+ 	public Collection<String> getRequired() {
+ 		return requiredPackages;
+ 	}
+ 
+ 	private class LocatedNodeAdapter implements SourceElement {
+ 
+ 		IAstNode node;
+ 
+ 		public LocatedNodeAdapter(IAstNode node) {
+ 			this.node = node;
+ 		}
+ 
+ 		public String getResourceName() {
+ 			return myResource.getUri().getPath();
+ 		}
+ 
+ 		public int getOffset() {
+ 			return node.getOffset();
+ 		}
+ 
+ 		public int getEndOffset() {
+ 			return node.getEndOffset();
+ 		}
+ 
+ 		public int getLine() {
+ 			return myTree.getSource().lineForOffset(node.getOffset());
+ 		}
+ 	}
+ 
+ 	private static class ResolveBean {
+ 		private TiFeature feature;
+ 		private IAstNode node;
+ 		private String reference;
+ 
+ 		public ResolveBean(TiFeature feature, IAstNode node, String reference) {
+ 			this.feature = feature;
+ 			this.node = node;
+ 			this.reference = reference;
+ 		}
+ 
+ 		public TiFeature getFeature() {
+ 			return feature;
+ 		}
+ 
+ 		public String getReference() {
+ 			return reference;
+ 		}
+ 
+ 		public IAstNode getNode() {
+ 			return node;
+ 		}
+ 	}
+ 
+ 	private static class ResolveSuperBean {
+ 		private TiClass class_;
+ 		private IAstNode node;
+ 		private Collection<String> references;
+ 
+ 		public ResolveSuperBean(TiClass tiClass, IAstNode node, Collection<String> references) {
+ 			this.class_ = tiClass;
+ 			this.node = node;
+ 			this.references = references;
+ 		}
+ 
+ 		public TiClass getClassifier() {
+ 			return class_;
+ 		}
+ 
+ 		public Collection<String> getReferences() {
+ 			return references;
+ 		}
+ 
+ 		public IAstNode getNode() {
+ 			return node;
+ 		}
+ 	}
+ 
+ 	private static class ResolveDefaultValue {
+ 		private final TiFeature feature_;
+ 		private final IAstExpression defaultValue;
+ 
+ 		public ResolveDefaultValue(TiFeature feature, IAstExpression defaultValue) {
+ 			this.feature_ = feature;
+ 			this.defaultValue = defaultValue;
+ 		}
+ 
+ 		public TiFeature getFeature_() {
+ 			return feature_;
+ 		}
+ 
+ 		public IAstExpression getDefaultValue() {
+ 			return defaultValue;
+ 		}
+ 	}
+ }

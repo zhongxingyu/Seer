@@ -1,0 +1,74 @@
+ package net.sf.eclipsefp.haskell.scion.internal.client;
+ 
+ import net.sf.eclipsefp.haskell.scion.client.ScionPlugin;
+ import net.sf.eclipsefp.haskell.scion.internal.util.UITexts;
+ import net.sf.eclipsefp.haskell.scion.types.CompilationResult;
+ import net.sf.eclipsefp.haskell.scion.types.ICompilerResult;
+ import net.sf.eclipsefp.haskell.scion.types.Note;
+ 
+ import org.eclipse.core.resources.IProject;
+ import org.eclipse.core.resources.IResource;
+ import org.eclipse.core.runtime.CoreException;
+ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+ import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+ import org.eclipse.jface.text.IDocument;
+ 
+ public class CompilationResultHandler extends JobChangeAdapter {
+ 	private IProject project;
+ 	private int maxLines=Integer.MAX_VALUE;
+ 	
+ 	public CompilationResultHandler(IProject project) {
+ 		super();
+ 		this.project = project;
+ 	}
+ 
+ 	public CompilationResultHandler(IProject project,IDocument doc) {
+ 		super();
+ 		this.project = project;
+		this.maxLines=doc.getNumberOfLines()-1;
+ 	}
+ 	
+ 	public void process(ICompilerResult r){
+ 		CompilationResult cr=r.getCompilationResult();
+ 		if (cr!=null){
+ 			String root=project.getLocation().toOSString();
+ 			for (Note n:cr.getNotes()){
+ 				String s=n.getLocation().getFileName();
+ 				if (s.startsWith(root)){
+ 					s=s.substring(root.length());
+ 				}
+ 				IResource res=project.findMember(s);
+ 				if (res!=null){
+ 					try {
+ 						n.applyAsMarker(res,maxLines);
+ 					}	catch( CoreException ex ) {
+ 						ScionPlugin.logError(UITexts.error_applyMarkers, ex);
+ 						ex.printStackTrace();
+ 					}
+ 				}
+ 			}
+ 		}
+ 		if (r.hasOutput()){
+ 			try {
+ 				IResource res=project.findMember(ScionPlugin.DIST_FOLDER);
+ 				if (res!=null){
+ 					res.refreshLocal(IResource.DEPTH_INFINITE, null);
+ 				} else {
+ 					project.refreshLocal(IResource.DEPTH_INFINITE, null);
+ 				}
+ 			} catch (CoreException ce){
+ 				
+ 			}
+ 		}
+ 	}
+ 	
+ 	@Override
+ 	public void done(IJobChangeEvent event) {
+ 		
+ 		if (event.getResult().isOK()) {
+ 			ICompilerResult r=(ICompilerResult)event.getJob();
+ 			process(r);
+ 		}
+ 	}
+ 	
+ }

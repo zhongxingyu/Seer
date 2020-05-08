@@ -1,0 +1,410 @@
+ /*
+  * Copyright (c) 2010 Mark Allen.
+  * 
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal
+  * in the Software without restriction, including without limitation the rights
+  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  * copies of the Software, and to permit persons to whom the Software is
+  * furnished to do so, subject to the following conditions:
+  * 
+  * The above copyright notice and this permission notice shall be included in
+  * all copies or substantial portions of the Software.
+  * 
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  * THE SOFTWARE.
+  */
+ 
+ package com.restfb;
+ 
+ import static com.restfb.util.StringUtils.ENCODING_CHARSET;
+ import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+ 
+ import java.io.Closeable;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.net.HttpURLConnection;
+ import java.net.URL;
+ 
+ import com.restfb.util.StringUtils;
+ 
+ /**
+  * Default implementation of a service that sends HTTP requests to the Facebook
+  * API endpoint.
+  * 
+  * @author <a href="http://restfb.com">Mark Allen</a>
+  */
+ public class DefaultWebRequestor implements WebRequestor {
+   /**
+    * Arbitrary unique boundary marker for multipart {@code POST}s.
+    */
+   private static final String MULTIPART_BOUNDARY =
+       "**boundarystringwhichwill**neverbeencounteredinthewild**";
+ 
+   /**
+    * Line separator for multipart {@code POST}s.
+    */
+   private static final String MULTIPART_CARRIAGE_RETURN_AND_NEWLINE = "\r\n";
+ 
+   /**
+    * Hyphens for multipart {@code POST}s.
+    */
+   private static final String MULTIPART_TWO_HYPHENS = "--";
+ 
+   /**
+    * Default buffer size for multipart {@code POST}s.
+    */
+   private static final int MULTIPART_DEFAULT_BUFFER_SIZE = 8192;
+ 
+   /**
+    * By default, how long should we wait for a response (in ms)?
+    */
+   private static final int DEFAULT_READ_TIMEOUT_IN_MS = 20000;
+ 
+   /**
+    * Logger.
+    */
+ 
+   /* if[JUL] */
+   private static final java.util.logging.Logger julLogger =
+       java.util.logging.Logger.getLogger(DefaultWebRequestor.class.getName());
+   /* end[JUL] */
+ 
+   /* if[LOG4J] */
+   private static final org.apache.log4j.Logger log4jLogger =
+       org.apache.log4j.Logger.getLogger(DefaultWebRequestor.class);
+   /* end[LOG4J] */
+ 
+   /* if[JCL] */
+   private static final org.apache.commons.logging.Log jclLogger =
+       org.apache.commons.logging.LogFactory.getLog(DefaultWebRequestor.class);
+   /* end[JCL] */
+ 
+   /**
+    * @see com.restfb.WebRequestor#executeGet(java.lang.String)
+    */
+   @Override
+   public Response executeGet(String url) throws IOException {
+     /* if[JUL] */
+     if (julLogger.isLoggable(java.util.logging.Level.INFO))
+       julLogger.info("Making a GET request to " + url);
+     /* end[JUL] */
+ 
+     /* if[LOG4J] */
+     if (log4jLogger.isInfoEnabled())
+       log4jLogger.info("Making a GET request to " + url);
+     /* end[LOG4J] */
+ 
+     /* if[JCL] */
+     if (jclLogger.isInfoEnabled())
+       jclLogger.info("Making a GET request to " + url);
+     /* end[JCL] */
+ 
+     HttpURLConnection httpUrlConnection = null;
+     InputStream inputStream = null;
+ 
+     try {
+       httpUrlConnection = (HttpURLConnection) new URL(url).openConnection();
+       httpUrlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT_IN_MS);
+ 
+       // Allow subclasses to customize the connection if they'd like to - set
+       // their own headers, timeouts, etc.
+       customizeConnection(httpUrlConnection);
+ 
+       httpUrlConnection.setRequestMethod("GET");
+       httpUrlConnection.connect();
+ 
+       /* if[JUL] */
+       if (julLogger.isLoggable(java.util.logging.Level.FINER))
+         julLogger.finer("Response headers: "
+             + httpUrlConnection.getHeaderFields());
+       /* end[JUL] */
+ 
+       /* if[LOG4J] */
+       if (log4jLogger.isTraceEnabled())
+         log4jLogger.trace("Response headers: "
+             + httpUrlConnection.getHeaderFields());
+       /* end[LOG4J] */
+ 
+       /* if[JCL] */
+       if (jclLogger.isTraceEnabled())
+         jclLogger.trace("Response headers: "
+             + httpUrlConnection.getHeaderFields());
+       /* end[JCL] */
+ 
+       try {
+         inputStream =
+             httpUrlConnection.getResponseCode() == HTTP_INTERNAL_ERROR ? httpUrlConnection
+               .getErrorStream()
+                 : httpUrlConnection.getInputStream();
+       } catch (IOException e) {
+         /* if[JUL] */
+         if (julLogger.isLoggable(java.util.logging.Level.WARNING))
+           julLogger.warning("An error occurred while making a GET request to "
+               + url + ": " + e);
+         /* end[JUL] */
+ 
+         /* if[LOG4J] */
+         log4jLogger.warn("An error occurred while making a GET request to "
+             + url, e);
+         /* end[LOG4J] */
+ 
+         /* if[JCL] */
+         jclLogger.warn(
+           "An error occurred while making a GET request to " + url, e);
+         /* end[JCL] */
+       }
+ 
+       return new Response(httpUrlConnection.getResponseCode(), StringUtils
+         .fromInputStream(inputStream));
+     } finally {
+       closeQuietly(httpUrlConnection);
+     }
+   }
+ 
+   /**
+    * @see com.restfb.WebRequestor#executePost(java.lang.String,
+    *      java.lang.String)
+    */
+   @Override
+   public Response executePost(String url, String parameters) throws IOException {
+     return executePost(url, parameters, null);
+   }
+ 
+   /**
+    * @see com.restfb.WebRequestor#executePost(java.lang.String,
+    *      java.lang.String, java.io.InputStream)
+    */
+   @Override
+   public Response executePost(String url, String parameters,
+       InputStream binaryAttachment) throws IOException {
+     boolean hasBinaryAttachment = binaryAttachment != null;
+ 
+     /* if[JUL] */
+     if (julLogger.isLoggable(java.util.logging.Level.INFO))
+       julLogger.info("Executing a POST to " + url + " with parameters "
+           + (hasBinaryAttachment ? "" : "(sent in request body): ")
+           + parameters
+           + (hasBinaryAttachment ? " and a binary attachment." : ""));
+     /* end[JUL] */
+ 
+     /* if[LOG4J] */
+     if (log4jLogger.isInfoEnabled())
+       log4jLogger.info("Executing a POST to " + url + " with parameters "
+           + (hasBinaryAttachment ? "" : "(sent in request body): ")
+           + parameters
+           + (hasBinaryAttachment ? " and a binary attachment." : ""));
+     /* end[LOG4J] */
+ 
+     /* if[JCL] */
+     if (jclLogger.isInfoEnabled())
+       jclLogger.info("Executing a POST to " + url + " with parameters "
+           + (hasBinaryAttachment ? "" : "(sent in request body): ")
+           + parameters
+           + (hasBinaryAttachment ? " and a binary attachment." : ""));
+     /* end[JCL] */
+ 
+     HttpURLConnection httpUrlConnection = null;
+     OutputStream outputStream = null;
+     InputStream inputStream = null;
+ 
+     try {
+       httpUrlConnection =
+           (HttpURLConnection) new URL(url
+               + (hasBinaryAttachment ? "?" + parameters : "")).openConnection();
+       httpUrlConnection.setReadTimeout(DEFAULT_READ_TIMEOUT_IN_MS);
+ 
+       // Allow subclasses to customize the connection if they'd like to - set
+       // their own headers, timeouts, etc.
+       customizeConnection(httpUrlConnection);
+ 
+       httpUrlConnection.setRequestMethod("POST");
+       httpUrlConnection.setDoOutput(true);
+       httpUrlConnection.setUseCaches(false);
+ 
+       if (hasBinaryAttachment) {
+         httpUrlConnection.setRequestProperty("Connection", "Keep-Alive");
+         httpUrlConnection.setRequestProperty("Content-Type",
+           "multipart/form-data;boundary=" + MULTIPART_BOUNDARY);
+       }
+ 
+       httpUrlConnection.connect();
+       outputStream = httpUrlConnection.getOutputStream();
+ 
+       // If we have a binary attachment, the body is just the attachment and the
+       // other parameters are passed in via the URL.
+       // Otherwise the body is the URL parameter string.
+       if (hasBinaryAttachment) {
+         outputStream
+           .write((MULTIPART_TWO_HYPHENS + MULTIPART_BOUNDARY
+               + MULTIPART_CARRIAGE_RETURN_AND_NEWLINE
+               + "Content-Disposition: form-data; filename=\"test.jpg\""
+               + MULTIPART_CARRIAGE_RETURN_AND_NEWLINE + MULTIPART_CARRIAGE_RETURN_AND_NEWLINE)
+             .getBytes(ENCODING_CHARSET));
+ 
+         write(binaryAttachment, outputStream, MULTIPART_DEFAULT_BUFFER_SIZE);
+ 
+         outputStream.write((MULTIPART_CARRIAGE_RETURN_AND_NEWLINE
+             + MULTIPART_TWO_HYPHENS + MULTIPART_BOUNDARY
+             + MULTIPART_TWO_HYPHENS + MULTIPART_CARRIAGE_RETURN_AND_NEWLINE)
+           .getBytes(ENCODING_CHARSET));
+       } else {
+         outputStream.write(parameters.getBytes(ENCODING_CHARSET));
+       }
+ 
+       /* if[JUL] */
+       if (julLogger.isLoggable(java.util.logging.Level.FINER))
+         julLogger.finer("Response headers: "
+             + httpUrlConnection.getHeaderFields());
+       /* end[JUL] */
+ 
+       /* if[LOG4J] */
+       if (log4jLogger.isTraceEnabled())
+         log4jLogger.trace("Response headers: "
+             + httpUrlConnection.getHeaderFields());
+       /* end[LOG4J] */
+ 
+       /* if[JCL] */
+       if (jclLogger.isTraceEnabled())
+         jclLogger.trace("Response headers: "
+             + httpUrlConnection.getHeaderFields());
+       /* end[JCL] */
+ 
+       try {
+         inputStream =
+             httpUrlConnection.getResponseCode() == HTTP_INTERNAL_ERROR ? httpUrlConnection
+               .getErrorStream()
+                 : httpUrlConnection.getInputStream();
+       } catch (IOException e) {
+         /* if[JUL] */
+         if (julLogger.isLoggable(java.util.logging.Level.WARNING))
+           julLogger.warning("An error occurred while POSTing to " + url + ": "
+               + e);
+         /* end[JUL] */
+ 
+         /* if[LOG4J] */
+         log4jLogger.warn("An error occurred while POSTing to " + url, e);
+         /* end[LOG4J] */
+ 
+         /* if[JCL] */
+         jclLogger.warn("An error occurred while POSTing to " + url, e);
+         /* end[JCL] */
+       }
+ 
+       return new Response(httpUrlConnection.getResponseCode(), StringUtils
+         .fromInputStream(inputStream));
+     } finally {
+       closeQuietly(binaryAttachment);
+       closeQuietly(outputStream);
+       closeQuietly(httpUrlConnection);
+     }
+   }
+ 
+   /**
+    * Hook method which allows subclasses to easily customize the {@code
+    * connection}s created by {@link #executeGet(String)} and
+    * {@link #executePost(String, String)} - for example, setting a custom read
+    * timeout or request header.
+    * 
+    * This implementation is a no-op.
+    * 
+    * @param connection
+    *          The connection to customize.
+    */
+   protected void customizeConnection(HttpURLConnection connection) {}
+ 
+   /**
+    * Attempts to cleanly close a resource, swallowing any exceptions that might
+    * occur since there's no way to recover anyway.
+    * <p>
+    * It's OK to pass {@code null} in, this method will no-op in that case.
+    * 
+    * @param closeable
+    *          The resource to close.
+    */
+   protected void closeQuietly(Closeable closeable) {
+     if (closeable == null)
+       return;
+     try {
+       closeable.close();
+     } catch (Throwable t) {
+       /* if[JUL] */
+       if (julLogger.isLoggable(java.util.logging.Level.WARNING))
+         julLogger.warning("Unable to close " + closeable + ": " + t);
+       /* end[JUL] */
+ 
+       /* if[LOG4J] */
+       log4jLogger.warn("Unable to close " + closeable + ": ", t);
+       /* end[LOG4J] */
+ 
+       /* if[JCL] */
+       jclLogger.warn("Unable to close " + closeable + ": ", t);
+       /* end[JCL] */
+     }
+   }
+ 
+   /**
+    * Attempts to cleanly close an {@code HttpURLConnection}, swallowing any
+    * exceptions that might occur since there's no way to recover anyway.
+    * <p>
+    * It's OK to pass {@code null} in, this method will no-op in that case.
+    * 
+    * @param httpUrlConnection
+    *          The connection to close.
+    */
+   protected void closeQuietly(HttpURLConnection httpUrlConnection) {
+     if (httpUrlConnection == null)
+       return;
+     try {
+       httpUrlConnection.disconnect();
+     } catch (Throwable t) {
+       /* if[JUL] */
+       if (julLogger.isLoggable(java.util.logging.Level.WARNING))
+         julLogger.warning("Unable to disconnect " + httpUrlConnection + ": "
+             + t);
+       /* end[JUL] */
+ 
+       /* if[LOG4J] */
+       log4jLogger.warn("Unable to disconnect " + httpUrlConnection + ": ", t);
+       /* end[LOG4J] */
+ 
+       /* if[JCL] */
+       jclLogger.warn("Unable to disconnect " + httpUrlConnection + ": ", t);
+       /* end[JCL] */
+     }
+   }
+ 
+   /**
+    * Writes the contents of the {@code source} stream to the {@code destination}
+    * stream using the given {@code bufferSize}.
+    * 
+    * @param source
+    *          The source stream to copy from.
+    * @param destination
+    *          The destination stream to copy to.
+    * @param bufferSize
+    *          The size of the buffer to use during the copy operation.
+    * @throws IOException
+    *           If an error occurs when reading from {@code source} or writing to
+    *           {@code destination}.
+    * @throws NullPointerException
+    *           If either {@code source} or @{code destination} is {@code null}.
+    */
+   protected void write(InputStream source, OutputStream destination,
+       int bufferSize) throws IOException {
+     if (source == null || destination == null)
+       throw new NullPointerException(
+         "Must provide non-null source and destination streams.");
+ 
+     int read = 0;
+     byte[] chunk = new byte[bufferSize];
+     while ((read = source.read(chunk)) > 0)
+       destination.write(chunk, 0, read);
+   }
+ }

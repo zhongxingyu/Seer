@@ -1,0 +1,179 @@
+ package com.proofpoint.jetty;
+ 
+ import com.google.inject.Inject;
+ import com.google.inject.Provider;
+ import com.google.inject.servlet.GuiceFilter;
+ import org.eclipse.jetty.http.security.Constraint;
+ import org.eclipse.jetty.jmx.MBeanContainer;
+ import org.eclipse.jetty.security.ConstraintMapping;
+ import org.eclipse.jetty.security.ConstraintSecurityHandler;
+ import org.eclipse.jetty.security.LoginService;
+ import org.eclipse.jetty.security.SecurityHandler;
+ import org.eclipse.jetty.security.authentication.BasicAuthenticator;
+ import org.eclipse.jetty.server.RequestLog;
+ import org.eclipse.jetty.server.Server;
+ import org.eclipse.jetty.server.handler.HandlerCollection;
+ import org.eclipse.jetty.server.handler.RequestLogHandler;
+ import org.eclipse.jetty.server.handler.StatisticsHandler;
+ import org.eclipse.jetty.server.nio.SelectChannelConnector;
+ import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+ import org.eclipse.jetty.servlet.DefaultServlet;
+ import org.eclipse.jetty.servlet.FilterMapping;
+ import org.eclipse.jetty.servlet.ServletContextHandler;
+ import org.eclipse.jetty.servlets.GzipFilter;
+ import org.eclipse.jetty.util.thread.QueuedThreadPool;
+ 
+ import javax.annotation.Nullable;
+ import javax.management.MBeanServer;
+ import java.io.File;
+ import java.io.IOException;
+ import java.util.Arrays;
+ 
+ /**
+  * Provides an instance of a Jetty server ready to be configured with
+  * com.google.inject.servlet.ServletModule
+  */
+ public class JettyProvider
+         implements Provider<Server>
+ {
+     private MBeanServer mbeanServer;
+     private JettyConfig config;
+     private LoginService loginService;
+ 
+     @Inject
+     public JettyProvider(JettyConfig config)
+     {
+         this.config = config;
+     }
+ 
+     @Inject(optional = true)
+     public void setMBeanServer(MBeanServer server)
+     {
+         mbeanServer = server;
+     }
+ 
+     @Inject(optional = true)
+     public void setLoginService(@Nullable LoginService loginService)
+     {
+         this.loginService = loginService;
+     }
+ 
+     public Server get()
+     {
+         String ip = config.getServerIp();
+         
+         Server server = new Server();
+ 
+         if (mbeanServer != null) {
+             // export jmx mbeans if a server was provided
+             MBeanContainer mbeanContainer = new MBeanContainer(mbeanServer);
+             server.getContainer().addEventListener(mbeanContainer);
+         }
+ 
+         // set up NIO-based HTTP connector
+         SelectChannelConnector connector = new SelectChannelConnector();
+         connector.setPort(config.getHttpPort());
+         connector.setStatsOn(true);
+         if (ip != null) {
+             connector.setHost(ip);
+         }
+         
+         server.addConnector(connector);
+ 
+         if (config.isHttpsEnabled()) {
+             SslSelectChannelConnector sslConnector = new SslSelectChannelConnector();
+             sslConnector.setPort(config.getHttpsPort());
+             sslConnector.setStatsOn(true);
+             sslConnector.setKeystore(config.getKeystorePath());
+             sslConnector.setPassword(config.getKeystorePassword());
+             if (ip != null) {
+                 sslConnector.setHost(ip);
+             }
+ 
+             server.addConnector(sslConnector);
+         }
+ 
+         QueuedThreadPool threadpool = new QueuedThreadPool(config.getMaxThreads());
+         threadpool.setMinThreads(config.getMinThreads());
+         threadpool.setMaxIdleTimeMs(config.getThreadMaxIdleTime());
+         server.setThreadPool(threadpool);
+ 
+         /**
+          * structure is:
+          *
+          * server
+          *    |--- statistics handler
+          *           |--- context handler
+          *           |       |--- gzip response filter
+          *           |       |--- gzip request filter
+          *           |       |--- security handler
+          *           |       |--- guice filter
+          *           |       |--- default servlet (no op, as all requests are handled by filter)
+          *           |--- log handler
+          */
+         HandlerCollection handlers = new HandlerCollection();
+         handlers.addHandler(getContextHandler());
+         handlers.addHandler(getLogHandler());
+ 
+         StatisticsHandler statsHandler = new StatisticsHandler();
+         statsHandler.setHandler(handlers);
+         server.setHandler(statsHandler);
+ 
+         return server;
+     }
+ 
+     private ServletContextHandler getContextHandler()
+     {
+         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+         context.addFilter(GzipFilter.class, "/*", FilterMapping.DEFAULT);
+         context.addFilter(GZipRequestFilter.class, "/*", FilterMapping.DEFAULT);
+         context.addFilter(GuiceFilter.class, "/*", FilterMapping.DEFAULT);
+         context.addServlet(DefaultServlet.class, "/");
+ 
+         if (loginService != null) {
+             context.setSecurityHandler(getSecurityHandler());
+         }
+ 
+         return context;
+     }
+ 
+     private SecurityHandler getSecurityHandler()
+     {
+         Constraint constraint = new Constraint();
+         constraint.setAuthenticate(false);
+ 
+         ConstraintMapping constraintMapping = new ConstraintMapping();
+         constraintMapping.setConstraint(constraint);
+         constraintMapping.setPathSpec("/*");
+ 
+         ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
+         securityHandler.setLoginService(loginService);
+ 
+         // TODO: support for other auth schemes (digest, etc)
+         securityHandler.setAuthenticator(new BasicAuthenticator());
+         securityHandler.setConstraintMappings(Arrays.asList(constraintMapping));
+         return securityHandler;
+     }
+ 
+     private RequestLogHandler getLogHandler()
+     {
+         // TODO: use custom (more easily-parseable) format
+         // TODO: make retention & rotation configurable
+         RequestLogHandler logHandler = new RequestLogHandler();
+ 
+         File logPath = new File(config.getLogPath()).getParentFile();
+         logPath.mkdirs();
+ 
+         RequestLog requestLog;
+         try {
+             requestLog = new DelimitedRequestLog(config.getLogPath(), config.getLogRetainDays());
+         }
+         catch (IOException e) {
+             throw new RuntimeException(e);
+         }
+         
+         logHandler.setRequestLog(requestLog);
+ 
+         return logHandler;
+     }
+ }

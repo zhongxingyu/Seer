@@ -1,0 +1,29 @@
+ package crazypants.enderio.machine.painter;
+ 
+ import java.util.List;
+ 
+ import cpw.mods.fml.relauncher.Side;
+ import cpw.mods.fml.relauncher.SideOnly;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.item.ItemBlock;
+ import net.minecraft.item.ItemStack;
+ 
+ public class BlockItemCustomStair extends ItemBlock {
+ 
+   public BlockItemCustomStair(int id) {
+     super(id);
+     setHasSubtypes(true);
+   }
+ 
+   @Override
+   public int getMetadata(int par1) {
+    return 0;
+   }
+   
+   @Override
+   @SideOnly(Side.CLIENT)
+   public void addInformation(ItemStack item, EntityPlayer par2EntityPlayer, List list, boolean par4) {
+     super.addInformation(item, par2EntityPlayer, list, par4);    
+     list.add(PainterUtil.getTooltTipText(item));    
+   }
+ }

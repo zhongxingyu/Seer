@@ -1,0 +1,336 @@
+ /*
+  * Copyright (C) 2008 Esmertec AG.
+  * Copyright (C) 2008 The Android Open Source Project
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.android.mms.ui;
+ 
+ import com.android.mms.MmsConfig;
+ import com.android.mms.data.Contact;
+ import com.android.mms.data.ContactList;
+ 
+ import android.content.Context;
+ import android.provider.Telephony.Mms;
+ import android.telephony.PhoneNumberUtils;
+ import android.text.Annotation;
+ import android.text.Editable;
+ import android.text.Layout;
+ import android.text.Spannable;
+ import android.text.SpannableString;
+ import android.text.SpannableStringBuilder;
+ import android.text.Spanned;
+ import android.text.TextUtils;
+ import android.text.TextWatcher;
+ import android.util.AttributeSet;
+ import android.view.KeyEvent;
+ import android.view.MotionEvent;
+ import android.view.ContextMenu.ContextMenuInfo;
+ import android.widget.ListAdapter;
+ import android.widget.MultiAutoCompleteTextView;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ /**
+  * Provide UI for editing the recipients of multi-media messages.
+  */
+ public class RecipientsEditor extends MultiAutoCompleteTextView {
+     private int mLongPressedPosition = -1;
+     private final RecipientsEditorTokenizer mTokenizer;
+ 
+     public RecipientsEditor(Context context, AttributeSet attrs) {
+         super(context, attrs, android.R.attr.autoCompleteTextViewStyle);
+         mTokenizer = new RecipientsEditorTokenizer(context, this);
+         setTokenizer(mTokenizer);
+ 
+         /*
+          * The point of this TextWatcher is that when the user chooses
+          * an address completion from the AutoCompleteTextView menu, it
+          * is marked up with Annotation objects to tie it back to the
+          * address book entry that it came from.  If the user then goes
+          * back and edits that part of the text, it no longer corresponds
+          * to that address book entry and needs to have the Annotations
+          * claiming that it does removed.
+          */
+         addTextChangedListener(new TextWatcher() {
+             private Annotation[] mAffected;
+ 
+             public void beforeTextChanged(CharSequence s, int start,
+                                           int count, int after) {
+                 mAffected = ((Spanned) s).getSpans(start, start + count,
+                                                    Annotation.class);
+             }
+ 
+             public void onTextChanged(CharSequence s, int start,
+                                       int before, int after) {
+ 
+             }
+ 
+             public void afterTextChanged(Editable s) {
+                 if (mAffected != null) {
+                     for (Annotation a : mAffected) {
+                         s.removeSpan(a);
+                     }
+                 }
+ 
+                 mAffected = null;
+             }
+         });
+     }
+     
+     @Override
+     public boolean enoughToFilter() {
+         // If the user is in the middle of editing an existing recipient, don't offer the 
+         // auto-complete menu. Without this, when the user selects an auto-complete menu item,
+         // it will get added to the list of recipients so we end up with the old before-editing
+         // recipient and the new post-editing recipient. As a precedent, gmail does not show
+         // the auto-complete menu when editing an existing recipient.
+         int end = getSelectionEnd();
+         int len = getText().length();
+ 
+         return end == len;
+     }
+ 
+     public int getRecipientCount() {
+         return mTokenizer.getNumbers().size();
+     }
+ 
+     public List<String> getNumbers() {
+         return mTokenizer.getNumbers();
+     }
+ 
+     public ContactList getContacts() {
+         List<String> numbers = mTokenizer.getNumbers();
+         ContactList list = new ContactList();
+         for (String number : numbers) {
+             list.add(Contact.get(number, false));
+         }
+         return list;
+     }
+ 
+     private boolean isValid(String number) {
+         if (!MmsConfig.getMmsEnabled()) {
+             return PhoneNumberUtils.isWellFormedSmsAddress(number);
+         }
+ 
+         return PhoneNumberUtils.isWellFormedSmsAddress(number)
+             || Mms.isEmailAddress(number);
+     }
+ 
+     public boolean hasValidRecipient() {
+         for (String number : mTokenizer.getNumbers()) {
+             if (isValid(number))
+                 return true;
+         }
+         return false;
+     }
+ 
+     public boolean hasInvalidRecipient() {
+         for (String number : mTokenizer.getNumbers()) {
+             if (!isValid(number))
+                 return true;
+         }
+         return false;
+     }
+ 
+     public String formatInvalidNumbers() {
+         StringBuilder sb = new StringBuilder();
+         for (String number : mTokenizer.getNumbers()) {
+             if (!isValid(number)) {
+                 if (sb.length() != 0) {
+                     sb.append(", ");
+                 }
+                 sb.append(number);
+             }
+         }
+         return sb.toString();
+     }
+ 
+     public boolean containsEmail() {
+         if (TextUtils.indexOf(getText(), '@') == -1)
+             return false;
+ 
+         List<String> numbers = mTokenizer.getNumbers();
+         for (String number : numbers) {
+             if (Mms.isEmailAddress(number))
+                 return true;
+         }
+         return false;
+     }
+ 
+     public static CharSequence contactToToken(Contact c) {
+         SpannableString s = new SpannableString(c.getNameAndNumber());
+         int len = s.length();
+ 
+         if (len == 0) {
+             return s;
+         }
+ 
+         s.setSpan(new Annotation("number", c.getNumber()), 0, len,
+                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+ 
+         return s;
+     }
+ 
+     public void populate(ContactList list) {
+         SpannableStringBuilder sb = new SpannableStringBuilder();
+ 
+         for (Contact c : list) {
+             if (sb.length() != 0) {
+                 sb.append(", ");
+             }
+ 
+             sb.append(contactToToken(c));
+         }
+ 
+         setText(sb);
+     }
+ 
+     private int pointToPosition(int x, int y) {
+         x -= getCompoundPaddingLeft();
+         y -= getExtendedPaddingTop();
+ 
+ 
+         x += getScrollX();
+         y += getScrollY();
+ 
+         Layout layout = getLayout();
+         if (layout == null) {
+             return -1;
+         }
+ 
+         int line = layout.getLineForVertical(y);
+         int off = layout.getOffsetForHorizontal(line, x);
+ 
+         return off;
+     }
+ 
+     @Override
+     public boolean onTouchEvent(MotionEvent ev) {
+         final int action = ev.getAction();
+         final int x = (int) ev.getX();
+         final int y = (int) ev.getY();
+ 
+         if (action == MotionEvent.ACTION_DOWN) {
+             mLongPressedPosition = pointToPosition(x, y);
+         }
+ 
+         return super.onTouchEvent(ev);
+     }
+ 
+     @Override
+     protected ContextMenuInfo getContextMenuInfo() {
+         if ((mLongPressedPosition >= 0)) {
+             Spanned text = getText();
+             if (mLongPressedPosition <= text.length()) {
+                 int start = mTokenizer.findTokenStart(text, mLongPressedPosition);
+                 int end = mTokenizer.findTokenEnd(text, start);
+ 
+                 if (end != start) {
+                     String number = getNumberAt(getText(), start, end, mContext);
+                     Contact c = Contact.get(number, true);
+                     return new RecipientContextMenuInfo(c);
+                 }
+             }
+         }
+         return null;
+     }
+ 
+     private static String getNumberAt(Spanned sp, int start, int end, Context context) {
+         Annotation[] a = sp.getSpans(start, end, Annotation.class);
+         String number = getAnnotation(a, "number");
+         if (TextUtils.isEmpty(number)) {
+             number = TextUtils.substring(sp, start, end);
+         }
+         return number;
+         
+     }
+ 
+     private static String getAnnotation(Annotation[] a, String key) {
+         for (int i = 0; i < a.length; i++) {
+             if (a[i].getKey().equals(key)) {
+                 return a[i].getValue();
+             }
+         }
+ 
+         return "";
+     }
+ 
+     @Override
+     public boolean onKeyDown(int keyCode, KeyEvent event) {
+         if (isPopupShowing()) {
+             switch (keyCode) {
+                 case KeyEvent.KEYCODE_COMMA:
+                     ListAdapter adapter = getAdapter();
+                     // There is at least one item in the dropdown list
+                     // when isPopupShowing() is true.
+                     Object selectedItem = adapter.getItem(0);
+                     replaceText(convertSelectionToString(selectedItem));
+                     dismissDropDown();
+                     return true;
+             }
+         }
+ 
+         return super.onKeyDown(keyCode, event);
+     }
+ 
+     private class RecipientsEditorTokenizer
+             extends MultiAutoCompleteTextView.CommaTokenizer
+             implements MultiAutoCompleteTextView.Tokenizer {
+         private final MultiAutoCompleteTextView mList;
+         private final Context mContext;
+ 
+         RecipientsEditorTokenizer(Context context, MultiAutoCompleteTextView list) {
+             mList = list;
+             mContext = context;
+         }
+ 
+         public List<String> getNumbers() {
+             Spanned sp = mList.getText();
+             int len = sp.length();
+             List<String> list = new ArrayList<String>();
+ 
+             int start = 0;
+             int i = 0;
+             while (i < len + 1) {
+                 if ((i == len) || (sp.charAt(i) == ',')) {
+                     if (i > start) {
+                         list.add(getNumberAt(sp, start, i, mContext));
+                     }
+ 
+                     i++;
+ 
+                     while ((i < len) && (sp.charAt(i) == ' ')) {
+                         i++;
+                     }
+ 
+                     start = i;
+                 } else {
+                     i++;
+                 }
+             }
+ 
+             return list;
+         }
+     }
+ 
+     static class RecipientContextMenuInfo implements ContextMenuInfo {
+         final Contact recipient;
+ 
+         RecipientContextMenuInfo(Contact r) {
+             recipient = r;
+         }
+     }
+ }

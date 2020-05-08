@@ -1,0 +1,354 @@
+ /*
+  * This file is part of Spout.
+  *
+  * Copyright (c) 2011-2012, SpoutDev <http://www.spout.org/>
+  * Spout is licensed under the SpoutDev License Version 1.
+  *
+  * Spout is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU Lesser General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * In addition, 180 days after any changes are published, you can use the
+  * software, incorporating those changes, under the terms of the MIT license,
+  * as described in the SpoutDev License Version 1.
+  *
+  * Spout is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public License,
+  * the MIT license and the SpoutDev License Version 1 along with this program.
+  * If not, see <http://www.gnu.org/licenses/> for the GNU Lesser General Public
+  * License and see <http://www.spout.org/SpoutDevLicenseV1.txt> for the full license,
+  * including the MIT license.
+  */
+ package org.spout.engine.renderer.shader;
+ 
+ import java.awt.Color;
+ import java.io.FileNotFoundException;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.List;
+ 
+ import org.lwjgl.opengl.GL11;
+ import org.lwjgl.opengl.GL20;
+ 
+ import org.spout.api.Client;
+ import org.spout.api.Spout;
+ import org.spout.api.math.Matrix;
+ import org.spout.api.math.Vector2;
+ import org.spout.api.math.Vector3;
+ import org.spout.api.math.Vector4;
+ import org.spout.api.render.RenderMaterial;
+ import org.spout.api.render.RenderMode;
+ import org.spout.api.render.Shader;
+ import org.spout.api.render.Texture;
+ import org.spout.api.resource.Resource;
+ 
+ import org.spout.engine.SpoutClient;
+ import org.spout.engine.renderer.shader.variables.ColorShaderVariable;
+ import org.spout.engine.renderer.shader.variables.FloatShaderVariable;
+ import org.spout.engine.renderer.shader.variables.IntShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Mat2ShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Mat3ShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Mat4ShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Mat4ArrayShaderVariable;
+ import org.spout.engine.renderer.shader.variables.ShaderVariable;
+ import org.spout.engine.renderer.shader.variables.TextureSamplerShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Vec2ShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Vec3ShaderVariable;
+ import org.spout.engine.renderer.shader.variables.Vec4ShaderVariable;
+ 
+ /**
+  * Represents a Shader Object in OpenGL
+  */
+ public class ClientShader extends Resource implements Shader {
+ 	
+ 	public class ShaderCompilationTask implements Runnable{
+ 
+ 		private final ClientShader shader;
+ 		private final String vsource,fsource;
+ 		private final String vsourceUrl,fsourceUrl;
+ 		
+ 		public ShaderCompilationTask(ClientShader shader,String vsource, String vsourceUrl, String fsource, String fsourceUrl){
+ 			this.shader = shader;
+ 			this.vsource = vsource;
+ 			this.vsourceUrl = vsourceUrl;
+ 			this.fsource = fsource;
+ 			this.fsourceUrl = fsourceUrl;
+ 		}
+ 		
+ 		@Override
+ 		public void run() {
+ 			doCompileShader(vsource,fsource);
+ 		}
+ 		
+ 		private void doCompileShader(String vsource, String fsource){
+ 			if (((Client) Spout.getEngine()).getRenderMode() == RenderMode.GL11) {
+ 				return;
+ 			}
+ 
+ 
+ 			//Create a new Shader object on the GPU
+ 			program = GL20.glCreateProgram();
+ 
+ 			int vShader = ShaderHelper.compileShader(vsource, vsourceUrl, GL20.GL_VERTEX_SHADER);
+ 			GL20.glAttachShader(program, vShader);
+ 
+ 
+ 			int fShader = ShaderHelper.compileShader(fsource, fsourceUrl, GL20.GL_FRAGMENT_SHADER);
+ 			GL20.glAttachShader(program, fShader);
+ 
+ 			GL20.glLinkProgram(program);
+ 
+ 			int status = GL20.glGetProgram(program, GL20.GL_LINK_STATUS);
+ 			if (status != GL11.GL_TRUE) {
+ 				String error = GL20.glGetProgramInfoLog(program, 255);
+ 				throw new ShaderCompileException("Link Error: " + error);
+ 			}
+ 			if (validateShader) {
+ 				GL20.glValidateProgram(shader.program);
+ 				if (GL20.glGetProgram(program, GL20.GL_VALIDATE_STATUS) != GL11.GL_TRUE) {
+ 					String info = GL20.glGetProgramInfoLog(program, 255);
+ 					System.out.println("Validate Log: \n" + info);
+ 				}
+ 
+ 				System.out.println("Attached Shaders: " + GL20.glGetProgram(program, GL20.GL_ATTACHED_SHADERS));
+ 				int activeAttributes = GL20.glGetProgram(program, GL20.GL_ACTIVE_ATTRIBUTES);
+ 				System.out.println("Active Attributes: " + activeAttributes);
+ 				int maxAttributeLength = GL20.glGetProgram(program, GL20.GL_ACTIVE_ATTRIBUTE_MAX_LENGTH);
+ 				for (int i = 0; i < activeAttributes; i++) {
+ 					System.out.println("\t" + GL20.glGetActiveAttrib(program, i, maxAttributeLength));
+ 				}
+ 
+ 				int activeUniforms = GL20.glGetProgram(program, GL20.GL_ACTIVE_UNIFORMS);
+ 				System.out.println("Active Uniforms: " + activeUniforms);
+ 				int maxUniformLength = GL20.glGetProgram(program, GL20.GL_ACTIVE_UNIFORM_MAX_LENGTH);
+ 				for (int i = 0; i < activeUniforms; i++) {
+ 					System.out.println("\t" + GL20.glGetActiveUniform(program, i, maxUniformLength));
+ 				}
+ 			}
+ 			System.out.println("Compiled Shader with id: " + program);
+ 		}
+ 	}
+ 	
+ 	int program;
+ 
+ 	HashMap<String, ShaderVariable> variables = new HashMap<String, ShaderVariable>();
+ 	HashMap<String, TextureSamplerShaderVariable> textures = new HashMap<String, TextureSamplerShaderVariable>();
+ 	List<String> dirtyVariables = new ArrayList<String>();
+ 	List<String> dirtyTextures = new ArrayList<String>();
+ 	
+ 	int maxTextures;
+ 
+ 	public static boolean validateShader = true;
+ 
+ 	public ClientShader(){
+ 
+ 	}
+ 
+ 	public ClientShader(String vshaderSource, String vshaderUrl, String fshaderSource, String fshaderUrl, boolean override){
+		doCompileShader(vshaderSource, vshaderUrl, fshaderSource, vshaderUrl);
+ 	}
+ 
+ 
+ 	public ClientShader(String vertexShader, String fragmentShader) {
+ 
+ 		System.out.println("Compiling " + vertexShader + " and " + fragmentShader);
+ 
+ 
+ 
+ 		//Compile the vertex shader
+ 		String vshader;
+ 		if (vertexShader == null) {
+ 			vshader = fallbackVertexShader;
+ 		} else {
+ 			try {
+ 				vshader = ShaderHelper.readShaderSource(vertexShader);
+ 			} catch (FileNotFoundException e) {
+ 				System.out.println("Vertex Shader: " + vertexShader + " Not found, using fallback");
+ 				vshader = fallbackVertexShader;
+ 			}
+ 		}
+ 
+ 		String fshader;
+ 		if (fragmentShader == null) {
+ 			fshader = fallbackFragmentShader;
+ 		} else {
+ 			try {
+ 				fshader = ShaderHelper.readShaderSource(fragmentShader);
+ 			} catch (FileNotFoundException e) {
+ 				System.out.println("Fragment Shader: " + fragmentShader + " Not found, using fallback");
+ 				fshader = fallbackFragmentShader;
+ 			}
+ 		}
+ 
+ 		doCompileShader(vshader, vertexShader, fshader, fragmentShader);
+ 
+ 	}
+ 
+ 
+ 	private void doCompileShader(String vsource, String vsourceUrl, String fsource, String fsourceUrl){
+ 		((SpoutClient) Spout.getEngine()).enqueueTask(new ShaderCompilationTask(this, vsource, vsourceUrl, fsource, fsourceUrl));
+ 	}
+ 
+ 
+ 
+ 	@Override
+ 	public void setUniform(String name, int value) {
+ 		variables.put(name, new IntShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 
+ 	@Override
+ 	public void setUniform(String name, float value) {
+ 		variables.put(name, new FloatShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 	@Override
+ 	public void setUniform(String name, Vector2 value) {
+ 		variables.put(name, new Vec2ShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 	@Override
+ 	public void setUniform(String name, Matrix[] value) {
+ 		variables.put(name, new Mat4ArrayShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 	@Override
+ 	public void setUniform(String name, Vector3 value) {
+ 		variables.put(name, new Vec3ShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 
+ 	@Override
+ 	public void setUniform(String name, Vector4 value) {
+ 		variables.put(name, new Vec4ShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 
+ 	@Override
+ 	public void setUniform(String name, Matrix value) {
+ 		if (value.getDimension() == 2) {
+ 			variables.put(name, new Mat2ShaderVariable(program, name, value));
+ 		} else if (value.getDimension() == 3) {
+ 			variables.put(name, new Mat3ShaderVariable(program, name, value));
+ 		} else if (value.getDimension() == 4) {
+ 			variables.put(name, new Mat4ShaderVariable(program, name, value));
+ 		}
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 	@Override
+ 	public void setUniform(String name, Color value) {
+ 		variables.put(name, new ColorShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyVariables.add(name);
+ 	}
+ 
+ 
+ 	@Override
+ 	public void setUniform(String name, Texture value) {
+ 		textures.put(name, new TextureSamplerShaderVariable(program, name, value));
+ 		if(assigned == this) dirtyTextures.add(name);
+ 	}
+ 
+ 
+ 	@Override
+ 	public void enableAttribute(String name, int size, int type, int stride, long offset, int layout) {
+ 		GL20.glBindAttribLocation(program, layout, name);
+ 		//GL20.glEnableVertexAttribArray(layout);
+ 		//GL20.glVertexAttribPointer(layout, size, type, false, 0, offset);
+ 	}
+ 
+ 	private static ClientShader assigned = null;
+ 	
+ 	@Override
+ 	public void assign() {
+ 		if (((Client)Spout.getEngine()).getRenderMode()==RenderMode.GL11) {
+ 			assign(true);
+ 			return;
+ 		}
+ 		
+ 		if(assigned != this){
+ 			GL20.glUseProgram(program);
+ 			for (ShaderVariable v : variables.values()) {
+ 				v.assign();
+ 			}
+ 			dirtyVariables.clear();
+ 			int i = 0;
+ 			for(TextureSamplerShaderVariable v : textures.values()){
+ 				v.bind(i);
+ 				i++;
+ 			}
+ 			dirtyTextures.clear();
+ 			assigned = this;
+ 		}else{
+ 			for(String key : dirtyVariables) {
+ 				variables.get(key).assign();
+ 			}
+ 			dirtyVariables.clear();
+ 			
+ 			if(!dirtyTextures.isEmpty()){ // MUST all reassign it, because keep texture number
+ 				int i = 0;
+ 				for(TextureSamplerShaderVariable v : textures.values()){
+ 					v.bind(i);
+ 					i++;
+ 				}
+ 				dirtyTextures.clear();
+ 			}
+ 			
+ 		}
+ 	}
+ 	
+ 	public void assign(boolean compatibilityMode) {
+ 		// Overriden by basic shader
+ 	}
+ 
+ 	String fallbackVertexShader = "#version 120\n" +
+ 			"attribute vec4 vPosition;\n" +
+ 			"attribute vec4 vColor;\n" +
+ 			"attribute vec2 vTexCoord; \n" +
+ 			"varying vec4 color;\n" +
+ 			"varying vec2 uvcoord; \n" +
+ 			"uniform mat4 Projection; \n" +
+ 			"uniform mat4 View; \n" +
+ 			"void main() \n" +
+ 			"{\n    gl_Position = Projection * View * vPosition; \n" +
+ 			"	uvcoord = vTexCoord; \n" +
+ 			"color = vColor; \n" +
+ 			"} \n";
+ 	String fallbackFragmentShader = "#version 120\n" +
+ 			"varying vec4 color;  //in \n" +
+ 			"varying vec2 uvcoord; \n" +
+ 			"uniform sampler2D texture; \n" +
+ 			"void main()\n{\n" +
+ 			"gl_FragColor =  color; \n} \n";
+ 	
+ 	private void dispose() {
+ 		if(program != -1 ) GL20.glDeleteProgram(program);
+ 	}
+ 	
+ 	public void finalize() {
+ 		dispose();
+ 	}
+ 
+ 	private RenderMaterial renderMaterial = null;
+ 	
+ 	@Override
+ 	public RenderMaterial getMaterialAssigned() {
+ 		return renderMaterial;
+ 	}
+ 
+ 	@Override
+ 	public void setMaterialAssigned(RenderMaterial material) {
+ 		this.renderMaterial = material;
+ 	}
+ }

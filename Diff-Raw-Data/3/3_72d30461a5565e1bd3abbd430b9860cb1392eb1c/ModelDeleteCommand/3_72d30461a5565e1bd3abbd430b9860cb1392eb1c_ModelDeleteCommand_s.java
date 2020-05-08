@@ -1,0 +1,112 @@
+ package dk.itu.big_red.editors.bigraph.commands;
+ 
+ import java.util.ArrayList;
+ import dk.itu.big_red.model.Bigraph;
+ import dk.itu.big_red.model.Container;
+ import dk.itu.big_red.model.Edge;
+ import dk.itu.big_red.model.Layoutable;
+ import dk.itu.big_red.model.Link;
+ import dk.itu.big_red.model.ModelObject;
+ import dk.itu.big_red.model.Node;
+ import dk.itu.big_red.model.Point;
+ import dk.itu.big_red.model.Port;
+ import dk.itu.big_red.model.assistants.BigraphScratchpad;
+ import dk.itu.big_red.model.changes.ChangeGroup;
+ import dk.itu.big_red.util.Lists;
+ 
+ public class ModelDeleteCommand extends ChangeCommand {
+ 	@Override
+ 	public Bigraph getTarget() {
+ 		return (Bigraph)super.getTarget();
+ 	}
+ 	
+ 	private ChangeGroup cg = new ChangeGroup();
+ 	
+ 	public ModelDeleteCommand() {
+ 		setChange(cg);
+ 	}
+ 	
+ 	private ArrayList<ModelObject> objects = new ArrayList<ModelObject>();
+ 	
+ 	public static final String GROUP_MAP_ID =
+ 		"dk.itu.big_red.editors.bigraph.commands.ModelDeleteCommand";
+ 	
+ 	public void addObject(ModelObject m) {
+ 		if (m != null && !(m instanceof Bigraph) && !(m instanceof Port)) {
+ 			objects.add(m);
+ 			if (m instanceof Link.Connection) {
+ 				setTarget(((Link.Connection)m).getLink().getBigraph());
+ 			} else if (m instanceof Layoutable) {
+ 				setTarget(((Layoutable)m).getBigraph());
+ 			}
+ 		}
+ 	}
+ 	
+ 	private BigraphScratchpad scratch = null;
+ 
+ 	public void setTarget(Bigraph target) {
+ 		super.setTarget(target);
+ 		if (scratch == null)
+ 			scratch = new BigraphScratchpad(target);
+ 	}
+ 	
+ 	private void removePoint(Link l, Point p) {
+ 		cg.add(p.changeDisconnect(l));
+ 		scratch.removePointFor(l, p);
+ 		if (scratch.getPointsFor(l).size() == 0 && l instanceof Edge) {
+ 			cg.add(l.getBigraph().changeRemoveChild(l));
+ 			scratch.removeChildFor(l.getBigraph(), l);
+ 		}
+ 	}
+ 	
+ 	private void remove(ModelObject m) {
+ 		if (m instanceof Link.Connection) {
+ 			Link.Connection l = (Link.Connection)m;
+ 			Link link = l.getLink(); Point point = l.getPoint();
+ 			setTarget(link.getBigraph());
+ 			removePoint(link, point);
+ 		} else if (m instanceof Layoutable) {
+ 			Layoutable n = (Layoutable)m;
+ 			if (scratch.getParentFor(n) == null)
+ 				return;
+ 			
+ 			if (n instanceof Container) {
+ 				Container c = (Container)n;
+ 				
+ 				if (n instanceof Node) {
+ 					Node j = (Node)n;
+ 					for (Point p : j.getPorts()) {
+ 						Link l = scratch.getLinkFor(p);
+ 						if (l != null)
+ 							removePoint(l, p);
+ 					}
+ 				}
+ 				
+ 				for (Layoutable i : Lists.copy(scratch.getChildrenFor(c)))
+ 					remove(i);
+ 			} else if (n instanceof Link) {
+ 				Link l = (Link)n;
+ 				for (Point p : Lists.copy(scratch.getPointsFor(l)))
+ 					removePoint(l, p);
+ 				if (l instanceof Edge)
+ 					return;
+ 			} else if (n instanceof Point) {
+ 				Point p = (Point)n;
+ 				if (scratch.getLinkFor(p) != null)
+					return;
+				removePoint(p.getLink(), p);
+ 			}
+ 			cg.add(n.getParent().changeRemoveChild(n));
+ 			scratch.removeChildFor(n.getParent(), n);
+ 		}
+ 	}
+ 	
+ 	@Override
+ 	public void prepare() {
+ 		cg.clear();
+ 		if (scratch != null)
+ 			scratch.clear();
+ 		for (ModelObject m : objects)
+ 			remove(m);
+ 	}
+ }

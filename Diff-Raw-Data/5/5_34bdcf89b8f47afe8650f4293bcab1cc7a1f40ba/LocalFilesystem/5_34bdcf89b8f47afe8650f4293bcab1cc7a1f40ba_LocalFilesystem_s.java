@@ -1,0 +1,205 @@
+ // Copyright (C) 2011 jOVAL.org.  All rights reserved.
+ // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+ 
+ package org.joval.io;
+ 
+ import java.io.File;
+ import java.io.InputStream;
+ import java.io.IOException;
+ import java.io.OutputStream;
+ import java.io.RandomAccessFile;
+ import java.util.NoSuchElementException;
+ 
+ import org.joval.intf.io.IFile;
+ import org.joval.intf.io.IFilesystem;
+ import org.joval.intf.io.IRandomAccess;
+ import org.joval.intf.util.IPathRedirector;
+ import org.joval.intf.util.tree.INode;
+ import org.joval.intf.util.tree.ITree;
+ import org.joval.intf.util.tree.ITreeBuilder;
+ import org.joval.intf.system.IEnvironment;
+ import org.joval.os.windows.io.WindowsFile;
+ import org.joval.util.tree.CachingTree;
+ import org.joval.util.tree.Tree;
+ import org.joval.util.JOVALMsg;
+ import org.joval.util.JOVALSystem;
+ 
+ /**
+  * A pure-Java implementation of the IFilesystem interface.
+  *
+  * @author David A. Solin
+  * @version %I% %G%
+  */
+ public class LocalFilesystem extends CachingTree implements IFilesystem {
+     private static boolean WINDOWS = System.getProperty("os.name").startsWith("Windows");
+ 
+     private boolean autoExpand = true, preloaded = false;
+     private IEnvironment env;
+     private IPathRedirector redirector;
+ 
+     public LocalFilesystem (IEnvironment env, IPathRedirector redirector) {
+ 	super();
+ 	this.env = env;
+ 	this.redirector = redirector;
+     }
+ 
+     public void setAutoExpand(boolean autoExpand) {
+ 	this.autoExpand = autoExpand;
+     }
+ 
+     // Implement methdos left abstract in CachingTree
+ 
+     public boolean preload() {
+ 	if (preloaded) {
+ 	    return true;
+ 	}
+ 
+ 	try {
+ 	    if (WINDOWS) {
+ 		File[] roots = File.listRoots();
+ 		for (int i=0; i < roots.length; i++) {
+ 		    String name = roots[i].getName();
+ 		    ITreeBuilder tree = cache.getTreeBuilder(name);
+ 		    if (tree == null) {
+ 			tree = new Tree(name, getDelimiter());
+ 			cache.addTree(tree);
+ 		    }
+ 		    addRecursive(tree, roots[i]);
+ 		}
+ 	    } else {
+ 		ITreeBuilder tree = cache.getTreeBuilder("");
+ 		if (tree == null) {
+ 		    tree = new Tree("", getDelimiter());
+ 		    cache.addTree(tree);
+ 		}
+ 		addRecursive(tree, new File(getDelimiter()));
+ 	    }
+ 
+ 	    preloaded = true;
+ 	    return true;
+ 	} catch (Exception e) {
+ 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE);
+ 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+ 	    return false;
+ 	}
+     }
+ 
+     public String getDelimiter() {
+ 	return File.separator;
+     }
+ 
+     public INode lookup(String path) throws NoSuchElementException {
+ 	try {
+ 	    IFile f = getFile(path);
+ 	    if (f.exists()) {
+ 		return f;
+ 	    } else {
+ 		throw new NoSuchElementException(path);
+ 	    }
+ 	} catch (IOException e) {
+ 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+ 	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+ 	}
+ 	return null;
+     }
+ 
+     // Implement IFilesystem
+ 
+     public boolean connect() {
+ 	return true;
+     }
+ 
+     public void disconnect() {
+     }
+ 
+     public IFile getFile(String path) throws IllegalArgumentException, IOException {
+ 	if (autoExpand) {
+ 	    path = env.expand(path);
+ 	}
+ 	String realPath = path;
+ 	if (redirector != null) {
+ 	    String alt = redirector.getRedirect(path);
+ 	    if (alt != null) {
+ 		realPath = alt;
+ 	    }
+ 	}
+ 	if (WINDOWS) {
+ 	    if (realPath.length() > 2 && realPath.charAt(1) == ':') {
+ 	        if (isLetter(realPath.charAt(0))) {
+ 		    return new WindowsFile(new FileProxy(this, new File(realPath), path));
+ 	        }
+ 	    }
+ 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
+	} else if (realPath.charAt(0) == File.separatorChar) {
+ 	    return new FileProxy(this, new File(realPath), path);
+ 	} else {
+ 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
+ 	}
+     }
+ 
+     public IFile getFile(String path, boolean vol) throws IllegalArgumentException, IOException {
+ 	return getFile(path);
+     }
+ 
+     public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
+ 	return new RandomAccessFileProxy(new RandomAccessFile(file.getLocalName(), mode));
+     }
+ 
+     public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
+ 	return new RandomAccessFileProxy(new RandomAccessFile(path, mode));
+     }
+ 
+     public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
+ 	return getFile(path).getInputStream();
+     }
+ 
+     public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
+ 	return getFile(path).getOutputStream(false);
+     }
+ 
+     public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
+ 	return getFile(path).getOutputStream(append);
+     }
+ 
+     // Private
+ 
+     /**
+      * Check for ASCII values between [A-Z] or [a-z].
+      */
+     boolean isLetter(char c) {
+         return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
+     }
+ 
+     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
+ 	String path = f.getCanonicalPath();
+ 	if (!path.equals(f.getPath())) {
+ 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+ 	} else if (f.isFile()) {
+ 	    INode node = tree.getRoot();
+ 	    try {
+ 		while ((path = trimToken(path, getDelimiter())) != null) {
+ 		    node = node.getChild(getToken(path, getDelimiter()));
+ 		}
+ 	    } catch (UnsupportedOperationException e) {
+ 		do {
+ 		    node = tree.makeNode(node, getToken(path, getDelimiter()));
+ 		} while ((path = trimToken(path, getDelimiter())) != null);
+ 	    } catch (NoSuchElementException e) {
+ 		do {
+ 		    node = tree.makeNode(node, getToken(path, getDelimiter()));
+ 		} while ((path = trimToken(path, getDelimiter())) != null);
+ 	    }
+ 	} else if (f.isDirectory()) {
+ 	    File[] children = f.listFiles();
+ 	    if (children == null) {
+ 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+ 	    } else {
+ 		for (File child : children) {
+ 		    addRecursive(tree, child);
+ 		}
+ 	    }
+ 	} else {
+ 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+ 	}
+     }
+ }

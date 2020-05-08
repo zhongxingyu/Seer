@@ -1,0 +1,1366 @@
+ /*
+  *  Copyright (c) 2012 Jan Kotek
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *    http://www.apache.org/licenses/LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations under the License.
+  */
+ package org.mapdb;
+ 
+ import java.io.DataInput;
+ import java.io.DataOutput;
+ import java.io.IOException;
+ import java.util.*;
+ import java.util.concurrent.ConcurrentMap;
+ import java.util.concurrent.locks.ReentrantReadWriteLock;
+ 
+ /**
+  * Thread safe concurrent HashMap
+  * <p/>
+  * This map uses full 32bit hash from beginning, There is no initial load factor and rehash.
+  * Technically it is not hash table, but hash tree with nodes expanding when they become full.
+  * <p/>
+  * This map is suitable for number of records  1e9 and over.
+  * Larger number of records will increase hash collisions and performance
+  * will degrade linearly with number of records (separate chaining).
+  * <p/>
+  * Concurrent scalability is achieved by splitting HashMap into 16 segments, each with separate lock.
+  * Very similar to ConcurrentHashMap
+  *
+  * @author Jan Kotek
+  */
+ @SuppressWarnings({ "unchecked", "rawtypes" })
+ public class HTreeMap<K,V>   extends AbstractMap<K,V> implements ConcurrentMap<K, V>, Bind.MapWithModificationListener<K,V> {
+ 
+ 
+     protected static final int BUCKET_OVERFLOW = 4;
+ 
+     /** is this a Map or Set?  if false, entries do not have values, only keys are allowed*/
+     protected final boolean hasValues;
+ 
+     /**
+      * Salt added to hash before rehashing, so it is harder to trigger hash collision attack.
+      */
+     protected final int hashSalt;
+ 
+     protected final Atomic.Long counter;
+ 
+     protected final Serializer<K> keySerializer;
+     protected final Serializer<V> valueSerializer;
+ 
+     protected final Engine engine;
+ 
+     protected final boolean expireFlag;
+     protected final long expireTimeStart;
+     protected final long expire;
+     protected final boolean expireAccessFlag;
+     protected final long expireAccess;
+ 
+     protected final long[] expireHeads;
+     protected final long[] expireTails;
+ 
+ 
+ 
+     /** node which holds key-value pair */
+     protected static final class LinkedNode<K,V>{
+ 
+         public final long next;
+         public final long expireLinkNodeRecid;
+ 
+         public final K key;
+         public final V value;
+ 
+         public LinkedNode(final long next, long expireLinkNodeRecid, final K key, final V value ){
+             this.key = key;
+             this.expireLinkNodeRecid = expireLinkNodeRecid;
+             this.value = value;
+             this.next = next;
+         }
+     }
+ 
+ 
+ 
+     protected final Serializer<LinkedNode<K,V>> LN_SERIALIZER = new Serializer<LinkedNode<K,V>>() {
+         @Override
+         public void serialize(DataOutput out, LinkedNode<K,V> value) throws IOException {
+             Utils.packLong(out, value.next);
+             Utils.packLong(out, value.expireLinkNodeRecid); //TODO save one byte if `expire` is not on
+             keySerializer.serialize(out,value.key);
+             if(hasValues)
+                 valueSerializer.serialize(out,value.value);
+         }
+ 
+         @Override
+         public LinkedNode<K,V> deserialize(DataInput in, int available) throws IOException {
+             return new LinkedNode<K, V>(
+                     Utils.unpackLong(in),
+                     Utils.unpackLong(in),
+                     (K) keySerializer.deserialize(in,-1),
+                     hasValues? (V) valueSerializer.deserialize(in,-1) : (V) Utils.EMPTY_STRING
+             );
+         }
+     };
+ 
+ 
+     protected static final Serializer<long[][]>DIR_SERIALIZER = new Serializer<long[][]>() {
+         @Override
+         public void serialize(DataOutput out, long[][] value) throws IOException {
+             if(value.length!=16) throw new InternalError();
+ 
+             //first write mask which indicate subarray nullability
+             int nulls = 0;
+             for(int i = 0;i<16;i++){
+                 if(value[i]!=null){
+                     for(long l:value[i]){
+                         if(l!=0){
+                             nulls |= 1<<i;
+                             break;
+                         }
+                     }
+                 }
+             }
+             out.writeShort(nulls);
+ 
+             //write non null subarrays
+             for(int i = 0;i<16;i++){
+                 if(value[i]!=null){
+                     if(value[i].length!=8) throw new InternalError();
+                     for(long l:value[i]){
+                         Utils.packLong(out, l);
+                     }
+                 }
+             }
+         }
+ 
+ 
+         @Override
+         public long[][] deserialize(DataInput in, int available) throws IOException {
+ 
+             final long[][] ret = new long[16][];
+ 
+             //there are 16  subarrays, each bite indicates if subarray is null
+             int nulls = in.readUnsignedShort();
+             for(int i=0;i<16;i++){
+                 if((nulls & 1)!=0){
+                     final long[] subarray = new long[8];
+                     for(int j=0;j<8;j++){
+                         subarray[j] = Utils.unpackLong(in);
+                     }
+                     ret[i] = subarray;
+                 }
+                 nulls = nulls>>>1;
+             }
+ 
+             return ret;
+         }
+     };
+ 
+     protected static final class ExpireLinkNode{
+ 
+         public static final Serializer<ExpireLinkNode> SERIALIZER = new Serializer<ExpireLinkNode>() {
+             @Override
+             public void serialize(DataOutput out, ExpireLinkNode value) throws IOException {
+                 if(value == null) return;
+                 Utils.packLong(out,value.prev);
+                 Utils.packLong(out,value.next);
+                 Utils.packLong(out,value.keyRecid);
+                 Utils.packLong(out,value.time);
+                 out.writeInt(value.hash);
+             }
+ 
+             @Override
+             public ExpireLinkNode deserialize(DataInput in, int available) throws IOException {
+                 if(available==0) return null;
+                 return new ExpireLinkNode(
+                         Utils.unpackLong(in),Utils.unpackLong(in),Utils.unpackLong(in),Utils.unpackLong(in),
+                         in.readInt()
+                 );
+             }
+         };
+ 
+         public final long prev;
+         public final long next;
+         public final long keyRecid;
+         public final long time;
+         public final int hash;
+ 
+         public ExpireLinkNode(long prev, long next, long keyRecid, long time, int hash) {
+             this.prev = prev;
+             this.next = next;
+             this.keyRecid = keyRecid;
+             this.time = time;
+             this.hash = hash;
+         }
+ 
+         public ExpireLinkNode copyNext(long next2) {
+             return new ExpireLinkNode(prev,next2, keyRecid,time,hash);
+         }
+ 
+         public ExpireLinkNode copyPrev(long prev2) {
+             return new ExpireLinkNode(prev2,next, keyRecid,time,hash);
+         }
+ 
+         public ExpireLinkNode copyTime(long time2) {
+             return new ExpireLinkNode(prev,next,keyRecid,time2,hash);
+         }
+ 
+     }
+ 
+ 
+     /** list of segments, this is immutable*/
+     protected final long[] segmentRecids;
+ 
+     protected final ReentrantReadWriteLock[] segmentLocks = new ReentrantReadWriteLock[16];
+     {
+         for(int i=0;i< 16;i++)  segmentLocks[i]=new ReentrantReadWriteLock();
+     }
+ 
+ 
+ 
+     /**
+      * Opens HTreeMap
+      */
+     public HTreeMap(Engine engine,long counterRecid, int hashSalt, long[] segmentRecids,
+                     Serializer<K> keySerializer, Serializer<V> valueSerializer,
+                     long expireTimeStart, long expire, long expireAccess, long expiryMaxSize,
+                     long[] expireHeads, long[] expireTails) {
+         if(engine==null) throw new NullPointerException();
+         if(segmentRecids==null) throw new NullPointerException();
+         if(keySerializer==null) throw new NullPointerException();
+ 
+         SerializerBase.assertSerializable(keySerializer);
+         this.hasValues = valueSerializer!=null;
+         if(hasValues) {
+             SerializerBase.assertSerializable(valueSerializer);
+         }
+ 
+ 
+         if(segmentRecids.length!=16) throw new IllegalArgumentException();
+ 
+         this.engine = engine;
+         this.hashSalt = hashSalt;
+         this.segmentRecids = Arrays.copyOf(segmentRecids,16);
+         this.keySerializer = keySerializer;
+         this.valueSerializer = valueSerializer;
+         this.expireFlag = expire !=0L;
+         this.expire = expire;
+         this.expireTimeStart = expireTimeStart;
+         this.expireAccessFlag = expireAccess !=0L;
+         this.expireAccess = expireAccess;
+         this.expireHeads = expireHeads==null? null : Arrays.copyOf(expireHeads,16);
+         this.expireTails = expireTails==null? null : Arrays.copyOf(expireTails,16);
+ 
+         if(counterRecid!=0){
+             this.counter = new Atomic.Long(engine,counterRecid);
+             Bind.size(this,counter);
+         }else{
+             this.counter = null;
+         }
+     }
+ 
+ 
+ 
+     protected static long[] preallocateSegments(Engine engine){
+         //prealocate segmentRecids, so we dont have to lock on those latter
+         long[] ret = new long[16];
+         for(int i=0;i<16;i++)
+             ret[i] = engine.put(new long[16][], DIR_SERIALIZER);
+         return ret;
+     }
+ 
+ 
+ 
+     @Override
+     public boolean containsKey(final Object o){
+         return get(o)!=null;
+     }
+ 
+     @Override
+     public int size() {
+         if(counter!=null)
+             return (int) counter.get(); //TODO larger then MAX_INT
+ 
+ 
+         long counter = 0;
+ 
+         //search tree, until we find first non null
+         for(int i=0;i<16;i++){
+             try{
+                 segmentLocks[i].readLock().lock();
+ 
+                 final long dirRecid = segmentRecids[i];
+                 counter+=recursiveDirCount(dirRecid);
+             }finally {
+                 segmentLocks[i].readLock().unlock();
+             }
+         }
+ 
+         if(counter>Integer.MAX_VALUE)
+             return Integer.MAX_VALUE;
+ 
+         return (int) counter;
+     }
+ 
+     private long recursiveDirCount(final long dirRecid) {
+         long[][] dir = engine.get(dirRecid, DIR_SERIALIZER);
+         long counter = 0;
+         for(long[] subdir:dir){
+             if(subdir == null) continue;
+             for(long recid:subdir){
+                 if(recid == 0) continue;
+                 if((recid&1)==0){
+                     //reference to another subdir
+                     recid = recid>>>1;
+                     counter += recursiveDirCount(recid);
+                 }else{
+                     //reference to linked list, count it
+                     recid = recid>>>1;
+                     while(recid!=0){
+                         LinkedNode n = engine.get(recid, LN_SERIALIZER);
+                         if(n!=null){
+                             counter++;
+                             recid =  n.next;
+                         }else{
+                             recid = 0;
+                         }
+                     }
+                 }
+             }
+         }
+         return counter;
+     }
+ 
+     @Override
+     public boolean isEmpty() {
+         //search tree, until we find first non null
+         for(int i=0;i<16;i++){
+             try{
+                 segmentLocks[i].readLock().lock();
+ 
+                 long dirRecid = segmentRecids[i];
+                 long[][] dir = engine.get(dirRecid, DIR_SERIALIZER);
+                 for(long[] d:dir){
+                     if(d!=null) return false;
+                 }
+ 
+             }finally {
+                 segmentLocks[i].readLock().unlock();
+             }
+         }
+ 
+         return true;
+     }
+ 
+ 
+ 
+     @Override
+ 	public V get(final Object o){
+         if(o==null) return null;
+         final int h = hash(o);
+         final int segment = h >>>28;
+         segmentLocks[segment].readLock().lock();
+         LinkedNode<K,V> ln;
+         try{
+             ln = getInner(o, h, segment);
+         }finally {
+             segmentLocks[segment].readLock().unlock();
+         }
+         if(ln==null) return null;
+         if(expireAccessFlag) expireLinkBump(segment,ln.expireLinkNodeRecid,expireAccess);
+         return ln.value;
+     }
+ 
+     protected LinkedNode<K,V> getInner(Object o, int h, int segment) {
+         long recid = segmentRecids[segment];
+         for(int level=3;level>=0;level--){
+             long[][] dir = engine.get(recid, DIR_SERIALIZER);
+             if(dir == null) return null;
+             int slot = (h>>>(level*7 )) & 0x7F;
+             if(slot>=128) throw new InternalError();
+             if(dir[slot/8]==null) return null;
+             recid = dir[slot/8][slot%8];
+             if(recid == 0) return null;
+             if((recid&1)!=0){ //last bite indicates if referenced record is LinkedNode
+                 recid = recid>>>1;
+                 while(true){
+                     LinkedNode<K,V> ln = engine.get(recid, LN_SERIALIZER);
+                     if(ln == null) return null;
+                     if(ln.key.equals(o)){
+                         return ln;
+                     }
+                     if(ln.next==0) return null;
+                     recid = ln.next;
+                 }
+             }
+ 
+             recid = recid>>>1;
+         }
+ 
+         return null;
+     }
+ 
+     @Override
+     public V put(final K key, final V value){
+         if (key == null)
+             throw new IllegalArgumentException("null key");
+ 
+         if (value == null)
+             throw new IllegalArgumentException("null value");
+ 
+         Utils.checkMapValueIsNotCollecion(value);
+ 
+         final int h = hash(key);
+         final int segment = h >>>28;
+         try{
+             segmentLocks[segment].writeLock().lock();
+             long dirRecid = segmentRecids[segment];
+ 
+             int level = 3;
+             while(true){
+                 long[][] dir = engine.get(dirRecid, DIR_SERIALIZER);
+                 final int slot =  (h>>>(7*level )) & 0x7F;
+                 if(slot>127) throw new InternalError();
+ 
+                 if(dir == null ){
+                     //create new dir
+                     dir = new long[16][];
+                 }
+ 
+                 if(dir[slot/8] == null){
+                     dir = Arrays.copyOf(dir,16);
+                     dir[slot/8] = new long[8];
+                 }
+ 
+                 int counter = 0;
+                 long recid = dir[slot/8][slot%8];
+ 
+                 if(recid!=0){
+                     if((recid&1) == 0){
+                         dirRecid = recid>>>1;
+                         level--;
+                         continue;
+                     }
+                     recid = recid>>>1;
+ 
+                     //traverse linked list, try to replace previous value
+                     LinkedNode<K,V> ln = engine.get(recid, LN_SERIALIZER);
+ 
+                     while(ln!=null){
+                         if(ln.key.equals(key)){
+                             //found, replace value at this node
+                             V oldVal = ln.value;
+                             ln = new LinkedNode<K, V>(ln.next, ln.expireLinkNodeRecid, ln.key, value);
+                             engine.update(recid, ln, LN_SERIALIZER);
+                             if(expireFlag) expireLinkBump(segment,ln.expireLinkNodeRecid,expire);
+                             notify(key,  oldVal, value);
+                             return oldVal;
+                         }
+                         recid = ln.next;
+                         ln = recid==0? null : engine.get(recid, LN_SERIALIZER);
+                         counter++;
+                     }
+                     //key was not found at linked list, so just append it to beginning
+                 }
+ 
+ 
+                 //check if linked list has overflow and needs to be expanded to new dir level
+                 if(counter>=BUCKET_OVERFLOW && level>=1){
+                     long[][] nextDir = new long[16][];
+ 
+                     {
+                         final long expireNodeRecid = expireFlag? engine.put(null, ExpireLinkNode.SERIALIZER):0L;
+                        final LinkedNode node = new LinkedNode<K, V>(0, expireNodeRecid, key, value);
+                         final long newRecid = engine.put(node, LN_SERIALIZER);
+                         //add newly inserted record
+                         int pos =(h >>>(7*(level-1) )) & 0x7F;
+                         nextDir[pos/8] = new long[8];
+                         nextDir[pos/8][pos%8] = ( newRecid<<1) | 1;
+                         if(expireFlag) expireLinkAdd(segment,expireNodeRecid,newRecid,h);
+                     }
+ 
+ 
+                     //redistribute linked bucket into new dir
+                     long nodeRecid = dir[slot/8][slot%8]>>>1;
+                     while(nodeRecid!=0){
+                         LinkedNode<K,V> n = engine.get(nodeRecid, LN_SERIALIZER);
+                         final long nextRecid = n.next;
+                         int pos = (hash(n.key) >>>(7*(level -1) )) & 0x7F;
+                         if(nextDir[pos/8]==null) nextDir[pos/8] = new long[8];
+                         n = new LinkedNode<K, V>(nextDir[pos/8][pos%8]>>>1, n.expireLinkNodeRecid, n.key, n.value);
+                         nextDir[pos/8][pos%8] = (nodeRecid<<1) | 1;
+                         engine.update(nodeRecid, n, LN_SERIALIZER);
+                         nodeRecid = nextRecid;
+                     }
+ 
+                     //insert nextDir and update parent dir
+                     long nextDirRecid = engine.put(nextDir, DIR_SERIALIZER);
+                     int parentPos = (h>>>(7*level )) & 0x7F;
+                     dir = Arrays.copyOf(dir,16);
+                     dir[parentPos/8] = Arrays.copyOf(dir[parentPos/8],8);
+                     dir[parentPos/8][parentPos%8] = (nextDirRecid<<1) | 0;
+                     engine.update(dirRecid, dir, DIR_SERIALIZER);
+                     notify(key, null, value);
+                     return null;
+                 }else{
+                     // record does not exist in linked list, so create new one
+                     recid = dir[slot/8][slot%8]>>>1;
+                     final long expireNodeRecid = expireFlag? engine.put(null, ExpireLinkNode.SERIALIZER):0L;
+ 
+                     final long newRecid = engine.put(new LinkedNode<K, V>(recid, expireNodeRecid, key, value), LN_SERIALIZER);
+                     dir = Arrays.copyOf(dir,16);
+                     dir[slot/8] = Arrays.copyOf(dir[slot/8],8);
+                     dir[slot/8][slot%8] = (newRecid<<1) | 1;
+                     engine.update(dirRecid, dir, DIR_SERIALIZER);
+                     if(expireFlag) expireLinkAdd(segment,expireNodeRecid, newRecid,h);
+                     notify(key, null, value);
+                     return null;
+                 }
+             }
+ 
+         }finally {
+             segmentLocks[segment].writeLock().unlock();
+         }
+     }
+ 
+ 
+     @Override
+     public V remove(Object key){
+ 
+         final int h = hash(key);
+         final int segment = h >>>28;
+         try{
+             segmentLocks[segment].writeLock().lock();
+ 
+             final  long[] dirRecids = new long[4];
+             int level = 3;
+             dirRecids[level] = segmentRecids[segment];
+ 
+             while(true){
+                 long[][] dir = engine.get(dirRecids[level], DIR_SERIALIZER);
+                 final int slot =  (h>>>(7*level )) & 0x7F;
+                 if(slot>127) throw new InternalError();
+ 
+                 if(dir == null ){
+                     //create new dir
+                     dir = new long[16][];
+                 }
+ 
+                 if(dir[slot/8] == null){
+                     dir = Arrays.copyOf(dir,16);
+                     dir[slot/8] = new long[8];
+                 }
+ 
+ //                int counter = 0;
+                 long recid = dir[slot/8][slot%8];
+ 
+                 if(recid!=0){
+                     if((recid&1) == 0){
+                         level--;
+                         dirRecids[level] = recid>>>1;
+                         continue;
+                     }
+                     recid = recid>>>1;
+ 
+                     //traverse linked list, try to remove node
+                     LinkedNode<K,V> ln = engine.get(recid, LN_SERIALIZER);
+                     LinkedNode<K,V> prevLn = null;
+                     long prevRecid = 0;
+                     while(ln!=null){
+                         if(ln.key.equals(key)){
+                             //remove from linkedList
+                             if(prevLn == null ){
+                                 //referenced directly from dir
+                                 if(ln.next==0){
+                                     recursiveDirDelete(h, level, dirRecids, dir, slot);
+ 
+ 
+                                 }else{
+                                     dir=Arrays.copyOf(dir,16);
+                                     dir[slot/8] = Arrays.copyOf(dir[slot/8],8);
+                                     dir[slot/8][slot%8] = (ln.next<<1)|1;
+                                     engine.update(dirRecids[level], dir, DIR_SERIALIZER);
+                                 }
+ 
+                             }else{
+                                 //referenced from LinkedNode
+                                 prevLn = new LinkedNode<K, V>(ln.next, prevLn.expireLinkNodeRecid,prevLn.key, prevLn.value);
+                                 engine.update(prevRecid, prevLn, LN_SERIALIZER);
+                             }
+                             //found, remove this node
+                             engine.delete(recid, LN_SERIALIZER);
+                             if(expireFlag) expireLinkRemove(segment, ln.expireLinkNodeRecid);
+                             notify((K) key, ln.value, null);
+                             return ln.value;
+                         }
+                         prevRecid = recid;
+                         prevLn = ln;
+                         recid = ln.next;
+                         ln = recid==0? null : engine.get(recid, LN_SERIALIZER);
+ //                        counter++;
+                     }
+                     //key was not found at linked list, so it does not exist
+                     return null;
+                 }
+                 //recid is 0, so entry does not exist
+                 return null;
+ 
+             }
+         }finally {
+             segmentLocks[segment].writeLock().unlock();
+         }
+     }
+ 
+ 
+     private void recursiveDirDelete(int h, int level, long[] dirRecids, long[][] dir, int slot) {
+         //TODO keep dir immutable while recursive delete
+         //was only item in linked list, so try to collapse the dir
+         dir=Arrays.copyOf(dir,16);
+         dir[slot/8] = Arrays.copyOf(dir[slot/8],8);
+         dir[slot/8][slot%8] = 0;
+         //one record was zeroed out, check if subarray can be collapsed to null
+         boolean allZero = true;
+         for(long l:dir[slot/8]){
+             if(l!=0){
+                 allZero = false;
+                 break;
+             }
+         }
+         if(allZero){
+ 
+             dir[slot/8] = null;
+         }
+         allZero = true;
+         for(long[] l:dir){
+             if(l!=null){
+                 allZero = false;
+                 break;
+             }
+         }
+ 
+         if(allZero){
+             //delete from parent dir
+             if(level==3){
+                 //parent is segment, recid of this dir can not be modified,  so just update to null
+                 engine.update(dirRecids[level], new long[16][], DIR_SERIALIZER);
+             }else{
+                 engine.delete(dirRecids[level], DIR_SERIALIZER);
+ 
+                 final long[][] parentDir = engine.get(dirRecids[level + 1], DIR_SERIALIZER);
+                 final int parentPos = (h >>> (7 * (level + 1))) & 0x7F;
+                 recursiveDirDelete(h,level+1,dirRecids, parentDir, parentPos);
+                 //parentDir[parentPos/8][parentPos%8] = 0;
+                 //engine.update(dirRecids[level + 1],parentDir,DIR_SERIALIZER);
+ 
+             }
+         }else{
+             engine.update(dirRecids[level], dir, DIR_SERIALIZER);
+         }
+     }
+ 
+     @Override
+     public void clear() {
+         for(int i = 0; i<16;i++) try{
+             segmentLocks[i].writeLock().lock();
+ 
+             final long dirRecid = segmentRecids[i];
+             recursiveDirClear(dirRecid);
+ 
+             //set dir to null, as segment recid is immutable
+             engine.update(dirRecid, new long[16][], DIR_SERIALIZER);
+ 
+             if(expireFlag)
+                 while(expireLinkRemoveLast(i)!=null){} //TODO speedup remove all
+ 
+         }finally {
+             segmentLocks[i].writeLock().unlock();
+         }
+     }
+ 
+     private void recursiveDirClear(final long dirRecid) {
+         final long[][] dir = engine.get(dirRecid, DIR_SERIALIZER);
+         if(dir == null) return;
+         for(long[] subdir:dir){
+             if(subdir==null) continue;
+             for(long recid:subdir){
+                 if(recid == 0) continue;
+                 if((recid&1)==0){
+                     //another dir
+                     recid = recid>>>1;
+                     //recursively remove dir
+                     recursiveDirClear(recid);
+                     engine.delete(recid, DIR_SERIALIZER);
+                 }else{
+                     //linked list to delete
+                     recid = recid>>>1;
+                     while(recid!=0){
+                         LinkedNode n = engine.get(recid, LN_SERIALIZER);
+                         engine.delete(recid,LN_SERIALIZER);
+                         notify((K)n.key, (V)n.value , null);
+                         recid = n.next;
+                     }
+                 }
+ 
+             }
+         }
+     }
+ 
+ 
+     @Override
+     public boolean containsValue(Object value) {
+         for (V v : values()) {
+             if (v.equals(value)) return true;
+         }
+         return false;
+     }
+ 
+     @Override
+     public void putAll(Map<? extends K, ? extends V> m) {
+         for(Entry<? extends K, ? extends V> e:m.entrySet()){
+             put(e.getKey(),e.getValue());
+         }
+     }
+ 
+     protected class KeySet extends AbstractSet<K> {
+ 
+         @Override
+         public int size() {
+             return HTreeMap.this.size();
+         }
+ 
+         @Override
+         public boolean isEmpty() {
+             return HTreeMap.this.isEmpty();
+         }
+ 
+         @Override
+         public boolean contains(Object o) {
+             return HTreeMap.this.containsKey(o);
+         }
+ 
+         @Override
+         public Iterator<K> iterator() {
+             return new KeyIterator();
+         }
+ 
+         @Override
+         public boolean add(K k) {
+             if(HTreeMap.this.hasValues)
+                 throw new UnsupportedOperationException();
+             else
+                 return HTreeMap.this.put(k, (V) Utils.EMPTY_STRING) == null;
+         }
+ 
+         @Override
+         public boolean remove(Object o) {
+ //            if(o instanceof Entry){
+ //                Entry e = (Entry) o;
+ //                return HTreeMap.this.remove(((Entry) o).getKey(),((Entry) o).getValue());
+ //            }
+             return HTreeMap.this.remove(o)!=null;
+ 
+         }
+ 
+ 
+         @Override
+         public void clear() {
+             HTreeMap.this.clear();
+         }
+ 
+         public HTreeMap<K,V> parent(){
+             return HTreeMap.this;
+         }
+     }
+ 
+ 
+ 
+     private final Set<K> _keySet = new KeySet();
+ 
+     @Override
+     public Set<K> keySet() {
+         return _keySet;
+     }
+ 
+     private final Collection<V> _values = new AbstractCollection<V>(){
+ 
+         @Override
+         public int size() {
+             return HTreeMap.this.size();
+         }
+ 
+         @Override
+         public boolean isEmpty() {
+             return HTreeMap.this.isEmpty();
+         }
+ 
+         @Override
+         public boolean contains(Object o) {
+             return HTreeMap.this.containsValue(o);
+         }
+ 
+ 
+ 
+         @Override
+         public Iterator<V> iterator() {
+             return new ValueIterator();
+         }
+ 
+     };
+ 
+     @Override
+     public Collection<V> values() {
+         return _values;
+     }
+ 
+     private Set<Entry<K,V>> _entrySet = new AbstractSet<Entry<K,V>>(){
+ 
+         @Override
+         public int size() {
+             return HTreeMap.this.size();
+         }
+ 
+         @Override
+         public boolean isEmpty() {
+             return HTreeMap.this.isEmpty();
+         }
+ 
+         @Override
+         public boolean contains(Object o) {
+             if(o instanceof  Entry){
+                 Entry e = (Entry) o;
+                 Object val = HTreeMap.this.get(e.getKey());
+                 return val!=null && val.equals(e.getValue());
+             }else
+                 return false;
+         }
+ 
+         @Override
+         public Iterator<Entry<K, V>> iterator() {
+             return new EntryIterator();
+         }
+ 
+ 
+         @Override
+         public boolean add(Entry<K, V> kvEntry) {
+             K key = kvEntry.getKey();
+             V value = kvEntry.getValue();
+             if(key==null || value == null) throw new NullPointerException();
+             HTreeMap.this.put(key, value);
+             return true;
+         }
+ 
+         @Override
+         public boolean remove(Object o) {
+             if(o instanceof Entry){
+                 Entry e = (Entry) o;
+                 Object key = e.getKey();
+                 if(key == null) return false;
+                 return HTreeMap.this.remove(key, e.getValue());
+             }
+             return false;
+         }
+ 
+ 
+         @Override
+         public void clear() {
+             HTreeMap.this.clear();
+         }
+     };
+ 
+     @Override
+     public Set<Entry<K, V>> entrySet() {
+         return _entrySet;
+     }
+ 
+ 
+     protected  int hash(final Object key) {
+         int h = key.hashCode() ^ hashSalt;
+         h ^= (h >>> 20) ^ (h >>> 12);
+         return h ^ (h >>> 7) ^ (h >>> 4);
+     }
+ 
+ 
+     abstract class HashIterator{
+ 
+         protected LinkedNode[] currentLinkedList;
+         protected int currentLinkedListPos = 0;
+ 
+         private K lastReturnedKey = null;
+ 
+         private int lastSegment = 0;
+ 
+         HashIterator(){
+             currentLinkedList = findNextLinkedNode(0);
+         }
+ 
+         public void remove() {
+             final K keyToRemove = lastReturnedKey;
+             if (lastReturnedKey == null)
+                 throw new IllegalStateException();
+ 
+             lastReturnedKey = null;
+             HTreeMap.this.remove(keyToRemove);
+         }
+ 
+         public boolean hasNext(){
+             return currentLinkedList!=null && currentLinkedListPos<currentLinkedList.length;
+         }
+ 
+ 
+         protected void  moveToNext(){
+             lastReturnedKey = (K) currentLinkedList[currentLinkedListPos].key;
+ 
+             if(expireAccessFlag){
+                 int segment = hash(lastReturnedKey)>>>28;
+                 expireLinkBump(segment, currentLinkedList[currentLinkedListPos].expireLinkNodeRecid,expireAccess);
+             }
+             currentLinkedListPos+=1;
+             if(currentLinkedListPos==currentLinkedList.length){
+                 final int lastHash = hash(lastReturnedKey);
+                 currentLinkedList = advance(lastHash);
+                 currentLinkedListPos = 0;
+             }
+         }
+ 
+         private LinkedNode[] advance(int lastHash){
+ 
+             int segment = lastHash >>>28;
+ 
+             //two phases, first find old item and increase hash
+             try{
+                 segmentLocks[segment].readLock().lock();
+ 
+                 long dirRecid = segmentRecids[segment];
+                 int level = 3;
+                 //dive into tree, finding last hash position
+                 while(true){
+                     long[][] dir = engine.get(dirRecid, DIR_SERIALIZER);
+                     int pos = (lastHash>>>(7 * level)) & 0x7F;
+ 
+                     //check if we need to expand deeper
+                     if(dir[pos/8]==null || dir[pos/8][pos%8]==0 || (dir[pos/8][pos%8]&1)==1) {
+                         //increase hash by 1
+                         if(level!=0){
+                             lastHash = ((lastHash>>>(7 * level)) + 1) << (7*level); //should use mask and XOR
+                         }else
+                             lastHash +=1;
+                         if(lastHash==0){
+                             return null;
+                         }
+                         break;
+                     }
+ 
+                     //reference is dir, move to next level
+                     dirRecid = dir[pos/8][pos%8]>>>1;
+                     level--;
+                 }
+ 
+             }finally {
+                 segmentLocks[segment].readLock().unlock();
+             }
+             return findNextLinkedNode(lastHash);
+ 
+ 
+         }
+ 
+         private LinkedNode[] findNextLinkedNode(int hash) {
+             //second phase, start search from increased hash to find next items
+             for(int segment = Math.max(hash >>>28, lastSegment); segment<16;segment++)try{
+ 
+                 lastSegment = Math.max(segment,lastSegment);
+                 segmentLocks[segment].readLock().lock();
+ 
+                 long dirRecid = segmentRecids[segment];
+                 LinkedNode ret[] = findNextLinkedNodeRecur(dirRecid, hash, 3);
+                 //System.out.println(Arrays.asList(ret));
+                 if(ret !=null) return ret;
+                 hash = 0;
+             }finally {
+                 segmentLocks[segment].readLock().unlock();
+             }
+ 
+             return null;
+         }
+ 
+         private LinkedNode[] findNextLinkedNodeRecur(long dirRecid, int newHash, int level){
+             long[][] dir = engine.get(dirRecid, DIR_SERIALIZER);
+             if(dir == null) return null;
+             int pos = (newHash>>>(level*7))  & 0x7F;
+             boolean first = true;
+             while(pos<128){
+                 if(dir[pos/8]!=null){
+                     long recid = dir[pos/8][pos%8];
+                     if(recid!=0){
+                         if((recid&1) == 1){
+                             recid = recid>>1;
+                             //found linked list, load it into array and return
+                             LinkedNode[] array = new LinkedNode[1];
+                             int arrayPos = 0;
+                             while(recid!=0){
+                                 LinkedNode ln = engine.get(recid, LN_SERIALIZER);
+                                 if(ln==null){
+                                     recid = 0;
+                                     continue;
+                                 }
+                                 //increase array size if needed
+                                 if(arrayPos == array.length)
+                                     array = Arrays.copyOf(array, array.length+1);
+                                 array[arrayPos++] = ln;
+                                 recid = ln.next;
+                             }
+                             return array;
+                         }else{
+                             //found another dir, continue dive
+                             recid = recid>>1;
+                             LinkedNode[] ret = findNextLinkedNodeRecur(recid, first ? newHash : 0, level - 1);
+                             if(ret != null) return ret;
+                         }
+                     }
+                 }
+                 first = false;
+                 pos++;
+             }
+             return null;
+         }
+     }
+ 
+     class KeyIterator extends HashIterator implements  Iterator<K>{
+ 
+         @Override
+         public K next() {
+         	if(currentLinkedList == null)
+         		throw new NoSuchElementException();
+             K key = (K) currentLinkedList[currentLinkedListPos].key;
+             moveToNext();
+             return key;
+         }
+     }
+ 
+     class ValueIterator extends HashIterator implements  Iterator<V>{
+ 
+         @Override
+         public V next() {
+         	if(currentLinkedList == null)
+         		throw new NoSuchElementException();
+             V value = (V) currentLinkedList[currentLinkedListPos].value;
+             moveToNext();
+             return value;
+         }
+     }
+ 
+     class EntryIterator extends HashIterator implements  Iterator<Entry<K,V>>{
+ 
+         @Override
+         public Entry<K, V> next() {
+         	if(currentLinkedList == null)
+         		throw new NoSuchElementException();
+             K key = (K) currentLinkedList[currentLinkedListPos].key;
+             moveToNext();
+             return new Entry2(key);
+         }
+     }
+ 
+     class Entry2 implements Entry<K,V>{
+ 
+         private final K key;
+ 
+         Entry2(K key) {
+             this.key = key;
+         }
+ 
+         @Override
+         public K getKey() {
+             return key;
+         }
+ 
+         @Override
+         public V getValue() {
+             return HTreeMap.this.get(key);
+         }
+ 
+         @Override
+         public V setValue(V value) {
+             return HTreeMap.this.put(key,value);
+         }
+ 
+         @Override
+         public boolean equals(Object o) {
+             return (o instanceof Entry) && key.equals(((Entry) o).getKey());
+         }
+ 
+         @Override
+         public int hashCode() {
+             final V value = HTreeMap.this.get(key);
+             return (key == null ? 0 : key.hashCode()) ^
+                     (value == null ? 0 : value.hashCode());
+         }
+     }
+ 
+ 
+     @Override
+     public V putIfAbsent(K key, V value) {
+         if(key==null||value==null) throw new NullPointerException();
+         Utils.checkMapValueIsNotCollecion(value);
+         final int segment = HTreeMap.this.hash(key) >>>28;
+         try{
+             segmentLocks[segment].writeLock().lock();
+ 
+             if (!containsKey(key))
+                  return put(key, value);
+             else
+                  return get(key);
+ 
+         }finally {
+             segmentLocks[segment].writeLock().unlock();
+         }
+     }
+ 
+     @Override
+     public boolean remove(Object key, Object value) {
+         if(key==null||value==null) throw new NullPointerException();
+         final int segment = HTreeMap.this.hash(key) >>>28;
+         try{
+             segmentLocks[segment].writeLock().lock();
+ 
+             if (containsKey(key) && get(key).equals(value)) {
+                 remove(key);
+                 return true;
+             }else
+                 return false;
+ 
+         }finally {
+             segmentLocks[segment].writeLock().unlock();
+         }
+     }
+ 
+     @Override
+     public boolean replace(K key, V oldValue, V newValue) {
+         if(key==null||oldValue==null||newValue==null) throw new NullPointerException();
+         final int segment = HTreeMap.this.hash(key) >>>28;
+         try{
+             segmentLocks[segment].writeLock().lock();
+ 
+             if (containsKey(key) && get(key).equals(oldValue)) {
+                  put(key, newValue);
+                  return true;
+             } else
+                 return false;
+ 
+         }finally {
+             segmentLocks[segment].writeLock().unlock();
+         }
+     }
+ 
+     @Override
+     public V replace(K key, V value) {
+         if(key==null||value==null) throw new NullPointerException();
+         final int segment = HTreeMap.this.hash(key) >>>28;
+         try{
+             segmentLocks[segment].writeLock().lock();
+ 
+             if (containsKey(key))
+                 return put(key, value);
+             else
+                 return null;
+         }finally {
+             segmentLocks[segment].writeLock().unlock();
+         }
+     }
+ 
+ 
+     protected void expireLinkAdd(int segment, long expireNodeRecid, long keyRecid, int hash){
+         assert(segmentLocks[segment].writeLock().isHeldByCurrentThread());
+ 
+         long time = expire+System.currentTimeMillis()-expireTimeStart;
+         long head = engine.get(expireHeads[segment],Serializer.LONG_SERIALIZER);
+         if(head == 0){
+             //insert new
+             ExpireLinkNode n = new ExpireLinkNode(0,0,keyRecid,time,hash);
+             engine.update(expireNodeRecid, n, ExpireLinkNode.SERIALIZER);
+             engine.update(expireHeads[segment],expireNodeRecid,Serializer.LONG_SERIALIZER);
+             engine.update(expireTails[segment],expireNodeRecid,Serializer.LONG_SERIALIZER);
+         }else{
+             //insert new head
+             ExpireLinkNode n = new ExpireLinkNode(head,0,keyRecid,time,hash);
+             engine.update(expireNodeRecid, n, ExpireLinkNode.SERIALIZER);
+ 
+             //update old head to have new head as next
+             ExpireLinkNode oldHead = engine.get(head,ExpireLinkNode.SERIALIZER);
+             oldHead=oldHead.copyNext(expireNodeRecid);
+             engine.update(head,oldHead,ExpireLinkNode.SERIALIZER);
+ 
+             //and update head
+             engine.update(expireHeads[segment],expireNodeRecid,Serializer.LONG_SERIALIZER);
+         }
+     }
+ 
+     protected void expireLinkBump(int segment, long nodeRecid, long timeIncrement){
+         segmentLocks[segment].writeLock().lock();
+ 
+         try{
+         ExpireLinkNode n = engine.get(nodeRecid,ExpireLinkNode.SERIALIZER);
+         long newTime = timeIncrement+System.currentTimeMillis()-expireTimeStart;
+         //TODO optimize bellow, but what if there is only size limit?
+         //if(n.time>newTime) return; // older time greater than new one, do not update
+ 
+         if(n.next==0){
+             //already head, so just update time
+             n = n.copyTime(newTime);
+             engine.update(nodeRecid,n,ExpireLinkNode.SERIALIZER);
+         }else{
+             //update prev so it points to next
+             if(n.prev!=0){
+                 //not a tail
+                 ExpireLinkNode prev = engine.get(n.prev,ExpireLinkNode.SERIALIZER);
+                 prev=prev.copyNext(n.next);
+                 engine.update(n.prev, prev, ExpireLinkNode.SERIALIZER);
+             }else{
+                 //yes tail, so just update it to point to next
+                 engine.update(expireTails[segment],n.next,Serializer.LONG_SERIALIZER);
+             }
+ 
+             //update next so it points to prev
+             ExpireLinkNode next = engine.get(n.next, ExpireLinkNode.SERIALIZER);
+             next=next.copyPrev(n.prev);
+             engine.update(n.next,next,ExpireLinkNode.SERIALIZER);
+ 
+             //TODO optimize if oldHead==next
+ 
+             //now insert node as new head
+             long oldHeadRecid = engine.get(expireHeads[segment],Serializer.LONG_SERIALIZER);
+             ExpireLinkNode oldHead = engine.get(oldHeadRecid, ExpireLinkNode.SERIALIZER);
+             oldHead = oldHead.copyNext(nodeRecid);
+             engine.update(oldHeadRecid,oldHead,ExpireLinkNode.SERIALIZER);
+             engine.update(expireHeads[segment],nodeRecid,Serializer.LONG_SERIALIZER);
+ 
+             n = new ExpireLinkNode(oldHeadRecid,0, n.keyRecid, newTime, n.hash);
+             engine.update(nodeRecid,n,ExpireLinkNode.SERIALIZER);
+         }
+         }finally{
+             segmentLocks[segment].writeLock().unlock();
+         }
+ 
+     }
+ 
+     protected ExpireLinkNode expireLinkRemoveLast(int segment){
+         assert(segmentLocks[segment].writeLock().isHeldByCurrentThread());
+ 
+         long tail = engine.get(expireTails[segment],Serializer.LONG_SERIALIZER);
+         if(tail==0) return null;
+ 
+         ExpireLinkNode n = engine.get(tail,ExpireLinkNode.SERIALIZER);
+         if(n.next==0){
+             //update tail and head
+             engine.update(expireHeads[segment],0L,Serializer.LONG_SERIALIZER);
+             engine.update(expireTails[segment],0L,Serializer.LONG_SERIALIZER);
+         }else{
+             //point tail to next record
+             engine.update(expireTails[segment],n.next,Serializer.LONG_SERIALIZER);
+             //update next record to have zero prev
+             ExpireLinkNode next = engine.get(n.next,ExpireLinkNode.SERIALIZER);
+             next=next.copyPrev(0L);
+             engine.update(n.next, next, ExpireLinkNode.SERIALIZER);
+         }
+ 
+         engine.delete(tail,ExpireLinkNode.SERIALIZER);
+         return n;
+     }
+ 
+ 
+     protected ExpireLinkNode expireLinkRemove(int segment, long nodeRecid){
+         assert(segmentLocks[segment].writeLock().isHeldByCurrentThread());
+ 
+         ExpireLinkNode n = engine.get(nodeRecid,ExpireLinkNode.SERIALIZER);
+         engine.delete(nodeRecid,ExpireLinkNode.SERIALIZER);
+         if(n.next == 0 && n.prev==0){
+             engine.update(expireHeads[segment],0L,Serializer.LONG_SERIALIZER);
+             engine.update(expireTails[segment],0L,Serializer.LONG_SERIALIZER);
+         }else if (n.next == 0) {
+             ExpireLinkNode prev = engine.get(n.prev,ExpireLinkNode.SERIALIZER);
+             prev=prev.copyNext(0);
+             engine.update(n.prev,prev,ExpireLinkNode.SERIALIZER);
+             engine.update(expireHeads[segment],n.prev,Serializer.LONG_SERIALIZER);
+         }else if (n.prev == 0) {
+             ExpireLinkNode next = engine.get(n.next,ExpireLinkNode.SERIALIZER);
+             next=next.copyPrev(0);
+             engine.update(n.next,next,ExpireLinkNode.SERIALIZER);
+             engine.update(expireTails[segment],n.next,Serializer.LONG_SERIALIZER);
+         }else{
+             ExpireLinkNode next = engine.get(n.next,ExpireLinkNode.SERIALIZER);
+             next=next.copyPrev(n.prev);
+             engine.update(n.next,next,ExpireLinkNode.SERIALIZER);
+ 
+             ExpireLinkNode prev = engine.get(n.prev,ExpireLinkNode.SERIALIZER);
+             prev=prev.copyNext(n.next);
+             engine.update(n.prev,prev,ExpireLinkNode.SERIALIZER);
+         }
+ 
+         return n;
+     }
+ 
+ 
+ 
+ 
+     /**
+      * Make readonly snapshot view of current Map. Snapshot is immutable and not affected by modifications made by other threads.
+      * Useful if you need consistent view on Map.
+      * <p>
+      * Maintaining snapshot have some overhead, underlying Engine is closed after Map view is GCed.
+      * Please make sure to release reference to this Map view, so snapshot view can be garbage collected.
+      *
+      * @return snapshot
+      */
+     public Map<K,V> snapshot(){
+         Engine snapshot = SnapshotEngine.createSnapshotFor(engine);
+         return new HTreeMap<K, V>(snapshot, counter==null?0:counter.recid,
+                 hashSalt, segmentRecids, keySerializer, valueSerializer,0L,0L,0L,0L,null,null);
+     }
+ 
+ 
+     protected final Object modListenersLock = new Object();
+     protected Bind.MapListener<K,V>[] modListeners = new Bind.MapListener[0];
+ 
+     @Override
+     public void addModificationListener(Bind.MapListener<K,V> listener) {
+         synchronized (modListenersLock){
+             Bind.MapListener<K,V>[] modListeners2 =
+                     Arrays.copyOf(modListeners,modListeners.length+1);
+             modListeners2[modListeners2.length-1] = listener;
+             modListeners = modListeners2;
+         }
+ 
+     }
+ 
+     @Override
+     public void removeModificationListener(Bind.MapListener<K,V> listener) {
+         synchronized (modListenersLock){
+             for(int i=0;i<modListeners.length;i++){
+                 if(modListeners[i]==listener) modListeners[i]=null;
+             }
+         }
+     }
+ 
+     protected void notify(K key, V oldValue, V newValue) {
+         Bind.MapListener<K,V>[] modListeners2  = modListeners;
+         for(Bind.MapListener<K,V> listener:modListeners2){
+             if(listener!=null)
+                 listener.update(key, oldValue, newValue);
+         }
+     }
+ 
+     /**
+      * Closes underlying storage and releases all resources.
+      * Used mostly with temporary collections where engine is not accessible.
+      */
+     public void close(){
+         engine.close();
+     }
+ 
+ }

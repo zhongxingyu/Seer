@@ -1,0 +1,161 @@
+ /* 
+  * Licensed to Aduna under one or more contributor license agreements.  
+  * See the NOTICE.txt file distributed with this work for additional 
+  * information regarding copyright ownership. 
+  *
+  * Aduna licenses this file to you under the terms of the Aduna BSD 
+  * License (the "License"); you may not use this file except in compliance 
+  * with the License. See the LICENSE.txt file distributed with this work 
+  * for the full License.
+  *
+  * Unless required by applicable law or agreed to in writing, software 
+  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
+  * implied. See the License for the specific language governing permissions
+  * and limitations under the License.
+  */
+ package org.openrdf.repository.sail;
+ 
+ import java.io.File;
+ 
+ import org.openrdf.model.ValueFactory;
+ import org.openrdf.repository.Repository;
+ import org.openrdf.repository.RepositoryException;
+ import org.openrdf.repository.RepositoryLockedException;
+ import org.openrdf.repository.base.RepositoryBase;
+ import org.openrdf.sail.Sail;
+ import org.openrdf.sail.SailException;
+ import org.openrdf.sail.SailLockedException;
+ 
+ /**
+  * An implementation of the {@link Repository} interface that operates on a
+  * (stack of) {@link Sail Sail} object(s). The behaviour of the repository is
+  * determined by the Sail stack that it operates on; for example, the repository
+  * will only support RDF Schema or OWL semantics if the Sail stack includes an
+  * inferencer for this.
+  * <p>
+  * Creating a repository object of this type is very easy. For example, the
+  * following code creates and initializes a main-memory store with RDF Schema
+  * semantics:
+  * 
+  * <pre>
+ * Repository repository = new SailRepository(new ForwardChainingRDFSInferencer(new MemoryStore()));
+  * repository.initialize();
+  * </pre>
+  * 
+  * Or, alternatively:
+  * 
+  * <pre>
+  * Sail sailStack = new MemoryStore();
+  * sailStack = new ForwardChainingRDFSInferencer(sailStack);
+  * 
+ * Repository repository = new SailRepository(sailStack);
+  * repository.initialize();
+  * </pre>
+  * 
+  * @author Arjohn Kampman
+  */
+ public class SailRepository extends RepositoryBase {
+ 
+ 	/*-----------*
+ 	 * Constants *
+ 	 *-----------*/
+ 
+ 	private final Sail sail;
+ 
+ 	/*--------------*
+ 	 * Constructors *
+ 	 *--------------*/
+ 
+ 	/**
+ 	 * Creates a new repository object that operates on the supplied Sail.
+ 	 * 
+ 	 * @param sail
+ 	 *        A Sail object.
+ 	 */
+ 	public SailRepository(Sail sail) {
+ 		this.sail = sail;
+ 	}
+ 
+ 	/*---------*
+ 	 * Methods *
+ 	 *---------*/
+ 
+ 	public File getDataDir() {
+ 		return sail.getDataDir();
+ 	}
+ 
+ 	public void setDataDir(File dataDir) {
+ 		sail.setDataDir(dataDir);
+ 	}
+ 
+ 	@Override
+ 	protected void initializeInternal()
+ 		throws RepositoryException
+ 	{
+ 		try {
+ 			sail.initialize();
+ 		}
+ 		catch (SailLockedException e) {
+ 			String l = e.getLockedBy();
+ 			String r = e.getRequestedBy();
+ 			String m = e.getMessage();
+ 			throw new RepositoryLockedException(l, r, m, e);
+ 		}
+ 		catch (SailException e) {
+ 			throw new RepositoryException(e.getMessage(), e);
+ 		}
+ 	}
+ 
+ 	@Override
+ 	protected void shutDownInternal()
+ 		throws RepositoryException
+ 	{
+ 		try {
+ 			sail.shutDown();
+ 		}
+ 		catch (SailException e) {
+ 			throw new RepositoryException("Unable to shutdown Sail", e);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Gets the Sail object that is on top of the Sail stack that this repository
+ 	 * operates on.
+ 	 * 
+ 	 * @return A Sail object.
+ 	 */
+ 	public Sail getSail() {
+ 		return sail;
+ 	}
+ 
+ 	public boolean isWritable()
+ 		throws RepositoryException
+ 	{
+ 		try {
+ 			return sail.isWritable();
+ 		}
+ 		catch (SailException e) {
+ 			throw new RepositoryException("Unable to determine writable status of Sail", e);
+ 		}
+ 	}
+ 
+ 	public ValueFactory getValueFactory() {
+ 		return sail.getValueFactory();
+ 	}
+ 
+ 	public SailRepositoryConnection getConnection()
+ 		throws RepositoryException
+ 	{
+ 		try {
+ 			return new SailRepositoryConnection(this, sail.getConnection());
+ 		}
+ 		catch (SailException e) {
+ 			throw new RepositoryException(e);
+ 		}
+ 	}
+ 
+ 	public String toString() {
+ 		return sail.toString();
+ 	}
+ }

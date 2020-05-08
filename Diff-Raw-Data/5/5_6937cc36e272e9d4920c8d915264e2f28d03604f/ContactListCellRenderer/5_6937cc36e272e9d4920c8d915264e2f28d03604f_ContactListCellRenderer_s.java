@@ -1,0 +1,396 @@
+ /*
+  * SIP Communicator, the OpenSource Java VoIP and Instant Messaging client.
+  *
+  * Distributable under LGPL license.
+  * See terms of license at gnu.org.
+  */
+ package net.java.sip.communicator.impl.gui.main.contactlist;
+ 
+ import java.awt.*;
+ 
+ import javax.swing.*;
+ 
+ import net.java.sip.communicator.impl.gui.*;
+ import net.java.sip.communicator.impl.gui.utils.*;
+ import net.java.sip.communicator.service.contactlist.*;
+ import net.java.sip.communicator.util.*;
+ import net.java.sip.communicator.util.swing.*;
+ 
+ /**
+  * The <tt>ContactListCellRenderer</tt> is the custom cell renderer used in the
+  * SIP-Communicator's <tt>ContactList</tt>. It extends JPanel instead of JLabel,
+  * which allows adding different buttons and icons to the contact cell. The cell
+  * border and background are repainted.
+  *
+  * @author Yana Stamcheva
+  * @author Lubomir Marinov
+  */
+ public class ContactListCellRenderer
+     extends JPanel
+     implements  ListCellRenderer,
+                 Icon
+ {
+     private static final int AVATAR_HEIGHT = 30;
+ 
+     private static final int AVATAR_WIDTH = 30;
+ 
+     /**
+      * The key of the user data in <tt>MetaContact</tt> which specifies
+      * the avatar cached from previous invocations.
+      */
+     private static final String AVATAR_DATA_KEY
+         = ContactListCellRenderer.class.getName() + ".avatar";
+ 
+     private final ImageIcon openedGroupIcon =
+         new ImageIcon(ImageLoader.getImage(ImageLoader.DOWN_ARROW_ICON));
+ 
+     private final ImageIcon closedGroupIcon =
+         new ImageIcon(ImageLoader.getImage(ImageLoader.RIGHT_ARROW_ICON));
+ 
+     /**
+      * The foreground color for groups.
+      */
+     private Color groupForegroundColor;
+ 
+     /**
+      * The foreground color for contacts.
+      */
+     protected Color contactForegroundColor;
+ 
+     /**
+      * The component showing the name of the contact or group.
+      */
+     protected final JLabel nameLabel = new JLabel();
+ 
+     /**
+      * The component showing the avatar or the contact count in the case of
+      * groups.
+      */
+     protected final JLabel rightLabel = new JLabel();
+ 
+     private final Image msgReceivedImage =
+         ImageLoader.getImage(ImageLoader.MESSAGE_RECEIVED_ICON);
+ 
+     /**
+      * The icon showing the contact status.
+      */
+     protected final ImageIcon statusIcon = new ImageIcon();
+ 
+     /**
+      * Indicates if the current list cell is selected.
+      */
+     protected boolean isSelected = false;
+ 
+     /**
+      * The index of the current cell.
+      */
+     protected int index = 0;
+ 
+     /**
+      * Indicates if the current cell contains a leaf or a group.
+      */
+     protected boolean isLeaf = true;
+ 
+     /**
+      * Initializes the panel containing the node.
+      */
+     public ContactListCellRenderer()
+     {
+         super(new BorderLayout());
+ 
+         int groupForegroundProperty = GuiActivator.getResources()
+             .getColor("service.gui.CONTACT_LIST_GROUP_FOREGROUND");
+ 
+         if (groupForegroundProperty > -1)
+             groupForegroundColor = new Color (groupForegroundProperty);
+ 
+         int contactForegroundProperty = GuiActivator.getResources()
+                 .getColor("service.gui.CONTACT_LIST_CONTACT_FOREGROUND");
+ 
+         if (contactForegroundProperty > -1)
+             contactForegroundColor = new Color(contactForegroundProperty);
+ 
+         this.setOpaque(false);
+         this.nameLabel.setOpaque(false);
+ 
+         this.nameLabel.setIconTextGap(2);
+ 
+         this.nameLabel.setPreferredSize(new Dimension(10, 17));
+ 
+        this.rightLabel.setPreferredSize(
+            new Dimension(AVATAR_WIDTH, AVATAR_HEIGHT));
+         this.rightLabel.setFont(rightLabel.getFont().deriveFont(9f));
+        this.rightLabel.setHorizontalAlignment(JLabel.CENTER);
+ 
+         this.add(nameLabel, BorderLayout.CENTER);
+         this.add(rightLabel, BorderLayout.EAST);
+ 
+         this.setToolTipText("");
+     }
+ 
+     /**
+      * Implements the <tt>ListCellRenderer</tt> method. Returns this panel that
+      * has been configured to display the meta contact and meta contact group
+      * cells.
+      *
+      * @param list the source list
+      * @param value the value of the current cell
+      * @param index the index of the current cell in the source list
+      * @param isSelected indicates if this cell is selected
+      * @param cellHasFocus indicates if this cell is focused
+      * 
+      * @return this panel
+      */
+     public Component getListCellRendererComponent(JList list, Object value,
+             int index, boolean isSelected, boolean cellHasFocus)
+     {
+         this.index = index;
+ 
+         this.rightLabel.setIcon(null);
+ 
+         DefaultContactList contactList = (DefaultContactList) list;
+ 
+         if (value instanceof MetaContact)
+         {
+             this.setPreferredSize(new Dimension(20, 30));
+ 
+             MetaContact metaContact = (MetaContact) value;
+ 
+             String displayName = metaContact.getDisplayName();
+ 
+             if (displayName == null || displayName.length() < 1)
+             {
+                 displayName = GuiActivator.getResources()
+                     .getI18NString("service.gui.UNKNOWN");
+             }
+ 
+             this.nameLabel.setText(displayName);
+ 
+             if(contactList.isMetaContactActive(metaContact))
+             {
+                 statusIcon.setImage(msgReceivedImage);
+             }
+             else
+             {
+                 statusIcon.setImage(Constants.getStatusIcon(
+                     contactList.getMetaContactStatus(metaContact)));
+             }
+ 
+             this.nameLabel.setIcon(statusIcon);
+ 
+             this.nameLabel.setFont(this.getFont().deriveFont(Font.PLAIN));
+ 
+             if (contactForegroundColor != null)
+                 this.nameLabel.setForeground(contactForegroundColor);
+ 
+             this.setBorder(BorderFactory.createEmptyBorder(1, 5, 1, 3));
+ 
+             ImageIcon avatar = getAvatar(metaContact);
+             if (avatar != null)
+                 this.rightLabel.setIcon(avatar);
+             this.rightLabel.setText("");
+ 
+             // We should set the bounds of the cell explicitly in order to
+             // make getComponentAt work properly.
+             final int listWidth = list.getWidth();
+             this.setBounds(0, 0, listWidth - 2, 30);
+ 
+             this.nameLabel.setBounds(0, 0, listWidth - 28, 17);
+             this.rightLabel.setBounds(listWidth - 28, 0, 25, 30);
+ 
+             this.isLeaf = true;
+         }
+         else if (value instanceof MetaContactGroup)
+         {
+             this.setPreferredSize(new Dimension(20, 20));
+ 
+             MetaContactGroup groupItem = (MetaContactGroup) value;
+ 
+             this.nameLabel.setText(groupItem.getGroupName());
+ 
+             this.nameLabel.setFont(this.getFont().deriveFont(Font.BOLD));
+ 
+             if (groupForegroundColor != null)
+                 this.nameLabel.setForeground(groupForegroundColor);
+ 
+             this.setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 3));
+ 
+             // We should set the bounds of the cell explicitly in order to
+             // make getComponentAt work properly.
+             this.setBounds(0, 0, list.getWidth() - 2, 20);
+ 
+             this.nameLabel.setIcon(
+                     contactList.isGroupClosed(groupItem)
+                         ? closedGroupIcon
+                         : openedGroupIcon);
+ 
+             // We have no photo icon for groups.
+             this.rightLabel.setIcon(null);
+             this.rightLabel.setText( groupItem.countOnlineChildContacts() 
+                     + "/" + groupItem.countChildContacts());
+ 
+             this.isLeaf = false;
+         }
+ 
+         this.isSelected = isSelected;
+ 
+         return this;
+     }
+ 
+     /**
+      * Gets the avatar of a specific <tt>MetaContact</tt> in the form of an
+      * <tt>ImageIcon</tt> value.
+      * 
+      * @param metaContact the <tt>MetaContact</tt> to retrieve the avatar of
+      * @return an <tt>ImageIcon</tt> which represents the avatar of the
+      * specified <tt>MetaContact</tt>
+      */
+     private ImageIcon getAvatar(MetaContact metaContact)
+     {
+         byte[] avatarBytes = metaContact.getAvatar(true);
+         ImageIcon avatar = null;
+ 
+         // Try to get the avatar from the cache.
+         Object[] avatarCache = (Object[]) metaContact.getData(AVATAR_DATA_KEY);
+         if ((avatarCache != null) && (avatarCache[0] == avatarBytes)) 
+             avatar = (ImageIcon) avatarCache[1];
+ 
+         // If the avatar isn't available or it's not up-to-date, create it.
+         if ((avatar == null)
+                 && (avatarBytes != null) && (avatarBytes.length > 0))
+             avatar
+                 = ImageUtils.getScaledRoundedIcon(
+                         avatarBytes,
+                         AVATAR_WIDTH,
+                         AVATAR_HEIGHT);
+ 
+         // Cache the avatar in case it has changed.
+         if (avatarCache == null)
+         {
+             if (avatar != null)
+                 metaContact.setData(
+                     AVATAR_DATA_KEY,
+                     new Object[] { avatarBytes, avatar });
+         }
+         else
+         {
+             avatarCache[0] = avatarBytes;
+             avatarCache[1] = avatar;
+         }
+ 
+         return avatar;
+     }
+ 
+     /**
+      * Paints a customized background.
+      *
+      * @param g the <tt>Graphics</tt> object through which we paint
+      */
+     @Override
+     protected void paintComponent(Graphics g)
+     {
+         super.paintComponent(g);
+ 
+         g = g.create();
+         try
+         {
+             internalPaintComponent(g);
+         }
+         finally
+         {
+             g.dispose();
+         }
+     }
+ 
+     /**
+      * Paint a background for all groups and a round blue border and background
+      * when a cell is selected.
+      *
+      * @param g the <tt>Graphics</tt> object through which we paint
+      */
+     private void internalPaintComponent(Graphics g)
+     {
+         AntialiasingManager.activateAntialiasing(g);
+ 
+         Graphics2D g2 = (Graphics2D) g;
+ 
+         if (!this.isLeaf)
+         {
+             final int width = getWidth();
+             GradientPaint p =
+                 new GradientPaint(0, 0, Constants.CONTACT_LIST_GROUP_BG_COLOR,
+                     width - 5, 0,
+                     Constants.CONTACT_LIST_GROUP_BG_GRADIENT_COLOR);
+ 
+             g2.setPaint(p);
+             g2.fillRoundRect(1, 1, width - 2, this.getHeight() - 1, 10, 10);
+         }
+ 
+         if (this.isSelected)
+         {
+             g2.setColor(Constants.SELECTED_COLOR);
+             g2.fillRoundRect(   1, 1,
+                                 this.getWidth() - 2, this.getHeight() - 1,
+                                 10, 10);
+         }
+     }
+ 
+     /**
+      * Returns the height of this icon.
+      * @return the height of this icon
+      */
+     public int getIconHeight()
+     {
+         return this.getHeight() + 10;
+     }
+ 
+     /**
+      * Returns the width of this icon.
+      * @return the widht of this icon
+      */
+     public int getIconWidth()
+     {
+         return this.getWidth() + 10;
+     }
+ 
+     /**
+      * Draw the icon at the specified location. Paints this component as an
+      * icon.
+      * @param c the component which can be used as observer
+      * @param g the <tt>Graphics</tt> object used for painting
+      * @param x the position on the X coordinate
+      * @param y the position on the Y coordinate
+      */
+     public void paintIcon(Component c, Graphics g, int x, int y)
+     {
+         Graphics2D g2 = (Graphics2D) g.create();
+         try
+         {
+             AntialiasingManager.activateAntialiasing(g2);
+ 
+             g2.setColor(Color.WHITE);
+             g2.setComposite(AlphaComposite.
+                 getInstance(AlphaComposite.SRC_OVER, 0.8f));
+             g2.fillRoundRect(x, y,
+                             getIconWidth() - 1, getIconHeight() - 1,
+                             10, 10);
+             g2.setColor(Color.DARK_GRAY);
+             g2.drawRoundRect(x, y,
+                             getIconWidth() - 1, getIconHeight() - 1,
+                             10, 10);
+ 
+             // Indent component content from the border. 
+             g2.translate(x + 5, y + 5);
+ 
+             // Paint component.
+             super.paint(g2);
+ 
+             //
+             g2.translate(x, y);
+         }
+         finally
+         {
+             g.dispose();
+         }
+     }
+ }

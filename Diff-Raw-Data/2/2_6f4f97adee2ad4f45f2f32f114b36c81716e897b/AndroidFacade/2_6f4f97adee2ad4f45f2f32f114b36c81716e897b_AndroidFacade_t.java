@@ -1,0 +1,416 @@
+ /*
+  * Copyright (C) 2009 Google Inc.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  * use this file except in compliance with the License. You may obtain a copy of
+  * the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  * License for the specific language governing permissions and limitations under
+  * the License.
+  */
+ 
+ package com.google.ase.facade;
+ 
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Queue;
+ import java.util.Set;
+ 
+ import android.app.Activity;
+ import android.app.ActivityManager;
+ import android.app.AlertDialog;
+ import android.app.Notification;
+ import android.app.NotificationManager;
+ import android.app.PendingIntent;
+ import android.app.Service;
+ import android.content.Context;
+ import android.content.DialogInterface;
+ import android.content.Intent;
+ import android.location.Address;
+ import android.location.Geocoder;
+ import android.net.Uri;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Vibrator;
+ import android.telephony.gsm.SmsManager;
+ import android.text.ClipboardManager;
+ import android.text.InputType;
+ import android.text.method.PasswordTransformationMethod;
+ import android.widget.EditText;
+ import android.widget.Toast;
+ 
+ import com.google.ase.AseApplication;
+ import com.google.ase.AseLog;
+ import com.google.ase.R;
+ import com.google.ase.activity.AseServiceHelper;
+ import com.google.ase.exception.AseRuntimeException;
+ import com.google.ase.future.FutureActivityTask;
+ import com.google.ase.future.FutureIntent;
+ import com.google.ase.jsonrpc.Rpc;
+ import com.google.ase.jsonrpc.RpcDefaultInteger;
+ import com.google.ase.jsonrpc.RpcDefaultString;
+ import com.google.ase.jsonrpc.RpcOptionalString;
+ import com.google.ase.jsonrpc.RpcParameter;
+ import com.google.ase.jsonrpc.RpcReceiver;
+ 
+ public class AndroidFacade implements RpcReceiver {
+ 
+   private final Service mService;
+   private final Handler mHandler;
+   private final Intent mIntent;
+   private final Queue<FutureActivityTask> mTaskQueue;
+ 
+   private final ActivityManager mActivityManager;
+   private final SmsManager mSms;
+   private final Vibrator mVibrator;
+   private final NotificationManager mNotificationManager;
+   private final Geocoder mGeocoder;
+   private final TextToSpeechFacade mTts;
+ 
+   @Override
+   public void shutdown() {
+     mTts.shutdown();
+   }
+ 
+   /**
+    * Creates a new AndroidFacade that simplifies the interface to various Android APIs.
+    *
+    * @param service
+    *          is the {@link Context} the APIs will run under
+    * @param handler
+    *          is the {@link Handler} the APIs will use to communicate with the UI thread
+    */
+   public AndroidFacade(Service service, Handler handler, Intent intent) {
+     mService = service;
+     mHandler = handler;
+     mIntent = intent;
+     mTaskQueue = ((AseApplication) mService.getApplication()).getTaskQueue();
+     mSms = SmsManager.getDefault();
+     mActivityManager = (ActivityManager) mService.getSystemService(Context.ACTIVITY_SERVICE);
+     mVibrator = (Vibrator) mService.getSystemService(Context.VIBRATOR_SERVICE);
+     mNotificationManager =
+         (NotificationManager) mService.getSystemService(Context.NOTIFICATION_SERVICE);
+     mGeocoder = new Geocoder(mService);
+     mTts = new TextToSpeechFacade(service);
+   }
+ 
+   @Rpc(description = "Put text in the clipboard.")
+   public void setClipboard(@RpcParameter("text") String text) {
+     ClipboardManager clipboard =
+         (ClipboardManager) mService.getSystemService(Context.CLIPBOARD_SERVICE);
+     clipboard.setText(text);
+   }
+ 
+   @Rpc(description = "Read text from the clipboard.", returns = "The text in the clipboard.")
+   public String getClipboard() {
+     ClipboardManager clipboard =
+         (ClipboardManager) mService.getSystemService(Context.CLIPBOARD_SERVICE);
+     return clipboard.getText().toString();
+   }
+ 
+ 
+   @Rpc(description = "Returns a list of addresses for the given latitude and longitude.", returns = "A list of addresses.")
+   public List<Address> geocode(
+       @RpcParameter("latitude") Double latitude,
+       @RpcParameter("longitude") Double longitude,
+       @RpcDefaultInteger(description = "max. no. of results (default 1)", defaultValue = 1) Integer maxResults)
+       throws IOException {
+     return mGeocoder.getFromLocation(latitude, longitude, maxResults);
+   }
+ 
+   public Intent startActivityForResult(final Intent intent) {
+     FutureActivityTask task = new FutureActivityTask() {
+       @Override
+       public void run(Activity activity, FutureIntent result) {
+         activity.startActivityForResult(intent, 0);
+       }
+     };
+     mTaskQueue.offer(task);
+     try {
+       launchHelper();
+     } catch (Exception e) {
+       AseLog.e("Failed to launch intent.", e);
+     }
+     FutureIntent result = task.getResult();
+     try {
+       return result.get();
+     } catch (Exception e) {
+       throw new AseRuntimeException(e);
+     }
+   }
+ 
+   private void launchHelper() {
+     Intent helper = new Intent(mService, AseServiceHelper.class);
+     helper.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+     mService.startActivity(helper);
+   }
+ 
+   @Rpc(description = "Starts an activity for result and returns the result.", returns = "A map of result values.")
+   public Intent startActivityForResult(@RpcParameter("action") final String action,
+       @RpcOptionalString(description = "uri") final String uri) {
+     Intent intent = new Intent(action);
+     if (uri != null) {
+       intent.setData(Uri.parse(uri));
+     }
+     return startActivityForResult(intent);
+   }
+ 
+   @Rpc(description = "Display content to be picked by URI (e.g. contacts)", returns = "A map of result values.")
+   public Intent pick(@RpcParameter("uri") String uri) {
+     return startActivityForResult(Intent.ACTION_PICK, uri);
+   }
+ 
+   private void startActivity(final Intent intent) {
+     try {
+       intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+       mService.startActivity(intent);
+     } catch (Exception e) {
+       AseLog.e("Failed to launch intent.", e);
+     }
+   }
+ 
+   @Rpc(description = "Starts an activity for result and returns the result.", returns = "A map of result values.")
+   public void startActivity(@RpcParameter("action") final String action,
+       @RpcOptionalString(description = "uri") final String uri) {
+     Intent intent = new Intent(action);
+     if (uri != null) {
+       intent.setData(Uri.parse(uri));
+     }
+     startActivity(intent);
+   }
+ 
+   @Rpc(description = "Start activity with view action by URI (i.e. browser, contacts, etc.).")
+   public void view(@RpcParameter("uri") String uri) {
+     startActivity(Intent.ACTION_VIEW, uri);
+   }
+ 
+   @Rpc(description = "Start activity with the given class name (i.e. Browser, Maps, etc.).")
+   public void launch(@RpcParameter("className") String className) {
+     Intent intent = new Intent(Intent.ACTION_MAIN);
+     String packageName = className.substring(0, className.lastIndexOf("."));
+     intent.setClassName(packageName, className);
+     startActivity(intent);
+   }
+ 
+   @Rpc(description = "Sends a text message to the given recipient.")
+   public void sendTextMessage(@RpcParameter("destinationAddress") String destinationAddress,
+       @RpcParameter("text") String text) {
+     mSms.sendTextMessage(destinationAddress, null, text, null, null);
+   }
+ 
+   @Rpc(description = "Vibrates the phone or a specified duration in milliseconds.")
+   public void vibrate(
+       @RpcDefaultInteger(description = "duration in milliseconds", defaultValue = 300) Integer duration) {
+    mVibrator.vibrate(duration);
+   }
+ 
+   @Rpc(description = "Displays a short-duration Toast notification.")
+   public void makeToast(@RpcParameter("message") final String message) {
+     mHandler.post(new Runnable() {
+       public void run() {
+         Toast.makeText(mService, message, Toast.LENGTH_SHORT).show();
+       }
+     });
+   }
+ 
+   private String getInputFromAlertDialog(final String title, final String message,
+       final boolean password) {
+     FutureActivityTask task = new FutureActivityTask() {
+       @Override
+       public void run(final Activity activity, final FutureIntent result) {
+         final EditText input = new EditText(activity);
+         if (password) {
+           input.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+           input.setTransformationMethod(new PasswordTransformationMethod());
+         }
+         AlertDialog.Builder alert = new AlertDialog.Builder(activity);
+         alert.setTitle(title);
+         alert.setMessage(message);
+         alert.setView(input);
+         alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialog, int whichButton) {
+             Intent intent = new Intent();
+             intent.putExtra("result", input.getText().toString());
+             result.set(intent);
+             activity.finish();
+           }
+         });
+         alert.setOnCancelListener(new DialogInterface.OnCancelListener() {
+           @Override
+           public void onCancel(DialogInterface arg0) {
+             result.set(null);
+             activity.finish();
+           }
+         });
+         alert.show();
+       }
+     };
+     mTaskQueue.offer(task);
+ 
+     try {
+       launchHelper();
+     } catch (Exception e) {
+       AseLog.e("Failed to launch intent.", e);
+     }
+ 
+     FutureIntent result = task.getResult();
+     try {
+       if (result.get() == null) {
+         return null;
+       } else {
+         return result.get().getStringExtra("result");
+       }
+     } catch (Exception e) {
+       AseLog.e("Failed to display dialog.", e);
+       throw new AseRuntimeException(e);
+     }
+   }
+ 
+   @Rpc(description = "Queries the user for a text input.")
+   public String getInput(
+       @RpcDefaultString(description = "title of the input box", defaultValue = "ASE Input") final String title,
+       @RpcDefaultString(description = "message to display above the input box", defaultValue = "Please enter value:") final String message) {
+     return getInputFromAlertDialog(title, message, false);
+   }
+ 
+   @Rpc(description = "Queries the user for a password.")
+   public String getPassword(
+       @RpcDefaultString(description = "title of the input box", defaultValue = "ASE Password Input") final String title,
+       @RpcDefaultString(description = "message to display above the input box", defaultValue = "Please enter password:") final String message) {
+     return getInputFromAlertDialog(title, message, true);
+   }
+ 
+   @Rpc(description = "Displays a notification that will be canceled when the user clicks on it.")
+   public void notify(
+       @RpcParameter("message") String message,
+       @RpcDefaultString(description = "title", defaultValue = "ASE Notification") final String title,
+       @RpcDefaultString(description = "ticker", defaultValue = "ASE Notification") final String ticker) {
+     Notification notification =
+         new Notification(R.drawable.ase_logo_48, ticker, System.currentTimeMillis());
+     // This contentIntent is a noop.
+     PendingIntent contentIntent = PendingIntent.getService(mService, 0, new Intent(), 0);
+     notification.setLatestEventInfo(mService, title, ticker, contentIntent);
+     notification.flags = Notification.FLAG_AUTO_CANCEL;
+     mNotificationManager.notify(1, notification);
+   }
+ 
+   @Rpc(description = "Dials a contact/phone number by URI.")
+   public void dial(@RpcParameter("uri") final String uri) {
+     startActivity(Intent.ACTION_DIAL, uri);
+   }
+ 
+   @Rpc(description = "Dials a phone number.")
+   public void dialNumber(@RpcParameter("phone number") final String number) {
+     dial("tel:" + number);
+   }
+ 
+   @Rpc(description = "Calls a contact/phone number by URI.")
+   public void call(@RpcParameter("uri") final String uri) {
+     startActivity(Intent.ACTION_CALL, uri);
+   }
+ 
+   @Rpc(description = "Calls a phone number.")
+   public void callNumber(@RpcParameter("phone number") final String number) {
+     call("tel:" + number);
+   }
+ 
+   @Rpc(description = "Opens a map search for query (e.g. pizza, 123 My Street).")
+   public void map(@RpcParameter("query, e.g. pizza, 123 My Street") String query) {
+     view("geo:0,0?q=" + query);
+   }
+ 
+   @Rpc(description = "Displays the contacts activity.")
+   public void showContacts() {
+     view("content://contacts/people");
+   }
+ 
+   @Rpc(description = "Displays a list of contacts to pick from.", returns = "A map of result values.")
+   public Intent pickContact() {
+     return pick("content://contacts/people");
+   }
+ 
+   @Rpc(description = "Displays a list of phone numbers to pick from.", returns = "A map of result values.")
+   public Intent pickPhone() {
+     return pick("content://contacts/phones");
+   }
+ 
+   @Rpc(description = "Starts the barcode scanner.", returns = "A map of result values.")
+   public Intent scanBarcode() {
+     return startActivityForResult("com.google.zxing.client.android.SCAN", null);
+   }
+ 
+   @Rpc(description = "Starts image capture.", returns = "A map of result values.")
+   public Intent captureImage() {
+     return startActivityForResult("android.media.action.IMAGE_CAPTURE", null);
+   }
+ 
+   @Rpc(description = "Opens a web search for the given query.")
+   public void webSearch(@RpcParameter("query") String query) {
+     view("http://www.google.com/search?q=" + query);
+   }
+ 
+   @Rpc(description = "Exits the activity or service running the script.")
+   public void exit() {
+     mService.stopSelf();
+   }
+ 
+   @Rpc(description = "Returns an extra value that was specified in the launch intent.", returns = "The extra value.")
+   public Object getExtra(@RpcParameter("name") String name) {
+     return mIntent.getExtras().get(name);
+   }
+ 
+   @Rpc(description = "Returns a list of packages running activities or services.", returns = "List of packages running activities.")
+   public Bundle getRunningPackages() {
+     Set<String> runningPackages = new HashSet<String>();
+     List<ActivityManager.RunningAppProcessInfo> appProcesses =
+         mActivityManager.getRunningAppProcesses();
+     for (ActivityManager.RunningAppProcessInfo info : appProcesses) {
+       runningPackages.addAll(Arrays.asList(info.pkgList));
+     }
+     List<ActivityManager.RunningServiceInfo> serviceProcesses =
+         mActivityManager.getRunningServices(Integer.MAX_VALUE);
+     for (ActivityManager.RunningServiceInfo info : serviceProcesses) {
+       runningPackages.add(info.service.getPackageName());
+     }
+     Bundle result = new Bundle();
+     result.putStringArrayList("packages", new ArrayList<String>(runningPackages));
+     return result;
+   }
+ 
+   @Rpc(description = "Force stops a package.")
+   public void forceStopPackage(@RpcParameter("package name") String packageName) {
+     mActivityManager.restartPackage(packageName);
+   }
+ 
+   /**
+    * Launches an activity that sends an e-mail message to a given recipient.
+    *
+    * @param recipientAddress
+    *          recipient's e-mail address
+    * @param subject
+    *          message subject
+    * @param body
+    *          message body
+    */
+   @Rpc(description = "Launches an activity that sends an e-mail message to a given recipient.")
+   public void sendEmail(
+       @RpcParameter("the recipient's e-mail address") final String recipientAddress,
+       @RpcParameter("subject of the e-mail") final String subject,
+       @RpcParameter("message body") final String body) {
+     final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+     emailIntent.setType("plain/text");
+     emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { recipientAddress });
+     emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
+     emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, body);
+     mService.startActivity(emailIntent);
+   }
+ }

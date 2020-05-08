@@ -1,0 +1,111 @@
+ /*******************************************************************************
+  * JBoss, Home of Professional Open Source
+  * Copyright 2010, Red Hat, Inc. and individual contributors
+  * by the @authors tag. See the copyright.txt in the distribution for a
+  * full listing of individual contributors.
+  *
+  * This is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation; either version 2.1 of
+  * the License, or (at your option) any later version.
+  *
+  * This software is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this software; if not, write to the Free
+  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  *******************************************************************************/
+ package org.richfaces.tests.metamer.ftest.richExtendedDataTable;
+ 
+ import static org.jboss.test.selenium.utils.URLUtils.buildUrl;
+ 
+ import java.net.URL;
+ 
+ import org.richfaces.tests.metamer.ftest.abstractions.DataTableSortingTest;
+import org.richfaces.tests.metamer.ftest.annotations.IssueTracking;
+ import org.richfaces.tests.metamer.ftest.model.ExtendedDataTable;
+ import org.testng.annotations.BeforeClass;
+ import org.testng.annotations.Test;
+ 
+ /**
+  * @author <a href="mailto:lfryc@redhat.com">Lukas Fryc</a>
+  * @version $Revision$
+  */
+ public class TestExtendedDataTableSortingUsingColumn extends DataTableSortingTest {
+ 
+     @Override
+     public URL getTestUrl() {
+         return buildUrl(contextPath, "faces/components/richExtendedDataTable/sorting-using-column.xhtml");
+     }
+ 
+     @BeforeClass
+     public void setupModel() {
+         model = new ExtendedDataTable(pjq("div.rf-edt[id$=richEDT]"));
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeSingle() {
+         super.testSortModeSingle();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeSingleReverse() {
+         super.testSortModeSingleReverse();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeSingleDoesntRememberOrder() {
+         super.testSortModeSingleDoesntRememberOrder();
+     }
+ 
+     @Test
+     @Override
+    @IssueTracking("https://issues.jboss.org/browse/RF-9932")
+     public void testSortModeSingleRerenderAll() {
+         super.testSortModeSingleRerenderAll();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeSingleFullPageRefresh() {
+         super.testSortModeSingleFullPageRefresh();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeMulti() {
+         super.testSortModeMulti();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeMultiReverse() {
+         super.testSortModeMultiReverse();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeMultiReplacingOldOccurences() {
+         super.testSortModeMultiReplacingOldOccurences();
+     }
+ 
+     @Test
+     @Override
+    @IssueTracking("https://issues.jboss.org/browse/RF-9932")
+     public void testSortModeMultiRerenderAll() {
+         super.testSortModeMultiRerenderAll();
+     }
+ 
+     @Test
+     @Override
+     public void testSortModeMultiFullPageRefresh() {
+         super.testSortModeMultiFullPageRefresh();
+     }
+ }

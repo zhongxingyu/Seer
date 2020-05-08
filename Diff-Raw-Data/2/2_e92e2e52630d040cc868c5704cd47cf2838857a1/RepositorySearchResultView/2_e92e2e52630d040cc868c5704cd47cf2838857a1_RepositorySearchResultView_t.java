@@ -1,0 +1,347 @@
+ /*******************************************************************************
+  * Copyright (c) 2003 - 2006 University Of British Columbia and others.
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+  *     University Of British Columbia - initial API and implementation
+  *******************************************************************************/
+ package org.eclipse.mylar.internal.tasks.ui.search;
+ 
+ import org.eclipse.core.runtime.IAdaptable;
+ import org.eclipse.jface.action.IMenuManager;
+ import org.eclipse.jface.action.MenuManager;
+ import org.eclipse.jface.util.IPropertyChangeListener;
+ import org.eclipse.jface.util.PropertyChangeEvent;
+ import org.eclipse.jface.viewers.ILabelDecorator;
+ import org.eclipse.jface.viewers.ILabelProvider;
+ import org.eclipse.jface.viewers.StructuredViewer;
+ import org.eclipse.jface.viewers.TableViewer;
+ import org.eclipse.jface.viewers.TreeViewer;
+ import org.eclipse.mylar.internal.tasks.ui.TaskListColorsAndFonts;
+ import org.eclipse.mylar.internal.tasks.ui.TaskUiUtil;
+ import org.eclipse.mylar.internal.tasks.ui.views.TaskElementLabelProvider;
+ import org.eclipse.mylar.internal.tasks.ui.views.TaskListTableLabelProvider;
+ import org.eclipse.mylar.tasks.core.AbstractQueryHit;
+ import org.eclipse.mylar.tasks.ui.TasksUiPlugin;
+ import org.eclipse.search.internal.ui.SearchMessages;
+ import org.eclipse.search.internal.ui.SearchPlugin;
+ import org.eclipse.search.internal.ui.SearchPreferencePage;
+ import org.eclipse.search.ui.IContextMenuConstants;
+ import org.eclipse.search.ui.text.AbstractTextSearchViewPage;
+ import org.eclipse.search.ui.text.Match;
+ import org.eclipse.swt.events.SelectionAdapter;
+ import org.eclipse.swt.events.SelectionEvent;
+ import org.eclipse.swt.graphics.Color;
+ import org.eclipse.swt.graphics.Image;
+ import org.eclipse.swt.widgets.TableColumn;
+ import org.eclipse.ui.IPageLayout;
+ import org.eclipse.ui.PartInitException;
+ import org.eclipse.ui.PlatformUI;
+ import org.eclipse.ui.part.IShowInTargetList;
+ import org.eclipse.ui.themes.IThemeManager;
+ 
+ /**
+  * Displays the results of a Repository search.
+  * 
+  * @see org.eclipse.search.ui.text.AbstractTextSearchViewPage
+  */
+ public class RepositorySearchResultView extends AbstractTextSearchViewPage implements IAdaptable {
+ 
+ 	// The categories to sort bug results by
+ 
+ 	public static final int ORDER_PRIORITY = 1;
+ 
+ 	public static final int ORDER_DESCRIPTION = 2;
+ 
+ 	public static final int ORDER_SEVERITY = 3;
+ 
+ 	public static final int ORDER_STATUS = 4;
+ 
+ 	public static final int ORDER_ID = 5;
+ 
+ 	public static final int ORDER_DEFAULT = ORDER_PRIORITY;
+ 
+ 	private static final String KEY_SORTING = TasksUiPlugin.PLUGIN_ID + ".search.resultpage.sorting"; //$NON-NLS-1$
+ 
+ 	private SearchResultContentProvider bugContentProvider;
+ 
+ 	private int bugCurrentSortOrder;
+ 
+ 	// private SearchResultSortAction bugSortByIDAction;
+ 
+ 	// private SearchResultSortAction bugSortBySeverityAction;
+ 
+ 	private SearchResultSortAction bugSortByPriorityAction;
+ 
+ 	private SearchResultSortAction bugSortByDescriptionAction;
+ 
+ 	// private SearchResultSortAction bugSortByStatusAction;
+ 
+ 	// private AddFavoriteAction addToFavoritesAction;
+ 
+ 	private OpenSearchResultAction openInEditorAction;
+ 
+ 	private static final String[] SHOW_IN_TARGETS = new String[] { IPageLayout.ID_RES_NAV };
+ 
+ 	private static final IShowInTargetList SHOW_IN_TARGET_LIST = new IShowInTargetList() {
+ 		public String[] getShowInTargetIds() {
+ 			return SHOW_IN_TARGETS;
+ 		}
+ 	};
+ 
+ 	private IPropertyChangeListener bugPropertyChangeListener;
+ 
+ 	/**
+ 	 * Constructor
+ 	 */
+ 	public RepositorySearchResultView() {
+ 		// Only use the table layout.
+ 		super(FLAG_LAYOUT_FLAT);
+ 
+ 		bugSortByPriorityAction = new SearchResultSortAction("Bug priority", this, ORDER_PRIORITY);
+ 		bugSortByDescriptionAction = new SearchResultSortAction("Bug Description", this, ORDER_DESCRIPTION);
+ 		// bugSortByIDAction = new SearchResultSortAction("Bug ID", this,
+ 		// ORDER_ID);
+ 		// bugSortBySeverityAction = new SearchResultSortAction("Bug severity",
+ 		// this, ORDER_SEVERITY);
+ 		// bugSortByStatusAction = new SearchResultSortAction("Bug status",
+ 		// this,
+ 		// ORDER_STATUS);
+ 		bugCurrentSortOrder = ORDER_DEFAULT;
+ 
+ 		// addToFavoritesAction = new AddFavoriteAction("Mark Result as
+ 		// Favorite", this);
+ 		openInEditorAction = new OpenSearchResultAction("Open in Editor", this);
+ 
+ 		bugPropertyChangeListener = new IPropertyChangeListener() {
+ 			public void propertyChange(PropertyChangeEvent event) {
+ 				if (SearchPreferencePage.LIMIT_TABLE.equals(event.getProperty())
+ 						|| SearchPreferencePage.LIMIT_TABLE_TO.equals(event.getProperty()))
+ 					if (getViewer() instanceof TableViewer) {
+ 						getViewPart().updateLabel();
+ 						getViewer().refresh();
+ 					}
+ 			}
+ 		};
+ 		SearchPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(bugPropertyChangeListener);
+ 	}
+ 
+ 	@Override
+ 	protected void elementsChanged(Object[] objects) {
+ 		if (bugContentProvider != null) {
+ 			bugContentProvider.elementsChanged(objects);
+ 		}
+ 	}
+ 
+ 	@Override
+ 	protected void clear() {
+ 		if (bugContentProvider != null) {
+ 			bugContentProvider.clear();
+ 		}
+ 	}
+ 
+ 	// Allows the inherited method "getViewer" to be accessed publicly.
+ 	@Override
+ 	public StructuredViewer getViewer() {
+ 		return super.getViewer();
+ 	}
+ 
+ 	@Override
+ 	protected void configureTreeViewer(TreeViewer viewer) {
+ 		// The tree layout is not used, so this function does not need to do
+ 		// anything.
+ 
+ 	}
+ 
+ 	@Override
+ 	protected void configureTableViewer(TableViewer viewer) {
+ 		viewer.setUseHashlookup(true);
+ 		String[] columnNames = new String[] { "", "!", "Description" };
+ 		TableColumn[] columns = new TableColumn[columnNames.length];
+ 		int[] columnWidths = new int[] { 20, 20, 500 };
+ 		viewer.setColumnProperties(columnNames);
+ 
+		viewer.getTable().setHeaderVisible(false);
+ 		for (int i = 0; i < columnNames.length; i++) {
+ 			columns[i] = new TableColumn(viewer.getTable(), 0, i); // SWT.LEFT
+ 			columns[i].setText(columnNames[i]);
+ 			columns[i].setWidth(columnWidths[i]);
+ 			columns[i].setData(new Integer(i));
+ 			columns[i].addSelectionListener(new SelectionAdapter() {
+ 
+ 				@Override
+ 				public void widgetSelected(SelectionEvent e) {
+ 					TableColumn col = (TableColumn) e.getSource();
+ 					Integer integer = (Integer) col.getData();
+ 					setSortOrder(integer.intValue());
+ 				}
+ 			});
+ 		}
+ 
+ 		// TaskElementLabelProvider BugzillaLabelProvider
+ 		IThemeManager themeManager = getSite().getWorkbenchWindow().getWorkbench().getThemeManager();
+ 		Color categoryBackground = themeManager.getCurrentTheme().getColorRegistry().get(
+ 				TaskListColorsAndFonts.THEME_COLOR_TASKLIST_CATEGORY);
+ 
+ 		SearchViewTableLabelProvider taskListTableLabelProvider = new SearchViewTableLabelProvider(
+ 				new TaskElementLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator(),
+ 				categoryBackground);
+ 
+ 		viewer.setLabelProvider(taskListTableLabelProvider);
+ 		viewer.setContentProvider(new SearchResultTableContentProvider(this));
+ 
+ 		// Set the order when the search view is loading so that the items are
+ 		// sorted right away
+ 		setSortOrder(bugCurrentSortOrder);
+ 
+ 		bugContentProvider = (SearchResultContentProvider) viewer.getContentProvider();
+ 	}
+ 
+ 	/**
+ 	 * Sets the new sorting category, and reorders all of the bug reports.
+ 	 * 
+ 	 * @param sortOrder
+ 	 *            The new category to sort bug reports by
+ 	 */
+ 	public void setSortOrder(int sortOrder) {
+ 		StructuredViewer viewer = getViewer();
+ 
+ 		switch (sortOrder) {
+ 		case ORDER_ID:
+ 			viewer.setSorter(new SearchResultSorterId());
+ 			break;
+ 		case ORDER_DESCRIPTION:
+ 			viewer.setSorter(new SearchResultSorterDescription());
+ 			break;
+ 		case ORDER_PRIORITY:
+ 			viewer.setSorter(new SearchResultSorterPriority());
+ 			break;
+ 		// case ORDER_SEVERITY:
+ 		// viewer.setSorter(new BugzillaSeveritySearchSorter());
+ 		// break;
+ 		// case ORDER_STATUS:
+ 		// viewer.setSorter(new BugzillaStateSearchSorter());
+ 		// break;
+ 		default:
+ 			// If the setting is not one of the four valid ones,
+ 			// use the default order setting.
+ 			sortOrder = ORDER_DEFAULT;
+ 			viewer.setSorter(new SearchResultSorterPriority());
+ 			break;
+ 		}
+ 		bugCurrentSortOrder = sortOrder;
+ 		getSettings().put(KEY_SORTING, bugCurrentSortOrder);
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+ 	 */
+ 	public Object getAdapter(Class adapter) {
+ 		if (IShowInTargetList.class.equals(adapter)) {
+ 			return SHOW_IN_TARGET_LIST;
+ 		}
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	protected void showMatch(Match match, int currentOffset, int currentLength, boolean activate)
+ 			throws PartInitException {
+ 		AbstractQueryHit repositoryHit = (AbstractQueryHit) match.getElement();
+ 		
+ 		TaskUiUtil.openRepositoryTask(repositoryHit.getRepositoryUrl(), repositoryHit.getId(), repositoryHit.getUrl());
+ 
+ 		// try {
+ 		// int id = Integer.parseInt(repositoryHit.getId());
+ 		// String bugUrl =
+ 		// BugzillaServerFacade.getBugUrlWithoutLogin(repositoryHit.getRepositoryUrl(),
+ 		// id);
+ 		// TaskUiUtil.openRepositoryTask(repositoryHit.getRepositoryUrl(),
+ 		// repositoryHit.getId(), bugUrl);
+ 		// } catch (NumberFormatException e) {
+ 		// MylarStatusHandler.fail(e, "Could not open, malformed id: " +
+ 		// repositoryHit.getId(), true);
+ 		// }
+ 	}
+ 
+ 	@Override
+ 	protected void fillContextMenu(IMenuManager mgr) {
+ 		super.fillContextMenu(mgr);
+ 
+ 		// Create the submenu for sorting
+ 		MenuManager sortMenu = new MenuManager(SearchMessages.SortDropDownAction_label); //$NON-NLS-1$
+ 		sortMenu.add(bugSortByPriorityAction);
+ 		sortMenu.add(bugSortByDescriptionAction);
+ 		// sortMenu.add(bugSortByIDAction);
+ 		// sortMenu.add(bugSortBySeverityAction);
+ 		// sortMenu.add(bugSortByStatusAction);
+ 
+ 		// Check the right sort option
+ 
+ 		bugSortByPriorityAction.setChecked(bugCurrentSortOrder == bugSortByPriorityAction.getSortOrder());
+ 		bugSortByDescriptionAction.setChecked(bugCurrentSortOrder == bugSortByDescriptionAction.getSortOrder());
+ 		// bugSortByIDAction.setChecked(bugCurrentSortOrder ==
+ 		// bugSortByIDAction.getSortOrder());
+ 		// bugSortBySeverityAction.setChecked(bugCurrentSortOrder ==
+ 		// bugSortBySeverityAction.getSortOrder());
+ 		// bugSortByStatusAction.setChecked(bugCurrentSortOrder ==
+ 		// bugSortByStatusAction.getSortOrder());
+ 
+ 		// Add the new context menu items
+ 		mgr.appendToGroup(IContextMenuConstants.GROUP_VIEWER_SETUP, sortMenu);
+ 		// mgr.appendToGroup(IContextMenuConstants.GROUP_ADDITIONS,
+ 		// addToFavoritesAction);
+ 		mgr.appendToGroup(IContextMenuConstants.GROUP_OPEN, openInEditorAction);
+ 	}
+ 
+ 	class SearchViewTableLabelProvider extends TaskListTableLabelProvider {
+ 
+ 		public SearchViewTableLabelProvider(ILabelProvider provider, ILabelDecorator decorator, Color parentBackground) {
+ 			super(provider, decorator, parentBackground, null);
+ 		}
+ 
+ 		@Override
+ 		public Image getColumnImage(Object element, int columnIndex) {
+ 			switch (columnIndex) {
+ 			case 0:
+ 				++columnIndex;
+ 				break;
+ 			case 1:
+ 				++columnIndex;
+ 				break;
+ 			case 2:
+ 				columnIndex = 2 + columnIndex;
+ 				break;
+ 			}
+ 			return super.getColumnImage(element, columnIndex);
+ 		}
+ 
+ 		@Override
+ 		public String getColumnText(Object obj, int columnIndex) {
+ 			switch (columnIndex) {
+ 			case 0:
+ 				++columnIndex;
+ 				break;
+ 			case 1:
+ 				++columnIndex;
+ 				break;
+ 			case 2:
+ 				columnIndex = 2 + columnIndex;
+ 				break;
+ 			}
+ 			return super.getColumnText(obj, columnIndex);
+ 		}
+ 
+ 		@Override
+ 		public Color getBackground(Object element, int columnIndex) {
+ 			// Note: see bug 142889
+ 			return null;
+ 		}
+ 
+ 	}
+ 
+ }

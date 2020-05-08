@@ -1,0 +1,162 @@
+ /*
+  * See the NOTICE file distributed with this work for additional
+  * information regarding copyright ownership.
+  *
+  * This is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation; either version 2.1 of
+  * the License, or (at your option) any later version.
+  *
+  * This software is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this software; if not, write to the Free
+  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  */
+ package org.xwiki.component.descriptor;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.List;
+ 
+ /**
+  * Default implementation of {@link ComponentDescriptor}.
+  * 
+  * @version $Id$
+  * @param <T> the type of the component role
+  * @since 1.7M1
+  */
+ public class DefaultComponentDescriptor<T> extends DefaultComponentRole<T> implements ComponentDescriptor<T>
+ {
+     /**
+      * @see #getImplementation()
+      */
+     private Class< ? extends T> implementation;
+ 
+     /**
+      * @see #getInstantiationStrategy()
+      */
+     private ComponentInstantiationStrategy instantiationStrategy = ComponentInstantiationStrategy.SINGLETON;
+ 
+     /**
+      * @see #getComponentDependencies()
+      */
+     private List<ComponentDependency< ? >> componentDependencies = new ArrayList<ComponentDependency< ? >>();
+ 
+     /**
+      * @param implementation the class of the component implementation
+      */
+     public void setImplementation(Class< ? extends T> implementation)
+     {
+         this.implementation = implementation;
+     }
+ 
+     @Override
+     public Class< ? extends T> getImplementation()
+     {
+         return implementation;
+     }
+ 
+     /**
+      * @param instantiationStrategy the way the component should be instantiated
+      * @see ComponentInstantiationStrategy
+      */
+     public void setInstantiationStrategy(ComponentInstantiationStrategy instantiationStrategy)
+     {
+         this.instantiationStrategy = instantiationStrategy;
+     }
+ 
+     @Override
+     public ComponentInstantiationStrategy getInstantiationStrategy()
+     {
+         return this.instantiationStrategy;
+     }
+ 
+     @Override
+     public Collection<ComponentDependency< ? >> getComponentDependencies()
+     {
+         return this.componentDependencies;
+     }
+ 
+     /**
+      * @param componentDependency the dependency to add
+      */
+     public void addComponentDependency(ComponentDependency< ? > componentDependency)
+     {
+         this.componentDependencies.add(componentDependency);
+     }
+ 
+     /**
+      * @param role the class of the component role
+      * @param roleHint the hint of the component role
+      * @param <TT> the type of the dependency role
+      */
+     public <TT> void addComponentDependency(Class<TT> role, String roleHint)
+     {
+         DefaultComponentDependency<TT> componentDependency = new DefaultComponentDependency<TT>();
+         componentDependency.setRole(role);
+         componentDependency.setRoleHint(roleHint);
+ 
+         this.componentDependencies.add(componentDependency);
+     }
+ 
+     @Override
+     public String toString()
+     {
+         StringBuilder buffer = new StringBuilder(super.toString());
+        buffer.append(" implementation = [").append(getImplementation().getName()).append("]");
+         buffer.append(" instantiation = [").append(getInstantiationStrategy()).append("]");
+ 
+         return buffer.toString();
+     }
+ 
+     /**
+      * {@inheritDoc}
+      * @since 3.3M1
+      */
+     @Override
+     public boolean equals(Object object)
+     {
+         boolean result;
+ 
+         // See http://www.technofundo.com/tech/java/equalhash.html for the detail of this algorithm.
+         if (this == object) {
+             result = true;
+         } else {
+             if ((object == null) || (object.getClass() != this.getClass())) {
+                 result = false;
+             } else {
+                 // object must be Syntax at this point
+                 DefaultComponentDescriptor cd = (DefaultComponentDescriptor) object;
+                 result = (super.equals(cd))
+                     && (getImplementation() == cd.getImplementation()
+                         || (getImplementation() != null && getImplementation().equals(cd.getImplementation())))
+                     && (getInstantiationStrategy() == cd.getInstantiationStrategy())
+                     && (getComponentDependencies().equals(cd.getComponentDependencies()));
+             }
+         }
+         return result;
+     }
+ 
+     /**
+      * {@inheritDoc}
+      * @since 3.3M1
+      */
+     @Override
+     public int hashCode()
+     {
+         // Random number. See http://www.technofundo.com/tech/java/equalhash.html for the detail of this
+         // algorithm.
+         int hash = 7;
+         hash = 31 * hash + super.hashCode();
+         hash = 31 * hash + (null == getImplementation() ? 0 : getImplementation().hashCode());
+         hash = 31 * hash + getInstantiationStrategy().hashCode();
+         hash = 31 * hash + getComponentDependencies().hashCode();
+ 
+         return hash;
+     }
+ }

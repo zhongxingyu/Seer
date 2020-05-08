@@ -1,0 +1,190 @@
+ /*
+  * Copyright (C) 2006 The Android Open Source Project
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.android.calendar;
+ 
+ import static android.provider.Calendar.EVENT_BEGIN_TIME;
+ 
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.SharedPreferences;
+ import android.net.Uri;
+ import android.preference.PreferenceManager;
+ import android.text.format.Time;
+ import android.util.Log;
+ import android.view.animation.AlphaAnimation;
+ import android.widget.ViewFlipper;
+ 
+ import java.util.Calendar;
+ import java.util.List;
+ 
+ public class Utils {
+     public static void startActivity(Context context, String className, long time) {
+         Intent intent = new Intent(Intent.ACTION_VIEW);
+ 
+         intent.setClassName(context, className);
+         intent.putExtra(EVENT_BEGIN_TIME, time);
+         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+ 
+         context.startActivity(intent);
+     }
+ 
+     static String getSharedPreference(Context context, String key, String defaultValue) {
+         SharedPreferences prefs = CalendarPreferenceActivity.getSharedPreferences(context);
+         return prefs.getString(key, defaultValue);
+     }
+ 
+     static void setSharedPreference(Context context, String key, String value) {
+         SharedPreferences prefs = CalendarPreferenceActivity.getSharedPreferences(context);
+         SharedPreferences.Editor editor = prefs.edit();
+         editor.putString(key, value);
+         editor.commit();
+     }
+ 
+     static void setDefaultView(Context context, int viewId) {
+         String activityString = CalendarApplication.ACTIVITY_NAMES[viewId];
+ 
+         SharedPreferences prefs = CalendarPreferenceActivity.getSharedPreferences(context);
+         SharedPreferences.Editor editor = prefs.edit();
+         if (viewId == CalendarApplication.AGENDA_VIEW_ID ||
+                 viewId == CalendarApplication.DAY_VIEW_ID) {
+             // Record the (new) detail start view only for Agenda and Day
+             editor.putString(CalendarPreferenceActivity.KEY_DETAILED_VIEW, activityString);
+         }
+ 
+         // Record the (new) start view
+         editor.putString(CalendarPreferenceActivity.KEY_START_VIEW, activityString);
+         editor.commit();
+     }
+ 
+     public static final Time timeFromIntent(Intent intent) {
+         Time time = new Time();
+         time.set(timeFromIntentInMillis(intent));
+         return time;
+     }
+ 
+     /**
+      * If the given intent specifies a time (in milliseconds since the epoch),
+      * then that time is returned. Otherwise, the current time is returned.
+      */
+     public static final long timeFromIntentInMillis(Intent intent) {
+         // If the time was specified, then use that.  Otherwise, use the current time.
+         Uri data = intent.getData();
+         long millis = intent.getLongExtra(EVENT_BEGIN_TIME, -1);
+         if (millis == -1 && data != null && data.isHierarchical()) {
+             List<String> path = data.getPathSegments();
+             if(path.size() == 3 && path.get(1).equals("time")) {
+                 try {
+                     millis = Long.valueOf(data.getLastPathSegment());
+                 } catch (NumberFormatException e) {
+                     Log.i("Calendar", "timeFromIntentInMillis: Data existed but no valid time " +
+                             "found. Using current time.");
+                 }
+             }
+         }
+        if (millis <= 0) {
+             millis = System.currentTimeMillis();
+         }
+         return millis;
+     }
+ 
+     public static final void applyAlphaAnimation(ViewFlipper v) {
+         AlphaAnimation in = new AlphaAnimation(0.0f, 1.0f);
+ 
+         in.setStartOffset(0);
+         in.setDuration(500);
+ 
+         AlphaAnimation out = new AlphaAnimation(1.0f, 0.0f);
+ 
+         out.setStartOffset(0);
+         out.setDuration(500);
+ 
+         v.setInAnimation(in);
+         v.setOutAnimation(out);
+     }
+ 
+     /**
+      * Formats the given Time object so that it gives the month and year
+      * (for example, "September 2007").
+      *
+      * @param time the time to format
+      * @return the string containing the weekday and the date
+      */
+     public static String formatMonthYear(Context context, Time time) {
+         return time.format(context.getResources().getString(R.string.month_year));
+     }
+ 
+     // TODO: replace this with the correct i18n way to do this
+     public static final String englishNthDay[] = {
+         "", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th",
+         "10th", "11th", "12th", "13th", "14th", "15th", "16th", "17th", "18th", "19th",
+         "20th", "21st", "22nd", "23rd", "24th", "25th", "26th", "27th", "28th", "29th",
+         "30th", "31st"
+     };
+ 
+     public static String formatNth(int nth) {
+         return "the " + englishNthDay[nth];
+     }
+ 
+     /**
+      * Sets the time to the beginning of the day (midnight) by clearing the
+      * hour, minute, and second fields.
+      */
+     static void setTimeToStartOfDay(Time time) {
+         time.second = 0;
+         time.minute = 0;
+         time.hour = 0;
+     }
+ 
+     /**
+      * Get first day of week as android.text.format.Time constant.
+      * @return the first day of week in android.text.format.Time
+      */
+     public static int getFirstDayOfWeek() {
+         int startDay = Calendar.getInstance().getFirstDayOfWeek();
+         if (startDay == Calendar.SATURDAY) {
+             return Time.SATURDAY;
+         } else if (startDay == Calendar.MONDAY) {
+             return Time.MONDAY;
+         } else {
+             return Time.SUNDAY;
+         }
+     }
+ 
+     /**
+      * Determine whether the column position is Saturday or not.
+      * @param column the column position
+      * @param firstDayOfWeek the first day of week in android.text.format.Time
+      * @return true if the column is Saturday position
+      */
+     public static boolean isSaturday(int column, int firstDayOfWeek) {
+         return (firstDayOfWeek == Time.SUNDAY && column == 6)
+             || (firstDayOfWeek == Time.MONDAY && column == 5)
+             || (firstDayOfWeek == Time.SATURDAY && column == 0);
+     }
+ 
+     /**
+      * Determine whether the column position is Sunday or not.
+      * @param column the column position
+      * @param firstDayOfWeek the first day of week in android.text.format.Time
+      * @return true if the column is Sunday position
+      */
+     public static boolean isSunday(int column, int firstDayOfWeek) {
+         return (firstDayOfWeek == Time.SUNDAY && column == 0)
+             || (firstDayOfWeek == Time.MONDAY && column == 6)
+             || (firstDayOfWeek == Time.SATURDAY && column == 1);
+     }
+ }

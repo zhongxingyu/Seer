@@ -1,0 +1,561 @@
+ /*
+  * $Id$
+  *
+  * This file is part of McIDAS-V
+  *
+  * Copyright 2007-2010
+  * Space Science and Engineering Center (SSEC)
+  * University of Wisconsin - Madison
+  * 1225 W. Dayton Street, Madison, WI 53706, USA
+  * http://www.ssec.wisc.edu/mcidas
+  * 
+  * All Rights Reserved
+  * 
+  * McIDAS-V is built on Unidata's IDV and SSEC's VisAD libraries, and
+  * some McIDAS-V source code is based on IDV and VisAD source code.  
+  * 
+  * McIDAS-V is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU Lesser Public License as published by
+  * the Free Software Foundation; either version 3 of the License, or
+  * (at your option) any later version.
+  * 
+  * McIDAS-V is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU Lesser Public License for more details.
+  * 
+  * You should have received a copy of the GNU Lesser Public License
+  * along with this program.  If not, see http://www.gnu.org/licenses.
+  */
+ 
+ package edu.wisc.ssec.mcidasv.data.hydra;
+ 
+ import java.util.HashMap;
+ import java.util.Iterator;
+ import java.util.ArrayList;
+ 
+ public class RangeProcessor {
+ 
+ 	static RangeProcessor createRangeProcessor(MultiDimensionReader reader, HashMap metadata) throws Exception {
+                 if (reader instanceof GranuleAggregation) {
+                     return new AggregationRangeProcessor((GranuleAggregation)reader, metadata);
+                 }
+ 
+ 		if (metadata.get("scale_name") == null) {
+ 			String product_name = (String) metadata.get(SwathAdapter.product_name);
+ 			if (product_name == "IASI_L1C_xxx") {
+ 				return new IASI_RangeProcessor();
+ 			}
+ 			return null;
+ 		}
+ 		else {
+ 			String product_name = (String) metadata.get(ProfileAlongTrack.product_name);
+ 			if (product_name == "2B-GEOPROF") {
+ 				return new CloudSat_2B_GEOPROF_RangeProcessor(reader, metadata);
+ 			}
+ 			else {
+ 				return new RangeProcessor(reader, metadata);
+ 			}
+ 		}
+ 	}
+ 
+ 	MultiDimensionReader reader;
+ 	HashMap metadata;
+ 
+ 	float[] scale = null;
+ 	float[] offset = null;
+ 	float[] missing = null;
+ 	float[] valid_range = null;
+ 	float valid_low  = -Float.MAX_VALUE;
+ 	float valid_high = Float.MAX_VALUE;
+ 	float[] low = new float[] {-Float.MAX_VALUE};
+ 	float[] high = new float[] {Float.MAX_VALUE};
+ 
+ 	boolean unpack = false;
+ 	boolean unsigned = false;
+ 
+ 	int scaleOffsetLen = 1;
+ 
+ 	String multiScaleDimName = SpectrumAdapter.channelIndex_name;
+ 
+ 	public RangeProcessor() {
+ 	}
+ 
+ 	public RangeProcessor(float scale, float offset, float valid_low, float valid_high, float missing) {
+ 		this.scale = new float[] {scale};
+ 		this.offset = new float[] {offset};
+ 		this.missing = new float[] {missing};
+ 		this.valid_low = valid_low;
+ 		this.valid_high = valid_high;
+ 	}
+ 
+ 
+ 	public RangeProcessor(MultiDimensionReader reader, HashMap metadata, String multiScaleDimName) throws Exception {
+ 		this(reader, metadata);
+ 		this.multiScaleDimName = multiScaleDimName;
+ 	}
+ 
+ 	public RangeProcessor(MultiDimensionReader reader, HashMap metadata) throws Exception {
+ 		this.reader = reader;
+ 		this.metadata = metadata;
+ 
+ 		if (metadata.get("unpack") != null) {
+ 			unpack = true;
+ 		}
+ 
+ 		if (metadata.get("unsigned") != null) {
+ 			unsigned = true;
+ 		}    
+ 
+ 		String array_name = (String) metadata.get("array_name");
+ 
+ 		scale = getAttributeAsFloatArray(array_name, (String) metadata.get("scale_name"));
+ 
+ 		offset = getAttributeAsFloatArray(array_name, (String) metadata.get("offset_name"));
+ 
+                 if (scale != null) {
+                    scaleOffsetLen = scale.length;
+ 
+                    if (offset != null) {
+ 	        	if (scale.length != offset.length) {
+ 		        	throw new Exception("RangeProcessor: scale and offset array lengths must be equal");
+ 		        }
+                    }
+                    else {
+                       offset = new float[scaleOffsetLen];
+                       for (int i=0; i<offset.length; i++) offset[i] = 0f;
+                    }
+ 
+                 }
+ 
+ 		missing = getAttributeAsFloatArray(array_name, (String) metadata.get("fill_value_name"));
+ 
+ 		String metaStr = (String)metadata.get("valid_range");
+ 		if (metaStr != null) {
+ 
+ 			valid_range = getAttributeAsFloatArray(array_name, metaStr);
+ 			if (valid_range != null) {
+ 
+ 				valid_low = valid_range[0];
+ 				valid_high = valid_range[1];
+ 
+ 				if (valid_range[0] > valid_range[1]) {
+ 					valid_low = valid_range[1];
+ 					valid_high = valid_range[0];
+ 				}
+ 			}
+ 		}
+ 
+ 	}
+ 
+ 	/**
+ 	 * Converts an (unsigned) byte to an unsigned int. 
+ 	 * Since Java doesn't have an unsigned
+ 	 * byte type, this requires some foolery.
+ 	 * This solution based on information and code from
+ 	 * http://www.rgagnon.com/javadetails/java-0026.html
+ 	 * @param s The unsigned short to convert
+ 	 * @return the unsigned int equivalent
+ 	 */
+ 	
+ 	public static int unsignedShortToInt(short s) {
+ 		return (int) s & 0xFFFF;
+ 	}
+ 
+ 	/**
+ 	 * Converts an (unsigned) byte to an unsigned int. 
+ 	 * Since Java doesn't have an unsigned
+ 	 * byte type, this requires some foolery.
+ 	 * This solution based on information and code from
+ 	 * http://www.rgagnon.com/javadetails/java-0026.html
+ 	 * @param b The unsigned byte to convert
+ 	 * @return the unsigned int equivalent
+ 	 */
+ 	
+ 	public static int unsignedByteToInt(byte b) {
+ 		return (int) b & 0xFF;
+ 	}
+ 
+ 	public float[] getAttributeAsFloatArray(String arrayName, String attrName) 
+ 	throws Exception 
+ 	{
+ 		float[] fltArray = null;
+ 		HDFArray arrayAttr = reader.getArrayAttribute(arrayName, attrName);
+ 
+ 		if (arrayAttr != null) {
+ 
+ 			if (arrayAttr.getType().equals(Float.TYPE)) {
+ 				float[] attr = (float[]) arrayAttr.getArray();
+ 				fltArray = new float[attr.length];
+ 				for (int k=0; k<attr.length; k++) fltArray[k] = attr[k];
+ 			}
+ 			else if (arrayAttr.getType().equals(Short.TYPE)) {
+ 				short[] attr = (short[]) arrayAttr.getArray();
+ 				fltArray = new float[attr.length];
+ 				for (int k=0; k<attr.length; k++) fltArray[k] = (float) attr[k];
+ 			}
+ 			else if (arrayAttr.getType().equals(Integer.TYPE)) {
+ 				int[] attr = (int[]) arrayAttr.getArray();
+ 				fltArray = new float[attr.length];
+ 				for (int k=0; k<attr.length; k++) fltArray[k] = (float) attr[k];
+ 			}
+ 			else if (arrayAttr.getType().equals(Double.TYPE)) {
+ 				double[] attr = (double[]) arrayAttr.getArray();
+ 				fltArray = new float[attr.length];
+ 				for (int k=0; k<attr.length; k++) fltArray[k] = (float) attr[k];
+ 			}
+ 
+ 		}
+ 
+ 		return fltArray;
+ 	}
+ 
+ 	/**
+ 	 * Process a range of data from a byte array
+ 	 * @param values
+ 	 * @param subset
+ 	 * @return
+ 	 */
+ 	
+ 	public float[] processRange(byte[] values, HashMap subset) {
+ 		int soIndex = 0;  // scale/offset index
+ 	
+ 		if (subset != null) {
+ 			if (subset.get(multiScaleDimName) != null) {
+ 				soIndex  = (int) ((double[])subset.get(multiScaleDimName))[0];
+ 			}
+ 		}
+ 	
+ 		float[] new_values = new float[values.length];
+ 		
+ 		// if we are working with unsigned data, need to convert missing vals to unsigned too
+ 		if (unsigned) {
+ 			if (missing != null) {
+ 				for (int i = 0; i < missing.length; i++) {
+ 					missing[i] = (float) unsignedByteToInt((byte) missing[i]);
+ 				}
+ 			}
+ 		}
+ 		
+ 		float val = 0f;
+ 		int i = 0;
+ 		
+ 		for (int k = 0; k < values.length; k++) {
+ 			val = (float) values[k];
+ 			if (unsigned) {
+ 				i = unsignedByteToInt(values[k]);
+ 				val = (float) i;
+ 			}    	 
+			if ((missing != null) && ((val == missing[0]) || (val < low[0]) || (val > high[0]))) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 			else {
+ 				if (unpack) {
+ 					new_values[k] = scale[soIndex] * (val) + offset[soIndex];
+ 				}
+ 				else {
+ 					new_values[k] = scale[soIndex] * (val - offset[soIndex]);
+ 				}
+ 			}
+ 		}
+ 		return new_values;
+ 	}
+ 
+ 	/**
+ 	 * Process a range of data from a short array
+ 	 * @param values
+ 	 * @param subset
+ 	 * @return
+ 	 */
+ 	
+ 	public float[] processRange(short[] values, HashMap subset) {
+ 		int soIndex = 0;  // scale/offset index
+ 
+ 		if (subset != null) {
+ 			if (subset.get(multiScaleDimName) != null) {
+ 				soIndex  = (int) ((double[])subset.get(multiScaleDimName))[0];
+ 			}
+ 		}
+ 
+ 		float[] new_values = new float[values.length];
+ 		
+ 		// if we are working with unsigned data, need to convert missing vals to unsigned too
+ 		if (unsigned) {
+ 			if (missing != null) {
+ 				for (int i = 0; i < missing.length; i++) {
+ 					missing[i] = (float) unsignedShortToInt((short) missing[i]);
+ 				}
+ 			}
+ 		}
+ 
+ 		float val = 0f;
+ 		int i = 0;
+ 		
+ 		for (int k = 0; k < values.length; k++) {
+ 			val = (float) values[k];
+ 			if (unsigned) {
+ 				i = unsignedShortToInt(values[k]);
+ 				val = (float) i;
+ 			}
+			if ((missing != null) && ((val == missing[0]) || (val < low[0]) || (val > high[0]))) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 			else {
+ 				if (unpack) {
+ 					new_values[k] = (scale[soIndex] * val) + offset[soIndex];
+ 				}
+ 				else {
+ 					new_values[k] = scale[soIndex] * (val - offset[soIndex]);
+ 				}
+ 			}
+ 		}
+ 		return new_values;
+ 	}
+ 
+ 	/**
+ 	 * Process a range of data from a float array
+ 	 * @param values
+ 	 * @param subset
+ 	 * @return
+ 	 */
+ 	
+ 	public float[] processRange(float[] values, HashMap subset) {
+ 		float[] new_values = null;
+ 
+ 		if ((missing != null) || (valid_range != null)) {
+ 			new_values = new float[values.length];
+ 		}
+ 		else {
+ 			return values;
+ 		}
+ 
+ 		float val;
+ 
+ 		for (int k = 0; k < values.length; k++) {
+ 			val = values[k];
+ 			new_values[k] = val;
+ 			if ((missing != null) && (val == missing[0])) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 			if ((valid_range != null) && ((val < low[0]) || (val > high[0]))) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 		}
+ 
+ 		return new_values;
+ 	}
+ 
+ 	/**
+ 	 * Process a range of data from a double array
+ 	 * @param values
+ 	 * @param subset
+ 	 * @return
+ 	 */
+ 	
+ 	public double[] processRange(double[] values, HashMap subset) {
+ 		double[] new_values = null;
+ 
+ 		if ((missing != null) || (valid_range != null)) {
+ 			new_values = new double[values.length];
+ 		}
+ 		else {
+ 			return values;
+ 		}
+ 
+ 		double val;
+ 
+ 		for (int k = 0; k < values.length; k++) {
+ 			val = values[k];
+ 			new_values[k] = val;
+ 			if ((missing != null) && (val == missing[0])) {
+ 				new_values[k] = Double.NaN;
+ 			}
+ 			if ((valid_range != null) && ((val < low[0]) || (val > high[0]))) {
+ 				new_values[k] = Double.NaN;
+ 			}
+ 		}
+ 
+ 		return new_values;
+ 	}
+ 
+ 	/**
+ 	 * Process a range of data from a byte array
+ 	 * @param values
+ 	 * @return
+ 	 */
+ 	
+ 	public float[] processAlongBandDim(byte[] values) {
+ 		float[] new_values = new float[values.length];
+ 
+                 // if we are working with unsigned data, need to convert missing vals to unsigned too
+                 if (unsigned) {
+                         if (missing != null) {
+                                 for (int i = 0; i < missing.length; i++) {
+                                         missing[i] = (float) unsignedByteToInt((byte) missing[i]);
+                                 }
+                         }
+                 }
+ 
+                 float val = 0f;
+                 int i = 0;
+ 
+ 		for (int k = 0; k < values.length; k++) {
+ 			val = (float) values[k];
+                         if (unsigned) {
+                                 i = unsignedByteToInt(values[k]);
+                                 val = (float) i;
+                         }
+ 			if ((val == missing[0]) || (val < low[0]) || (val > high[0])) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 			else {
+ 				if (unpack) {
+ 					new_values[k] = scale[k]*val + offset[k];
+ 				}
+ 				else {
+ 					new_values[k] = scale[k]*(val - offset[k]);
+ 				}
+ 			}
+ 		}
+ 		return new_values;
+ 	}
+ 
+ 	/**
+ 	 * Process a range of data from a short array
+ 	 * @param values
+ 	 * @return
+ 	 */
+ 	
+ 	public float[] processAlongBandDim(short[] values) {
+ 		float[] new_values = new float[values.length];
+ 
+                 // if we are working with unsigned data, need to convert missing vals to unsigned too
+                 if (unsigned) {
+                         if (missing != null) {
+                                 for (int i = 0; i < missing.length; i++) {
+                                         missing[i] = (float) unsignedShortToInt((short) missing[i]);
+                                 }
+                         }
+                 }
+ 
+                 float val = 0f;
+                 int i = 0;
+ 
+ 		for (int k = 0; k < values.length; k++) {
+ 			val = (float) values[k];
+                         if (unsigned) {
+                                 i = unsignedShortToInt(values[k]);
+                                 val = (float) i;
+                         }
+ 			if ((val == missing[0]) || (val < low[0]) || (val > high[0])) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 			else {
+ 				if (unpack) {
+ 					new_values[k] = scale[k]*val + offset[k];
+ 				}
+ 				else {
+ 					new_values[k] = scale[k]*(val - offset[k]);
+ 				}
+ 			}
+ 		}
+ 		return new_values;
+ 	}
+ 
+         public void setMultiScaleDimName(String multiScaleDimName) {
+              this.multiScaleDimName = multiScaleDimName;
+         }
+ 
+ }
+ 
+ class IASI_RangeProcessor extends RangeProcessor {
+ 
+ 	public IASI_RangeProcessor() throws Exception {
+ 		super();
+ 	}
+ 
+ 	public float[] processRange(short[] values, HashMap subset) {
+ 		int channelIndex = (int) ((double[]) subset.get(SpectrumAdapter.channelIndex_name))[0];
+ 
+ 		float[] new_values = IASI_L1C_Utility.getDecodedIASIImage(values, null, channelIndex);
+ 
+ 		double[] track_coords = (double[]) subset.get(SwathAdapter.track_name);
+ 		double[] xtrack_coords = (double[]) subset.get(SwathAdapter.xtrack_name);
+ 
+ 		int numElems = ((int)(xtrack_coords[1] - xtrack_coords[0]) + 1);
+ 		int numLines = ((int)(track_coords[1] - track_coords[0]) + 1);
+ 
+ 		new_values = IASI_L1C_Utility.psuedoScanReorder2(new_values, 60, numLines*2); 
+ 
+ 		//- subset here, if necessary
+ 
+ 		return new_values;
+ 	}
+ 
+ }
+ 
+ class CloudSat_2B_GEOPROF_RangeProcessor extends RangeProcessor {
+ 
+ 	public CloudSat_2B_GEOPROF_RangeProcessor(MultiDimensionReader reader, HashMap metadata) throws Exception {
+ 		super(reader, metadata);
+ 	}
+ 
+ 	public float[] processRange(short[] values, HashMap subset) {
+ 		float[] new_values = new float[values.length];
+ 		for (int k=0; k<values.length;k++) {
+ 			float val = (float) values[k];
+ 			if (val == missing[0]) {
+ 				new_values[k] = Float.NaN;
+ 			}
+ 			else if ((val < valid_low) || (val > valid_high)) {
+ 				new_values[k] = -40f;
+ 			}
+ 			else {
+ 				new_values[k] = val/scale[0] + offset[0];
+ 			}
+ 		}
+ 		return new_values;
+ 	}
+ 
+ }
+ 
+ class AggregationRangeProcessor extends RangeProcessor {
+ 
+     ArrayList<RangeProcessor> rangeProcessors = new ArrayList<RangeProcessor>();
+ 
+     int rngIdx = 0;
+ 
+     public AggregationRangeProcessor(GranuleAggregation aggrReader, HashMap metadata) throws Exception {
+        super();
+ 
+        ArrayList readers = aggrReader.getReaders();
+ 
+        for (int rdrIdx = 0; rdrIdx < readers.size(); rdrIdx++) {
+            rangeProcessors.add(
+                   RangeProcessor.createRangeProcessor(
+                                       (MultiDimensionReader)readers.get(rdrIdx), metadata));
+        }
+ 
+        aggrReader.addRangeProcessor((String)metadata.get(SwathAdapter.array_name), this);
+     }
+ 
+     public synchronized void setIndex(int index) {
+       rngIdx = index;
+     }
+ 
+     public synchronized float[] processRange(byte[] values, HashMap subset) {
+       return rangeProcessors.get(rngIdx).processRange(values, subset);
+     }
+ 
+     public synchronized float[] processRange(short[] values, HashMap subset) {
+       return rangeProcessors.get(rngIdx).processRange(values, subset);
+     }
+ 
+     public synchronized float[] processRange(float[] values, HashMap subset) {
+       return rangeProcessors.get(rngIdx).processRange(values, subset);
+     }
+ 
+     public synchronized double[] processRange(double[] values, HashMap subset) {
+       return rangeProcessors.get(rngIdx).processRange(values, subset);
+     }
+ }

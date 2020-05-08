@@ -1,0 +1,467 @@
+ package com.androidflashcards;
+ 
+ import android.app.*;
+ import android.content.SharedPreferences;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Message;
+ import android.view.*;
+ import android.widget.ArrayAdapter;
+ import android.view.View.OnTouchListener;
+ import android.widget.ListView;
+ import android.widget.AdapterView.OnItemSelectedListener;
+ import android.widget.AdapterView;
+ import android.widget.TextView;
+ import android.widget.ImageView;
+ import android.content.Intent;
+ import android.view.LayoutInflater;
+ import android.view.Menu;
+ import android.view.MenuItem;
+ import android.view.ContextMenu;
+ import android.view.ContextMenu.ContextMenuInfo;
+ import android.widget.AdapterView.AdapterContextMenuInfo;
+ import android.app.AlertDialog;
+ import android.content.DialogInterface;
+ import android.util.Log;
+ 
+ import java.io.File;
+ import java.io.FileReader;
+ import java.util.ArrayList;
+ import java.io.FilenameFilter;
+ import java.io.ObjectOutputStream;
+ import java.io.ObjectInputStream;
+ import java.io.FileOutputStream;
+ import java.io.FileInputStream;
+ import java.io.BufferedReader;
+ import java.io.BufferedInputStream;
+ import java.io.BufferedOutputStream;
+ import java.util.StringTokenizer;
+ import java.util.regex.Pattern;
+ 
+ import org.xml.sax.helpers.XMLReaderFactory;
+ import org.xml.sax.XMLReader;
+ import org.xml.sax.InputSource;
+ 
+ public class AndroidFlashcards extends ListActivity implements Runnable {
+ 
+ 	private ProgressDialog pd;
+ 	private AndroidFlashcards me;
+ 	private SharedPreferences lprefs;
+ 	private LessonListItem[] lessons = null;
+ 
+ 	private static final int FEED_BACK_ID = Menu.FIRST;
+ 	private static final int GET_LESSONS_ID = Menu.FIRST+1;
+ 	private static final int DELETE_ID = Menu.FIRST+2;
+ 
+ 	private final String rootDir = "/sdcard/flashcards";
+ 	private String curDir = rootDir;
+ 
+ 	public static final String TAG = "AndroidFlashcards";
+ 
+ 	/* Called when the activity is first created. */
+ 	@Override
+   public void onCreate(Bundle savedInstanceState) {
+ 		super.onCreate(savedInstanceState);
+ 		me = this;
+ 
+ 		lprefs = getSharedPreferences("lessonPrefs",0);
+ 
+ 		System.setProperty("org.xml.sax.driver","org.xmlpull.v1.sax2.Driver");
+ 
+ 		registerForContextMenu(getListView());
+ 
+ 		ensureInstructions();
+ 		parseLessons();
+ 	}
+ 
+ 	// This (and run()) are done in another thread so the ProgressDialog can be shown
+ 	private void parseLessons() {
+ 		pd = ProgressDialog.show(this, "", 
+ 														 "Checking for flashcards.\nPlease wait...", 
+ 														 true);
+ 		Thread t = new Thread(this);
+ 		t.start();
+ 	}
+ 
+ 	public void run() {
+ 		File f = new File(curDir);
+ 		if (!f.exists()) 
+ 			handler.sendMessage(handler.obtainMessage(1,curDir+" does not exist!"));
+ 		else if (!f.isDirectory()) 
+ 			handler.sendMessage(handler.obtainMessage(1,curDir+" exists, but is not a directory!"));
+ 		else {
+ 			lessons = loadDir(f,false);
+ 			if (lessons == null)
+ 				handler.sendMessage(handler.obtainMessage(1,"Sorry, an error occured while loading this directory"));				
+ 			else
+ 				handler.sendEmptyMessage(0);
+ 		}
+ 	}
+ 
+ 	
+   @Override
+ 	public void onListItemClick(ListView parent, View v,int position, long id) {
+ 		Intent i = new Intent(this, LessonSelect.class);
+ 		LessonListItem l = lessons[position];
+ 		if (l.isDir) {
+ 			curDir = l.file;
+ 			parseLessons();
+ 		} else {
+ 			i.putExtra("LessonFile", l.file);
+ 			i.putExtra("LessonName", l.name);
+ 			i.putExtra("LessonDesc", l.desc);
+ 			i.putExtra("LessonCount", l.count);
+ 			startActivity(i);
+ 		}
+ 	}
+ 
+ 	// Options menu handlers
+ 	@Override
+   public boolean onCreateOptionsMenu(Menu menu) {
+ 		super.onCreateOptionsMenu(menu);
+ 		menu.add(0, FEED_BACK_ID, 3, R.string.feedback);
+ 		menu.add(0, GET_LESSONS_ID, 3, R.string.get_lessons);
+ 		return true;
+ 	}
+ 
+   @Override
+   public boolean onMenuItemSelected(int featureId, MenuItem item) {
+ 		switch(item.getItemId()) {
+ 		case FEED_BACK_ID: 
+       final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+       emailIntent .setType("plain/text");
+       emailIntent .putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"nick@afternight.org"});
+       emailIntent .putExtra(android.content.Intent.EXTRA_SUBJECT, "Android Flashcards Feedback");
+       startActivity(Intent.createChooser(emailIntent, "Send Feedback..."));
+ 			return true;
+ 		case GET_LESSONS_ID:
+ 			final Intent glIntent = new Intent(this,DownloadableLessonList.class);
+ 			startActivityForResult(glIntent,0);
+ 			return true;
+ 		}
+ 		return super.onMenuItemSelected(featureId, item);
+ 	}
+ 	
+   @Override
+ 	public void onCreateContextMenu(ContextMenu menu, View v,
+ 																	ContextMenuInfo menuInfo) {
+ 		super.onCreateContextMenu(menu, v, menuInfo);
+ 		menu.add(0, DELETE_ID, 0, R.string.menu_delete);
+ 	}
+ 
+   @Override
+ 	public boolean onContextItemSelected(MenuItem item) {
+ 		switch(item.getItemId()) {
+ 		case DELETE_ID:
+ 			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+ 			String fn = lessons[(int)info.id].file;
+ 			File f = new File("/sdcard/flashcards/"+fn+".csv");
+ 			if (f.exists())
+ 				f.delete();
+ 			f = new File("/sdcard/flashcards/"+fn+".xml");
+ 			if (f.exists())
+ 				f.delete();
+ 			f = new File("/sdcard/flashcards/"+fn+".bin");
+ 			if (f.exists())
+ 				f.delete();
+ 			parseLessons();
+ 			return true;
+ 		}
+ 		return super.onContextItemSelected(item);
+ 	}
+ 
+ 	@Override
+ 	protected void onActivityResult(int requestCode,int resultCode,Intent data) {
+ 		switch(requestCode) {
+ 		case 0: // lesson downloader
+ 			if (resultCode == 1) // downloaded something
+ 				parseLessons();
+ 		}
+ 	}
+ 
+ 
+ 	@Override
+ 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+     if (keyCode == KeyEvent.KEYCODE_BACK && 
+ 				!curDir.equals(rootDir)) {
+ 			File f = new File(curDir);
+ 			curDir = f.getParent();
+ 			parseLessons();
+ 			return true;
+     }
+     return super.onKeyDown(keyCode, event);
+ 	}
+ 
+ 
+ 	// parsing stuff
+ 	private Handler handler = new Handler() {
+ 			@Override
+ 			public void handleMessage(Message msg) {
+ 				pd.dismiss();
+ 				if (msg.what == 0) {
+ 					LessonAdapter ad = new LessonAdapter(lessons);
+ 					setListAdapter(ad);
+ 					getListView().setTextFilterEnabled(true);
+ 				} else if (msg.what == 1) {
+ 					AlertDialog alertDialog = new AlertDialog.Builder(me).create();
+ 					alertDialog.setTitle("Error");
+ 					alertDialog.setMessage("Sorry, but an error occured trying to read the directory:\n\n"+msg.obj);
+ 					alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+ 							public void onClick(DialogInterface dialog, int which) {
+ 								setResult(0);
+ 								finish();
+ 								return;
+ 							} });
+ 					alertDialog.show();
+ 				}
+ 			}
+ 		};
+ 
+ 
+ 	private LessonListItem[] loadDir(File dir,boolean ignoreCache) {
+ 		if (!dir.isDirectory())
+ 			return null;
+ 
+ 		SharedPreferences.Editor editor = null;
+ 		File cache = new File(dir,".dircache");
+ 		LessonListItem[] ret = null;
+ 		if (ignoreCache ||
+ 				!cache.exists() ||
+ 				(cache.lastModified() < dir.lastModified())) {
+ 			ArrayList<LessonListItem> items = new ArrayList<LessonListItem>();
+ 			if (!dir.getAbsolutePath().equals(rootDir))
+ 				items.add(new LessonListItem(dir.getParent(),"..","Go Back","",true));
+ 			String[] files = dir.list(new FilenameFilter() {
+ 					public boolean accept(File dir,String name) {
+ 						File f = new File(dir,name);
+ 						if (f.isDirectory())
+ 							return true;
+ 						else if (name.endsWith(".xml") ||
+ 										 name.endsWith(".csv"))
+ 							return true;
+ 						return false;
+ 					}
+ 				});
+ 			for(int i = 0;i < files.length;i++) {
+ 				File curF = new File(dir.getAbsolutePath()+File.separator+files[i]);
+ 				if (curF.isDirectory()) 
+ 					items.add(new LessonListItem(curF.getAbsolutePath(),
+ 																			 files[i],
+ 																			 "Directory",
+ 																			 "",true));
+ 				else {
+ 					String fbase = curF.getName().substring(0,curF.getName().lastIndexOf("."));
+ 					File bf = new File(curF.getAbsolutePath().substring(0,curF.getAbsolutePath().lastIndexOf("."))+".bin");
+ 					if (!bf.exists() ||
+ 							bf.lastModified() < curF.lastModified() ||
+ 							!(lprefs.contains(fbase+"Name") &&
+ 								lprefs.contains(fbase+"Desc") &&
+ 								lprefs.contains(fbase+"Count"))) {
+ 						LessonListItem item = parseLesson(curF,bf,fbase);
+ 						if (item != null) {
+ 							items.add(item);
+ 							if (editor == null)
+ 								editor = lprefs.edit();
+ 							editor.putString(fbase+"Name",item.name);
+ 							editor.	putString(fbase+"Desc",item.desc);
+ 							editor.putString	(fbase+"Count",item.count);
+ 							editor.commit();
+ 						}
+ 					}
+ 					else {
+ 						items.add(new LessonListItem
+ 											(bf.getAbsolutePath(),
+ 											 lprefs.getString(fbase+"Name","[No Name]"),
+ 											 lprefs.getString(fbase+"Desc","[No Description]"),
+ 											 lprefs.getString(fbase+"Count","[No Count]"),false));
+ 					}
+ 				}
+ 			}
+ 			ret = items.toArray(new LessonListItem[0]);
+ 			java.util.Arrays.sort(ret);
+ 			try {
+ 				ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(cache));
+ 				oos.writeInt(ret.length);
+ 				for (int i = 0;i < ret.length;i++)
+ 					oos.writeObject(ret[i]);
+ 				oos.close();
+ 			} catch (Exception e) {
+ 				e.printStackTrace();
+ 			}
+ 			return ret;
+ 		} else {
+ 			// read the cache
+ 			try {
+ 				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cache));
+ 				int cnt = ois.readInt();
+ 				ret = new LessonListItem[cnt];
+ 				for (int i = 0;i<cnt;i++)
+ 					ret[i] = (LessonListItem)ois.readObject();
+ 			} catch (Exception e) {
+ 				e.printStackTrace();
+ 				return loadDir(dir,true);
+ 			}
+ 		}
+ 		return ret;
+ 	}
+ 
+ 	private LessonListItem parseLesson(File f,File bf,String fbase) {
+ 		Lesson l = null;
+ 		LessonListItem lli = null;
+ 		try {
+ 			FileOutputStream fos = new FileOutputStream(bf);
+ 			ObjectOutputStream oos = new ObjectOutputStream(fos);
+ 			if (f.getName().endsWith(".xml"))
+ 				l = parseXML(f,fbase);
+ 			else if (f.getName().endsWith(".csv"))
+ 				l = parseCSV(f,fbase);
+ 			if (l != null) {
+ 				oos.writeObject(l);
+ 				oos.close();
+ 				lli = new LessonListItem(bf.getAbsolutePath(),
+ 																 l.name(),
+ 																 l.description(),
+ 																 "Cards: "+l.cardCount(),false);
+ 			}
+ 		} catch(Exception e) {
+ 			e.printStackTrace();
+ 		}
+ 		return lli;
+ 	}
+ 
+ 
+ 	static protected Lesson parseXML(File file, String default_name) 
+ 		throws Exception {
+ 		XMLReader xr = XMLReaderFactory.createXMLReader();
+ 		FCParser fcp = new FCParser();
+ 		xr.setContentHandler(fcp);
+ 		xr.setErrorHandler(fcp);
+ 		FileReader r = new FileReader(file);
+ 		xr.parse(new InputSource(r));
+ 		String name = fcp.getName();
+ 		if (name == "")
+ 			name = default_name;
+ 		String description = fcp.getDesc();
+ 		return new Lesson(fcp.getCards(),name,description);
+ 	}
+ 
+ 	static protected Lesson parseCSV(File file, String default_name)
+ 		throws Exception {
+ 		BufferedReader br = new BufferedReader(new FileReader(file));
+ 		String line;
+ 		ArrayList<Card> cardList = new ArrayList<Card>();
+ 		boolean first = true;
+ 		String name = default_name;
+ 		String desc = "[no description]";
+ 
+ 		Pattern noquote_pat = Pattern.compile(",");
+ 
+ 		while((line = br.readLine()) != null) {
+ 			String[] toks = null;
+ 			line = line.trim();
+			if (line.length() <= 0) // ignore empty lines
+				continue;
+ 			if (line.charAt(0) == '"') { // double quote delimited string
+ 				int eq1 = line.indexOf('"',1);
+ 				while (eq1 > 2 && line.charAt(eq1-1) == '\\')  // escaped quote
+ 					eq1 = line.indexOf('"',(eq1+1));
+ 				if (eq1 < 3) {
+ 					Log.w(TAG,"Warning, invalid line: "+line);
+ 					continue;
+ 				}
+ 				String front = line.substring(1,eq1);
+ 				eq1 = line.indexOf(',',eq1+1);
+ 				if (eq1 <= 0) {
+ 					Log.w(TAG,"Warning, invalid line: "+line);
+ 					continue;
+ 				}
+ 				eq1 = line.indexOf('"',eq1+1);
+ 				if (eq1 <= 0) {
+ 					Log.w(TAG,"Warning, invalid line: "+line);
+ 					continue;
+ 				}
+ 				int eq2 = line.indexOf('"',eq1+1);
+ 				if (eq2 < eq1) {
+ 					Log.w(TAG,"Warning, invalid line: "+line);
+ 					continue;
+ 				}
+ 				String back = line.substring(eq1+1,eq2);
+ 				
+ 				front = front.replaceAll("\\\\\"","\"");
+ 				back = back.replaceAll("\\\\\"","\"");
+ 				
+ 				toks = new String[2];
+ 				toks[0] = front;
+ 				toks[1] = back;
+ 			} else // this is a bit easier :)
+ 				toks = noquote_pat.split(line);
+ 			StringTokenizer stok = new StringTokenizer(line,",");
+ 			if (toks.length < 2) {
+ 				Log.e(AndroidFlashcards.TAG,"Warning, invalid line: "+line);
+ 				continue;
+ 			}
+ 			if (toks.length > 2) 
+ 				Log.e(AndroidFlashcards.TAG,"Warning, too many fields on a line, ignoring all but the first two: "+line);
+ 			if (first) {
+ 				name = toks[0].trim();
+ 				desc = toks[1].trim();
+ 				first = false;
+ 			} else {
+ 				String front = toks[0].trim();
+ 				front = front.replaceAll("\\\\n","\n");
+ 				String back = toks[1].trim();
+ 				back = back.replaceAll("\\\\n","\n");
+ 				cardList.add(new Card(front,back));
+ 			}
+ 		}
+ 		return new Lesson(cardList.toArray(new Card[0]),name,desc);
+ 	}
+ 
+ 	private void ensureInstructions() {
+ 		File f = new File("/sdcard/flashcards/android_flashcards_instructions.xml");
+ 		if (!f.exists()) {
+ 			try {
+ 				BufferedInputStream bis = new BufferedInputStream(getResources().openRawResource(R.raw.android_flashcards_instructions));
+ 				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
+ 				int i;
+ 				while ((i = bis.read()) != -1)
+ 					bos.write(i);
+ 				bos.close();
+ 				bis.close();
+ 			} catch (Exception e) {
+ 				e.printStackTrace();
+ 			}
+ 		}
+ 	}
+ 
+ 	// ListAdapter
+ 	class LessonAdapter extends ArrayAdapter<LessonListItem> {
+ 		LessonListItem[] items;
+ 		LessonAdapter(LessonListItem[] _items) {
+ 			super(AndroidFlashcards.this, R.layout.lesson_list, _items);
+ 			items = _items;
+ 		}
+ 		
+ 		public View getView(int position, View convertView,	ViewGroup parent) {
+ 			View row=convertView;
+ 			if (row==null) {
+ 				LayoutInflater inflater=getLayoutInflater();
+ 				row=inflater.inflate(R.layout.lesson_list, parent, false);
+ 				row.setTag(R.id.list_label, row.findViewById(R.id.list_label));
+ 				row.setTag(R.id.list_desc, row.findViewById(R.id.list_desc));
+ 				row.setTag(R.id.list_count, row.findViewById(R.id.list_count));
+ 				row.setTag(R.id.list_icon, row.findViewById(R.id.list_icon));
+ 			}
+ 			((TextView)row.getTag(R.id.list_label)).setText(items[position].name);
+ 			((TextView)row.getTag(R.id.list_desc)).setText(items[position].desc);
+ 			((TextView)row.getTag(R.id.list_count)).setText(items[position].count);
+ 			ImageView icon=(ImageView)row.getTag(R.id.list_icon);
+ 			if (items[position].isDir)
+ 				icon.setImageResource(R.drawable.folder);
+ 			else
+ 				icon.setImageResource(R.drawable.list_icon);
+ 			return(row);
+ 		}
+ 	}
+ 
+ }

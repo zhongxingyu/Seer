@@ -1,0 +1,123 @@
+ package com.galineer.suzy.accountsim.framework;
+ 
+ import org.joda.money.CurrencyMismatchException;
+ import org.joda.money.CurrencyUnit;
+ import org.joda.money.Money;
+ 
+ public class Account {
+   // control outcome of deposit/withdrawal when crossing zero balance point
+   public enum Policy {
+     ALLOW,  // operation succeeds
+     TRUNCATE,  // operation partially succeeds, no error
+     IGNORE,  // operation fails, no error
+     ERROR  // operation fails with error
+   }
+ 
+   private String name;
+   private Money balance;
+   private Policy positivePolicy;
+   private Policy negativePolicy;
+ 
+   public Account(String name, Money initialBalance) {
+     this(name, initialBalance, Policy.ALLOW, Policy.ALLOW);
+   }
+ 
+   public Account(String name, Money initialBalance, Policy positivePolicy,
+                  Policy negativePolicy)
+       throws NullPointerException, IllegalArgumentException {
+ 
+     this.checkArgsNotNull(name, initialBalance, positivePolicy, negativePolicy);
+     this.name = name;
+     this.positivePolicy = positivePolicy;
+     this.negativePolicy = negativePolicy;
+ 
+     if (this.positivePolicy != Policy.ALLOW && initialBalance.isPositive()) {
+       throw new IllegalArgumentException(
+           "Specified account may not be positive but gave positive " +
+           "initial balance");
+     }
+     if (this.negativePolicy != Policy.ALLOW && initialBalance.isNegative()) {
+       throw new IllegalArgumentException(
+           "Specified account may not be negative but gave negative " +
+           "initial balance");
+     }
+     this.balance = initialBalance;
+   }
+ 
+   private void checkArgsNotNull(String name, Money initialBalance,
+                             Policy positivePolicy, Policy negativePolicy)
+       throws NullPointerException {
+ 
+     if (name == null) {
+       throw new NullPointerException("Account name cannot be null");
+     }
+     if (initialBalance == null) {
+       throw new NullPointerException("Account initial balance cannot be null");
+     }
+     if (positivePolicy == null || negativePolicy == null) {
+       throw new NullPointerException("Policy specifications cannot be null");
+     }
+   }
+ 
+   public String getName() {
+     return this.name;
+   }
+ 
+   public Money getBalance() {
+     return this.balance;
+   }
+ 
+   public CurrencyUnit getCurrency() {
+     return this.balance.getCurrencyUnit();
+   }
+ 
+   public String toString() {
+     return this.name + " (" + this.balance.toString() + ")";
+   }
+ 
+   public Money add(Money amount)
+       throws IllegalArgumentException, CurrencyMismatchException {
+ 
+     Money amountDeposited = this.addDryRun(amount);
+     this.balance = this.balance.plus(amountDeposited);
+     return amountDeposited;
+   }
+ 
+   public Money addDryRun(Money amount)
+       throws IllegalArgumentException, CurrencyMismatchException {
+ 
+     Money newBalance = this.balance.plus(amount);
+     Money amountDeposited = amount;
+     if (this.balance.isNegativeOrZero() && newBalance.isPositive()) {
+       amountDeposited = this.adjustDepositByPolicy(
+           amount, this.positivePolicy, "positive");
+     }
+     if (this.balance.isPositiveOrZero() && newBalance.isNegative()) {
+       amountDeposited = this.adjustDepositByPolicy(
+           amount, this.negativePolicy, "negative");
+     }
+     return amountDeposited;
+   }
+ 
+   private Money adjustDepositByPolicy(Money amount, Policy policy,
+                                       String whichPolicy)
+       throws IllegalArgumentException {
+ 
+     switch(policy) {
+       case ALLOW:
+         return amount;
+ 
+       case TRUNCATE:
+         return this.balance.negated();
+ 
+       case ERROR:
+         throw new IllegalArgumentException(
+            "Transaction would cause balance to become " + whichPolicy +
+             " on account that may not be " + whichPolicy);
+ 
+       case IGNORE:
+       default:
+         return Money.zero(this.balance.getCurrencyUnit());
+     }
+   }
+ }

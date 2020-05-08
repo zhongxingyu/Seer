@@ -1,0 +1,1224 @@
+ /**
+ 
+ TrakEM2 plugin for ImageJ(C).
+ Copyright (C) 2005, 2006, 2007 Albert Cardona and Rodney Douglas.
+ 
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation (http://www.gnu.org/licenses/gpl.txt )
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. 
+ 
+ You may contact Albert Cardona at acardona at ini.phys.ethz.ch
+ Institute of Neuroinformatics, University of Zurich / ETH, Switzerland.
+ **/
+ 
+ package ini.trakem2.display;
+ 
+ import ij.ImagePlus;
+ import ij.gui.GenericDialog;
+ 
+ import java.awt.Rectangle;
+ import java.awt.Color;
+ import java.awt.Graphics;
+ import java.awt.Point;
+ import java.util.Collections;
+ import java.util.LinkedList;
+ import java.util.HashSet;
+ import java.util.Hashtable;
+ import java.util.Iterator;
+ import java.util.ArrayList;
+ import java.util.Map;
+ import java.util.Set;
+ import java.awt.Stroke;
+ import java.awt.BasicStroke;
+ import java.awt.AlphaComposite;
+ import java.awt.Composite;
+ import java.awt.Graphics2D;
+ import java.awt.geom.AffineTransform;
+ import java.awt.image.ColorModel;
+ 
+ import ini.trakem2.utils.Utils;
+ import ini.trakem2.utils.IJError;
+ 
+ /** Keeps track of selected objects and mediates their transformation.*/ 
+ public class Selection {
+ 
+ 	/** Outward padding in pixels around the selected Displayables maximum enclosing box that may need repainting when updating the screen.*/
+ 	static public int PADDING = 31;
+ 
+ 	private Display display;
+ 	/** Queue of all selected objects. */
+ 	private final LinkedList queue = new LinkedList();
+ 	private final LinkedList queue_prev = new LinkedList();
+ 	private final Object queue_lock = new Object();
+ 	private boolean queue_locked = false;
+ 	/** All selected objects plus their links. */
+ 	private final HashSet<Displayable> hs = new HashSet<Displayable>();
+ 	private Displayable active = null;
+ 	private boolean transforming = false;
+ 	private Rectangle box = null;
+ 	private final int iNW = 0;
+ 	private final int iN = 1;
+ 	private final int iNE = 2;
+ 	private final int iE = 3;
+ 	private final int iSE = 4;
+ 	private final int iS = 5;
+ 	private final int iSW = 6;
+ 	private final int iW = 7;
+ 	private final int rNW = 8;
+ 	private final int rNE = 9;
+ 	private final int rSE = 10;
+ 	private final int rSW = 11;
+ 	private final int ROTATION = 12;
+ 	private final int FLOATER = 13;
+ 	private final Handle NW = new BoxHandle(0,0, iNW);
+ 	private final Handle N  = new BoxHandle(0,0, iN);
+ 	private final Handle NE  = new BoxHandle(0,0, iNE);
+ 	private final Handle E  = new BoxHandle(0,0, iE);
+ 	private final Handle SE  = new BoxHandle(0,0, iSE);
+ 	private final Handle S  = new BoxHandle(0,0, iS);
+ 	private final Handle SW  = new BoxHandle(0,0, iSW);
+ 	private final Handle W  = new BoxHandle(0,0, iW);
+ 	private final Handle RO = new RotationHandle(0,0, ROTATION);
+ 	/** Pivot of rotation. Always checked first on mouse pressed, before other handles. */
+ 	private final Floater floater = new Floater(0, 0, FLOATER);
+ 	private final Handle[] handles;
+ 	private Handle grabbed = null;
+ 	private boolean dragging = false;
+ 	private boolean rotating = false;
+ 
+ 	private int x_d_old, y_d_old, x_d, y_d; // for rotations
+ 
+ 	private ImagePlus virtual_imp = null;
+ 
+ 	/** The Display can be null, as long as paint, OvalHandle.contains, setTransforming, and getLinkedBox methods are never called on this object. */
+ 	public Selection(Display display) {
+ 		this.display = display;
+ 		this.handles = new Handle[]{NW, N, NE, E, SE, S, SW, W, RO, floater}; // shitty java, why no dictionaries (don't get me started with Hashtable class painful usability)
+ 	}
+ 
+ 	private void lock() {
+ 		//Utils.printCaller(this, 7);
+ 		while (queue_locked) { try { queue_lock.wait(); } catch (InterruptedException ie) {} }
+ 		queue_locked = true;
+ 	}
+ 
+ 	private void unlock() {
+ 		//Utils.printCaller(this);
+ 		queue_locked = false;
+ 		queue_lock.notifyAll();
+ 	}
+ 
+ 	/** Paint a white frame around the selected object and a pink frame around all others. Active is painted last, so white frame is always top. */
+ 	public void paint(Graphics g, Rectangle srcRect, double magnification) {
+ 		// paint rectangle around selected Displayable elements
+ 		synchronized (queue_lock) {
+ 			try {
+ 				lock();
+ 				if (queue.isEmpty()) return;
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				unlock();
+ 			}
+ 		}
+ 		if (!transforming) {
+ 			g.setColor(Color.pink);
+ 			Displayable[] da = null;
+ 			synchronized (queue_lock) {
+ 				lock();
+ 				try {
+ 					da = new Displayable[queue.size()];
+ 					queue.toArray(da);
+ 				} catch (Exception e) {
+ 					IJError.print(e);
+ 				} finally {
+ 					unlock();
+ 				}
+ 			}
+ 			final Rectangle bbox = new Rectangle();
+ 			for (int i=0; i<da.length; i++) {
+ 				da[i].getBoundingBox(bbox);
+ 				if (da[i].equals(active)) {
+ 					g.setColor(Color.white);
+ 					g.drawRect(bbox.x, bbox.y, bbox.width, bbox.height);
+ 					//g.drawPolygon(da[i].getPerimeter());
+ 					g.setColor(Color.pink);
+ 				} else {
+ 					//g.drawPolygon(da[i].getPerimeter());
+ 					g.drawRect(bbox.x, bbox.y, bbox.width, bbox.height);
+ 				}
+ 			}
+ 		}
+ 		//Utils.log2("transforming, dragging, rotating: " + transforming + "," + dragging + "," + rotating);
+ 		if (transforming) {
+ 			final Graphics2D g2d = (Graphics2D)g;
+ 			final Stroke original_stroke = g2d.getStroke();
+ 			AffineTransform original = g2d.getTransform();
+ 			g2d.setTransform(new AffineTransform());
+ 			if (!rotating) {
+ 				//Utils.log("box painting: " + box);
+ 
+ 				// 30 pixel line, 10 pixel gap, 10 pixel line, 10 pixel gap
+ 				float mag = (float)magnification;
+ 				float[] dashPattern = { 30, 10, 10, 10 };
+ 				g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, dashPattern, 0));
+ 				g.setColor(Color.yellow);
+ 				// paint box
+ 				//g.drawRect(box.x, box.y, box.width, box.height);
+ 				g2d.draw(original.createTransformedShape(this.box));
+ 				g2d.setStroke(new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+ 				// paint handles for scaling (boxes) and rotating (circles), and floater
+ 				for (int i=0; i<handles.length; i++) {
+ 					handles[i].paint(g, srcRect, magnification);
+ 				}
+ 			} else {
+ 				g2d.setStroke(new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER));
+ 				RO.paint(g, srcRect, magnification);
+ 				((RotationHandle)RO).paintMoving(g, srcRect, magnification, display.getCanvas().getCursorLoc());
+ 			}
+ 			g2d.setStroke(original_stroke);
+ 			g2d.setTransform(original);
+ 		}
+ 
+ 		/*
+ 		// debug:
+ 		if (null != active) {
+ 			g.setColor(Color.green);
+ 			java.awt.Polygon p = active.getPerimeter(active.getX(), active.getY());
+ 			System.out.println("polygon:");
+ 			for (int i=0; i<p.npoints; i++) {
+ 				System.out.println("x,y : " + p.xpoints[i] + "," + p.ypoints[i]);
+ 				p.xpoints[i] = (int)((p.xpoints[i] - srcRect.x)*magnification);
+ 				p.ypoints[i] = (int)((p.ypoints[i] - srcRect.y)*magnification);
+ 			}
+ 			g.drawPolygon(p);
+ 		}
+ 		*/
+ 	}
+ 
+ 	/** Handles have screen coordinates. */
+ 	private abstract class Handle {
+ 		public int x, y;
+ 		public final int id;
+ 		Handle(int x, int y, int id) {
+ 			this.x = x;
+ 			this.y = y;
+ 			this.id = id;
+ 		}
+ 		abstract public void paint(Graphics g, Rectangle srcRect, double mag);
+ 		/** Radius is the dectection "radius" around the handle x,y. */
+ 		public boolean contains(int x_p, int y_p, double radius) {
+ 			if (x - radius <= x_p && x + radius >= x_p
+ 			 && y - radius <= y_p && y + radius >= y_p) return true;
+ 			return false;
+ 		}
+ 		public void set(int x, int y) {
+ 			this.x = x;
+ 			this.y = y;
+ 		}
+ 		abstract void drag(int dx, int dy);
+ 	}
+ 
+ 	private class BoxHandle extends Handle {
+ 		BoxHandle(int x, int y, int id) {
+ 			super(x,y,id);
+ 		}
+ 		public void paint(final Graphics g, final Rectangle srcRect, final double mag) {
+ 			final int x = (int)((this.x - srcRect.x)*mag);
+ 			final int y = (int)((this.y - srcRect.y)*mag);
+ 			DisplayCanvas.drawHandle(g, x, y, 1.0); // ignoring magnification for the sizes, since Selection is painted differently
+ 		}
+ 		public void drag(int dx, int dy) {
+ 			Rectangle box_old = (Rectangle)box.clone();
+ 			//Utils.log2("dx,dy: " + dx + "," + dy + " before mod");
+ 			double res = dx / 2.0;
+ 			res -= Math.floor(res);
+ 			res *= 2;
+ 			int extra = (int)res;
+ 			int anchor_x = 0,
+ 			    anchor_y = 0;
+ 			switch (this.id) { // java sucks to such an extent, I don't even bother
+ 				case iNW:
+ 					if (x + dx >= E.x) return;
+ 					if (y + dy >= S.y) return;
+ 					box.x += dx;
+ 					box.y += dy;
+ 					box.width -= dx;
+ 					box.height -= dy;
+ 					anchor_x = SE.x;
+ 					anchor_y = SE.y;
+ 					break;
+ 				case iN:
+ 					if (y + dy >= S.y) return;
+ 					box.y += dy;
+ 					box.height -= dy;
+ 					anchor_x = S.x;
+ 					anchor_y = S.y;
+ 					break;
+ 				case iNE:
+ 					if (x + dx <= W.x) return;
+ 					if (y + dy >= S.y) return;
+ 					box.y += dy;
+ 					box.width += dx;
+ 					box.height -= dy;
+ 					anchor_x = SW.x;
+ 					anchor_y = SW.y;
+ 					break;
+ 				case iE:
+ 					if (x + dx <= W.x) return;
+ 					box.width += dx;
+ 					anchor_x = W.x;
+ 					anchor_y = W.y;
+ 					break;
+ 				case iSE:
+ 					if (x + dx <= W.x) return;
+ 					if (y + dy <= N.y) return;
+ 					box.width += dx;
+ 					box.height += dy;
+ 					anchor_x = NW.x;
+ 					anchor_y = NW.y;
+ 					break;
+ 				case iS:
+ 					if (y + dy <= N.y) return;
+ 					box.height += dy;
+ 					anchor_x = N.x;
+ 					anchor_y = N.y;
+ 					break;
+ 				case iSW:
+ 					if (x + dx >= E.x) return;
+ 					if (y + dy <= N.y) return;
+ 					box.x += dx;
+ 					box.width -= dx;
+ 					box.height += dy;
+ 					anchor_x = NE.x;
+ 					anchor_y = NE.y;
+ 					break;
+ 				case iW:
+ 					if (x + dx >= E.x) return;
+ 					box.x += dx;
+ 					box.width -= dx;
+ 					anchor_x = E.x;
+ 					anchor_y = E.y;
+ 					break;
+ 			}
+ 			// proportion:
+ 			double px = (double)box.width / (double)box_old.width;
+ 			double py = (double)box.height / (double)box_old.height;
+ 			// displacement: specific of each element of the selection and their links, depending on where they are.
+ 			for (Displayable d : hs) {
+ 				d.scale(px, py, anchor_x, anchor_y, false); // false because the linked ones are already included in the HashSet
+ 			}
+ 
+ 			// finally:
+ 			setHandles(box); // overkill. As Graham said, most newly available chip resources are going to be wasted. They are already.
+ 		}
+ 	}
+ 
+ 	private final double rotate() {
+ 		// center of rotation is the floater
+ 		double cos = Utils.getCos(x_d_old - floater.x, y_d_old - floater.y, x_d - floater.x, y_d - floater.y);
+ 		//double sin = Math.sqrt(1 - cos*cos);
+ 		//double delta = Utils.getAngle(cos, sin);
+ 		double delta = Math.acos(cos); // same thing as the two lines above
+ 		// need to compute the sign of rotation as well: the cross-product!
+ 		// cross-product:
+ 		// a = (3,0,0) and b = (0,2,0)
+ 		// a x b = (3,0,0) x (0,2,0) = ((0 x 0 - 2 x 0), -(3 x 0 - 0 x 0), (3 x 2 - 0 x 0)) = (0,0,6).
+ 
+ 		if (Double.isNaN(delta)) {
+ 			Utils.log2("Selection rotation handle: ignoring NaN angle");
+ 			return Double.NaN;
+ 		}
+ 
+ 		double zc = (x_d_old - floater.x) * (y_d - floater.y) - (x_d - floater.x) * (y_d_old - floater.y);
+ 		// correction:
+ 		if (zc < 0) {
+ 			delta = -delta;
+ 		}
+ 		for (Displayable d : hs) {
+ 			d.rotate(delta, floater.x, floater.y, false); // false because the linked ones are already included in the HashSet
+ 		}
+ 		return delta;
+ 	}
+ 
+ 	private class RotationHandle extends Handle {
+ 		final int shift = 50;
+ 		RotationHandle(int x, int y, int id) {
+ 			super(x, y, id);
+ 		}
+ 		public void paint(final Graphics g, final Rectangle srcRect, final double mag) {
+ 			final int x = (int)((this.x - srcRect.x)*mag) + shift;
+ 			final int y = (int)((this.y - srcRect.y)*mag);
+ 			final int fx = (int)((floater.x - srcRect.x)*mag);
+ 			final int fy = (int)((floater.y - srcRect.y)*mag);
+ 			draw(g, fx, fy, x, y);
+ 		}
+ 		private void draw(final Graphics g, int fx, int fy, int x, int y) {
+ 			g.setColor(Color.white);
+ 			g.drawLine(fx, fy, x, y);
+ 			g.fillOval(x -4, y -4, 9, 9);
+ 			g.setColor(Color.black);
+ 			g.drawOval(x -2, y -2, 5, 5);
+ 		}
+ 		public void paintMoving(final Graphics g, final Rectangle srcRect, final double mag, final Point mouse) {
+ 			// mouse as xMouse,yMouse from ImageCanvas: world coordinates, not screen!
+ 			final int fx = (int)((floater.x - srcRect.x)*mag);
+ 			final int fy = (int)((floater.y - srcRect.y)*mag);
+ 			// vector
+ 			double vx = (mouse.x - srcRect.x)*mag - fx;
+ 			double vy = (mouse.y - srcRect.y)*mag - fy;
+ 			//double len = Math.sqrt(vx*vx + vy*vy);
+ 			//vx = (vx / len) * 50;
+ 			//vy = (vy / len) * 50;
+ 			draw(g, fx, fy, fx + (int)vx, fy + (int)vy);
+ 		}
+ 		public boolean contains(int x_p, int y_p, double radius) {
+ 			final double mag = display.getCanvas().getMagnification();
+ 			final double x = this.x + shift / mag;
+ 			final double y = this.y;
+ 			if (x - radius <= x_p && x + radius >= x_p
+ 			 && y - radius <= y_p && y + radius >= y_p) return true;
+ 			return false;
+ 		}
+ 		public void drag(int dx, int dy) {
+ 			/// Bad design, I know, I'm ignoring the dx,dy
+ 			// how:
+ 			// center is the floater
+ 
+ 			rotate();
+ 		}
+ 	}
+ 
+ 	private class Floater extends Handle {
+ 		Floater(int x, int y, int id) {
+ 			super(x,y, id);
+ 		}
+ 		public void paint(Graphics g, Rectangle srcRect, double mag) {
+ 			int x = (int)((this.x - srcRect.x)*mag);
+ 			int y = (int)((this.y - srcRect.y)*mag);
+ 			g.setXORMode(Color.white);
+ 			g.drawOval(x -10, y -10, 21, 21);
+ 			g.drawRect(x -1, y -15, 3, 31);
+ 			g.drawRect(x -15, y -1, 31, 3);
+ 		}
+ 		public Rectangle getBoundingBox(Rectangle b) {
+ 			b.x = this.x - 15;
+ 			b.y = this.y - 15;
+ 			b.width = this.x + 31;
+ 			b.height = this.y + 31;
+ 			return b;
+ 		}
+ 		public void drag(int dx, int dy) {
+ 			this.x += dx;
+ 			this.y += dy;
+ 			RO.x = this.x;
+ 			RO.y = this.y;
+ 		}
+ 		public void center() {
+ 			this.x = RO.x = box.x + box.width/2;
+ 			this.y = RO.y = box.y + box.height/2;
+ 		}
+ 		public boolean contains(int x_p, int y_p, double radius) {
+ 			return super.contains(x_p, y_p, radius*3.5);
+ 		}
+ 	}
+ 
+ 	public void centerFloater() {
+ 		floater.center();
+ 	}
+ 
+ 	/** No display bounds are checked, the floater can be placed wherever you want. */
+ 	public void setFloater(int x, int y) {
+ 		floater.x = x;
+ 		floater.y = y;
+ 	}
+ 
+ 	public int getFloaterX() { return floater.x; }
+ 	public int getFloaterY() { return floater.y; }
+ 
+ 	public void setActive(Displayable d) {
+ 		synchronized (queue_lock) {
+ 			try {
+ 				lock();
+ 				if (!queue.contains(d)) {
+ 					Utils.log2("Selection.setActive warning: " + d + " is not part of the selection");
+ 					return;
+ 				}
+ 				active = d;
+ 				if (null != display) {
+ 					if (active instanceof ZDisplayable) {
+ 						active.setLayer(display.getLayer());
+ 					}
+ 					display.setActive(d);
+ 				}
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				unlock();
+ 			}
+ 		}
+ 	}
+ 
+ 	public void add(Displayable d) {
+ 		if (null == d) {
+ 			Utils.log2("Selection.add warning: skipping null ob");
+ 			return;
+ 		}
+ 		synchronized (queue_lock) {
+ 		try {
+ 			lock();
+ 			this.active = d;
+ 			if (queue.contains(d)) {
+ 				if (null != display) {
+ 					if (d instanceof ZDisplayable) d.setLayer(display.getLayer());
+ 					display.setActive(d);
+ 				}
+ 				Utils.log2("Selection.add warning: already have " + d + " selected.");
+ 				return;
+ 			}
+ 			setPrev(queue);
+ 			queue.add(d);
+ 			//Utils.log("box before adding: " + box);
+ 			// add it's box to the selection box
+ 			Rectangle b = d.getBoundingBox(new Rectangle());
+ 			if (null == box) box = b;
+ 			else box.add(b);
+ 			//Utils.log("box after adding: " + box);
+ 			setHandles(box);
+ 			// check if it was among the linked already before adding it's links and its transform
+ 			if (!hs.contains(d)) {
+ 				hs.add(d);
+ 				// now, grab the linked group and add it as well to the hashtable
+ 				HashSet hsl = d.getLinkedGroup(new HashSet());
+ 				if (null != hsl) {
+ 					for (Iterator it = hsl.iterator(); it.hasNext(); ) {
+ 						Displayable displ = (Displayable)it.next();
+ 						if (!hs.contains(displ)) hs.add(displ);
+ 					}
+ 				}
+ 			}
+ 			// finally:
+ 			if (null != display) display.setActive(d);
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			unlock();
+ 		}}
+ 	}
+ 
+ 	/** Select all objects in the Display's current layer, preserving the active one (if any) as active; includes all the ZDisplayables, whether visible in this layer or not. */
+ 	public void selectAll() {
+ 		if (null == display) return;
+ 		ArrayList al = display.getLayer().getDisplayables();
+ 		al.addAll(display.getLayer().getParent().getZDisplayables());
+ 		selectAll(al);
+ 	}
+ 
+ 	/** Select all objects in the given layer, preserving the active one (if any) as active. */
+ 	public void selectAll(Layer layer) {
+ 		selectAll(layer.getDisplayables());
+ 	}
+ 
+ 	private void selectAll(ArrayList al) {
+ 		synchronized (queue_lock) {
+ 		try {
+ 			lock();
+ 			setPrev(queue);
+ 			for (Iterator it = al.iterator(); it.hasNext(); ) {
+ 				Displayable d = (Displayable)it.next();
+ 				if (queue.contains(d)) continue;
+ 				queue.add(d);
+ 				if (hs.contains(d)) continue;
+ 				hs.add(d);
+ 				// now, grab the linked group and add it as well to the hashset
+ 				HashSet hsl = d.getLinkedGroup(new HashSet());
+ 				if (null != hsl) {
+ 					for (Iterator hit = hsl.iterator(); hit.hasNext(); ) {
+ 						Displayable displ = (Displayable)hit.next();
+ 						if (!hs.contains(displ)) hs.add(displ);
+ 					}
+ 				}
+ 			}
+ 
+ 			resetBox();
+ 
+ 			if (null != display && null == this.active) {
+ 				display.setActive((Displayable)queue.getLast());
+ 				this.active = display.getActive();
+ 			}
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			unlock();
+ 		}}
+ 	}
+ 
+ 	/** Delete all selected objects from their Layer. */
+ 	public boolean deleteAll() {
+ 		synchronized (queue_lock) {
+ 		try {
+ 			if (null == active) return true; // nothing to remove
+ 			if (!Utils.check("Remove " + queue.size() + " selected object" + (1 == queue.size() ? "?" : "s?"))) return false;
+ 			lock();
+ 			setPrev(queue);
+ 			if (null != display) display.setActive(null);
+ 			this.active = null;
+ 			StringBuffer sb = new StringBuffer();
+ 			Displayable[] d = new Displayable[queue.size()];
+ 			queue.toArray(d);
+ 			unlock();
+ 			try {
+ 				display.getProject().getLoader().startLargeUpdate();
+ 				for (int i=0; i<d.length; i++) {
+ 					// Remove from the trees and from the Layer/LayerSet
+ 					if (!d[i].remove2(false)) {
+ 						sb.append(d[i].getTitle()).append('\n');
+ 						continue;
+ 					}
+ 				}
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				display.getProject().getLoader().commitLargeUpdate();
+ 			}
+ 			if (sb.length() > 0) {
+ 				Utils.log("Could NOT delete:\n" + sb.toString());
+ 			}
+ 			//Display.repaint(display.getLayer(), box, 0);
+ 			Display.updateSelection(); // from all displays
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			if (queue_locked) unlock();
+ 		}}
+ 		return true;
+ 	}
+ 
+ 	/** Set the elements of the given LinkedList as those of the stored, previous selection, only if the given list is not empty. */
+ 	private void setPrev(LinkedList q) {
+ 		if (0 == q.size()) return;
+ 		queue_prev.clear();
+ 		queue_prev.addAll(q);
+ 	}
+ 
+ 	/** Remove the given displayable from this selection. */
+ 	public void remove(Displayable d) {
+ 		if (null == d) {
+ 			Utils.log2("Selection.remove warning: null Displayable to remove.");
+ 			return;
+ 		}
+ 		synchronized (queue_lock) {
+ 		try {
+ 			lock();
+ 			if (!hs.contains(d)) {
+ 				//Utils.log2("Selection.remove warning: can't find ob " + ob_t + " to remove");
+ 				// happens when removing a profile from the project tree that is not selected in the Display to which this Selection belongs
+ 				unlock();
+ 				return;
+ 			}
+ 			queue.remove(d);
+ 			setPrev(queue);
+ 			hs.remove(d);
+ 			if (d.equals(active)) {
+ 				if (0 == queue.size()) {
+ 					active = null;
+ 					box = null;
+ 					hs.clear();
+ 				} else {
+ 					// select last
+ 					active = (Displayable)queue.getLast();
+ 				}
+ 			}
+ 			// update
+ 			if (null != display) display.setActive(active);
+ 			// finish if none left
+ 			if (0 == queue.size()) {
+ 				box = null;
+ 				hs.clear();
+ 				unlock();
+ 				return;
+ 			}
+ 			// now, remove linked ones from the hs
+ 			HashSet hs_to_remove = d.getLinkedGroup(new HashSet());
+ 			HashSet hs_to_keep = new HashSet();
+ 			for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 				Displayable displ = (Displayable)it.next();
+ 				hs_to_keep = displ.getLinkedGroup(hs_to_keep); //accumulates into the hashset
+ 			}
+ 			for (Iterator it = hs.iterator(); it.hasNext(); ) {
+ 				Object ob = it.next();
+ 				if (hs_to_keep.contains(ob)) continue; // avoid linked ones still in queue or linked to those in queue
+ 				hs.remove(ob);
+ 			}
+ 			// recompute box
+ 			Rectangle r = new Rectangle(); // as temp storage
+ 			for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 				Displayable di = (Displayable)it.next();
+ 				box.add(di.getBoundingBox(r));
+ 			}
+ 			// reposition handles
+ 			setHandles(box);
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			unlock();
+ 		}}
+ 	}
+ 
+ 	private void setHandles(final Rectangle b) {
+ 		final int tx = b.x;
+ 		final int ty = b.y;
+ 		final int tw = b.width;
+ 		final int th = b.height;
+ 		NW.set(tx, ty);
+ 		N.set(tx + tw/2, ty);
+ 		NE.set(tx + tw, ty);
+ 		E.set(tx + tw, ty + th/2);
+ 		SE.set(tx + tw, ty + th);
+ 		S.set(tx + tw/2, ty + th);
+ 		SW.set(tx, ty + th);
+ 		W.set(tx, ty + th/2);
+ 	}
+ 
+ 	/** Remove all Displayables from this selection. */
+ 	public void clear() {
+ 		synchronized (queue_lock) {
+ 		try {
+ 			lock();
+ 			// set null active before clearing so that borders can be repainted
+ 			if (null != display && queue.size() > 0) {
+ 				display.setActive(null);
+ 				display.repaint(display.getLayer(), 5, box, false);
+ 			}
+ 			setPrev(queue);
+ 			this.queue.clear();
+ 			this.hs.clear();
+ 			this.active = null;
+ 			this.box = null;
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			unlock();
+ 		}}
+ 	}
+ 
+ 	public void setTransforming(boolean b) {
+ 		if (b == transforming) {
+ 			Utils.log2("Selection.setTransforming warning: trying to set the same mode");
+ 			return;
+ 		}
+ 		if (b) {
+ 			// start transform
+ 			transforming = true;
+ 			floater.center();
+ 			display.getLayer().getParent().addUndoStep(getTransformationsCopy());
+ 		} else {
+ 			transforming = false;
+ 		}
+ 	}
+ 
+ 	public void cancelTransform() {
+ 		transforming = false;
+ 		if (null == active) return;
+ 		// restoring transforms
+ 		display.getLayer().getParent().undoOneStep();
+ 		// reread all transforms and remake box
+ 		resetBox();
+ 	}
+ 
+ 	public boolean isTransforming() { return this.transforming; }
+ 
+ 	public void mousePressed(int x_p, int y_p, double magnification) {
+ 		grabbed = null; // reset
+ 		if (transforming) {
+ 			// find scale handle
+ 			double radius = 4 / magnification;
+ 			if (radius < 1) radius = 1;
+ 			// start with floater (the last)
+ 			for (int i=handles.length -1; i>-1; i--) {
+ 				if (handles[i].contains(x_p, y_p, radius)) {
+ 					grabbed = handles[i];
+ 					if (grabbed.id >= rNW && grabbed.id <= ROTATION) rotating = true;
+ 					return;
+ 				}
+ 			}
+ 		}
+ 		// if none grabbed, then drag the whole thing
+ 		dragging = false; //reset
+ 		if (box.x <= x_p && box.y <= y_p && box.x + box.width >= x_p && box.y + box.height >= y_p) {
+ 			dragging = true;
+ 		}
+ 	}
+ 	public void mouseDragged(int x_p, int y_p, int x_d, int y_d, int x_d_old, int y_d_old) {
+ 		this.x_d = x_d;
+ 		this.y_d = y_d;
+ 		this.x_d_old = x_d_old;
+ 		this.y_d_old = y_d_old;
+ 		int dx = x_d - x_d_old;
+ 		int dy = y_d - y_d_old;
+ 		if (null != grabbed) {
+ 			// drag the handle and perform whatever task it has assigned
+ 			grabbed.drag(dx, dy);
+ 		} else if (dragging) {
+ 			// drag all selected and linked
+ 			for (Displayable d : hs) d.translate(dx, dy, false); // false because the linked ones are already included in the HashSet
+ 			//and the box!
+ 			box.x += dx;
+ 			box.y += dy;
+ 			// and the handles!
+ 			setHandles(box);
+ 		}
+ 	}
+ 
+ 	/*
+ 	public void mouseMoved() {
+ 		if (null != active) {
+ 			new Thread() {
+ 				public void run() {
+ 					Transform t = (Transform)ht.get(active);
+ 					Utils.showStatus("x,y : " + t.x + ", " + t.y, false);
+ 				}
+ 			}.start();
+ 		}
+ 	}
+ 	*/
+ 
+ 	public void mouseReleased(int x_p, int y_p, int x_d, int y_d, int x_r, int y_r) {
+ 		if (transforming) {
+ 			// recalculate box
+ 			resetBox();
+ 		}
+ 
+ 		//reset
+ 		if ((null != grabbed && grabbed.id <= iW) || dragging) {
+ 			floater.center();
+ 		}
+ 		grabbed = null;
+ 		dragging = false;
+ 		rotating = false;
+ 	}
+ 
+ 	/** Returns a copy of the box enclosing all selected ob, or null if none.*/
+ 	public Rectangle getBox() {
+ 		if (null == box) return null;
+ 		return (Rectangle)box.clone();
+ 	}
+ 
+ 	/** Returns the total box enclosing all selected objects and their linked objects within the current layer, or null if none are selected. Includes the position of the floater, when transforming.*/
+ 	public Rectangle getLinkedBox() {
+ 		if (null == active) return null;
+ 		Rectangle b = active.getBoundingBox();
+ 		Layer layer = display.getLayer();
+ 		Rectangle r = new Rectangle(); // for reuse
+ 		for (Iterator it = hs.iterator(); it.hasNext(); ) {
+ 			Displayable d = (Displayable)it.next();
+ 			if (!d.equals(active) && d.getLayer().equals(layer)) {
+ 				b.add(d.getBoundingBox(r));
+ 			}
+ 		}
+ 		// include floater, whereever it is
+ 		if (transforming) b.add(floater.getBoundingBox(r));
+ 		return b;
+ 	}
+ 
+ 	/** Test if any of the selection objects is directly or indirectly locked. */
+ 	public boolean isLocked() {
+ 		if (null == active || null == hs || hs.isEmpty()) return false;
+ 		// loop directly to avoid looping through the same linked groups if two or more selected objects belong to the same linked group. The ht contains all linked items anyway.
+ 		for (Iterator it = hs.iterator(); it.hasNext(); ) {
+ 			Displayable d = (Displayable)it.next();
+ 			if (d.isLocked2()) return true;
+ 		}
+ 		return false;
+ 	}
+ 
+ 	/** Lock / unlock all selected objects. */
+ 	public void setLocked(final boolean b) {
+ 		if (null == active) return; // empty
+ 		synchronized (queue_lock) {
+ 			try {
+ 				lock();
+ 				for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 					Displayable d = (Displayable)it.next();
+ 					d.setLocked(b);
+ 				}
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				unlock();
+ 			}
+ 		}
+ 		// update the 'locked' field in the Transforms
+ 		update();
+ 	}
+ 
+ 	public boolean isEmpty() {
+ 		synchronized (queue_lock) {
+ 			try {
+ 				lock();
+ 				return 0 == queue.size(); // active must always exists if selection is not empty
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				unlock();
+ 			}
+ 		}
+ 		return true;
+ 	}
+ 
+ 	public boolean contains(final Displayable d) {
+ 		synchronized (queue_lock) {
+ 			try {
+ 				lock();
+ 				return queue.contains(d);
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				unlock();
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	/** Returns true if selection contains any items of the given class.*/
+ 	public boolean contains(final Class c) {
+ 		if (null == c) return false;
+ 		synchronized (queue_lock) {
+ 			try {
+ 				lock();
+ 				if (c.equals(Displayable.class) && queue.size() > 0) return true;
+ 				for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 					if (it.next().getClass().equals(c)) return true;
+ 				}
+ 			} catch (Exception e) {
+ 				IJError.print(e);
+ 			} finally {
+ 				unlock();
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	protected void debug(String msg) {
+ 		Utils.log2(msg + ": queue size = " + queue.size() + "  hs size: " + hs.size());
+ 	}
+ 
+ 	/** Returns a hash table with all selected Displayables as keys, and a copy of their affine transform as value. This is useful to easily create undo steps. */
+ 	protected Hashtable getTransformationsCopy() {
+ 		Hashtable ht_copy = new Hashtable(hs.size());
+ 		for (Iterator it = hs.iterator(); it.hasNext(); ) {
+ 			Displayable d = (Displayable)it.next();
+ 			ht_copy.put(d, d.getAffineTransformCopy());
+ 		}
+ 		return ht_copy;
+ 	}
+ 
+ 	// this method should be removed TODO
+ 	void update() {
+ 		synchronized (queue_lock) {
+ 		try {
+ 			lock();
+ 			if (transforming) {
+ 				Utils.log("Selection.update warning: shouldn't be doing this while transforming!");
+ 			}
+ 			Utils.log2("updating selection");
+ 			hs.clear();
+ 			HashSet hsl = new HashSet();
+ 			for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 				Displayable d = (Displayable)it.next();
+ 				// collect all linked ones into the hs
+ 				hsl = d.getLinkedGroup(hsl);
+ 			}
+ 			if (0 == hsl.size()) {
+ 				active = null;
+ 				if (null != display) display.setActive(null);
+ 				unlock();
+ 				return;
+ 			}
+ 			hs.addAll(hsl); // hs is final, can't just assign
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			unlock();
+ 		}}
+ 	}
+ 
+ 	public boolean isDragging() {
+ 		return dragging;
+ 	}
+ 
+ 	/** Recalculate box and reset handles. */
+ 	public void resetBox() {
+ 		box = null;
+ 		Rectangle b = new Rectangle();
+ 		for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 			Displayable d = (Displayable)it.next();
+ 			b = d.getBoundingBox(b);
+ 			if (null == box) box = (Rectangle)b.clone();
+ 			box.add(b);
+ 		}
+		setHandles(box);
+ 	}
+ 
+ 	/** Update the bounding box of the whole selection. */
+ 	public void updateTransform(final Displayable d) {
+ 		if (null == d) {
+ 			Utils.log2("Selection.updateTransform warning: null Displayable");
+ 			return;
+ 		}
+ 		synchronized (queue_lock) {
+ 		try {
+ 			lock();
+ 			if (!hs.contains(d)) {
+ 				Utils.log2("Selection.updateTransform warning: " + d + " not selected or among the linked");
+ 				return;
+ 			}
+ 			resetBox();
+ 		} catch (Exception e) {
+ 			IJError.print(e);
+ 		} finally {
+ 			unlock();
+ 		}}
+ 	}
+ 
+ 	public int getNSelected() {
+ 		return queue.size();
+ 	}
+ 
+ 	public int getNLinked() {
+ 		return hs.size();
+ 	}
+ 
+ 	/** Rotate the objects in the current selection by the given angle, in degrees, relative to the floater position. */
+ 	public void rotate(double angle) {
+ 		for (Displayable d : hs) {
+ 			d.rotate(Math.toRadians(angle), floater.x, floater.y, false); // all linked ones included in the hashset
+ 		}
+ 		resetBox();
+ 	}
+ 	/** Translate all selected objects and their links by the given differentials. The floater position is unaffected; if you want to update it call centerFloater() */
+ 	public void translate(double dx, double dy) {
+ 		for (Displayable d : hs) {
+ 			d.translate(dx, dy, false); // all linked ones already included in the hashset
+ 		}
+ 		resetBox();
+ 	}
+ 	/** Scale all selected objects and their links by by the given scales, relative to the floater position. . */
+ 	public void scale(double sx, double sy) {
+ 		if (0 == sx || 0 == sy) {
+ 			Utils.showMessage("Cannot scale to 0.");
+ 			return;
+ 		}
+ 		for (Displayable d : hs) {
+ 			d.scale(sx, sy, floater.x, floater.y, false); // all linked ones already included in the hashset
+ 		}
+ 		resetBox();
+ 	}
+ 
+ 	/** Returns a copy of the list of all selected Displayables (and not their linked ones). */
+ 	public ArrayList getSelected() {
+ 		final ArrayList al = new ArrayList();
+ 		for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 			al.add(it.next());
+ 		}
+ 		return al;
+ 	}
+ 
+ 	/** Returns a copy of the list of all selected Displayables (and not their linked ones) of the given class. */
+ 	public ArrayList getSelected(final Class c) {
+ 		final ArrayList al = new ArrayList();
+ 		if (null == c || c.equals(Displayable.class)) {
+ 			al.addAll(queue);
+ 			return al;
+ 		}
+ 		boolean zd = c.equals(ZDisplayable.class);
+ 		for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 			Object ob = it.next();
+ 			if ((zd && ob instanceof ZDisplayable)
+ 			  || c.equals(ob.getClass())) {
+ 				al.add(ob);
+ 			 }
+ 		}
+ 		return al;
+ 	}
+ 
+ 	/** Returns the set of all Displayable objects affected by this selection, that is, the selected ones and their linked ones.*/
+ 	public Set<Displayable> getAffected() {
+ 		Set<Displayable> set = null;
+ 		synchronized (queue_lock) {
+ 			lock();
+ 			set = (Set<Displayable>)hs.clone();
+ 			unlock();
+ 		}
+ 		return set;
+ 	}
+ 
+ 	/** Returns the set of all Displayable objects of the given class affected by this selection, that is, among the selected ones and their linked ones. */
+ 	public Set<Displayable> getAffected(final Class c) {
+ 		HashSet<Displayable> copy = new HashSet<Displayable>();
+ 		synchronized (queue_lock) {
+ 			lock();
+ 			if (Displayable.class.equals(c) && hs.size() > 0) {
+ 				copy.addAll(hs);
+ 				unlock();
+ 				return copy;
+ 			}
+ 			boolean zd = ZDisplayable.class.equals(c);
+ 			for (Displayable d : this.hs) {
+ 				if (zd && d instanceof ZDisplayable) {
+ 					copy.add(d);
+ 				} else if (d.getClass().equals(c)) {
+ 					copy.add(d);
+ 				}
+ 			}
+ 			unlock();
+ 		}
+ 		return hs;
+ 	}
+ 
+ 	/** If any of the selected or linked is of Class c. */
+ 	public boolean containsAffected(final Class c) {
+ 		synchronized (queue_lock) {
+ 			lock();
+ 			if (Displayable.class.equals(c) && hs.size() > 0) {
+ 				unlock();
+ 				return true;
+ 			}
+ 			boolean zd = ZDisplayable.class.equals(c);
+ 			for (Displayable d : hs) {
+ 				if (zd && d instanceof ZDisplayable) {
+ 					unlock();
+ 					return true;
+ 				} else if (d.getClass().equals(c)) {
+ 					unlock();
+ 					return true;
+ 				}
+ 			}
+ 			unlock();
+ 		}
+ 		return false;
+ 	}
+ 
+ 	/** Send all selected components to the previous layer. */
+ 	public void moveUp() {
+ 		if (null == display) return;
+ 		Layer la = display.getLayer();
+ 		LinkedList list = (LinkedList)queue.clone();
+ 		for (Iterator it = list.iterator(); it.hasNext(); ) {
+ 			la.getParent().moveUp(la, (Displayable)it.next());
+ 		}
+ 		clear();
+ 	}
+ 
+ 	/** Send all selected components to the next layer. */
+ 	public void moveDown() {
+ 		if (null == display) return;
+ 		Layer la = display.getLayer();
+ 		LinkedList list = (LinkedList)queue.clone();
+ 		for (Iterator it = list.iterator(); it.hasNext(); ) {
+ 			la.getParent().moveDown(la, (Displayable)it.next());
+ 		}
+ 		clear();
+ 	}
+ 
+ 	/** Set all selected objects visible/hidden. */
+ 	public void setVisible(boolean b) {
+ 		synchronized (queue_lock) {
+ 			lock();
+ 			for (Iterator it = queue.iterator(); it.hasNext(); ) {
+ 				Displayable d = (Displayable)it.next();
+ 				if (b != d.isVisible()) d.setVisible(b);
+ 			}
+ 			unlock();
+ 		}
+ 		Display.repaint(display.getLayer(), box, 10);
+ 	}
+ 
+ 	/** Removes the given Displayable from the selection and previous selection list. */
+ 	protected void removeFromPrev(Displayable d) {
+ 		if (null == d) return;
+ 		synchronized (queue_lock) {
+ 			lock();
+ 			queue_prev.remove(d);
+ 			unlock();
+ 		}
+ 	}
+ 
+ 	/** Restore the previous selection. */
+ 	public void restore() {
+ 		synchronized (queue_lock) {
+ 			lock();
+ 			LinkedList q = (LinkedList)queue.clone();
+ 			ArrayList al = new ArrayList();
+ 			al.addAll(queue_prev);
+ 			unlock();
+ 			clear();
+			selectAll(al);
+ 			lock();
+ 			setPrev(q);
+ 			unlock();
+ 		}
+ 	}
+ 
+ 	public void specify() {
+ 		if (null == display || null == display.getActive()) return;
+ 		final GenericDialog gd = new GenericDialog("Specify");
+ 		gd.addMessage("Relative to the floater's position:");
+ 		gd.addNumericField("floater X: ", getFloaterX(), 2);
+ 		gd.addNumericField("floater Y: ", getFloaterY(), 2);
+ 		gd.addMessage("Transforms applied in the same order as listed below:");
+ 		gd.addNumericField("rotate : ", 0, 2);
+ 		gd.addNumericField("translate in X: ", 0, 2);
+ 		gd.addNumericField("translate in Y: ", 0, 2);
+ 		gd.addNumericField("scale in X: ", 1.0, 2);
+ 		gd.addNumericField("scale in Y: ", 1.0, 2);
+ 		gd.showDialog();
+ 		if (gd.wasCanceled()) {
+ 			return;
+ 		}
+ 		boolean tr = transforming;
+ 		if (!tr) setTransforming(true);
+ 		if (!tr) display.getLayer().getParent().addUndoStep(getTransformationsCopy());
+ 		final Rectangle sel_box = getLinkedBox();
+ 		setFloater((int)gd.getNextNumber(), (int)gd.getNextNumber());
+ 		double rot = gd.getNextNumber();
+ 		double dx = gd.getNextNumber();
+ 		double dy = gd.getNextNumber();
+ 		double sx = gd.getNextNumber();
+ 		double sy = gd.getNextNumber();
+ 		if (0 != dx || 0 != dy) translate(dx, dy);
+ 		if (0 != rot) rotate(rot);
+ 		if (0 != sx && 0 != sy) scale(sx, sy);
+ 		else Utils.showMessage("Cannot scale to zero.");
+ 		sel_box.add(getLinkedBox());
+ 		// restore state if different
+ 		if (!tr) setTransforming(tr);
+ 		Display.repaint(display.getLayer(), sel_box, Selection.PADDING);
+ 	}
+ 
+ 	protected void apply(final int what, final double[] params) {
+ 		final Rectangle sel_box = getLinkedBox();
+ 		switch (what) {
+ 			case 0: translate(params[0], params[1]); break;
+ 			case 1: rotate(params[0]); break;
+ 			case 2: scale(params[0], params[1]); break;
+ 		}
+ 		sel_box.add(getLinkedBox());
+ 		Display.repaint(display.getLayer(), sel_box, Selection.PADDING);
+ 	}
+ 
+ 	/** Apply the given LUT to all selected 8-bit, 16-bit, 32-bit images. */
+ 	public void setLut(ColorModel cm) {
+ 		//TODO
+ 		Utils.log("Setting LUT not implemented yet.");
+ 	}
+ }

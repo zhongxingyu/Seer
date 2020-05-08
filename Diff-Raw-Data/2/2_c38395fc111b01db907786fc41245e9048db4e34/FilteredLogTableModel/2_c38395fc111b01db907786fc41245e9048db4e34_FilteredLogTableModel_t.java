@@ -1,0 +1,361 @@
+ /*
+  * Copyright (C) The Apache Software Foundation. All rights reserved.
+  *
+  * This software is published under the terms of the Apache Software
+  * License version 1.1, a copy of which has been included with this
+  * distribution in the LICENSE.txt file.
+  */
+ package rvsn00p.viewer;
+ 
+ import rvsn00p.LogRecord;
+ import rvsn00p.LogRecordFilter;
+ import rvsn00p.PassingLogRecordFilter;
+ import rvsn00p.util.DateFormatManager;
+ import rvsn00p.util.HTMLEncoder;
+ 
+ import javax.swing.table.AbstractTableModel;
+ import java.util.ArrayList;
+ import java.util.Date;
+ import java.util.Iterator;
+ import java.util.List;
+ 
+ 
+ 
+ /**
+  * A TableModel for LogRecords which includes filtering support.
+  *
+  * @author rjan Lundberg
+  *
+  * Based on Logfactor5 By
+  *
+  * @author Richard Wan
+  * @author Brent Sprecher
+  */
+ public class FilteredLogTableModel
+         extends AbstractTableModel {
+     //--------------------------------------------------------------------------
+     //   Constants:
+     //--------------------------------------------------------------------------
+ 
+     //--------------------------------------------------------------------------
+     //   Protected Variables:
+     //--------------------------------------------------------------------------
+ 
+     protected LogRecordFilter _filter = new PassingLogRecordFilter();
+     protected List _allRecords = new ArrayList();
+     protected List _filteredRecords;
+     protected int _maxNumberOfLogRecords = 5000;
+     protected String[] _colNames = {"Date",
+                                     "Msg#",
+                                     "Type",
+                                     "Subject",
+                                     "Tracking ID",
+                                     "Message"};
+ 
+     protected DateFormatManager _dfm  = new DateFormatManager("HH:mm:ss.S");
+     static int _lastHTMLBufLength = 1000;
+ 
+     //--------------------------------------------------------------------------
+     //   Private Variables:
+     //--------------------------------------------------------------------------
+ 
+     //--------------------------------------------------------------------------
+     //   Constructors:
+     //--------------------------------------------------------------------------
+ 
+     public FilteredLogTableModel() {
+         super();
+     }
+ 
+     //--------------------------------------------------------------------------
+     //   Public Methods:
+     //--------------------------------------------------------------------------
+ 
+     public void setDateFormatManager(DateFormatManager dfm) {
+         if( dfm != null)
+           this._dfm = dfm;
+     }
+ 
+     public DateFormatManager getDateFormatManager() {
+         return   this._dfm;
+     }
+ 
+     public void setLogRecordFilter(LogRecordFilter filter) {
+         _filter = filter;
+     }
+ 
+     public LogRecordFilter getLogRecordFilter() {
+         return _filter;
+     }
+ 
+     public String getColumnName(int i) {
+         return _colNames[i];
+     }
+ 
+     public int getColumnCount() {
+         return _colNames.length;
+     }
+ 
+     public int getRowCount() {
+         return getFilteredRecords().size();
+     }
+ 
+     public int getTotalRowCount() {
+         return _allRecords.size();
+     }
+ 
+     public Object getValueAt(int row, int col) {
+         LogRecord record = getFilteredRecord(row);
+         return getColumn(col, record);
+     }
+ 
+     public void setMaxNumberOfLogRecords(int maxNumRecords) {
+         if (maxNumRecords > 0) {
+             _maxNumberOfLogRecords = maxNumRecords;
+         }
+ 
+     }
+ 
+     public synchronized boolean addLogRecord(LogRecord record) {
+ 
+         _allRecords.add(record);
+ 
+         if (_filter.passes(record) == false) {
+             return false;
+         }
+         getFilteredRecords().add(record);
+         fireTableRowsInserted(getRowCount(), getRowCount());
+         trimRecords();
+         return true;
+     }
+ 
+     /**
+      * Forces the LogTableModel to requery its filters to determine
+      * which records to display.
+      */
+     public synchronized void refresh() {
+         _filteredRecords = createFilteredRecordsList();
+         fireTableDataChanged();
+     }
+ 
+     public synchronized void fastRefresh() {
+         _filteredRecords.remove(0);
+         fireTableRowsDeleted(0, 0);
+     }
+ 
+ 
+     /**
+      * Clears all records from the LogTableModel
+      */
+     public synchronized void clear() {
+         _allRecords.clear();
+         _filteredRecords.clear();
+         fireTableDataChanged();
+     }
+ 
+     //--------------------------------------------------------------------------
+     //   Protected Methods:
+     //--------------------------------------------------------------------------
+ 
+     protected List getFilteredRecords() {
+         if (_filteredRecords == null) {
+             refresh();
+         }
+         return _filteredRecords;
+     }
+ 
+     protected List createFilteredRecordsList() {
+         List result = new ArrayList();
+         Iterator records = _allRecords.iterator();
+         LogRecord current;
+         while (records.hasNext()) {
+             current = (LogRecord) records.next();
+             if (_filter.passes(current)) {
+                 result.add(current);
+             }
+         }
+         return result;
+     }
+ 
+      /**
+      * Returns a HTML table representation of the filtered records
+      * @param dfMgr the date formt manager used
+      */
+     public StringBuffer createFilteredHTMLTable(DateFormatManager dfMgr) {
+         //use a buffer with the same size as the last used one
+         final StringBuffer strbuf = new StringBuffer(_lastHTMLBufLength);
+         final Iterator records = _filteredRecords.iterator();
+         LogRecord current;
+         addHtmlTableHeaderString(strbuf,dfMgr);
+         while (records.hasNext()) {
+             current = (LogRecord) records.next();
+ 
+             strbuf.append("<tr>\n\t");
+             addHTMLTDString(current,strbuf,dfMgr);
+             strbuf.append("\n</tr>\n");
+         }
+         strbuf.append("</table>");
+ 
+         //remember last buffer size
+         _lastHTMLBufLength = strbuf.length()+2;
+ 
+         return strbuf;
+     }
+ 
+      /**
+      * createFilteredTextFromMsg.
+      * Returns a text string containing all message fields delimite
+      */
+     public StringBuffer createFilteredTextFromMsg() {
+         final StringBuffer strbuf = new StringBuffer();
+         final Iterator records = _filteredRecords.iterator();
+         LogRecord current;
+         while (records.hasNext()) {
+             current = (LogRecord) records.next();
+             strbuf.append("\n");
+             strbuf.append(current.getMessage() );
+         }
+         strbuf.append("\n");
+ 
+         return strbuf;
+     }
+ 
+      /**
+      * Adda a HTML <td> String representation of this LogRecord to the buf parameter.
+      * @param lr the logrecord
+      * @param buf the stringbuffer to add the <td> string representation
+      * @param dfMgr the date formt manager used
+      */
+      protected void addHTMLTDString(LogRecord lr, StringBuffer buf, DateFormatManager dfMgr) {
+ 
+          for (int i = 0; i < getColumnCount(); ++i) {
+              Object obj = getColumn(i, lr, dfMgr);
+              if (obj != null) {
+                  buf.append("<td>");
+                 if (i == 5) {
+                      // message
+                      buf.append("<code>");
+                      buf.append(HTMLEncoder.encodeString( obj.toString() ) );
+                      buf.append("</code>");
+                  } else {
+                     buf.append(obj.toString());
+                  }
+                  buf.append("</td>");
+              } else {
+                  buf.append("<td></td>");
+              }
+          }
+      }
+ 
+ 
+     protected void  addHtmlTableHeaderString(StringBuffer buf, DateFormatManager dfMgr) {
+             // table parameters
+             buf.append("<table border=\"1\" width=\"100%\">\n");
+             buf.append("<tr>\n");
+ 
+             // print the column headers
+             for (int i = 0; i < getColumnCount() ; ++i) {
+                 buf.append("\t<th align=\"left\" bgcolor=\"#C0C0C0\" bordercolor=\"#FFFFFF\">");
+ 
+                 buf.append( getColumnName(i) );
+ 
+                 //date format
+                 if( i == 0) {
+                    buf.append("<br>(");
+                    buf.append(dfMgr.getPattern() );
+                    buf.append(")");
+                 }
+                 buf.append("</th>\n");
+              }
+              buf.append("</tr>\n");
+     }
+ 
+     protected LogRecord getFilteredRecord(int row) {
+         final List records = getFilteredRecords();
+         final int size = records.size();
+         if (row < size) {
+             return (LogRecord) records.get(row);
+         }
+         // a minor problem has happened. JTable has asked for
+         // a row outside the bounds, because the size of
+         // _filteredRecords has changed while it was looping.
+         // return the last row.
+         return (LogRecord) records.get(size - 1);
+ 
+     }
+ 
+     protected Object getColumn(int col, LogRecord lr, DateFormatManager dfm) {
+         if (lr == null) {
+             return "NULL Column";
+         }
+ 
+         switch (col) {
+             case 0:
+                 String date = dfm.format(new Date(lr.getMillis())).toString();
+                 return date;
+             case 1:
+                 return new Long(lr.getSequenceNumber());
+             case 2:
+                    return lr.getType();
+             case 3:
+                   return lr.getSubject();
+             case 4:
+                    return lr.getTrackingID();
+             case 5:
+                    return lr.getMessage();
+             default:
+                 String message = "The column number " + col + " must be between 0 and 5";
+                 throw new IllegalArgumentException(message);
+         }
+     }
+ 
+     protected Object getColumn(int col, LogRecord lr) {
+            return getColumn(col,lr,_dfm);
+     }
+ 
+ 
+ 
+     // We don't want the amount of rows to grow without bound,
+     // leading to a out-of-memory-exception.  Especially not good
+     // in a production environment :)
+ 
+     // This method & clearLogRecords() are synchronized so we don't
+     // delete rows that don't exist.
+     protected void trimRecords() {
+         if (needsTrimming()) {
+             trimOldestRecords();
+         }
+     }
+ 
+     protected boolean needsTrimming() {
+         return (_allRecords.size() > _maxNumberOfLogRecords);
+     }
+ 
+     protected void trimOldestRecords() {
+         synchronized (_allRecords) {
+             final int trim = numberOfRecordsToTrim();
+             if (trim > 1) {
+                 List oldRecords =
+                         _allRecords.subList(0, trim);
+                 oldRecords.clear();
+                 refresh();
+             } else {
+                 _allRecords.remove(0);
+                 fastRefresh();
+             }
+         }
+ 
+     }
+ 
+     //--------------------------------------------------------------------------
+     //   Private Methods:
+     //--------------------------------------------------------------------------
+     private int numberOfRecordsToTrim() {
+         return _allRecords.size() - _maxNumberOfLogRecords;
+     }
+ 
+     //--------------------------------------------------------------------------
+     //   Nested Top-Level Classes or Interfaces
+     //--------------------------------------------------------------------------
+ }
+ 

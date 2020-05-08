@@ -1,0 +1,249 @@
+ /*
+  * To change this template, choose Tools | Templates
+  * and open the template in the editor.
+  */
+ package cz.incad.kramerius.utils;
+ 
+ /**
+  *
+  * @author incad
+  */
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.nio.charset.Charset;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.List;
+ import java.util.logging.Level;
+ 
+ import javax.xml.xpath.XPath;
+ import javax.xml.xpath.XPathConstants;
+ import javax.xml.xpath.XPathExpression;
+ import javax.xml.xpath.XPathExpressionException;
+ import javax.xml.xpath.XPathFactory;
+ 
+ import org.fedora.api.RelationshipTuple;
+ import org.w3c.dom.Document;
+ import org.w3c.dom.Node;
+ import org.w3c.dom.NodeList;
+ import org.w3c.dom.Text;
+ 
+ import cz.incad.kramerius.FedoraAccess;
+ import cz.incad.kramerius.KrameriusModels;
+ import cz.incad.kramerius.utils.conf.KConfiguration;
+ 
+ public class FedoraUtils {
+ 
+ 	public static final java.util.logging.Logger LOGGER = java.util.logging.Logger
+ 			.getLogger(FedoraUtils.class.getName());
+     
+ 	public static final String RELS_EXT_STREAM = "RELS-EXT";
+     public static final String IMG_THUMB_STREAM = "IMG_THUMB";
+ 	public static final String IMG_FULL_STREAM = "IMG_FULL";
+     public static final String IMG_PREVIEW_STREAM = "IMG_PREVIEW";
+     
+     public static final int THUMBNAIL_HEIGHT = 128;
+     public static final int PREVIEW_HEIGHT = 512;
+ 
+     public static ArrayList<String> getRdfPids(String pid, String relation) {
+         ArrayList<String> pids = new ArrayList<String>();
+         try {
+             
+             String command = KConfiguration.getInstance().getFedoraHost() + "/get/" + pid + "/" + RELS_EXT_STREAM;
+             InputStream is = RESTHelper.inputStream(command, KConfiguration.getInstance().getFedoraUser(), KConfiguration.getInstance().getFedoraPass());
+             Document contentDom = XMLUtils.parseDocument(is);
+             XPathFactory factory = XPathFactory.newInstance();
+             XPath xpath = factory.newXPath();
+             String xPathStr = "/RDF/Description/" + relation;
+             XPathExpression expr = xpath.compile(xPathStr);
+             NodeList nodes = (NodeList) expr.evaluate(contentDom, XPathConstants.NODESET);
+             for (int i = 0; i < nodes.getLength(); i++) {
+                 Node childnode = nodes.item(i);
+                 if (!childnode.getNodeName().contains("hasModel")) {
+                     pids.add(childnode.getNodeName() + " " +
+                             childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("/")[1]);
+                 }
+             }
+         } catch (Exception e) {
+         	LOGGER.log(Level.SEVERE, e.getMessage(), e);
+         }
+         return pids;
+     }
+ 
+     
+     public static List<RelationshipTuple> getSubjectPids(String objectPid){
+     	List<RelationshipTuple> retval = new ArrayList<RelationshipTuple>();
+     	String command = KConfiguration.getInstance().getFedoraHost() + "/risearch?type=triples&lang=spo&format=N-Triples&query=*%20*%20%3Cinfo:fedora/" + objectPid + "%3E";
+     	try {
+ 			String result = IOUtils.readAsString(RESTHelper.inputStream(command, KConfiguration.getInstance().getFedoraUser(), KConfiguration.getInstance().getFedoraPass()),Charset.forName("UTF-8"),true);
+ 			String[] lines = result.split("\n");
+ 			for (String line: lines){
+ 				String[] tokens = line.split(" ");
+ 				if (tokens.length<3) continue;
+ 				try{
+ 					RelationshipTuple tuple = new RelationshipTuple();
+ 					tuple.setSubject(tokens[0].substring(1, tokens[0].length()-1));
+ 					tuple.setPredicate(tokens[1].substring(1, tokens[1].length()-1));
+ 					tuple.setObject(tokens[2].substring(1, tokens[2].length()-1));
+ 					tuple.setIsLiteral(false);
+ 					retval.add(tuple);}
+ 				catch(Exception ex){
+ 					LOGGER.info("Problem parsing RDF, skipping line:"+Arrays.toString(tokens)+" : "+ex);
+ 				}
+ 			}
+ 		} catch (Exception e) {
+ 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+ 		}
+ 		return retval;
+     }
+     
+     public static void main(String[] args){
+     	getSubjectPids("uuid:4a8a8630-af36-11dd-ae9c-000d606f5dc6");
+     }
+     
+     public static boolean fillFirstPagePid(ArrayList<String> pids, ArrayList<String> models) {
+         
+         String pid= pids.get(pids.size()-1);
+         try {
+             String command = KConfiguration.getInstance().getFedoraHost() + "/get/uuid:" + pid + "/RELS-EXT";
+             InputStream is = RESTHelper.inputStream(command, KConfiguration.getInstance().getFedoraUser(), KConfiguration.getInstance().getFedoraPass());
+             Document contentDom = XMLUtils.parseDocument(is);
+             XPathFactory factory = XPathFactory.newInstance();
+             XPath xpath = factory.newXPath();
+             XPathExpression expr = xpath.compile("/RDF/Description/*");
+             NodeList nodes = (NodeList) expr.evaluate(contentDom, XPathConstants.NODESET);
+             for (int i = 0; i < nodes.getLength(); i++) {
+                 Node childnode = nodes.item(i);
+                 String nodeName = childnode.getNodeName();
+                 if (nodeName.contains("hasPage") || nodeName.contains("isOnPage")) {
+                     if(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().contains("uuid:")){
+                         pids.add(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("uuid:")[1]);
+                     }else{
+                         //obcas import neni v poradku a chybi uuid:. zustaneme u info:fedora/
+                         pids.add(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("info:fedora/")[1]);
+                     }
+                     models.add("page");
+                     return true;
+                 } else if(nodeName.contains("hasItem") ||nodeName.contains("hasVolume")||nodeName.contains("hasUnit")) {
+                     if(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().contains("uuid:")){
+                         pids.add(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("uuid:")[1]);
+                     }else{
+                         //obcas import neni v poradku a chybi uuid:. zustaneme u info:fedora/
+                         pids.add(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("info:fedora/")[1]);
+                     }
+                     models.add(KrameriusModels.toString(cz.incad.kramerius.RDFModels.convertRDFToModel(nodeName)));
+                     return FedoraUtils.fillFirstPagePid(pids, models);
+                 }
+             }
+             
+         } catch (Exception e) {
+         	LOGGER.log(Level.SEVERE, e.getMessage(), e);
+         }
+         return false;
+     }
+     
+     public static String findFirstPagePid(String pid) {
+ 
+         ArrayList<String> pids = new ArrayList<String>();
+         try {
+             String command = KConfiguration.getInstance().getFedoraHost() + "/get/" + pid + "/RELS-EXT";
+             InputStream is = RESTHelper.inputStream(command, KConfiguration.getInstance().getFedoraUser(), KConfiguration.getInstance().getFedoraPass());
+             Document contentDom = XMLUtils.parseDocument(is);
+             XPathFactory factory = XPathFactory.newInstance();
+             XPath xpath = factory.newXPath();
+             XPathExpression expr = xpath.compile("/RDF/Description/*");
+             NodeList nodes = (NodeList) expr.evaluate(contentDom, XPathConstants.NODESET);
+             for (int i = 0; i < nodes.getLength(); i++) {
+                 Node childnode = nodes.item(i);
+                 String nodeName = childnode.getNodeName();
+                if (nodeName.contains("hasPage")) {
+                     return childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("uuid:")[1];
+                 } else if(!nodeName.contains("hasModel") && childnode.hasAttributes() &&
+                         childnode.getAttributes().getNamedItem("rdf:resource")!=null) {
+                     
+                     pids.add(childnode.getAttributes().getNamedItem("rdf:resource").getNodeValue().split("/")[1]);
+                 }
+             }
+             for (String relpid : pids) {
+                 return FedoraUtils.findFirstPagePid(relpid);
+             }
+         } catch (Exception e) {
+         	LOGGER.log(Level.SEVERE, e.getMessage(), e);
+         }
+         return null;
+     }
+ 
+     /**
+      * Returns url stream 
+      * @param uuid of object
+      * @return
+      */
+     public static String getDjVuImage(KConfiguration configuration, String uuid) {
+ 		String imagePath = configuration.getFedoraHost()+"/get/uuid:"+uuid+"/" + IMG_FULL_STREAM;
+     	return imagePath;
+     }
+ 
+     /**d
+      * Returns path to fedora stream
+      * @param conf KConfiguraiton 
+      * @param uuid UUID of the object 
+      * @param stream Stream ID
+      * @return
+      */
+     public static String getFedoraStreamPath(KConfiguration conf, String uuid, String stream) {
+         String imagePath = conf.getFedoraHost()+"/get/uuid:"+uuid+"/" + stream;
+         return imagePath;
+     }
+ 
+     
+  
+     /**
+      * Returns true if given stream (profile of the stream) is referenced stream by URL
+      * @param conf KConfiguration object
+      * @param profileDoc Profile document
+      */
+     public static boolean isFedoraExternalStream(KConfiguration conf, Document profileDoc) throws XPathExpressionException {
+         XPathFactory factory = XPathFactory.newInstance();
+         XPath xpath = factory.newXPath();
+         XPathExpression expr = xpath.compile("/datastreamProfile/dsLocationType/text()");
+         NodeList nodes = (NodeList) expr.evaluate(profileDoc, XPathConstants.NODESET);
+         if (nodes.getLength() > 0) {
+             Text text = (Text) nodes.item(0);
+             String trimedString = text.getData().trim();
+             return trimedString.equals("URL");
+         } else return false;
+     }
+     
+     public static String getLocation(KConfiguration conf, Document profileDoc) throws XPathExpressionException {
+         XPathFactory factory = XPathFactory.newInstance();
+         XPath xpath = factory.newXPath();
+         XPathExpression expr = xpath.compile("/datastreamProfile/dsLocation/text()");
+         NodeList nodes = (NodeList) expr.evaluate(profileDoc, XPathConstants.NODESET);
+         if (nodes.getLength() > 0) {
+             Text text = (Text) nodes.item(0);
+             String trimedString = text.getData().trim();
+             return trimedString;
+         } else return null;
+     }
+     
+     /**
+      * Returns thumb stream
+      * @param uuid UUID of the object
+      * @return
+      */
+     public static String getThumbnailFromFedora(KConfiguration configuration, String uuid) {
+     	String imagePath = configuration.getFedoraHost()+"/get/uuid:"+uuid+"/" + IMG_THUMB_STREAM;
+     	return imagePath;
+     }
+     
+     /**
+      * Returns list of fedora streams
+      * @param configuration KConfiguration configuration object
+      * @param uuid UUID reqested object
+      * @return
+      */
+     public static String getFedoraDatastreamsList(KConfiguration configuration, String uuid) {
+     	String datastreamsListPath = configuration.getFedoraHost()+"/objects/uuid:"+uuid+"/datastreams?format=xml";
+     	return datastreamsListPath;
+     }
+ }

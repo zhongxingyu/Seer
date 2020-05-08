@@ -1,0 +1,1162 @@
+ /*
+  * The Apache Software License, Version 1.1
+  *
+  *
+  * Copyright (c) 1999 The Apache Software Foundation.  All rights 
+  * reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions
+  * are met:
+  *
+  * 1. Redistributions of source code must retain the above copyright
+  *    notice, this list of conditions and the following disclaimer. 
+  *
+  * 2. Redistributions in binary form must reproduce the above copyright
+  *    notice, this list of conditions and the following disclaimer in
+  *    the documentation and/or other materials provided with the
+  *    distribution.
+  *
+  * 3. The end-user documentation included with the redistribution,
+  *    if any, must include the following acknowledgment:  
+  *       "This product includes software developed by the
+  *        Apache Software Foundation (http://www.apache.org/)."
+  *    Alternately, this acknowledgment may appear in the software itself,
+  *    if and wherever such third-party acknowledgments normally appear.
+  *
+  * 4. The names "Xalan" and "Apache Software Foundation" must
+  *    not be used to endorse or promote products derived from this
+  *    software without prior written permission. For written 
+  *    permission, please contact apache@apache.org.
+  *
+  * 5. Products derived from this software may not be called "Apache",
+  *    nor may "Apache" appear in their name, without prior written
+  *    permission of the Apache Software Foundation.
+  *
+  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED.  IN NO EVENT SHALL THE APACHE SOFTWARE FOUNDATION OR
+  * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+  * USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  * ====================================================================
+  *
+  * This software consists of voluntary contributions made by many
+  * individuals on behalf of the Apache Software Foundation and was
+  * originally based on software copyright (c) 1999, Lotus
+  * Development Corporation., http://www.lotus.com.  For more
+  * information on the Apache Software Foundation, please see
+  * <http://www.apache.org/>.
+  */
+ package org.apache.xalan.serialize;
+ 
+ import java.util.Stack;
+ 
+ import java.io.Writer;
+ import java.io.IOException;
+ 
+ import java.util.Hashtable;
+ import java.util.Vector;
+ import java.util.Properties;
+ 
+ import org.xml.sax.*;
+ 
+ import org.apache.xml.utils.BoolStack;
+ import org.apache.xml.utils.Trie;
+ import org.apache.xalan.res.XSLMessages;
+ import org.apache.xpath.res.XPATHErrorResources;
+ import org.apache.xml.utils.StringToIntTable;
+ import org.apache.xalan.templates.OutputProperties;
+ 
+ import javax.xml.transform.OutputKeys;
+ import javax.xml.transform.Result;
+ 
+ /**
+  * <meta name="usage" content="general"/>
+  * FormatterToHTML formats SAX-style events into XML.
+  * Warning: this class will be replaced by the Xerces Serializer classes.
+  */
+ public class FormatterToHTML extends FormatterToXML
+ {
+ 
+   /** State stack to keep track of if the current element has output 
+    *  escaping disabled. */
+   private BoolStack m_isRawStack = new BoolStack();
+ 
+   /** True if the current element is a block element.  (seems like 
+    *  this needs to be a stack. -sb). */
+   private boolean m_inBlockElem = false;
+ 
+   /**
+    * Map that tells which XML characters should have special treatment, and it
+    *  provides character to entity name lookup.
+    */
+   protected static CharInfo m_htmlcharInfo =
+     new CharInfo(CharInfo.HTML_ENTITIES_RESOURCE);
+ 
+   /** A digital search trie for fast, case insensitive lookup of ElemDesc objects. */
+   static Trie m_elementFlags = new Trie();
+ 
+   static
+   {
+ 
+     // HTML 4.0 loose DTD
+     m_elementFlags.put("BASEFONT", new ElemDesc(0 | ElemDesc.EMPTY));
+     m_elementFlags.put("FRAME",
+                        new ElemDesc(0 | ElemDesc.EMPTY | ElemDesc.BLOCK));
+     m_elementFlags.put("FRAMESET", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("NOFRAMES", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("ISINDEX",
+                        new ElemDesc(0 | ElemDesc.EMPTY | ElemDesc.BLOCK));
+     m_elementFlags.put("APPLET",
+                        new ElemDesc(0 | ElemDesc.WHITESPACESENSITIVE));
+     m_elementFlags.put("CENTER", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("DIR", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("MENU", new ElemDesc(0 | ElemDesc.BLOCK));
+ 
+     // HTML 4.0 strict DTD
+     m_elementFlags.put("TT", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+     m_elementFlags.put("I", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+     m_elementFlags.put("B", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+     m_elementFlags.put("BIG", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+     m_elementFlags.put("SMALL", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+     m_elementFlags.put("EM", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("STRONG", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("DFN", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("CODE", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("SAMP", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("KBD", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("VAR", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("CITE", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("ABBR", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("ACRONYM", new ElemDesc(0 | ElemDesc.PHRASE));
+     m_elementFlags.put("SUP",
+                        new ElemDesc(0 | ElemDesc.SPECIAL
+                                     | ElemDesc.ASPECIAL));
+     m_elementFlags.put("SUB",
+                        new ElemDesc(0 | ElemDesc.SPECIAL
+                                     | ElemDesc.ASPECIAL));
+     m_elementFlags.put("SPAN",
+                        new ElemDesc(0 | ElemDesc.SPECIAL
+                                     | ElemDesc.ASPECIAL));
+     m_elementFlags.put("BDO",
+                        new ElemDesc(0 | ElemDesc.SPECIAL
+                                     | ElemDesc.ASPECIAL));
+     m_elementFlags.put("BR",
+                        new ElemDesc(0 | ElemDesc.SPECIAL | ElemDesc.ASPECIAL
+                                     | ElemDesc.EMPTY | ElemDesc.BLOCK));
+     m_elementFlags.put("BODY", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("ADDRESS",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("DIV",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("A", new ElemDesc(0 | ElemDesc.SPECIAL));
+     m_elementFlags.put("MAP",
+                        new ElemDesc(0 | ElemDesc.SPECIAL | ElemDesc.ASPECIAL
+                                     | ElemDesc.BLOCK));
+     m_elementFlags.put("AREA",
+                        new ElemDesc(0 | ElemDesc.EMPTY | ElemDesc.BLOCK));
+     m_elementFlags.put("LINK",
+                        new ElemDesc(0 | ElemDesc.HEADMISC | ElemDesc.EMPTY
+                                     | ElemDesc.BLOCK));
+     m_elementFlags.put("IMG",
+                        new ElemDesc(0 | ElemDesc.SPECIAL | ElemDesc.ASPECIAL
+                                     | ElemDesc.EMPTY
+                                     | ElemDesc.WHITESPACESENSITIVE));
+     m_elementFlags.put("OBJECT",
+                        new ElemDesc(0 | ElemDesc.SPECIAL | ElemDesc.ASPECIAL
+                                     | ElemDesc.HEADMISC
+                                     | ElemDesc.WHITESPACESENSITIVE));
+     m_elementFlags.put("PARAM", new ElemDesc(0 | ElemDesc.EMPTY));
+     m_elementFlags.put("HR",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET
+                                     | ElemDesc.EMPTY));
+     m_elementFlags.put("P",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("H1",
+                        new ElemDesc(0 | ElemDesc.HEAD | ElemDesc.BLOCK));
+     m_elementFlags.put("H2",
+                        new ElemDesc(0 | ElemDesc.HEAD | ElemDesc.BLOCK));
+     m_elementFlags.put("H3",
+                        new ElemDesc(0 | ElemDesc.HEAD | ElemDesc.BLOCK));
+     m_elementFlags.put("H4",
+                        new ElemDesc(0 | ElemDesc.HEAD | ElemDesc.BLOCK));
+     m_elementFlags.put("H5",
+                        new ElemDesc(0 | ElemDesc.HEAD | ElemDesc.BLOCK));
+     m_elementFlags.put("H6",
+                        new ElemDesc(0 | ElemDesc.HEAD | ElemDesc.BLOCK));
+     m_elementFlags.put("PRE",
+                        new ElemDesc(0 | ElemDesc.PREFORMATTED
+                                     | ElemDesc.BLOCK));
+     m_elementFlags.put("Q",
+                        new ElemDesc(0 | ElemDesc.SPECIAL
+                                     | ElemDesc.ASPECIAL));
+     m_elementFlags.put("BLOCKQUOTE",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("INS", new ElemDesc(0));
+     m_elementFlags.put("DEL", new ElemDesc(0));
+     m_elementFlags.put("DL",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("DT", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("DD", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("OL",
+                        new ElemDesc(0 | ElemDesc.LIST | ElemDesc.BLOCK));
+     m_elementFlags.put("UL",
+                        new ElemDesc(0 | ElemDesc.LIST | ElemDesc.BLOCK));
+     m_elementFlags.put("LI", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("FORM", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("LABEL", new ElemDesc(0 | ElemDesc.FORMCTRL));
+     m_elementFlags.put("INPUT",
+                        new ElemDesc(0 | ElemDesc.FORMCTRL
+                                     | ElemDesc.INLINELABEL | ElemDesc.EMPTY));
+     m_elementFlags.put("SELECT",
+                        new ElemDesc(0 | ElemDesc.FORMCTRL
+                                     | ElemDesc.INLINELABEL));
+     m_elementFlags.put("OPTGROUP", new ElemDesc(0));
+     m_elementFlags.put("OPTION", new ElemDesc(0));
+     m_elementFlags.put("TEXTAREA",
+                        new ElemDesc(0 | ElemDesc.FORMCTRL
+                                     | ElemDesc.INLINELABEL));
+     m_elementFlags.put("FIELDSET",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM));
+     m_elementFlags.put("LEGEND", new ElemDesc(0));
+     m_elementFlags.put("BUTTON",
+                        new ElemDesc(0 | ElemDesc.FORMCTRL
+                                     | ElemDesc.INLINELABEL));
+     m_elementFlags.put("TABLE",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("CAPTION", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("THEAD", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("TFOOT", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("TBODY", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("COLGROUP", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("COL",
+                        new ElemDesc(0 | ElemDesc.EMPTY | ElemDesc.BLOCK));
+     m_elementFlags.put("TR", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("TH", new ElemDesc(0));
+     m_elementFlags.put("TD", new ElemDesc(0));
+     m_elementFlags.put("HEAD",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.HEADELEM));
+     m_elementFlags.put("TITLE", new ElemDesc(0 | ElemDesc.BLOCK));
+     m_elementFlags.put("BASE",
+                        new ElemDesc(0 | ElemDesc.EMPTY | ElemDesc.BLOCK));
+     m_elementFlags.put("META",
+                        new ElemDesc(0 | ElemDesc.HEADMISC | ElemDesc.EMPTY
+                                     | ElemDesc.BLOCK));
+     m_elementFlags.put("STYLE",
+                        new ElemDesc(0 | ElemDesc.HEADMISC | ElemDesc.RAW
+                                     | ElemDesc.BLOCK));
+     m_elementFlags.put("SCRIPT",
+                        new ElemDesc(0 | ElemDesc.SPECIAL | ElemDesc.ASPECIAL
+                                     | ElemDesc.HEADMISC | ElemDesc.RAW));
+     m_elementFlags.put("NOSCRIPT",
+                        new ElemDesc(0 | ElemDesc.BLOCK | ElemDesc.BLOCKFORM
+                                     | ElemDesc.BLOCKFORMFIELDSET));
+     m_elementFlags.put("HTML", new ElemDesc(0 | ElemDesc.BLOCK));
+ 
+     // From "John Ky" <hand@syd.speednet.com.au
+     // Transitional Document Type Definition ()
+     // file:///C:/Documents%20and%20Settings/sboag.BOAG600E/My%20Documents/html/sgml/loosedtd.html#basefont
+     m_elementFlags.put("FONT", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+ 
+     // file:///C:/Documents%20and%20Settings/sboag.BOAG600E/My%20Documents/html/present/graphics.html#edef-STRIKE
+     m_elementFlags.put("S", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+     m_elementFlags.put("STRIKE", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+ 
+     // file:///C:/Documents%20and%20Settings/sboag.BOAG600E/My%20Documents/html/present/graphics.html#edef-U
+     m_elementFlags.put("U", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+ 
+     // From "John Ky" <hand@syd.speednet.com.au
+     m_elementFlags.put("NOBR", new ElemDesc(0 | ElemDesc.FONTSTYLE));
+ 
+     ElemDesc elemDesc;
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("BASE");
+ 
+     elemDesc.setAttr("HREF", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("BLOCKQUOTE");
+ 
+     elemDesc.setAttr("CITE", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("Q");
+ 
+     elemDesc.setAttr("CITE", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("INS");
+ 
+     elemDesc.setAttr("CITE", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("DEL");
+ 
+     elemDesc.setAttr("CITE", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("A");
+ 
+     elemDesc.setAttr("HREF", ElemDesc.ATTRURL);
+     elemDesc.setAttr("NAME", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("INPUT");
+ 
+     elemDesc.setAttr("SRC", ElemDesc.ATTRURL);
+     elemDesc.setAttr("USEMAP", ElemDesc.ATTRURL);
+     elemDesc.setAttr("CHECKED", ElemDesc.ATTREMPTY);
+     elemDesc.setAttr("DISABLED", ElemDesc.ATTREMPTY);
+     elemDesc.setAttr("READONLY", ElemDesc.ATTREMPTY);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("SELECT");
+ 
+     elemDesc.setAttr("READONLY", ElemDesc.ATTREMPTY);
+     elemDesc.setAttr("MULTIPLE", ElemDesc.ATTREMPTY);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("OPTGROUP");
+ 
+     elemDesc.setAttr("DISABLED", ElemDesc.ATTREMPTY);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("OPTION");
+ 
+     elemDesc.setAttr("SELECTED", ElemDesc.ATTREMPTY);
+     elemDesc.setAttr("DISABLED", ElemDesc.ATTREMPTY);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("TEXTAREA");
+ 
+     elemDesc.setAttr("DISABLED", ElemDesc.ATTREMPTY);
+     elemDesc.setAttr("READONLY", ElemDesc.ATTREMPTY);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("BUTTON");
+ 
+     elemDesc.setAttr("DISABLED", ElemDesc.ATTREMPTY);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("SCRIPT");
+ 
+     elemDesc.setAttr("SRC", ElemDesc.ATTRURL);
+     elemDesc.setAttr("FOR", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("IMG");
+ 
+     elemDesc.setAttr("SRC", ElemDesc.ATTRURL);
+     elemDesc.setAttr("LONGDESC", ElemDesc.ATTRURL);
+     elemDesc.setAttr("USEMAP", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("OBJECT");
+ 
+     elemDesc.setAttr("CLASSID", ElemDesc.ATTRURL);
+     elemDesc.setAttr("CODEBASE", ElemDesc.ATTRURL);
+     elemDesc.setAttr("DATA", ElemDesc.ATTRURL);
+     elemDesc.setAttr("ARCHIVE", ElemDesc.ATTRURL);
+     elemDesc.setAttr("USEMAP", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("FORM");
+ 
+     elemDesc.setAttr("ACTION", ElemDesc.ATTRURL);
+ 
+     elemDesc = (ElemDesc) m_elementFlags.get("HEAD");
+ 
+     elemDesc.setAttr("PROFILE", ElemDesc.ATTRURL);
+ 
+     // Attribution to: "Voytenko, Dimitry" <DVoytenko@SECTORBASE.COM>
+     elemDesc = (ElemDesc) m_elementFlags.get("FRAME");
+ 
+     elemDesc.setAttr("SRC", ElemDesc.ATTRURL);
+   }
+ 
+   /**
+    * Dummy element for elements not found.
+    */
+   static private ElemDesc m_dummy = new ElemDesc(0 | ElemDesc.BLOCK);
+ 
+   /** True if URLs should be specially escaped with the %xx form. */
+   private boolean m_specialEscapeURLs = true;
+ 
+   /**
+    * Tells if the formatter should use special URL escaping.
+    *
+    * @param bool True if URLs should be specially escaped with the %xx form.
+    */
+   public void setSpecialEscapeURLs(boolean bool)
+   {
+     m_specialEscapeURLs = bool;
+   }
+ 
+   /**
+    * Specifies an output format for this serializer. It the
+    * serializer has already been associated with an output format,
+    * it will switch to the new format. This method should not be
+    * called while the serializer is in the process of serializing
+    * a document.
+    *
+    * @param format The output format to use
+    */
+   public void setOutputFormat(Properties format)
+   {
+ 
+     m_specialEscapeURLs =
+       OutputProperties.getBooleanProperty(OutputProperties.S_USE_URL_ESCAPING,
+                                           format);
+ 
+     super.setOutputFormat(format);
+   }
+ 
+   /**
+    * Tells if the formatter should use special URL escaping.
+    *
+    * @return True if URLs should be specially escaped with the %xx form.
+    */
+   public boolean getSpecialEscapeURLs()
+   {
+     return m_specialEscapeURLs;
+   }
+ 
+   /**
+    * Get a description of the given element.
+    *
+    * @param name non-null name of element, case insensitive.
+    *
+    * @return non-null reference to ElemDesc, which may be m_dummy if no 
+    *         element description matches the given name.
+    */
+   ElemDesc getElemDesc(String name)
+   {
+ 
+     if (null != name)
+     {
+       Object obj = m_elementFlags.get(name);
+ 
+       if (null != obj)
+         return (ElemDesc) obj;
+     }
+ 
+     return m_dummy;
+   }
+ 
+   /**
+    * Default constructor.
+    */
+   public FormatterToHTML()
+   {
+ 
+     super();
+ 
+     m_charInfo = m_htmlcharInfo;
+   }
+ 
+   /** The name of the current element. */
+   private String m_currentElementName = null;
+ 
+   /**
+    * Receive notification of the beginning of a document.
+    *
+    * @exception org.xml.sax.SAXException Any SAX exception, possibly
+    *            wrapping another exception.
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void startDocument() throws org.xml.sax.SAXException
+   {
+ 
+     m_needToOutputDocTypeDecl = true;
+     m_startNewLine = false;
+     m_shouldNotWriteXMLHeader = true;
+ 
+     if (true == m_needToOutputDocTypeDecl)
+     {
+       if ((null != m_doctypeSystem) || (null != m_doctypePublic))
+       {
+         accum("<!DOCTYPE HTML");
+ 
+         if (null != m_doctypePublic)
+         {
+           accum(" PUBLIC \"");
+           accum(m_doctypePublic);
+           accum("\"");
+         }
+ 
+         if (null != m_doctypeSystem)
+         {
+           if (null == m_doctypePublic)
+             accum(" SYSTEM \"");
+           else
+             accum(" \"");
+ 
+           accum(m_doctypeSystem);
+           accum("\"");
+         }
+ 
+         accum(">");
+         accum(m_lineSep);
+       }
+     }
+ 
+     m_needToOutputDocTypeDecl = false;
+   }
+ 
+   /**
+    *  Receive notification of the beginning of an element.
+    *
+    *
+    *  @param namespaceURI
+    *  @param localName
+    *  @param name The element type name.
+    *  @param atts The attributes attached to the element, if any.
+    *  @throws org.xml.sax.SAXException Any SAX exception, possibly
+    *             wrapping another exception.
+    *  @see #endElement
+    *  @see org.xml.sax.AttributeList
+    */
+   public void startElement(
+           String namespaceURI, String localName, String name, Attributes atts)
+             throws org.xml.sax.SAXException
+   {
+ 
+     if (null != namespaceURI && namespaceURI.length() > 0)
+     {
+       super.startElement(namespaceURI, localName, name, atts);
+ 
+       return;
+     }
+ 
+     boolean savedDoIndent = m_doIndent;
+     boolean noLineBreak;
+ 
+     writeParentTagEnd();
+     pushState(
+       namespaceURI, localName,
+       m_cdataSectionNames, m_cdataSectionStates);
+ 
+     // pushState(namespaceURI, localName, m_format.getNonEscapingElements(),
+     //          m_disableOutputEscapingStates);
+     ElemDesc elemDesc = getElemDesc(name);
+ 
+     // ElemDesc parentElemDesc = getElemDesc(m_currentElementName);
+     boolean isBlockElement = elemDesc.is(ElemDesc.BLOCK);
+     boolean isHeadElement = elemDesc.is(ElemDesc.HEADELEM);
+ 
+     // boolean isWhiteSpaceSensitive = elemDesc.is(ElemDesc.WHITESPACESENSITIVE);
+     if (m_ispreserve)
+       m_ispreserve = false;
+     else if (m_doIndent && (null != m_currentElementName)
+              && (!m_inBlockElem || isBlockElement)
+ 
+     /* && !isWhiteSpaceSensitive */
+     )
+     {
+       m_startNewLine = true;
+ 
+       indent(m_currentIndent);
+     }
+ 
+     m_inBlockElem = !isBlockElement;
+ 
+     m_isRawStack.push(elemDesc.is(ElemDesc.RAW));
+ 
+     m_currentElementName = name;
+ 
+     // m_parents.push(m_currentElementName);
+     this.accum('<');
+     this.accum(name);
+ 
+     int nAttrs = atts.getLength();
+ 
+     for (int i = 0; i < nAttrs; i++)
+     {
+       processAttribute(atts.getQName(i), elemDesc, atts.getValue(i));
+     }
+ 
+     // Flag the current element as not yet having any children.
+     openElementForChildren();
+ 
+     m_currentIndent += this.m_indentAmount;
+     m_isprevtext = false;
+     m_doIndent = savedDoIndent;
+ 
+     if (isHeadElement)
+     {
+       writeParentTagEnd();
+ 
+       if (m_doIndent)
+         indent(m_currentIndent);
+ 
+       accum(
+         "<META http-equiv=\"Content-Type\" content=\"text/html; charset=");
+ 
+       String encoding = Encodings.getMimeEncoding(m_encoding);
+ 
+       accum(encoding);
+       accum('"');
+       accum('>');
+     }
+   }
+ 
+   /**
+    *  Receive notification of the end of an element.
+    *
+    *
+    *  @param namespaceURI
+    *  @param localName
+    *  @param name The element type name
+    *  @throws org.xml.sax.SAXException Any SAX exception, possibly
+    *             wrapping another exception.
+    */
+   public void endElement(String namespaceURI, String localName, String name)
+           throws org.xml.sax.SAXException
+   {
+ 
+     if (null != namespaceURI && namespaceURI.length() > 0)
+     {
+       super.endElement(namespaceURI, localName, name);
+ 
+       return;
+     }
+ 
+     m_currentIndent -= this.m_indentAmount;
+ 
+     boolean hasChildNodes = childNodesWereAdded();
+ 
+     // System.out.println(m_currentElementName);
+     // m_parents.pop();
+     m_isRawStack.pop();
+ 
+     ElemDesc elemDesc = getElemDesc(name);
+ 
+     // ElemDesc parentElemDesc = getElemDesc(m_currentElementName);
+     boolean isBlockElement = elemDesc.is(ElemDesc.BLOCK);
+     boolean shouldIndent = false;
+ 
+     if (m_ispreserve)
+     {
+       m_ispreserve = false;
+     }
+     else if (m_doIndent && (!m_inBlockElem || isBlockElement))
+     {
+       m_startNewLine = true;
+       shouldIndent = true;
+ 
+       // indent(m_currentIndent);
+     }
+ 
+     m_inBlockElem = !isBlockElement;
+ 
+     if (hasChildNodes)
+     {
+       if (shouldIndent)
+         indent(m_currentIndent);
+ 
+       this.accum("</");
+       this.accum(name);
+       this.accum('>');
+ 
+       m_currentElementName = name;
+     }
+     else
+     {
+       if (!elemDesc.is(ElemDesc.EMPTY))
+       {
+         this.accum('>');
+ 
+        if (shouldIndent)
+          indent(m_currentIndent);
+ 
+         this.accum('<');
+         this.accum('/');
+         this.accum(name);
+         this.accum('>');
+       }
+       else
+       {
+         this.accum('>');
+       }
+     }
+ 
+     if (elemDesc.is(ElemDesc.WHITESPACESENSITIVE))
+       m_ispreserve = true;
+ 
+     if (hasChildNodes)
+     {
+       if (!m_preserves.isEmpty())
+         m_preserves.pop();
+     }
+ 
+     m_isprevtext = false;
+ 
+     // m_disableOutputEscapingStates.pop();
+     m_cdataSectionStates.pop();
+   }
+ 
+   /**
+    * Process an attribute.
+    * @param   name   The name of the attribute.
+    * @param elemDesc non-null reference to the owning element description.
+    * @param   value   The value of the attribute.
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   protected void processAttribute(
+           String name, ElemDesc elemDesc, String value)
+             throws org.xml.sax.SAXException
+   {
+ 
+     this.accum(' ');
+ 
+     if (((value.length() == 0) || value.equalsIgnoreCase(name))
+             && elemDesc.isAttrFlagSet(name, ElemDesc.ATTREMPTY))
+     {
+       this.accum(name);
+     }
+     else
+     {
+       this.accum(name);
+       this.accum('=');
+       this.accum('\"');
+ 
+       if (elemDesc.isAttrFlagSet(name, ElemDesc.ATTRURL))
+         writeAttrURI(value, this.m_encoding);
+       else
+         writeAttrString(value, this.m_encoding);
+ 
+       this.accum('\"');
+     }
+   }
+ 
+   /** Mask for high byte. */
+   static final int MASK1 = 0xFF00;
+ 
+   /** Mask for low byte. */
+   static final int MASK2 = 0x00FF;
+ 
+   /**
+    * Write the specified <var>string</var> after substituting non ASCII characters,
+    * with <CODE>%HH</CODE>, where HH is the hex of the byte value.
+    *
+    * @param   string      String to convert to XML format.
+    * @param   specials    Chracters, should be represeted in chracter referenfces.
+    * @param   encoding    CURRENTLY NOT IMPLEMENTED.
+    * @see #backReference
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void writeAttrURI(String string, String encoding)
+           throws org.xml.sax.SAXException
+   {
+ 
+     char[] stringArray = string.toCharArray();
+     int len = stringArray.length;
+ 
+     for (int i = 0; i < len; i++)
+     {
+       char ch = stringArray[i];
+ 
+       // if first 8 bytes are 0, no need to append them.
+       if ((ch < 9) || (ch > 127)
+               || /*(ch == '"') || -sb, as per #PDIK4L9LZY */ (ch == ' '))
+       {
+         if (m_specialEscapeURLs)
+         {
+           int b1 = (int) ((((int) ch) & MASK1) >> 8);
+           int b2 = (int) (((int) ch) & MASK2);
+ 
+           if (b1 != 0)
+           {
+             accum("%");
+             accum(Integer.toHexString(b1));
+           }
+ 
+           accum("%");
+           accum(Integer.toHexString(b2));
+         }
+         else if (ch < m_maxCharacter)
+         {
+           accum(ch);
+         }
+         else
+         {
+           accum("&#");
+           accum(Integer.toString(ch));
+           accum(';');
+         }
+       }
+       else if (ch == '"')
+       {
+         accum('&');
+         accum('q');
+         accum('u');
+         accum('o');
+         accum('t');
+         accum(';');
+       }
+       else
+       {
+         accum(ch);
+       }
+     }
+   }
+ 
+   /**
+    * Writes the specified <var>string</var> after substituting <VAR>specials</VAR>,
+    * and UTF-16 surrogates for character references <CODE>&amp;#xnn</CODE>.
+    *
+    * @param   string      String to convert to XML format.
+    * @param   encoding    CURRENTLY NOT IMPLEMENTED.
+    * @see #backReference
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void writeAttrString(String string, String encoding)
+           throws org.xml.sax.SAXException
+   {
+ 
+     final char chars[] = string.toCharArray();
+     final int strLen = chars.length;
+ 
+     for (int i = 0; i < strLen; i++)
+     {
+       char ch = chars[i];
+ 
+       // System.out.println("SPECIALSSIZE: "+SPECIALSSIZE);
+       // System.out.println("ch: "+(int)ch);
+       // System.out.println("m_maxCharacter: "+(int)m_maxCharacter);
+       // System.out.println("m_attrCharsMap[ch]: "+(int)m_attrCharsMap[ch]);
+       if ((ch < m_maxCharacter) && (!m_charInfo.isSpecial(ch)))
+       {
+         accum(ch);
+       }
+       else if ('<' == ch || '>' == ch)
+       {
+         accum(ch);  // no escaping in this case, as specified in 15.2
+       }
+       else if (('&' == ch) && ((i + 1) < strLen) && ('{' == chars[i + 1]))
+       {
+         accum(ch);  // no escaping in this case, as specified in 15.2
+       }
+       else
+       {
+         int pos = accumDefaultEntity(ch, i, chars, strLen, false);
+ 
+         if (i != pos)
+         {
+           i = pos - 1;
+         }
+         else
+         {
+           if (0xd800 <= ch && ch < 0xdc00)
+           {
+ 
+             // UTF-16 surrogate
+             int next;
+ 
+             if (i + 1 >= strLen)
+             {
+               throw new org.xml.sax.SAXException(
+                 XSLMessages.createXPATHMessage(
+                   XPATHErrorResources.ER_INVALID_UTF16_SURROGATE,
+                   new Object[]{ Integer.toHexString(ch) }));  //"Invalid UTF-16 surrogate detected: "
+ 
+               //+Integer.toHexString(ch)+ " ?");
+             }
+             else
+             {
+               next = chars[++i];
+ 
+               if (!(0xdc00 <= next && next < 0xe000))
+                 throw new org.xml.sax.SAXException(
+                   XSLMessages.createXPATHMessage(
+                     XPATHErrorResources.ER_INVALID_UTF16_SURROGATE,
+                     new Object[]{
+                       Integer.toHexString(ch) + " "
+                       + Integer.toHexString(next) }));  //"Invalid UTF-16 surrogate detected: "
+ 
+               //+Integer.toHexString(ch)+" "+Integer.toHexString(next));
+               next = ((ch - 0xd800) << 10) + next - 0xdc00 + 0x00010000;
+             }
+ 
+             accum("&#");
+             accum(Integer.toString(next));
+             accum(';');
+ 
+             /*} else if (null != ctbc && !ctbc.canConvert(ch)) {
+             accum("&#x");
+             accum(Integer.toString((int)ch, 16));
+             accum(";");*/
+           }
+ 
+           // The next is kind of a hack to keep from escaping in the case 
+           // of Shift_JIS and the like.
+ 
+           /*
+           else if ((ch < m_maxCharacter) && (m_maxCharacter == 0xFFFF)
+           && (ch != 160))
+           {
+           accum(ch);  // no escaping in this case
+           }
+           else
+           */
+           String entityName = m_charInfo.getEntityNameForChar(ch);
+ 
+           if (null != entityName)
+           {
+             accum('&');
+             accum(entityName);
+             accum(';');
+           }
+           else if (ch < m_maxCharacter)
+           {
+             accum(ch);  // no escaping in this case
+           }
+           else
+           {
+             if (ch < m_maxCharacter)
+             {
+               accum(ch);  // no escaping in this case
+             }
+             else
+             {
+               accum("&#");
+               accum(Integer.toString(ch));
+               accum(';');
+             }
+           }
+         }
+       }
+     }
+   }
+ 
+   /**
+    * Copy an entity into the accumulation buffer.
+    *
+    * @param s The name of the entity.
+    * @param pos unused.
+    *
+    * @return The pos argument.
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   private int copyEntityIntoBuf(String s, int pos)
+           throws org.xml.sax.SAXException
+   {
+ 
+     int l = s.length();
+ 
+     accum('&');
+ 
+     for (int i = 0; i < l; i++)
+     {
+       accum(s.charAt(i));
+     }
+ 
+     accum(';');
+ 
+     return pos;
+   }
+ 
+   /**
+    * Receive notification of character data.
+    *
+    * <p>The Parser will call this method to report each chunk of
+    * character data.  SAX parsers may return all contiguous character
+    * data in a single chunk, or they may split it into several
+    * chunks; however, all of the characters in any single event
+    * must come from the same external entity, so that the Locator
+    * provides useful information.</p>
+    *
+    * <p>The application must not attempt to read from the array
+    * outside of the specified range.</p>
+    *
+    * <p>Note that some parsers will report whitespace using the
+    * ignorableWhitespace() method rather than this one (validating
+    * parsers must do so).</p>
+    *
+    * @param chars The characters from the XML document.
+    * @param start The start position in the array.
+    * @param length The number of characters to read from the array.
+    * @exception org.xml.sax.SAXException Any SAX exception, possibly
+    *            wrapping another exception.
+    * @see #ignorableWhitespace
+    * @see org.xml.sax.Locator
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void characters(char chars[], int start, int length)
+           throws org.xml.sax.SAXException
+   {
+ 
+     if (m_isRawStack.peekOrFalse())
+     {
+       try
+       {
+         writeParentTagEnd();
+ 
+         m_ispreserve = true;
+ 
+         if (shouldIndent())
+           indent(m_currentIndent);
+ 
+         // this.accum("<![CDATA[");
+         // this.accum(chars, start, length);
+         writeNormalizedChars(chars, start, length, false);
+ 
+         // this.accum("]]>");
+         return;
+       }
+       catch (IOException ioe)
+       {
+         throw new org.xml.sax.SAXException(
+           XSLMessages.createXPATHMessage(
+           XPATHErrorResources.ER_OIERROR, null), ioe);  //"IO error", ioe);
+       }
+     }
+     else
+     {
+       super.characters(chars, start, length);
+     }
+   }
+ 
+   /**
+    *  Receive notification of cdata.
+    *
+    *  <p>The Parser will call this method to report each chunk of
+    *  character data.  SAX parsers may return all contiguous character
+    *  data in a single chunk, or they may split it into several
+    *  chunks; however, all of the characters in any single event
+    *  must come from the same external entity, so that the Locator
+    *  provides useful information.</p>
+    *
+    *  <p>The application must not attempt to read from the array
+    *  outside of the specified range.</p>
+    *
+    *  <p>Note that some parsers will report whitespace using the
+    *  ignorableWhitespace() method rather than this one (validating
+    *  parsers must do so).</p>
+    *
+    *  @param ch The characters from the XML document.
+    *  @param start The start position in the array.
+    *  @param length The number of characters to read from the array.
+    *  @exception org.xml.sax.SAXException Any SAX exception, possibly
+    *             wrapping another exception.
+    *  @see #ignorableWhitespace
+    *  @see org.xml.sax.Locator
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void cdata(char ch[], int start, int length)
+           throws org.xml.sax.SAXException
+   {
+ 
+     if ((null != m_currentElementName)
+             && (m_currentElementName.equalsIgnoreCase("SCRIPT")
+                 || m_currentElementName.equalsIgnoreCase("STYLE")))
+     {
+       try
+       {
+         writeParentTagEnd();
+ 
+         m_ispreserve = true;
+ 
+         if (shouldIndent())
+           indent(m_currentIndent);
+ 
+         // this.accum(ch, start, length);
+         writeNormalizedChars(ch, start, length, true);
+       }
+       catch (IOException ioe)
+       {
+         throw new org.xml.sax.SAXException(
+           XSLMessages.createXPATHMessage(
+           XPATHErrorResources.ER_OIERROR, null), ioe);  //"IO error", ioe);
+       }
+     }
+ 
+     /*
+     else if(m_stripCData) // should normally always be false
+     {
+       try
+       {
+         writeParentTagEnd();
+         m_ispreserve = true;
+         if (shouldIndent())
+           indent(m_currentIndent);
+         // this.accum("<![CDATA[");
+         this.accum(ch, start, length);
+         // this.accum("]]>");
+       }
+       catch(IOException ioe)
+       {
+         throw new org.xml.sax.SAXException(XSLMessages.createXPATHMessage(XPATHErrorResources.ER_OIERROR, null),ioe); //"IO error", ioe);
+       }
+     }
+     */
+     else
+     {
+       super.cdata(ch, start, length);
+     }
+   }
+ 
+   /**
+    *  Receive notification of a processing instruction.
+    *
+    *  @param target The processing instruction target.
+    *  @param data The processing instruction data, or null if
+    *         none was supplied.
+    *  @exception org.xml.sax.SAXException Any SAX exception, possibly
+    *             wrapping another exception.
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void processingInstruction(String target, String data)
+           throws org.xml.sax.SAXException
+   {
+ 
+     // Use a fairly nasty hack to tell if the next node is supposed to be 
+     // unescaped text.
+     if (target.equals(Result.PI_DISABLE_OUTPUT_ESCAPING))
+     {
+       startNonEscaping();
+     }
+     else if (target.equals(Result.PI_ENABLE_OUTPUT_ESCAPING))
+     {
+       endNonEscaping();
+     }
+     else
+     {
+       writeParentTagEnd();
+ 
+       if (shouldIndent())
+         indent(m_currentIndent);
+ 
+       this.accum("<?" + target);
+ 
+       if (data.length() > 0 &&!Character.isSpaceChar(data.charAt(0)))
+         this.accum(" ");
+ 
+       this.accum(data + ">");  // different from XML
+ 
+       m_startNewLine = true;
+     }
+   }
+ 
+   /**
+    * Receive notivication of a entityReference.
+    *
+    * @param name non-null reference to entity name string.
+    *
+    * @throws org.xml.sax.SAXException
+    */
+   public void entityReference(String name) throws org.xml.sax.SAXException
+   {
+ 
+     this.accum("&");
+     this.accum(name);
+     this.accum(";");
+   }
+ }

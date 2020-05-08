@@ -1,0 +1,694 @@
+ /*
+  * Copyright (c) 2012 Data Harmonisation Panel
+  * 
+  * All rights reserved. This program and the accompanying materials are made
+  * available under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation, either version 3 of the License,
+  * or (at your option) any later version.
+  * 
+  * You should have received a copy of the GNU Lesser General Public License
+  * along with this distribution. If not, see <http://www.gnu.org/licenses/>.
+  * 
+  * Contributors:
+  *     HUMBOLDT EU Integrated Project #030962
+  *     Data Harmonisation Panel <http://www.dhpanel.eu>
+  */
+ 
+ package eu.esdihumboldt.hale.ui.io;
+ 
+ import java.lang.reflect.InvocationTargetException;
+ import java.util.ArrayList;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.concurrent.atomic.AtomicReference;
+ 
+ import org.eclipse.core.runtime.IProgressMonitor;
+ import org.eclipse.core.runtime.content.IContentType;
+ import org.eclipse.jface.dialogs.IPageChangingListener;
+ import org.eclipse.jface.dialogs.PageChangingEvent;
+ import org.eclipse.jface.operation.IRunnableWithProgress;
+ import org.eclipse.jface.wizard.IWizardPage;
+ import org.eclipse.jface.wizard.Wizard;
+ import org.eclipse.jface.wizard.WizardDialog;
+ import org.eclipse.ui.PlatformUI;
+ 
+ import com.google.common.base.Objects;
+ import com.google.common.collect.Multimap;
+ 
+ import de.cs3d.util.eclipse.extension.ExtensionObjectFactoryCollection;
+ import de.cs3d.util.eclipse.extension.FactoryFilter;
+ import de.cs3d.util.logging.ALogger;
+ import de.cs3d.util.logging.ALoggerFactory;
+ import de.cs3d.util.logging.ATransaction;
+ import eu.esdihumboldt.hale.common.core.io.IOAdvisor;
+ import eu.esdihumboldt.hale.common.core.io.IOProvider;
+ import eu.esdihumboldt.hale.common.core.io.IOProviderConfigurationException;
+ import eu.esdihumboldt.hale.common.core.io.ImportProvider;
+ import eu.esdihumboldt.hale.common.core.io.ProgressMonitorIndicator;
+ import eu.esdihumboldt.hale.common.core.io.extension.IOProviderDescriptor;
+ import eu.esdihumboldt.hale.common.core.io.extension.IOProviderExtension;
+ import eu.esdihumboldt.hale.common.core.io.project.model.IOConfiguration;
+ import eu.esdihumboldt.hale.common.core.io.project.model.Project;
+ import eu.esdihumboldt.hale.common.core.io.report.IOReport;
+ import eu.esdihumboldt.hale.common.core.io.report.IOReporter;
+ import eu.esdihumboldt.hale.common.core.io.report.impl.IOMessageImpl;
+ import eu.esdihumboldt.hale.ui.io.action.ActionUI;
+ import eu.esdihumboldt.hale.ui.io.action.ActionUIExtension;
+ import eu.esdihumboldt.hale.ui.io.config.AbstractConfigurationPage;
+ import eu.esdihumboldt.hale.ui.io.config.ConfigurationPageExtension;
+ import eu.esdihumboldt.hale.ui.service.project.ProjectService;
+ import eu.esdihumboldt.hale.ui.service.report.ReportService;
+ 
+ /**
+  * Abstract I/O wizard based on {@link IOProvider} descriptors
+  * 
+  * @param <P> the {@link IOProvider} type used in the wizard
+  * 
+  * @author Simon Templer
+  * @partner 01 / Fraunhofer Institute for Computer Graphics Research
+  */
+ public abstract class IOWizard<P extends IOProvider> extends Wizard implements
+ 		IPageChangingListener {
+ 
+ 	private static final ALogger log = ALoggerFactory.getLogger(IOWizard.class);
+ 
+ 	private final Set<IOWizardListener<P, ? extends IOWizard<P>>> listeners = new HashSet<IOWizardListener<P, ? extends IOWizard<P>>>();
+ 
+ 	private final Class<P> providerType;
+ 
+ 	private P provider;
+ 
+ 	private IOProviderDescriptor descriptor;
+ 
+ 	private IOAdvisor<P> advisor;
+ 
+ 	private String actionId;
+ 
+ 	private IContentType contentType;
+ 
+ 	private Multimap<String, AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> configPages;
+ 
+ 	private final List<IWizardPage> mainPages = new ArrayList<IWizardPage>();
+ 
+ 	/**
+ 	 * Create an I/O wizard
+ 	 * 
+ 	 * @param providerType the I/O provider type
+ 	 */
+ 	public IOWizard(Class<P> providerType) {
+ 		super();
+ 		this.providerType = providerType;
+ 
+ 		// create possible configuration pages
+ 		configPages = ConfigurationPageExtension.getInstance()
+ 				.getConfigurationPages(getFactories());
+ 
+ 		setNeedsProgressMonitor(true);
+ 	}
+ 
+ 	/**
+ 	 * Get the I/O advisor
+ 	 * 
+ 	 * @return the advisor
+ 	 */
+ 	protected IOAdvisor<P> getAdvisor() {
+ 		return advisor;
+ 	}
+ 
+ 	/**
+ 	 * Get the action identifier
+ 	 * 
+ 	 * @return the action ID
+ 	 */
+ 	protected String getActionId() {
+ 		return actionId;
+ 	}
+ 
+ 	/**
+ 	 * Set the I/O advisor
+ 	 * 
+ 	 * @param advisor the advisor to set
+ 	 * @param actionId the action identifier, <code>null</code> if it has none
+ 	 */
+ 	public void setAdvisor(IOAdvisor<P> advisor, String actionId) {
+ 		this.advisor = advisor;
+ 		this.actionId = actionId;
+ 
+ 		// recreate possible configuration pages now that advisor is set
+ 		configPages = ConfigurationPageExtension.getInstance()
+ 				.getConfigurationPages(getFactories());
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#addPages()
+ 	 */
+ 	@Override
+ 	public void addPages() {
+ 		super.addPages();
+ 
+ 		// add configuration pages
+ 		for (AbstractConfigurationPage<? extends P, ? extends IOWizard<P>> page : configPages
+ 				.values()) {
+ 			addPage(page);
+ 		}
+ 
+ 		if (getContainer() instanceof WizardDialog) {
+ 			((WizardDialog) getContainer()).addPageChangingListener(this);
+ 		}
+ 		else {
+ 			throw new RuntimeException("Only WizardDialog as container supported");
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * @see IPageChangingListener#handlePageChanging(PageChangingEvent)
+ 	 */
+ 	@Override
+ 	public void handlePageChanging(PageChangingEvent event) {
+ 		if (getProvider() == null) {
+ 			return;
+ 		}
+ 
+ 		if (event.getCurrentPage() instanceof IWizardPage
+ 				&& event.getTargetPage() == getNextPage((IWizardPage) event.getCurrentPage())) {
+ 			// only do automatic configuration when proceeding to next page
+ 			if (event.getCurrentPage() instanceof IOWizardPage<?, ?>) {
+ 				@SuppressWarnings("unchecked")
+ 				IOWizardPage<P, ?> page = (IOWizardPage<P, ?>) event.getCurrentPage();
+ 				event.doit = validatePage(page);
+ 				// TODO error message?!
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#dispose()
+ 	 */
+ 	@Override
+ 	public void dispose() {
+ 		if (getContainer() instanceof WizardDialog) {
+ 			((WizardDialog) getContainer()).removePageChangingListener(this);
+ 		}
+ 
+ 		super.dispose();
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#addPage(IWizardPage)
+ 	 */
+ 	@Override
+ 	public void addPage(IWizardPage page) {
+ 		// collect main pages
+ 		if (!configPages.containsValue(page)) {
+ 			mainPages.add(page);
+ 		}
+ 
+ 		super.addPage(page);
+ 	}
+ 
+ 	/**
+ 	 * Get the list of configuration pages for the currently selected provider
+ 	 * factory <code>null</code> if there are none.
+ 	 * 
+ 	 * @return the configuration pages for the current provider
+ 	 */
+ 	protected List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> getConfigurationPages() {
+ 		if (descriptor == null) {
+ 			return null;
+ 		}
+ 
+ 		// get the provider id
+ 		String id = descriptor.getIdentifier();
+ 
+ 		List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> result = new ArrayList<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>>(
+ 				configPages.get(id));
+ 
+ 		return (result.size() > 0 ? result : null);
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#canFinish()
+ 	 */
+ 	@Override
+ 	public boolean canFinish() {
+ 		// check if main pages are complete
+ 		for (int i = 0; i < mainPages.size(); i++) {
+ 			if (!(mainPages.get(i)).isPageComplete()) {
+ 				return false;
+ 			}
+ 		}
+ 
+ 		// check if configuration pages are complete
+ 		List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> confPages = getConfigurationPages();
+ 		if (confPages != null) {
+ 			for (int i = 0; i < confPages.size(); i++) {
+ 				if (!(confPages.get(i)).isPageComplete()) {
+ 					return false;
+ 				}
+ 			}
+ 		}
+ 
+ 		return true;
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#getNextPage(IWizardPage)
+ 	 */
+ 	@Override
+ 	public IWizardPage getNextPage(IWizardPage page) {
+ 		// get main index
+ 		int mainIndex = mainPages.indexOf(page);
+ 
+ 		if (mainIndex >= 0) {
+ 			// current page is one of the main pages
+ 			if (mainIndex < mainPages.size() - 1) {
+ 				// next main page
+ 				return mainPages.get(mainIndex + 1);
+ 			}
+ 			else {
+ 				// first configuration page
+ 				List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> confPages = getConfigurationPages();
+ 				if (confPages != null && confPages.size() > 0) {
+ 					return confPages.get(0);
+ 				}
+ 			}
+ 		}
+ 		else {
+ 			// current page is a configuration page
+ 			List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> confPages = getConfigurationPages();
+ 			// return the next configuration page
+ 			if (confPages != null) {
+ 				for (int i = 0; i < confPages.size() - 1; ++i) {
+ 					if (confPages.get(i) == page) {
+ 						return confPages.get(i + 1);
+ 					}
+ 				}
+ 			}
+ 		}
+ 
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#getPageCount()
+ 	 */
+ 	@Override
+ 	public int getPageCount() {
+ 		int count = mainPages.size();
+ 		List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> confPages = getConfigurationPages();
+ 		if (confPages != null) {
+ 			count += confPages.size();
+ 		}
+ 
+ 		return count;
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#getPreviousPage(IWizardPage)
+ 	 */
+ 	@Override
+ 	public IWizardPage getPreviousPage(IWizardPage page) {
+ 		// get main index
+ 		int mainIndex = mainPages.indexOf(page);
+ 
+ 		if (mainIndex >= 0) {
+ 			// current page is one of the main pages
+ 			if (mainIndex > 0) {
+ 				// previous main page
+ 				return mainPages.get(mainIndex - 1);
+ 			}
+ 		}
+ 		else {
+ 			// current page is a configuration page
+ 			List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> confPages = getConfigurationPages();
+ 			if (confPages != null) {
+ 				if (confPages.size() > 0 && confPages.get(0) == page) {
+ 					// return last main page
+ 					return mainPages.get(mainPages.size() - 1);
+ 				}
+ 				// return the previous configuration page
+ 				for (int i = 1; i < confPages.size(); ++i) {
+ 					if (confPages.get(i) == page) {
+ 						return confPages.get(i - 1);
+ 					}
+ 				}
+ 			}
+ 		}
+ 
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#getStartingPage()
+ 	 */
+ 	@Override
+ 	public IWizardPage getStartingPage() {
+ 		return mainPages.get(0);
+ 	}
+ 
+ 	/**
+ 	 * Get the available provider descriptors. To filter or sort them you can
+ 	 * override this method.
+ 	 * 
+ 	 * @return the available provider descriptors
+ 	 */
+ 	public List<IOProviderDescriptor> getFactories() {
+ 		// FIXME rename method
+ 		return IOProviderExtension.getInstance().getFactories(
+ 				new FactoryFilter<IOProvider, IOProviderDescriptor>() {
+ 
+ 					@Override
+ 					public boolean acceptFactory(IOProviderDescriptor factory) {
+ 						// accept all factories that provide a compatible I/O
+ 						// provider
+ 						return providerType.isAssignableFrom(factory.getProviderType());
+ 					}
+ 
+ 					@Override
+ 					public boolean acceptCollection(
+ 							ExtensionObjectFactoryCollection<IOProvider, IOProviderDescriptor> collection) {
+ 						return true;
+ 					}
+ 				});
+ 	}
+ 
+ 	/**
+ 	 * Get the provider assigned to the wizard. It will be <code>null</code> if
+ 	 * no page assigned a provider factory to the wizard yet.
+ 	 * 
+ 	 * @return the I/O provider
+ 	 */
+ 	@SuppressWarnings("unchecked")
+ 	public P getProvider() {
+ 		if (provider == null && descriptor != null) {
+ 			try {
+ 				provider = (P) descriptor.createExtensionObject();
+ 			} catch (Exception e) {
+ 				throw new IllegalStateException("Could not instantiate I/O provider", e);
+ 			}
+ 			advisor.prepareProvider(provider);
+ 		}
+ 
+ 		return provider;
+ 	}
+ 
+ 	/**
+ 	 * Assign an I/O provider factory to the wizard
+ 	 * 
+ 	 * @param descriptor the provider factory to set
+ 	 */
+ 	public void setProviderFactory(IOProviderDescriptor descriptor) {
+ 		if (Objects.equal(descriptor, this.descriptor))
+ 			return;
+ 
+ 		// disable old configuration pages
+ 		List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> pages = getConfigurationPages();
+ 		if (pages != null) {
+ 			for (AbstractConfigurationPage<? extends P, ? extends IOWizard<P>> page : pages) {
+ 				page.disable();
+ 			}
+ 		}
+ 
+ 		this.descriptor = descriptor;
+ 
+ 		// reset provider
+ 		provider = null;
+ 
+ 		// enable new configuration pages
+ 		pages = getConfigurationPages();
+ 		if (pages != null) {
+ 			for (AbstractConfigurationPage<? extends P, ? extends IOWizard<P>> page : pages) {
+ 				page.enable();
+ 			}
+ 		}
+ 
+ 		fireProviderFactoryChanged(descriptor);
+ 	}
+ 
+ 	/**
+ 	 * Get the content type assigned to the wizard
+ 	 * 
+ 	 * @return the content type, may be <code>null</code>
+ 	 */
+ 	public IContentType getContentType() {
+ 		return contentType;
+ 	}
+ 
+ 	/**
+ 	 * Assign a content type to the wizard
+ 	 * 
+ 	 * @param contentType the content type to set
+ 	 */
+ 	public void setContentType(IContentType contentType) {
+ 		if (Objects.equal(contentType, this.contentType))
+ 			return;
+ 
+ 		this.contentType = contentType;
+ 
+ 		fireContentTypeChanged(contentType);
+ 	}
+ 
+ 	/**
+ 	 * Get the provider descriptor assigned to the wizard. It will be
+ 	 * <code>null</code> if no page assigned a provider factory to the wizard
+ 	 * yet.
+ 	 * 
+ 	 * @return the I/O provider factory
+ 	 */
+ 	public IOProviderDescriptor getProviderFactory() {
+ 		return descriptor;
+ 	}
+ 
+ 	/**
+ 	 * @see Wizard#performFinish()
+ 	 * 
+ 	 * @return <code>true</code> if executing the I/O provider was successful
+ 	 */
+ 	@Override
+ 	public boolean performFinish() {
+ 		if (getProvider() == null) {
+ 			return false;
+ 		}
+ 
+ 		// process main pages
+ 		for (int i = 0; i < mainPages.size(); i++) {
+ 			// validating is still necessary as it is not guaranteed to be up to
+ 			// date by handlePageChanging
+ 			boolean valid = validatePage(mainPages.get(i));
+ 			if (!valid) {
+ 				// TODO error message?!
+ 				return false;
+ 			}
+ 		}
+ 
+ 		// check if configuration pages are complete
+ 		List<AbstractConfigurationPage<? extends P, ? extends IOWizard<P>>> confPages = getConfigurationPages();
+ 		if (confPages != null) {
+ 			for (int i = 0; i < confPages.size(); i++) {
+ 				// validating is still necessary as it is not guaranteed to be
+ 				// up to date by handlePageChanging
+ 				boolean valid = validatePage(confPages.get(i));
+ 				if (!valid) {
+ 					// TODO error message?!
+ 					return false;
+ 				}
+ 			}
+ 		}
+ 
+ 		// process wizard
+ 		updateConfiguration(provider);
+ 
+ 		// create default report
+ 		IOReporter defReport = provider.createReporter();
+ 
+ 		// validate and execute provider
+ 		try {
+ 			// validate configuration
+ 			provider.validate();
+ 
+ 			ProjectService ps = null;
+ 			if (actionId != null) {
+ 				// XXX instead move project resource to action?
+ 				ActionUI factory = ActionUIExtension.getInstance().findActionUI(actionId);
+ 				if (factory.isProjectResource()) {
+ 					ps = (ProjectService) PlatformUI.getWorkbench()
+ 							.getService(ProjectService.class);
+ 
+ 					// prevent loading of duplicate resources
+ 					if (provider instanceof ImportProvider) {
+ 						String currentResource = ((ImportProvider) provider).getSource()
+ 								.getLocation().toASCIIString();
+ 						List<IOConfiguration> resources = ((Project) ps.getProjectInfo())
+ 								.getResources();
+ 						for (IOConfiguration conf : resources) {
+							String resource = conf.getProviderConfiguration().get(
+									ImportProvider.PARAM_SOURCE);
+ 							// resource is already loaded into the project
+ 							if (resource != null && resource.equals(currentResource)) {
+ 								log.userError("Resource is already loaded. Loading duplicate resources is aborted!");
+ 								return false;
+ 							}
+ 						}
+ 					}
+ 				}
+ 			}
+ 
+ 			IOReport report = execute(provider, defReport);
+ 
+ 			if (report != null) {
+ 				// add report to report server
+ 				ReportService repService = (ReportService) PlatformUI.getWorkbench().getService(
+ 						ReportService.class);
+ 				repService.addReport(report);
+ 
+ 				// show message to user
+ 				if (report.isSuccess()) {
+ 					// no message, we rely on the report being shown/processed
+ 
+ 					// let advisor handle results
+ 					advisor.handleResults(getProvider());
+ 
+ 					// add to project service if necessary
+ 					if (ps != null)
+ 						ps.rememberIO(actionId, getProviderFactory().getIdentifier(), provider);
+ 
+ 					return true;
+ 				}
+ 				else {
+ 					// error message
+ 					log.userError(report.getSummary() + "\nPlease see the report for details.");
+ 					return false;
+ 				}
+ 			}
+ 			else
+ 				return true;
+ 		} catch (IOProviderConfigurationException e) {
+ 			// user feedback
+ 			log.userError(
+ 					"Validation of the provider configuration failed:\n" + e.getLocalizedMessage(),
+ 					e);
+ 			return false;
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Execute the given provider
+ 	 * 
+ 	 * @param provider the I/O provider
+ 	 * @param defaultReporter the default reporter that is used if the provider
+ 	 *            doesn't supply a report
+ 	 * @return the execution report, if null it will not give feedback to the
+ 	 *         user and the advisor's handleResult method won't be called either
+ 	 */
+ 	protected IOReport execute(final IOProvider provider, final IOReporter defaultReporter) {
+ 		// execute provider
+ 		final AtomicReference<IOReport> report = new AtomicReference<IOReport>(defaultReporter);
+ 		defaultReporter.setSuccess(false);
+ 		try {
+ 			getContainer().run(true, provider.isCancelable(), new IRunnableWithProgress() {
+ 
+ 				@Override
+ 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
+ 						InterruptedException {
+ 					ATransaction trans = log.begin(defaultReporter.getTaskName());
+ 					try {
+ 						IOReport result = provider.execute(new ProgressMonitorIndicator(monitor));
+ 						if (result != null) {
+ 							report.set(result);
+ 						}
+ 						else {
+ 							defaultReporter.setSuccess(true);
+ 						}
+ 					} catch (Throwable e) {
+ 						defaultReporter.error(new IOMessageImpl(e.getLocalizedMessage(), e));
+ 					} finally {
+ 						trans.end();
+ 					}
+ 				}
+ 			});
+ 		} catch (Throwable e) {
+ 			defaultReporter.error(new IOMessageImpl(e.getLocalizedMessage(), e));
+ 		}
+ 
+ 		return report.get();
+ 	}
+ 
+ 	/**
+ 	 * Update the provider configuration. This will be called just before the
+ 	 * I/O provider is executed.
+ 	 * 
+ 	 * @param provider the I/O provider
+ 	 */
+ 	protected void updateConfiguration(P provider) {
+ 		// set the content type
+ 		provider.setContentType(getContentType());
+ 
+ 		// let advisor update configuration
+ 		advisor.updateConfiguration(provider);
+ 	}
+ 
+ 	/**
+ 	 * Validate the given page and update the I/O provider
+ 	 * 
+ 	 * @param page the wizard page to validate
+ 	 * @return if the page is valid and updating the I/O provider was successful
+ 	 */
+ 	@SuppressWarnings("unchecked")
+ 	protected boolean validatePage(IWizardPage page) {
+ 		if (page instanceof IOWizardPage<?, ?>) {
+ 			return ((IOWizardPage<P, ?>) page).updateConfiguration(provider);
+ 		}
+ 		else {
+ 			return true;
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Get the supported I/O provider type, usually an interface.
+ 	 * 
+ 	 * @return the supported I/O provider type
+ 	 */
+ 	public Class<P> getProviderType() {
+ 		return providerType;
+ 	}
+ 
+ 	/**
+ 	 * Adds an {@link IOWizardListener}
+ 	 * 
+ 	 * @param listener the listener to add
+ 	 */
+ 	public void addIOWizardListener(IOWizardListener<P, ? extends IOWizard<P>> listener) {
+ 		synchronized (listeners) {
+ 			listeners.add(listener);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Removes an {@link IOWizardListener}
+ 	 * 
+ 	 * @param listener the listener to remove
+ 	 */
+ 	public void removeIOWizardListener(IOWizardListener<P, ? extends IOWizard<P>> listener) {
+ 		synchronized (listeners) {
+ 			listeners.remove(listener);
+ 		}
+ 	}
+ 
+ 	private void fireProviderFactoryChanged(IOProviderDescriptor providerFactory) {
+ 		synchronized (listeners) {
+ 			for (IOWizardListener<P, ? extends IOWizard<P>> listener : listeners) {
+ 				listener.providerDescriptorChanged(providerFactory);
+ 			}
+ 		}
+ 	}
+ 
+ 	private void fireContentTypeChanged(IContentType contentType) {
+ 		synchronized (listeners) {
+ 			for (IOWizardListener<P, ? extends IOWizard<P>> listener : listeners) {
+ 				listener.contentTypeChanged(contentType);
+ 			}
+ 		}
+ 	}
+ 
+ }

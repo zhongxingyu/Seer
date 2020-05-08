@@ -1,0 +1,168 @@
+ /*
+  * Copyright 2007 Wyona
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *      http://www.wyona.org/licenses/APACHE-LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations under the License.
+  */
+ package org.wyona.yanel.impl.resources.xml;
+ 
+ import java.util.HashMap;
+ import java.util.Properties;
+ 
+ import org.apache.avalon.framework.configuration.Configuration;
+ import org.apache.avalon.framework.configuration.ConfigurationException;
+ import org.apache.log4j.Logger;
+ import org.wyona.yanel.core.attributes.viewable.ViewDescriptor;
+ 
+ public class ConfigurableViewDescriptor extends ViewDescriptor {
+     
+     public static final String TYPE_XML = "xml";
+     public static final String TYPE_JELLY = "jelly";
+     public static final String TYPE_JELLY_XML = "jelly-XML";
+     public static final String TYPE_JELLY_TEXT = "jelly-text";
+     public static final String TYPE_REDIRECT = "redirect";
+     public static final String TYPE_CUSTOM = "custom";
+     
+     protected String template;
+     protected String type;
+     protected String redirectURL;
+     protected String[] xsltPaths;
+     protected String serializerKey;
+     protected Properties serializerProperties;
+     protected HashMap httpHeaders;
+ 
+     private static final Logger log = Logger.getLogger(ConfigurableViewDescriptor.class);
+ 
+     public ConfigurableViewDescriptor(String id) {
+         super(id);
+     }
+     
+     /**
+      * 
+      */
+     public void configure(Configuration config) throws ConfigurationException {
+         
+         type = config.getAttribute("type", TYPE_XML);
+         
+         Configuration[] xsltConfigs = config.getChildren("xslt");
+         xsltPaths = new String[xsltConfigs.length];
+         for (int i = 0; i < xsltConfigs.length; i++) {
+             xsltPaths[i] = xsltConfigs[i].getValue();
+         }
+         
+         Configuration mimeTypeConfig = config.getChild("mime-type", false);
+         if (mimeTypeConfig != null) {
+             setMimeType(mimeTypeConfig.getValue());
+         }
+         
+         Configuration serializerConfig = config.getChild("serializer", false);
+         if (serializerConfig != null) {
+             serializerKey = serializerConfig.getAttribute("key");
+             serializerProperties = new Properties();
+             Configuration propertyConfig = serializerConfig.getChild("omit-xml-declaration", false);
+             if (propertyConfig != null) {
+                 serializerProperties.setProperty("omit-xml-declaration", propertyConfig.getValue());
+             }
+             propertyConfig = serializerConfig.getChild("doctype-public", false);
+             if (propertyConfig != null) {
+                 serializerProperties.setProperty("doctype-public", propertyConfig.getValue());
+             }
+             propertyConfig = serializerConfig.getChild("doctype-system", false);
+             if (propertyConfig != null) {
+                serializerProperties.setProperty("doctype-system", propertyConfig.getValue());
+             }
+             propertyConfig = serializerConfig.getChild("indent", false);
+             if (propertyConfig != null) {
+                 serializerProperties.setProperty("indent", propertyConfig.getValue());
+             }
+         }
+         
+         if (type.equals(TYPE_JELLY)) {
+             template = config.getChild("template").getValue();
+             /*TODO send a message to yanel-usage@ that we now will log what follows at the warn level and only then do it*/
+             log.info("'"+TYPE_JELLY+"' view-type is deprecated, please use '"+TYPE_JELLY_XML+"' or '"+TYPE_JELLY_TEXT+"' instead (see http://lists.wyona.org/pipermail/yanel-development/2009-May/003567.html for rationale).");
+         }
+         if (type.equals(TYPE_JELLY_XML) || type.equals(TYPE_JELLY_TEXT)) {
+             template = config.getChild("template").getValue();
+         }
+         if (type.equals(TYPE_REDIRECT)) {
+             redirectURL = config.getChild("url").getValue();
+         }
+         
+         httpHeaders = new HashMap();
+         Configuration headerParentConfig = config.getChild("http-headers", false);
+         if (headerParentConfig != null) {
+             Configuration[] headerConfigs = headerParentConfig.getChildren("header");
+             for (int i = 0; i < headerConfigs.length; i++) {
+                 String name = headerConfigs[i].getAttribute("name");
+                 String value = headerConfigs[i].getAttribute("value");
+                 httpHeaders.put(name, value);
+             }
+         }
+     }
+ 
+     public String getRedirectURL() {
+         return redirectURL;
+     }
+ 
+     public void setRedirectURL(String redirectURL) {
+         this.redirectURL = redirectURL;
+     }
+ 
+     public String getSerializerKey() {
+         return serializerKey;
+     }
+ 
+     public void setSerializerKey(String serializerKey) {
+         this.serializerKey = serializerKey;
+     }
+ 
+     public Properties getSerializerProperties() {
+         return serializerProperties;
+     }
+ 
+     public void setSerializerProperties(Properties serializerProperties) {
+         this.serializerProperties = serializerProperties;
+     }
+ 
+     public HashMap getHttpHeaders() {
+         return this.httpHeaders;
+     }
+ 
+     public void setHttpHeaders(HashMap httpHeaders) {
+         this.httpHeaders = httpHeaders;
+     }
+ 
+     public String getTemplate() {
+         return template;
+     }
+ 
+     public void setTemplate(String template) {
+         this.template = template;
+     }
+ 
+     public String getType() {
+         return type;
+     }
+ 
+     public void setType(String type) {
+         this.type = type;
+     }
+ 
+     public String[] getXSLTPaths() {
+         return xsltPaths;
+     }
+ 
+     public void setXSLTPaths(String[] xsltPaths) {
+         this.xsltPaths = xsltPaths;
+     }
+ }

@@ -1,0 +1,90 @@
+ /*
+  * Sonar JIRA Plugin
+  * Copyright (C) 2009 SonarSource
+  * dev@sonar.codehaus.org
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 3 of the License, or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this program; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
+  */
+ package org.sonar.plugins.jira.reviews;
+ 
+ import com.atlassian.jira.rpc.soap.client.RemoteIssue;
+ import org.sonar.api.ServerExtension;
+ import org.sonar.api.config.Settings;
+ import org.sonar.api.issue.action.Function;
+ import org.sonar.plugins.jira.JiraConstants;
+ 
+ import java.rmi.RemoteException;
+ 
+ public class LinkFunction implements Function, ServerExtension {
+ 
+   private final JiraIssueCreator jiraIssueCreator;
+ 
+   public LinkFunction(JiraIssueCreator jiraIssueCreator) {
+     this.jiraIssueCreator = jiraIssueCreator;
+   }
+ 
+   public void execute(Context context) {
+     checkConditions(context.projectSettings());
+     createJiraIssue(context);
+   }
+ 
+   protected void createJiraIssue(Context context){
+     RemoteIssue issue;
+     try {
+       issue = jiraIssueCreator.createIssue(context.issue(), context.projectSettings());
+     } catch (RemoteException e) {
+       throw new IllegalStateException("Impossible to create an issue on JIRA. A problem occured with the remote server: " + e.getMessage(), e);
+     }
+ 
+     createComment(issue, context);
+     // and add the property
+     context.setAttribute(JiraConstants.SONAR_ISSUE_DATA_PROPERTY_KEY, issue.getKey());
+   }
+ 
+   private void checkConditions(Settings settingss) {
+     checkProperty(JiraConstants.SERVER_URL_PROPERTY, settingss);
+     checkProperty(JiraConstants.SOAP_BASE_URL_PROPERTY, settingss);
+     checkProperty(JiraConstants.USERNAME_PROPERTY, settingss);
+     checkProperty(JiraConstants.PASSWORD_PROPERTY, settingss);
+     checkProperty(JiraConstants.JIRA_PROJECT_KEY_PROPERTY, settingss);
+     checkProperty(JiraConstants.JIRA_INFO_PRIORITY_ID, settingss);
+     checkProperty(JiraConstants.JIRA_MINOR_PRIORITY_ID, settingss);
+     checkProperty(JiraConstants.JIRA_MAJOR_PRIORITY_ID, settingss);
+     checkProperty(JiraConstants.JIRA_CRITICAL_PRIORITY_ID, settingss);
+     checkProperty(JiraConstants.JIRA_BLOCKER_PRIORITY_ID, settingss);
+     checkProperty(JiraConstants.JIRA_ISSUE_TYPE_ID, settingss);
+     checkProperty(JiraConstants.JIRA_ISSUE_COMPONENT_ID, settingss);
+   }
+ 
+   private void checkProperty(String property, Settings settings) {
+     if (!settings.hasKey(property)) {
+      throw new IllegalStateException("The following property '" + property + "' must be set.");
+     }
+   }
+ 
+   protected void createComment(RemoteIssue issue, Context context) {
+     context.addComment(generateCommentText(issue, context));
+   }
+ 
+   protected String generateCommentText(RemoteIssue issue, Context context) {
+     StringBuilder message = new StringBuilder();
+     message.append("Issue linked to JIRA issue: ");
+     message.append(context.projectSettings().getString(JiraConstants.SERVER_URL_PROPERTY));
+     message.append("/browse/");
+     message.append(issue.getKey());
+     return message.toString();
+   }
+ 
+ }

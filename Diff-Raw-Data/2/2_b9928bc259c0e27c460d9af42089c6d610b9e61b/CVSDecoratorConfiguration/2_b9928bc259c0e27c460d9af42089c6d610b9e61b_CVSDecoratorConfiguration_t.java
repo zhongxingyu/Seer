@@ -1,0 +1,77 @@
+ package org.eclipse.team.internal.ccvs.ui;
+ 
+ /*
+  * (c) Copyright IBM Corp. 2000, 2001.
+  * All Rights Reserved.
+  */
+ 
+ import java.util.Map;
+ 
+ import org.eclipse.core.runtime.IStatus;
+ import org.eclipse.team.ccvs.core.CVSStatus;
+ 
+ public class CVSDecoratorConfiguration {
+ 
+ 	// bindings for 
+ 	public static final String RESOURCE_NAME = "name"; //$NON-NLS-1$
+ 	public static final String RESOURCE_TAG = "tag"; //$NON-NLS-1$
+ 	public static final String FILE_REVISION = "revision"; //$NON-NLS-1$
+ 	public static final String FILE_KEYWORD = "keyword"; //$NON-NLS-1$
+ 	
+ 	// bindings for repository location
+ 	public static final String REMOTELOCATION_METHOD = "method"; //$NON-NLS-1$
+ 	public static final String REMOTELOCATION_USER = "user"; //$NON-NLS-1$
+ 	public static final String REMOTELOCATION_HOST = "host"; //$NON-NLS-1$
+ 	public static final String REMOTELOCATION_ROOT = "root"; //$NON-NLS-1$
+ 	public static final String REMOTELOCATION_REPOSITORY = "repository"; //$NON-NLS-1$
+ 	
+ 	// bindings for resource states
+ 	public static final String DIRTY_FLAG = "dirty_flag"; //$NON-NLS-1$
+ 	public static final String ADDED_FLAG = "added_flag"; //$NON-NLS-1$
+ 	public static final String DEFAULT_DIRTY_FLAG = ">"; //$NON-NLS-1$
+ 	public static final String DEFAULT_ADDED_FLAG = "*"; //$NON-NLS-1$
+ 	
+ 	// default text decoration formats
+ 	public static final String DEFAULT_FILETEXTFORMAT = "{dirty_flag}{name}  {revision} {tag}"; //$NON-NLS-1$
+ 	public static final String DEFAULT_FOLDERTEXTFORMAT = "{dirty_flag}{name}  {tag}"; //$NON-NLS-1$
+ 	public static final String DEFAULT_PROJECTTEXTFORMAT = "{dirty_flag}{name}  {tag} [{host}]"; //$NON-NLS-1$
+ 
+ 	// prefix characters that can be removed if the following binding is not found
+ 	private static final char KEYWORD_SEPSPACE = ' ';
+ 	private static final char KEYWORD_SEPCOLON = ':';
+ 	private static final char KEYWORD_SEPAT = '@';
+ 		
+ 	public static String bind(String format, Map bindings) {
+ 		StringBuffer output = new StringBuffer(80);
+ 		int length = format.length();
+ 		int start = -1;
+ 		int end = length;
+ 		while (true) {
+ 			if ((end = format.indexOf('{', start)) > -1) {
+ 				output.append(format.substring(start + 1, end));
+ 				if ((start = format.indexOf('}', end)) > -1) {
+ 					String s = (String)bindings.get(format.substring(end + 1, start));
+ 					if(s!=null) {
+ 						output.append(s);
+ 					} else {
+ 						// support for removing prefix character if binding is null
+ 						int curLength = output.length();
+ 						if(curLength>0) {
+ 							char c = output.charAt(curLength - 1);
+							if(c == KEYWORD_SEPCOLON || c == KEYWORD_SEPAT) {
+ 								output.deleteCharAt(curLength - 1);							
+ 							}
+ 						}
+ 					}
+ 				} else {
+ 					output.append(format.substring(end, length));
+ 					break;
+ 				}
+ 			} else {
+ 				output.append(format.substring(start + 1, length));
+ 				break;
+ 			}
+ 		}
+ 		return output.toString();
+ 	}
+ }

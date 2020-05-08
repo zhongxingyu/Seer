@@ -1,0 +1,535 @@
+ 
+ import java.awt.Cursor;
+ import java.awt.event.*;
+ import java.io.*;
+ import java.util.List;
+ import javax.swing.*;
+ 
+ public class Gui extends javax.swing.JFrame {
+     
+     final JFileChooser fc = new JFileChooser();
+     
+     public class PopUpDemo extends JPopupMenu {
+         
+         JMenuItem save_current;
+         JMenuItem save_all;
+         javax.swing.JLabel image;
+         
+         public PopUpDemo(javax.swing.JLabel image) {
+             this.image = image;
+             save_current = new JMenuItem("Save image to directory.");
+             add(save_current);
+             save_current.setAction(new SaveAction());
+             save_all = new JMenuItem("Save all images to directory.");
+             add(save_all);
+             save_all.setAction(new SaveAllAction());
+         }
+         
+         public class SaveAction extends AbstractAction {
+             
+             public SaveAction() {
+                 super("Save image to directory.");
+             }
+             
+             @Override
+             public void actionPerformed(ActionEvent e) {
+                 if (image.getIcon() != null) {
+                     fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                     int returnVal = fc.showSaveDialog(Gui.this);
+                     if (returnVal == JFileChooser.APPROVE_OPTION) {
+                         File file = fc.getSelectedFile();
+                         Helper.copyStoreImageToLocation(((ImageIcon) image.getIcon()).getDescription(), file);
+                     }
+                 }
+             }
+         }
+         
+         public class SaveAllAction extends AbstractAction {
+             
+             public SaveAllAction() {
+                 super("Save all images to directory.");
+             }
+             
+             @Override
+             public void actionPerformed(ActionEvent e) {
+                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                 int returnVal = fc.showSaveDialog(Gui.this);
+                 if (returnVal == JFileChooser.APPROVE_OPTION) {
+                     new SaveAll_Task().execute();
+                 }
+             }
+             
+             private class SaveAll_Task extends SwingWorker<Void, Void> {
+                 
+                 @Override
+                 protected Void doInBackground() throws Exception {
+                     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                     statusarea.setText("Saving all images of " + blogname.getText() + ".\n" + statusarea.getText());
+                     loadbutton.setEnabled(false);
+                     hiresbutton.setEnabled(false);
+                     resetbutton.setEnabled(false);
+                     runbutton.setEnabled(false);
+                     File file = fc.getSelectedFile();
+                     for (Picture picture : Main.getPictures()) {
+                         String location = Main.getBlogDir() + File.separator + picture.md5_id + File.separator + picture.media_name;
+                         if (picture.downloaded_hi) {
+                             location = Main.getBlogDir() + File.separator + picture.md5_id + File.separator + picture.hi_name;
+                         }
+                         Helper.copyStoreImageToLocation(location, file);
+                     }                    
+                     loadbutton.setEnabled(true);
+                     hiresbutton.setEnabled(true);
+                     resetbutton.setEnabled(true);
+                     runbutton.setEnabled(true);
+                     statusarea.setText("Saving all images of " + blogname.getText() + " complete!\n" + statusarea.getText());
+                     setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                     return null;
+                 }
+             };
+         }
+     }
+     
+     public class PopClickListener extends MouseAdapter {
+         
+         javax.swing.JLabel image;
+         
+         public PopClickListener(javax.swing.JLabel image) {
+             this.image = image;
+         }
+         
+         @Override
+         public void mousePressed(MouseEvent e) {
+             if (e.isPopupTrigger()) {
+                 doPop(e);
+             }
+         }
+         
+         @Override
+         public void mouseReleased(MouseEvent e) {
+             if (e.isPopupTrigger()) {
+                 doPop(e);
+             }
+         }
+         
+         private void doPop(MouseEvent e) {
+             PopUpDemo menu = new PopUpDemo(image);
+             menu.show(e.getComponent(), e.getX(), e.getY());
+         }
+     }
+ 
+     /**
+      * Creates new form Gui
+      */
+     public Gui() {
+         initComponents();
+         hiresbutton.setEnabled(false);
+         image.addMouseListener(new PopClickListener(image));
+     }
+ 
+     /**
+      * This method is called from within the constructor to initialize the form.
+      * WARNING: Do NOT modify this code. The content of this method is always
+      * regenerated by the Form Editor.
+      */
+     @SuppressWarnings("unchecked")
+     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+     private void initComponents() {
+ 
+         jToolBar1 = new javax.swing.JToolBar();
+         httplabel = new javax.swing.JLabel();
+         blogname = new javax.swing.JTextField();
+         tumblrlabel = new javax.swing.JLabel();
+         start = new javax.swing.JTextField();
+         tolabel = new javax.swing.JLabel();
+         end = new javax.swing.JTextField();
+         runbutton = new javax.swing.JButton();
+         resetbutton = new javax.swing.JButton();
+         jScrollPane1 = new javax.swing.JScrollPane();
+         thumbbar = new javax.swing.JToolBar();
+         hiresbutton = new javax.swing.JButton();
+         jScrollPane2 = new javax.swing.JScrollPane();
+         image = new javax.swing.JLabel();
+         progressbar = new javax.swing.JProgressBar();
+         jScrollPane4 = new javax.swing.JScrollPane();
+         statusarea = new javax.swing.JTextArea();
+         loadbutton = new javax.swing.JButton();
+ 
+         jToolBar1.setRollover(true);
+ 
+         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+ 
+         httplabel.setText("http://");
+ 
+         blogname.setColumns(10);
+ 
+        tumblrlabel.setText(".tumblr.com/page");
+ 
+         start.setColumns(3);
+ 
+         tolabel.setText("to");
+ 
+         end.setColumns(3);
+ 
+         runbutton.setText("Run");
+         runbutton.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 runbuttonActionPerformed(evt);
+             }
+         });
+ 
+         resetbutton.setText("Reset");
+         resetbutton.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 resetbuttonActionPerformed(evt);
+             }
+         });
+ 
+         thumbbar.setFloatable(false);
+         thumbbar.setRollover(true);
+         jScrollPane1.setViewportView(thumbbar);
+ 
+         hiresbutton.setText("Hi-Res");
+         hiresbutton.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 hiresbuttonActionPerformed(evt);
+             }
+         });
+ 
+         image.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+         jScrollPane2.setViewportView(image);
+ 
+         statusarea.setEditable(false);
+         statusarea.setColumns(20);
+         statusarea.setRows(5);
+         jScrollPane4.setViewportView(statusarea);
+ 
+         loadbutton.setText("Load");
+         loadbutton.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 loadbuttonActionPerformed(evt);
+             }
+         });
+ 
+         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+         getContentPane().setLayout(layout);
+         layout.setHorizontalGroup(
+             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(layout.createSequentialGroup()
+                 .addContainerGap()
+                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(jScrollPane2)
+                     .addGroup(layout.createSequentialGroup()
+                         .addComponent(httplabel)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(blogname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(tumblrlabel)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(start, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(tolabel)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(end, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(loadbutton)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(runbutton)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(hiresbutton)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                         .addComponent(resetbutton)
+                         .addGap(0, 0, Short.MAX_VALUE))
+                     .addComponent(progressbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                     .addComponent(jScrollPane4))
+                 .addContainerGap())
+         );
+         layout.setVerticalGroup(
+             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(layout.createSequentialGroup()
+                 .addContainerGap()
+                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(httplabel)
+                     .addComponent(blogname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(tumblrlabel)
+                     .addComponent(start, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(tolabel)
+                     .addComponent(end, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addComponent(runbutton)
+                     .addComponent(resetbutton)
+                     .addComponent(hiresbutton)
+                     .addComponent(loadbutton))
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addComponent(progressbar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 438, Short.MAX_VALUE)
+                 .addContainerGap())
+         );
+ 
+         pack();
+     }// </editor-fold>//GEN-END:initComponents
+ 
+     private class Load_Task extends SwingWorker<Void, Void> {
+         
+         @Override
+         protected Void doInBackground() throws Exception {
+             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+             statusarea.setText("Loading " + blogname.getText() + ".\n" + statusarea.getText());
+             loadbutton.setEnabled(false);
+             hiresbutton.setEnabled(false);
+             resetbutton.setEnabled(false);
+             runbutton.setEnabled(false);
+             Main.load();
+             (new Populate()).execute();
+             loadbutton.setEnabled(true);
+             hiresbutton.setEnabled(true);
+             resetbutton.setEnabled(true);
+             runbutton.setEnabled(true);
+             statusarea.setText("Loading " + blogname.getText() + " complete!\n" + statusarea.getText());
+             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+             return null;
+         }
+     };
+     
+     private class Run_Task extends SwingWorker<Void, Void> {
+         
+         @Override
+         protected Void doInBackground() throws Exception {
+             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+             statusarea.setText("Running " + blogname.getText() + ".\n" + statusarea.getText());
+             loadbutton.setEnabled(false);
+             hiresbutton.setEnabled(false);
+             resetbutton.setEnabled(false);
+             runbutton.setEnabled(false);
+             Main.load();
+             int min = Integer.parseInt(start.getText());
+             int max = Integer.parseInt(end.getText());
+             progressbar.setMinimum(0);
+             (new Populate()).execute();
+             Main.run(min, max);
+             (new Populate()).execute();
+             Main.save();
+             loadbutton.setEnabled(true);
+             hiresbutton.setEnabled(true);
+             resetbutton.setEnabled(true);
+             runbutton.setEnabled(true);
+             statusarea.setText("Running " + blogname.getText() + " complete!\n" + statusarea.getText());
+             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+             return null;
+         }
+     };
+     
+     private class Reset_Task extends SwingWorker<Void, Void> {
+         
+         @Override
+         protected Void doInBackground() throws Exception {
+             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+             statusarea.setText("Reset " + blogname.getText() + ".\n" + statusarea.getText());
+             loadbutton.setEnabled(false);
+             hiresbutton.setEnabled(false);
+             resetbutton.setEnabled(false);
+             runbutton.setEnabled(false);
+             thumbbar.removeAll();
+             Main.reset();
+             loadbutton.setEnabled(true);
+             hiresbutton.setEnabled(false);
+             resetbutton.setEnabled(true);
+             runbutton.setEnabled(true);
+             statusarea.setText("Reset " + blogname.getText() + " complete!\n" + statusarea.getText());
+             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+             return null;
+         }
+     };
+     
+     private class HiRes_Task extends SwingWorker<Void, Void> {
+         
+         @Override
+         protected Void doInBackground() throws Exception {
+             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+             statusarea.setText("Hi-Res " + blogname.getText() + ".\n" + statusarea.getText());
+             loadbutton.setEnabled(false);
+             hiresbutton.setEnabled(false);
+             resetbutton.setEnabled(false);
+             runbutton.setEnabled(false);
+             setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+             Main.downloadHiRes();
+             (new Populate()).execute();
+             Main.save();
+             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+             loadbutton.setEnabled(true);
+             hiresbutton.setEnabled(true);
+             resetbutton.setEnabled(true);
+             runbutton.setEnabled(true);
+             statusarea.setText("Hi-Res " + blogname.getText() + " complete!\n" + statusarea.getText());
+             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+             return null;
+         }
+     };
+     
+     private void runbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runbuttonActionPerformed
+         if (blogname.getText().isEmpty()) {
+             statusarea.setText("No blog name given!");
+             return;
+         }
+         try {
+             int min = Integer.parseInt(start.getText());
+             int max = Integer.parseInt(end.getText());
+         } catch (Exception e) {
+             statusarea.setText("Invalid range!");
+             return;
+         }
+         Main.setBlogName(blogname.getText());
+         (new Run_Task()).execute();
+     }//GEN-LAST:event_runbuttonActionPerformed
+     
+     private void resetbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetbuttonActionPerformed
+         if (blogname.getText().isEmpty()) {
+             statusarea.setText("No blog name given!");
+             return;
+         }
+         Main.setBlogName(blogname.getText());
+         (new Reset_Task()).execute();
+     }//GEN-LAST:event_resetbuttonActionPerformed
+     
+     private void hiresbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hiresbuttonActionPerformed
+         if (blogname.getText().isEmpty()) {
+             statusarea.setText("No blog name given!");
+             return;
+         }
+         Main.setBlogName(blogname.getText());
+         (new HiRes_Task()).execute();
+     }//GEN-LAST:event_hiresbuttonActionPerformed
+     
+     private void loadbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadbuttonActionPerformed
+         if (blogname.getText().isEmpty()) {
+             statusarea.setText("No blog name given!");
+             return;
+         }
+         Main.setBlogName(blogname.getText());
+         (new Load_Task()).execute();
+     }//GEN-LAST:event_loadbuttonActionPerformed
+     private MissingIcon placeholderIcon = new MissingIcon();
+     
+     private class Populate extends SwingWorker<Void, ThumbnailAction> {
+         
+         @Override
+         protected Void doInBackground() throws Exception {
+             thumbbar.removeAll();
+             for (Picture picture : Main.getPictures()) {
+                 ImageIcon icon;
+                 String location = Main.getBlogDir() + File.separator + picture.md5_id + File.separator + picture.media_name;
+                 if (picture.downloaded_hi) {
+                     location = Main.getBlogDir() + File.separator + picture.md5_id + File.separator + picture.hi_name;
+                 }
+                 icon = new ImageIcon(location, location);
+                 ThumbnailAction thumbAction;
+                 if (icon != null) {
+                     ImageIcon thumbnailIcon = new ImageIcon(Main.getBlogDir() + File.separator + picture.md5_id + File.separator + picture.thumb_name);
+                     thumbAction = new ThumbnailAction(icon, thumbnailIcon, location);
+                 } else {
+                     thumbAction = new ThumbnailAction(placeholderIcon, placeholderIcon, location);
+                 }
+                 publish(thumbAction);
+             }
+             return null;
+         }
+         
+         @Override
+         protected void process(List<ThumbnailAction> chunks) {
+             for (ThumbnailAction thumbAction : chunks) {
+                 JButton thumbButton = new JButton(thumbAction);
+                 thumbbar.add(thumbButton, thumbbar.getComponentCount() - 1);
+             }
+         }
+     };
+     
+     private class ThumbnailAction extends AbstractAction {
+         
+         private Icon displayPhoto;
+         
+         public ThumbnailAction(Icon photo, Icon thumb, String desc) {
+             displayPhoto = photo;
+             putValue(SHORT_DESCRIPTION, desc);
+             putValue(LARGE_ICON_KEY, thumb);
+         }
+         
+         @Override
+         public void actionPerformed(ActionEvent e) {
+             image.setIcon(displayPhoto);
+         }
+     }
+ 
+     /**
+      * @param args the command line arguments
+      */
+     public static void main(String args[]) {
+         /* Set the Nimbus look and feel */
+         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+          */
+         try {
+             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                 if ("Nimbus".equals(info.getName())) {
+                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                     break;
+                 }
+             }
+         } catch (ClassNotFoundException ex) {
+             java.util.logging.Logger.getLogger(Gui.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         } catch (InstantiationException ex) {
+             java.util.logging.Logger.getLogger(Gui.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         } catch (IllegalAccessException ex) {
+             java.util.logging.Logger.getLogger(Gui.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+             java.util.logging.Logger.getLogger(Gui.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         }
+         //</editor-fold>
+ 
+         /* Create and display the form */
+         java.awt.EventQueue.invokeLater(new Runnable() {
+             @Override
+             public void run() {
+                 Gui gui = new Gui();
+                 gui.setVisible(true);
+             }
+         });
+     }
+     
+     protected void setStatus(String status) {
+         this.statusarea.setText(status + "\n" + statusarea.getText());
+     }
+     
+     protected void setProgress(int progress) {
+         this.progressbar.setValue(progress);
+     }
+     
+     protected void setMaxProgress(int progress) {
+         this.progressbar.setMaximum(progress);
+     }
+     // Variables declaration - do not modify//GEN-BEGIN:variables
+     private javax.swing.JTextField blogname;
+     private javax.swing.JTextField end;
+     private javax.swing.JButton hiresbutton;
+     private javax.swing.JLabel httplabel;
+     private javax.swing.JLabel image;
+     private javax.swing.JScrollPane jScrollPane1;
+     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+     private javax.swing.JScrollPane jScrollPane4;
+     private javax.swing.JToolBar jToolBar1;
+     private javax.swing.JButton loadbutton;
+     private javax.swing.JProgressBar progressbar;
+     private javax.swing.JButton resetbutton;
+     private javax.swing.JButton runbutton;
+     private javax.swing.JTextField start;
+     private javax.swing.JTextArea statusarea;
+     private javax.swing.JToolBar thumbbar;
+     private javax.swing.JLabel tolabel;
+     private javax.swing.JLabel tumblrlabel;
+     // End of variables declaration//GEN-END:variables
+ }
