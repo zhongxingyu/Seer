@@ -1,0 +1,218 @@
+ /*
+  *  Licensed to the Apache Software Foundation (ASF) under one
+  *  or more contributor license agreements.  See the NOTICE file
+  *  distributed with this work for additional information
+  *  regarding copyright ownership.  The ASF licenses this file
+  *  to you under the Apache License, Version 2.0 (the
+  *  "License"); you may not use this file except in compliance
+  *  with the License.  You may obtain a copy of the License at
+  *
+  *    http://www.apache.org/licenses/LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing,
+  *  software distributed under the License is distributed on an
+  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  *  KIND, either express or implied.  See the License for the
+  *  specific language governing permissions and limitations
+  *  under the License.
+  *
+  */
+ package org.apache.mina.transport.vmpipe;
+ 
+ import java.util.concurrent.Semaphore;
+ import java.util.concurrent.TimeUnit;
+ 
+ import junit.framework.Assert;
+ import junit.framework.TestCase;
+ 
+ import org.apache.mina.common.ConnectFuture;
+ import org.apache.mina.common.IoAcceptor;
+ import org.apache.mina.common.IoBuffer;
+ import org.apache.mina.common.IoConnector;
+ import org.apache.mina.common.IoHandlerAdapter;
+ import org.apache.mina.common.IoSession;
+ import org.apache.mina.filter.executor.ExecutorFilter;
+ 
+ /**
+  * Makes sure if the order of event is correct.
+  *
+  * @author The Apache MINA Project Team (dev@mina.apache.org)
+  * @version $Rev$, $Date$
+  */
+ public class VmPipeEventOrderTest extends TestCase {
+     public void testServerToClient() throws Exception {
+         IoAcceptor acceptor = new VmPipeAcceptor();
+         //acceptor.getFilterChain().addLast( "logger", new LoggingFilter() );
+ 
+         IoConnector connector = new VmPipeConnector();
+         //connector.getFilterChain().addLast( "logger", new LoggingFilter() );
+ 
+         acceptor.setHandler(new IoHandlerAdapter() {
+             @Override
+             public void sessionOpened(IoSession session) throws Exception {
+                 session.write("B");
+             }
+ 
+             @Override
+             public void messageSent(IoSession session, Object message)
+                     throws Exception {
+                 session.close();
+             }
+         });
+ 
+         acceptor.bind(new VmPipeAddress(1));
+ 
+         final StringBuffer actual = new StringBuffer();
+ 
+         connector.setHandler(new IoHandlerAdapter() {
+ 
+             @Override
+             public void messageReceived(IoSession session, Object message)
+                     throws Exception {
+                 actual.append(message);
+             }
+ 
+             @Override
+             public void sessionClosed(IoSession session) throws Exception {
+                 actual.append("C");
+             }
+ 
+             @Override
+             public void sessionOpened(IoSession session) throws Exception {
+                 actual.append("A");
+             }
+ 
+         });
+ 
+         ConnectFuture future = connector.connect(new VmPipeAddress(1));
+ 
+         future.awaitUninterruptibly();
+         future.getSession().getCloseFuture().awaitUninterruptibly();
+         acceptor.dispose();
+ 
+         // sessionClosed() might not be invoked yet
+         // even if the connection is closed.
+         while (actual.indexOf("C") < 0) {
+             Thread.yield();
+         }
+ 
+         Assert.assertEquals("ABC", actual.toString());
+     }
+ 
+     public void testClientToServer() throws Exception {
+         IoAcceptor acceptor = new VmPipeAcceptor();
+         //acceptor.getFilterChain().addLast( "logger", new LoggingFilter() );
+ 
+         IoConnector connector = new VmPipeConnector();
+         //connector.getFilterChain().addLast( "logger", new LoggingFilter() );
+ 
+         final StringBuffer actual = new StringBuffer();
+ 
+         acceptor.setHandler(new IoHandlerAdapter() {
+ 
+             @Override
+             public void messageReceived(IoSession session, Object message)
+                     throws Exception {
+                 actual.append(message);
+             }
+ 
+             @Override
+             public void sessionClosed(IoSession session) throws Exception {
+                 actual.append("C");
+             }
+ 
+             @Override
+             public void sessionOpened(IoSession session) throws Exception {
+                 actual.append("A");
+             }
+ 
+         });
+ 
+         acceptor.bind(new VmPipeAddress(1));
+ 
+         connector.setHandler(new IoHandlerAdapter() {
+             @Override
+             public void sessionOpened(IoSession session) throws Exception {
+                 session.write("B");
+             }
+ 
+             @Override
+             public void messageSent(IoSession session, Object message)
+                     throws Exception {
+                 session.close();
+             }
+         });
+ 
+         ConnectFuture future = connector.connect(new VmPipeAddress(1));
+ 
+         future.awaitUninterruptibly();
+         future.getSession().getCloseFuture().awaitUninterruptibly();
+         acceptor.dispose();
+         connector.dispose();
+ 
+         // sessionClosed() might not be invoked yet
+         // even if the connection is closed.
+         while (actual.indexOf("C") < 0) {
+             Thread.yield();
+         }
+ 
+         Assert.assertEquals("ABC", actual.toString());
+     }
+ 
+     public void testSessionCreated() throws Exception {
+         final Semaphore semaphore = new Semaphore(0);
+         final StringBuffer stringBuffer = new StringBuffer();
+         VmPipeAcceptor vmPipeAcceptor = new VmPipeAcceptor();
+         final VmPipeAddress vmPipeAddress = new VmPipeAddress(12345);
+         vmPipeAcceptor.setHandler(new IoHandlerAdapter() {
+             @Override
+             public void sessionCreated(IoSession session) throws Exception {
+                 // pretend we are doing some time-consuming work. For
+                 // performance reasons, you would never want to do time
+                 // consuming work in sessionCreated.
+                 // However, this increases the likelihood of the timing bug.
+                 Thread.sleep(1000);
+                 stringBuffer.append("A");
+             }
+ 
+             @Override
+             public void sessionOpened(IoSession session) throws Exception {
+                 stringBuffer.append("B");
+             }
+ 
+             @Override
+             public void messageReceived(IoSession session, Object message)
+                     throws Exception {
+                 stringBuffer.append("C");
+             }
+             
+             @Override
+             public void sessionClosed(IoSession session) throws Exception {
+                 stringBuffer.append("D");
+                 semaphore.release();
+             }
+         });
+         vmPipeAcceptor.bind(vmPipeAddress);
+ 
+         final VmPipeConnector vmPipeConnector = new VmPipeConnector();
+         vmPipeConnector.getFilterChain().addLast("executor", new ExecutorFilter());
+         vmPipeConnector.setHandler(new IoHandlerAdapter() {
+             @Override
+             public void sessionOpened(IoSession session) throws Exception {
+                 session.write(IoBuffer.wrap(new byte[1]));
+             }
+         });
+         ConnectFuture connectFuture = vmPipeConnector.connect(vmPipeAddress);
+         connectFuture.awaitUninterruptibly();
+        
+        // Wait until one byte is written.
+        while (connectFuture.getSession().getWrittenBytes() == 0) {
+            Thread.yield();
+        }
+        
+         connectFuture.getSession().close();
+         semaphore.tryAcquire(1, TimeUnit.SECONDS);
+         vmPipeAcceptor.unbind(vmPipeAddress);
+         Assert.assertEquals("ABCD", stringBuffer.toString());
+     }
+ }

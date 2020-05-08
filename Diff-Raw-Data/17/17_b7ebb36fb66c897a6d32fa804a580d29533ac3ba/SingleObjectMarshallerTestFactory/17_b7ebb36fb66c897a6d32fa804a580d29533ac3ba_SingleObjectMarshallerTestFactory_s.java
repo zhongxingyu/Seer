@@ -1,0 +1,215 @@
+ /*
+  * JBoss, Home of Professional Open Source
+  * Copyright 2008, JBoss Inc., and individual contributors as indicated
+  * by the @authors tag. See the copyright.txt in the distribution for a
+  * full listing of individual contributors.
+  *
+  * This is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation; either version 2.1 of
+  * the License, or (at your option) any later version.
+  *
+  * This software is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this software; if not, write to the Free
+  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  */
+ 
+ package org.jboss.test.marshalling;
+ 
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.EnumMap;
+ import java.util.EnumSet;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.IdentityHashMap;
+ import java.util.LinkedHashMap;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.TreeMap;
+ import java.util.TreeSet;
+ import java.util.concurrent.TimeUnit;
+ import org.jboss.marshalling.MarshallingConfiguration;
+ import org.testng.annotations.DataProvider;
+ import org.testng.annotations.Factory;
+ import org.testng.annotations.Test;
+ 
+ /**
+  *
+  */
+ @Test
+ public final class SingleObjectMarshallerTestFactory {
+ 
+     @DataProvider(name = "singleObjectProvider")
+     @SuppressWarnings({ "ZeroLengthArrayAllocation" })
+     public static Object[][] parameters() {
+         final List<Object[]> newList = new ArrayList<Object[]>();
+         final List<Object> testObjects = new ArrayList<Object>();
+         populate(testObjects);
+         for (Object[] objects : SimpleMarshallerTestFactory.parameters()) {
+             for (Object object : testObjects) {
+                 final Object[] params = new Object[4];
+                 System.arraycopy(objects, 0, params, 0, 3);
+                 params[3] = object;
+                 newList.add(params);
+             }
+         }
+         return newList.toArray(new Object[newList.size()][]);
+     }
+ 
+     private static Map<Integer, Object> populateMap(int size, Map<Integer, Object> map) {
+         for (int i = 0; i < size; i ++) {
+             map.put(Integer.valueOf(i), Long.valueOf(i));
+         }
+         return map;
+     }
+ 
+     private static Collection<Integer> populateCollection(int size, Collection<Integer> collection) {
+         for (int i = 0; i < size; i++) {
+             collection.add(Integer.valueOf(i));
+         }
+         return collection;
+     }
+  
+     private static void populateAllMapSizes(List<Object> list, Maker<Map<Integer,Object>> mapMaker) {
+         list.add(populateMap(0, mapMaker.make()));
+         list.add(populateMap(1, mapMaker.make()));
+         list.add(populateMap(80, mapMaker.make()));
+         list.add(populateMap(256, mapMaker.make()));
+         list.add(populateMap(257, mapMaker.make()));
+         list.add(populateMap(8000, mapMaker.make()));
+         list.add(populateMap(65536, mapMaker.make()));
+         list.add(populateMap(65537, mapMaker.make()));
+ //        list.add(populateMap(800000, mapMaker.make())); // too slow
+     }
+ 
+     private static void populateAllCollectionSizes(List<Object> list, Maker<Collection<Integer>> collectionMaker) {
+         list.add(populateCollection(0, collectionMaker.make()));
+         list.add(populateCollection(1, collectionMaker.make()));
+         list.add(populateCollection(80, collectionMaker.make()));
+         list.add(populateCollection(256, collectionMaker.make()));
+         list.add(populateCollection(257, collectionMaker.make()));
+         list.add(populateCollection(8000, collectionMaker.make()));
+         list.add(populateCollection(65536, collectionMaker.make()));
+         list.add(populateCollection(65537, collectionMaker.make()));
+ //        list.add(populateCollection(800000, collectionMaker.make())); // too slow
+     }
+ 
+     private static void populateAllMaps(List<Object> list) {
+         populateAllMapSizes(list, hashMapMaker);
+         populateAllMapSizes(list, linkedHashMapMaker);
+         populateAllMapSizes(list, identityHashMapMaker);
+         populateAllMapSizes(list, treeMapMaker);
+     }
+ 
+     private static void populateAllCollections(List<Object> list) {
+         populateAllCollectionSizes(list, arrayListMaker);
+         populateAllCollectionSizes(list, linkedListMaker);
+         populateAllCollectionSizes(list, hashSetMaker);
+         populateAllCollectionSizes(list, linkedHashSetMaker);
+         populateAllCollectionSizes(list, treeSetMaker);
+     }
+ 
+     private static void populate(List<Object> list) {
+         populateAllMaps(list);
+         populateAllCollections(list);
+         list.add(Collections.emptySet());
+         list.add(Collections.emptyList());
+         list.add(Collections.emptyMap());
+         list.add(Collections.singleton(Integer.valueOf(1234)));
+         list.add(Collections.singletonList(Integer.valueOf(1234)));
+         list.add(Collections.singletonMap(Integer.valueOf(1234), Long.valueOf(54321L)));
+         list.add(Boolean.TRUE);
+         list.add(Boolean.FALSE);
+         list.add(null);
+         list.add(Short.valueOf((short) 153));
+         list.add(Byte.valueOf((byte) 18));
+         list.add(Character.valueOf('X'));
+         list.add(Float.valueOf(0.12f));
+         list.add(Double.valueOf(0.12));
+         list.add("This is a string");
+         list.add(new TestComplexObject(true, (byte)5, 'c', (short)8192, 294902, 319203219042L, 21.125f, 42.625, "TestString", new HashSet<Object>(Arrays.asList("Hello", Boolean.TRUE, Integer.valueOf(12345)))));
+         list.add(new TestComplexExternalizableObject(true, (byte)5, 'c', (short)8192, 294902, 319203219042L, 21.125f, 42.625, "TestString", new HashSet<Object>(Arrays.asList("Hello", Boolean.TRUE, Integer.valueOf(12345)))));
+         list.add(Collections.unmodifiableMap(new HashMap<Object, Object>()));
+         list.add(Collections.unmodifiableSet(new HashSet<Object>()));
+         list.add(Collections.unmodifiableCollection(new HashSet<Object>()));
+         list.add(Collections.unmodifiableList(new ArrayList<Object>()));
+         list.add(Collections.unmodifiableSortedMap(new TreeMap<Object, Object>()));
+         list.add(Collections.unmodifiableSortedSet(new TreeSet<Object>()));
+         list.add(EnumSet.noneOf(Thread.State.class));
+         list.add(EnumSet.allOf(Thread.State.class));
+         list.add(new EnumMap<TimeUnit, String>(TimeUnit.class));
+     }
+ 
+     @Factory(dataProvider = "singleObjectProvider")
+     public Object[] getTests(TestMarshallerProvider testMarshallerProvider, TestUnmarshallerProvider testUnmarshallerProvider, MarshallingConfiguration configuration, Object subject) {
+         return new Object[] { new SingleObjectMarshallerTests(testMarshallerProvider, testUnmarshallerProvider, configuration, subject) };
+     }
+ 
+     private static final Maker<Map<Integer,Object>> hashMapMaker = new Maker<Map<Integer,Object>>() {
+         public Map<Integer, Object> make() {
+             return new HashMap<Integer, Object>();
+         }
+     };
+ 
+     private static final Maker<Map<Integer,Object>> treeMapMaker = new Maker<Map<Integer,Object>>() {
+         public Map<Integer, Object> make() {
+             return new TreeMap<Integer, Object>();
+         }
+     };
+ 
+     private static final Maker<Map<Integer,Object>> linkedHashMapMaker = new Maker<Map<Integer,Object>>() {
+         public Map<Integer, Object> make() {
+             return new LinkedHashMap<Integer, Object>();
+         }
+     };
+ 
+     private static final Maker<Map<Integer,Object>> identityHashMapMaker = new Maker<Map<Integer,Object>>() {
+         public Map<Integer, Object> make() {
+             return new IdentityHashMap<Integer, Object>();
+         }
+     };
+ 
+     private static final Maker<Collection<Integer>> arrayListMaker = new Maker<Collection<Integer>>() {
+         public Collection<Integer> make() {
+             return new ArrayList<Integer>();
+         }
+     };
+ 
+     private static final Maker<Collection<Integer>> linkedListMaker = new Maker<Collection<Integer>>() {
+         public Collection<Integer> make() {
+             return new LinkedList<Integer>();
+         }
+     };
+ 
+     private static final Maker<Collection<Integer>> hashSetMaker = new Maker<Collection<Integer>>() {
+         public Collection<Integer> make() {
+             return new HashSet<Integer>();
+         }
+     };
+ 
+     private static final Maker<Collection<Integer>> linkedHashSetMaker = new Maker<Collection<Integer>>() {
+         public Collection<Integer> make() {
+             return new HashSet<Integer>();
+         }
+     };
+ 
+     private static final Maker<Collection<Integer>> treeSetMaker = new Maker<Collection<Integer>>() {
+         public Collection<Integer> make() {
+             return new TreeSet<Integer>();
+         }
+     };
+ 
+     private interface Maker<T> {
+         T make();
+     }
+ }

@@ -1,0 +1,415 @@
+ package hudson.plugins.global_build_stats;
+ 
+ import hudson.Extension;
+ import hudson.Plugin;
+ import hudson.model.AbstractBuild;
+ import hudson.model.AbstractProject;
+import hudson.model.CheckPoint;
+ import hudson.model.Hudson;
+ import hudson.model.ManagementLink;
+ import hudson.model.TaskListener;
+ import hudson.model.TopLevelItem;
+import hudson.model.Descriptor.FormException;
+ import hudson.model.listeners.RunListener;
+ import hudson.plugins.global_build_stats.model.BuildStatConfiguration;
+ import hudson.plugins.global_build_stats.model.DateRange;
+ import hudson.plugins.global_build_stats.model.HistoricScale;
+ import hudson.plugins.global_build_stats.model.JobBuildResult;
+ import hudson.security.Permission;
+ import hudson.util.ChartUtil;
+ import hudson.util.DataSetBuilder;
+ import hudson.util.FormValidation;
+ import hudson.util.ShiftedCategoryAxis;
+ import hudson.util.StackedAreaRenderer2;
+ 
+ import java.awt.Color;
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.Calendar;
+ import java.util.Collections;
+ import java.util.Comparator;
+ import java.util.GregorianCalendar;
+ import java.util.Iterator;
+ import java.util.List;
+ 
+ import javax.servlet.ServletException;
+ 
+import net.sf.json.JSONObject;
+
+ import org.jfree.chart.ChartFactory;
+ import org.jfree.chart.JFreeChart;
+ import org.jfree.chart.axis.CategoryAxis;
+ import org.jfree.chart.axis.CategoryLabelPositions;
+ import org.jfree.chart.axis.NumberAxis;
+ import org.jfree.chart.plot.CategoryPlot;
+ import org.jfree.chart.plot.PlotOrientation;
+ import org.jfree.chart.title.LegendTitle;
+ import org.jfree.data.category.CategoryDataset;
+ import org.jfree.ui.RectangleEdge;
+ import org.jfree.ui.RectangleInsets;
+ import org.kohsuke.stapler.QueryParameter;
+ import org.kohsuke.stapler.StaplerRequest;
+ import org.kohsuke.stapler.StaplerResponse;
+ 
+ /**
+  * Entry point of the global build stats plugin
+  * 
+  * @author fcamblor
+  * @plugin
+  */
+ public class GlobalBuildStatsPlugin extends Plugin {
+ 
+ 	private List<JobBuildResult> jobBuildResults = new ArrayList<JobBuildResult>();
+ 	private List<BuildStatConfiguration> buildStatConfigs = new ArrayList<BuildStatConfiguration>();
+ 
+ 	@Override
+ 	public void postInitialize() throws Exception {
+ 		super.postInitialize();
+ 		
+ 		// Reload plugin informations
+ 		this.load();
+ 	}
+ 	
+     @Extension
+     public static class GlobalBuildStatsManagementLink extends ManagementLink {
+ 
+         public String getIconFileName() {
+             return "/plugin/global-build-stats/icons/global-build-stats.png";
+         }
+ 
+         public String getDisplayName() {
+             return "Global Builds Stats";
+         }
+ 
+         public String getUrlName() {
+             return "plugin/global-build-stats/";
+         }
+         
+         @Override public String getDescription() {
+             return "Displays stats about daily build failures";
+         }
+     }
+     
+     @Extension
+     public static class GlobalBuildStatsRunListener extends RunListener<AbstractBuild>{
+     	public GlobalBuildStatsRunListener() {
+     		super(AbstractBuild.class);
+ 		}
+     	
+     	@Override
+     	public void onCompleted(AbstractBuild r, TaskListener listener) {
+     		super.onCompleted(r, listener);
+     		
+     		GlobalBuildStatsPlugin plugin = Hudson.getInstance().getPlugin(GlobalBuildStatsPlugin.class);
+     		plugin.addBuild(r);
+     		try {
+ 				plugin.save();
+ 			} catch (IOException e) {
+ 			}
+     	}
+     }
+     
+     public FormValidation doCheckJobFilter(@QueryParameter String value){
+     	try{ JobFilterFactory.createJobFilter(value); return FormValidation.ok(); }
+     	catch(Throwable t){ return FormValidation.error("JobFilter is invalid"); }
+     }
+     
+     public FormValidation doCheckFailuresShown(@QueryParameter String value){
+     	if(!isBool(value)){ return FormValidation.error("FailuresShown must be a boolean"); }
+     	else { return FormValidation.ok(); }
+     }
+     
+     public FormValidation doCheckUnstablesShown(@QueryParameter String value){
+     	if(!isBool(value)){ return FormValidation.error("UnstablesShown must be a boolean"); }
+     	else { return FormValidation.ok(); }
+     }
+     
+     public FormValidation doCheckAbortedShown(@QueryParameter String value){
+     	if(!isBool(value)){ return FormValidation.error("AbortedShown must be a boolean"); }
+     	else { return FormValidation.ok(); }
+     }
+     
+     public FormValidation doCheckNotBuildsShown(@QueryParameter String value){
+     	if(!isBool(value)){ return FormValidation.error("NotBuildsShown must be a boolean"); }
+     	else { return FormValidation.ok(); }
+     }
+     
+     public FormValidation doCheckSuccessShown(@QueryParameter String value){
+     	if(!isBool(value)){ return FormValidation.error("SuccessShown must be a boolean"); }
+     	else { return FormValidation.ok(); }
+     }
+     
+ 	public FormValidation doCheckHistoricScale(@QueryParameter String value){
+     	if(!isMandatory(value)){ return FormValidation.error("Historic scale is mandatory"); }
+     	else {
+     		try{ HistoricScale.valueOf(value); return FormValidation.ok(); }
+     		catch(Throwable t){ return FormValidation.error("HistoricScale is invalid"); }
+     	}
+     }
+ 
+ 	public FormValidation doCheckHistoricLength(@QueryParameter String value){
+     	if(!isMandatory(value)){ return FormValidation.error("Historic length is mandatory"); }
+     	else if(!isInt(value)){ return FormValidation.error("Historic length should be an integer"); }
+     	else { return FormValidation.ok(); }
+     }
+ 
+     public FormValidation doCheckBuildStatHeight(@QueryParameter String value){
+     	if(!isMandatory(value)){ return FormValidation.error("Build stats height is mandatory"); }
+     	else if(!isInt(value)){ return FormValidation.error("Build stats height should be an integer"); }
+     	else { return FormValidation.ok(); }
+     }
+ 
+     public FormValidation doCheckBuildStatWidth(@QueryParameter String value){
+     	if(!isMandatory(value)){ return FormValidation.error("Build stats width is mandatory"); }
+     	else if(!isInt(value)){ return FormValidation.error("Build stats width should be an integer"); }
+     	else { return FormValidation.ok(); }
+     }
+ 
+     public FormValidation doCheckTitle(@QueryParameter String value){
+     	if(!isMandatory(value)){ return FormValidation.error("Title is mandatory"); }
+     	else { return FormValidation.ok(); }
+     }
+ 
+     public void doRecordBuildInfos(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+         jobBuildResults.clear();
+         
+         //TODO fix MatrixProject and use getAllJobs()
+         for (TopLevelItem item : Hudson.getInstance().getItems()) {
+             if (item instanceof AbstractProject) {
+             	addBuildsFrom((AbstractProject) item);
+             }
+         }
+ 
+     	save();
+     	
+         res.forwardToPreviousPage(req);
+     }
+     
+     public void doCreateChart(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+     	BuildStatConfiguration config = createBuildStatConfig(req);
+     	List<JobBuildResult> filteredJobBuildResults = createFilteredAndSortedBuildResults(config);
+         DataSetBuilder<String, DateRange> dsb = createDataSetBuilder(filteredJobBuildResults, config);
+     	
+         ChartUtil.generateGraph(req, res, createChart(req, dsb.build(), config.getBuildStatTitle()), 
+         		config.getBuildStatWidth(), config.getBuildStatHeight());
+     }
+     
+ 	protected static boolean isInt(String value){
+ 		try{
+ 			Integer.parseInt(value);
+ 			return true;
+ 		}catch(NumberFormatException e){
+ 			return false;
+ 		}
+ 	}
+ 	
+ 	protected static boolean isMandatory(String value){
+ 		return value != null && !"".equals(value);
+ 	}
+ 	
+ 	protected static boolean isBool(String value){
+ 		try{
+ 			Boolean.valueOf(value);
+ 			return true;
+ 		}catch(Throwable t){
+ 			return false;
+ 		}
+ 	}
+     
+     public void doUpdateBuildStatConfiguration(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+     	this.buildStatConfigs.set(Integer.parseInt(req.getParameter("buildStatId")), createBuildStatConfig(req));
+     	save();
+     	res.forwardToPreviousPage(req);
+     }
+     
+     public void doAddBuildStatConfiguration(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+     	this.buildStatConfigs.add(createBuildStatConfig(req));
+     	save();
+     	res.forwardToPreviousPage(req);
+     }
+     
+     public void doDeleteConfiguration(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+     	this.buildStatConfigs.remove(Integer.parseInt(req.getParameter("buildStatId")));
+     	save();
+         res.forwardToPreviousPage(req);
+     }
+     
+     public void doMoveUpConf(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+     	// Swapping build confs
+     	int index = Integer.parseInt(req.getParameter("buildStatId"));
+     	BuildStatConfiguration b = this.buildStatConfigs.get(index);
+     	this.buildStatConfigs.set(index, this.buildStatConfigs.get(index-1));
+     	this.buildStatConfigs.set(index-1, b);
+     	save();
+         res.forwardToPreviousPage(req);
+     }
+     
+     public void doMoveDownConf(StaplerRequest req, StaplerResponse res) throws ServletException, IOException {
+    	Hudson.getInstance().checkPermission(Hudson.ADMINISTER);
+     	
+     	// Swapping build confs
+     	int index = Integer.parseInt(req.getParameter("buildStatId"));
+     	BuildStatConfiguration b = this.buildStatConfigs.get(index);
+     	this.buildStatConfigs.set(index, this.buildStatConfigs.get(index+1));
+     	this.buildStatConfigs.set(index+1, b);
+     	save();
+         res.forwardToPreviousPage(req);
+     }
+     
+     private BuildStatConfiguration createBuildStatConfig(StaplerRequest req){
+     	return new BuildStatConfiguration(
+     			req.getParameter("title"), 
+     			Integer.parseInt(req.getParameter("buildStatWidth")),
+     			Integer.parseInt(req.getParameter("buildStatHeight")),
+     			Integer.parseInt(req.getParameter("historicLength")), 
+     			HistoricScale.valueOf(req.getParameter("historicScale")),
+     			req.getParameter("jobFilter"),
+     			Boolean.parseBoolean(req.getParameter("successShown")),
+     			Boolean.parseBoolean(req.getParameter("failuresShown")),
+     			Boolean.parseBoolean(req.getParameter("unstablesShown")),
+     			Boolean.parseBoolean(req.getParameter("abortedShown")),
+     			Boolean.parseBoolean(req.getParameter("notBuildsShown")));
+     }
+     
+     private JFreeChart createChart(StaplerRequest req, CategoryDataset dataset, String title) {
+ 
+     	final JFreeChart chart = ChartFactory.createStackedAreaChart(title, null, "Count", dataset, PlotOrientation.VERTICAL, true, true, false);
+         chart.setBackgroundPaint(Color.white);
+         
+         final LegendTitle legend = chart.getLegend();
+         legend.setPosition(RectangleEdge.RIGHT);
+ 
+         final CategoryPlot plot = chart.getCategoryPlot();
+         
+         plot.setForegroundAlpha(0.85F);
+         plot.setRangeGridlinesVisible(true);
+ 
+         CategoryAxis domainAxis = new ShiftedCategoryAxis(null);
+         domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+         domainAxis.setLowerMargin(0.0);
+         domainAxis.setUpperMargin(0.0);
+         domainAxis.setCategoryMargin(0.0);
+         plot.setDomainAxis(domainAxis);
+ 
+         final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+ 
+         // This renderer allows to map area for clicks
+         // + it fixes some rendering bug (0 is displayed on "demi" tick instead of "plain" tick)
+         final StackedAreaRenderer2 renderer = new StackedAreaRenderer2();
+         renderer.setSeriesPaint(0, new Color(255, 255, 85));
+         renderer.setSeriesPaint(1, new Color(255, 85, 85));
+         renderer.setSeriesPaint(2, new Color(85, 85, 85));
+         renderer.setSeriesPaint(3, new Color(85, 85, 255));
+         renderer.setSeriesPaint(4, new Color(255, 85, 255));
+ 
+         plot.setRenderer(renderer);
+         plot.setInsets(new RectangleInsets(5.0, 0, 0, 5.0));
+ 
+         return chart;
+     }
+     
+     private DataSetBuilder<String, DateRange> createDataSetBuilder(List<JobBuildResult> filteredJobBuildResults, 
+     			BuildStatConfiguration config){
+         DataSetBuilder<String, DateRange> dsb = new DataSetBuilder<String, DateRange>();
+         
+         if(filteredJobBuildResults.size() == 0){
+         	return dsb;
+         }
+         
+     	Calendar d2 = new GregorianCalendar();
+     	Calendar d1 = config.getHistoricScale().getPreviousStep(d2);
+     	
+     	int nbSuccess=0, nbFailures=0, nbUnstables=0, nbAborted=0, nbNotBuild=0;
+     	int nbSteps = 0;
+     	Iterator<JobBuildResult> buildsIter = filteredJobBuildResults.iterator();
+     	JobBuildResult currentBuild = buildsIter.next();
+     	Calendar buildDate = currentBuild.getBuildDate();
+     	while(nbSteps != config.getHistoricLength()){
+         	// Finding range where the build resides
+         	while(nbSteps < config.getHistoricLength() && d1.after(buildDate)){
+         		DateRange range = new DateRange(d1, d2);
+         		dsb.add(nbSuccess, "success", range);
+     			dsb.add(nbFailures, "failures", range);
+     			dsb.add(nbUnstables, "unstables", range);
+     			dsb.add(nbAborted, "aborted", range);
+     			dsb.add(nbNotBuild, "not build", range);
+         		
+ 				d2 = (Calendar)d1.clone();
+ 				d1 = config.getHistoricScale().getPreviousStep(d2);
+ 				nbSuccess=0; nbFailures=0; nbUnstables=0; nbAborted=0; nbNotBuild=0;
+ 				nbSteps++;
+         	}
+         	
+         	// If no range found : stop the iteration !
+         	if(nbSteps != config.getHistoricLength() && currentBuild != null){
+         		nbSuccess += config.isSuccessShown()?currentBuild.getResult().getSuccessCount():0;
+         		nbFailures += config.isFailuresShown()?currentBuild.getResult().getFailureCount():0;
+         		nbUnstables += config.isUnstablesShown()?currentBuild.getResult().getUnstableCount():0;
+         		nbAborted += config.isAbortedShown()?currentBuild.getResult().getAbortedCount():0;
+         		nbNotBuild += config.isNotBuildShown()?currentBuild.getResult().getNotBuildCount():0;
+         		
+         		if(buildsIter.hasNext()){
+         			currentBuild = buildsIter.next();
+         			buildDate = currentBuild.getBuildDate();
+         		} else {
+         			currentBuild = null;
+         			buildDate = new GregorianCalendar(); buildDate.setTimeInMillis(1);
+         		}
+         	}
+     	}
+     	
+         return dsb;
+     }
+     
+     private List<JobBuildResult> createFilteredAndSortedBuildResults(BuildStatConfiguration config){
+     	List<JobBuildResult> filteredJobBuildResults = new ArrayList<JobBuildResult>();
+         for(JobBuildResult r : jobBuildResults){
+         	if(JobFilterFactory.createJobFilter(config.getJobFilter()).isJobApplicable(r.getJobName())){
+         		filteredJobBuildResults.add(r);
+         	}
+         }
+         
+         // Sorting on job results dates
+         Collections.sort(filteredJobBuildResults, Collections.reverseOrder(new Comparator<JobBuildResult>() {
+         	public int compare(JobBuildResult o1, JobBuildResult o2) {
+         		return o1.getBuildDate().compareTo(o2.getBuildDate());
+         	}
+ 		}));
+         
+         return filteredJobBuildResults;
+     }
+     	
+ 	private void addBuildsFrom(AbstractProject project){
+         List<AbstractBuild> builds = project.getBuilds();
+         Iterator<AbstractBuild> buildIterator = builds.iterator();
+ 
+         while (buildIterator.hasNext()) {
+         	addBuild(buildIterator.next());
+         }
+ 	}
+ 	
+ 	private void addBuild(AbstractBuild build){
+     	jobBuildResults.add(JobBuildResultFactory.INSTANCE.createJobBuildResult(build));
+ 	}
+ 
+ 	public BuildStatConfiguration[] getBuildStatConfigs() {
+ 		return buildStatConfigs.toArray(new BuildStatConfiguration[]{});
+ 	}
+ 	
+ 	public Permission getRequiredPermission(){
+ 		return Hudson.ADMINISTER;
+ 	}
+ }

@@ -1,0 +1,37 @@
+ package inter;
+ 
+ import lexer.*;
+ 
+ /**
+  * A node in the syntax tree.
+  */
+ public class Node {
+ 	/** Source code line number for this node. */
+ 	int lexline = 0;
+ 
+ 	Node() {
+ 		lexline = Lexer.line;
+ 	}
+ 
+ 	void error(String s) {
+ 		throw new Error("near line " + lexline + ": " + s);
+ 	}
+ 
+ 	static int labels = 0;
+ 
+ 	public int newlabel() {
+ 		return ++labels;
+ 	}
+ 
+ 	public void emitlabel(int i) {
+ 		System.out.print("L" + i + ":");
+ 	}
+ 
+ 	public void emit(String s) {
+ 		System.out.println("\t" + s);
+ 	}
+	
+ 	public static void reset() {
+ 		labels = 0;
+ 	}
+ }

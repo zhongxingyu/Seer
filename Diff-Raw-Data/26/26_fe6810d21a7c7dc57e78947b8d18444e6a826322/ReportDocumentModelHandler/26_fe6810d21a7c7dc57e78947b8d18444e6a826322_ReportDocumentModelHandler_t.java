@@ -1,0 +1,368 @@
+ /**
+  *  This document is a part of the source code and related artifacts
+  *  for CollectionSpace, an open source collections management system
+  *  for museums and related institutions:
+ 
+  *  http://www.collectionspace.org
+  *  http://wiki.collectionspace.org
+ 
+  *  Copyright 2009 University of California at Berkeley
+ 
+  *  Licensed under the Educational Community License (ECL), Version 2.0.
+  *  You may not use this file except in compliance with this License.
+ 
+  *  You may obtain a copy of the ECL 2.0 License at
+ 
+  *  https://source.collectionspace.org/collection-space/LICENSE.txt
+ 
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations under the License.
+  */
+ package org.collectionspace.services.report.nuxeo;
+ 
+ import java.io.ByteArrayOutputStream;
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.FileNotFoundException;
+ import java.sql.Connection;
+ import java.sql.SQLException;
+ import java.util.HashMap;
+ import java.util.List;
+import java.util.Map;
+
+ import javax.ws.rs.core.MediaType;
+ import javax.ws.rs.core.Response.ResponseBuilder;
+ 
+ import javax.naming.NamingException;
+ import javax.ws.rs.WebApplicationException;
+ import javax.ws.rs.core.Response;
+ 
+ import net.sf.jasperreports.engine.JRException;
+ import net.sf.jasperreports.engine.JRExporter;
+ import net.sf.jasperreports.engine.JRExporterParameter;
+ import net.sf.jasperreports.engine.JRParameter;
+ import net.sf.jasperreports.engine.JasperExportManager;
+ import net.sf.jasperreports.engine.JasperFillManager;
+ import net.sf.jasperreports.engine.JasperPrint;
+ import net.sf.jasperreports.engine.export.JRCsvExporter;
+ import net.sf.jasperreports.engine.export.JRCsvExporterParameter;
+ import net.sf.jasperreports.engine.export.JRHtmlExporter;
+ import net.sf.jasperreports.engine.export.JRPdfExporter;
+ import net.sf.jasperreports.engine.export.JRXmlExporter;
+ 
+ import org.collectionspace.services.ReportJAXBSchema;
+ import org.collectionspace.services.report.ReportsCommon;
+ import org.collectionspace.services.client.PoxPayloadIn;
+ import org.collectionspace.services.client.PoxPayloadOut;
+ import org.collectionspace.services.client.ReportClient;
+ import org.collectionspace.services.common.ServiceMain;
+ import org.collectionspace.services.common.api.Tools;
+ import org.collectionspace.services.common.config.ConfigReader;
+ import org.collectionspace.services.common.context.ServiceContext;
+ import org.collectionspace.services.common.document.BadRequestException;
+ import org.collectionspace.services.common.document.DocumentException;
+ import org.collectionspace.services.common.document.DocumentWrapper;
+ import org.collectionspace.services.common.invocable.Invocable;
+ import org.collectionspace.services.common.invocable.InvocationContext;
+ import org.collectionspace.services.common.storage.JDBCTools;
+ import org.collectionspace.services.jaxb.InvocableJAXBSchema;
+ import org.collectionspace.services.nuxeo.client.java.DocHandlerBase;
+ import org.collectionspace.services.nuxeo.client.java.RepositoryJavaClientImpl;
+ import org.jfree.util.Log;
+ import org.nuxeo.ecm.core.api.DocumentModel;
+ import org.nuxeo.ecm.core.api.model.PropertyException;
+ import org.nuxeo.ecm.core.api.repository.RepositoryInstance;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ /**
+  * ReportDocumentModelHandler
+  *
+  * $LastChangedRevision: $
+  * $LastChangedDate: $
+  */
+ public class ReportDocumentModelHandler extends DocHandlerBase<ReportsCommon> {
+     private final Logger logger = LoggerFactory.getLogger(ReportDocumentModelHandler.class);
+     private static String REPORTS_FOLDER = "reports";
+     private static String CSID_LIST_SEPARATOR = ",";
+     
+     private static String REPORTS_STD_CSID_PARAM = "csid";
+     private static String REPORTS_STD_GROUPCSID_PARAM = "groupcsid";
+     private static String REPORTS_STD_CSIDLIST_PARAM = "csidlist";
+     private static String REPORTS_STD_TENANTID_PARAM = "tenantid";
+ 	
+ 	public Response invokeReport(
+ 			ServiceContext<PoxPayloadIn, PoxPayloadOut> ctx,
+ 			String csid,
+ 			InvocationContext invContext) throws Exception {
+ 		RepositoryInstance repoSession = null;
+ 		boolean releaseRepoSession = false;
+ 
+ 		String invocationMode = invContext.getMode();
+ 		String modeProperty = null;
+ 		String outputMimeType = ReportClient.DEFAULT_REPORT_OUTPUT_MIME;
+ 		HashMap<String, Object> params = new HashMap<String, Object>();
+ 		params.put(REPORTS_STD_TENANTID_PARAM, ctx.getTenantId());
+ 		boolean checkDocType = true;
+		
+		// Note we set before we put in the default ones, so they cannot override tenant or CSID.
+		setParamsFromContext(params, invContext);
+		
+ 		if(Invocable.INVOCATION_MODE_SINGLE.equalsIgnoreCase(invocationMode)) {
+ 			modeProperty = InvocableJAXBSchema.SUPPORTS_SINGLE_DOC;
+     		params.put(REPORTS_STD_CSID_PARAM, invContext.getSingleCSID());
+ 		} else if(Invocable.INVOCATION_MODE_LIST.equalsIgnoreCase(invocationMode)) {
+ 			modeProperty = InvocableJAXBSchema.SUPPORTS_DOC_LIST;
+ 			List<String> csids = null;
+ 			InvocationContext.ListCSIDs listThing = invContext.getListCSIDs();
+ 				if(listThing!=null) {
+ 					csids = listThing.getCsid();
+ 				}
+ 				if(csids==null||csids.isEmpty()){
+ 	    			throw new BadRequestException(
+ 	    					"ReportResource: Report invoked in list mode, with no csids in list." );
+ 				}
+ 				StringBuilder sb = new StringBuilder();
+ 				boolean first = true;
+ 				for(String csidItem : csids) {
+ 					if(first)
+ 						first = false;
+ 					else
+ 						sb.append(CSID_LIST_SEPARATOR);
+ 	   				sb.append(csidItem);
+ 				}
+     		params.put(REPORTS_STD_CSIDLIST_PARAM, sb.toString());
+ 		} else if(Invocable.INVOCATION_MODE_GROUP.equalsIgnoreCase(invocationMode)) {
+ 			modeProperty = InvocableJAXBSchema.SUPPORTS_GROUP;
+     		params.put(REPORTS_STD_GROUPCSID_PARAM, invContext.getGroupCSID());
+ 		} else if(Invocable.INVOCATION_MODE_NO_CONTEXT.equalsIgnoreCase(invocationMode)) {
+ 			modeProperty = InvocableJAXBSchema.SUPPORTS_NO_CONTEXT;
+ 			checkDocType = false;
+ 		} else {
+ 			throw new BadRequestException("ReportResource: unknown Invocation Mode: "
+         			+invocationMode);
+ 		}
+ 		
+ 		
+ 		RepositoryJavaClientImpl repoClient = (RepositoryJavaClientImpl)this.getRepositoryClient(ctx);
+ 		repoSession = this.getRepositorySession();
+ 		if (repoSession == null) {
+ 			repoSession = repoClient.getRepositorySession(ctx);
+ 			releaseRepoSession = true;
+ 		}
+ 
+ 		String reportFileName = null;
+ 		// Get properties from the batch docModel, and release the session
+ 		try {
+ 			DocumentWrapper<DocumentModel> wrapper = repoClient.getDoc(repoSession, ctx, csid);
+ 			DocumentModel docModel = wrapper.getWrappedObject();
+ 			Boolean supports = (Boolean)docModel.getPropertyValue(modeProperty);
+ 			if(supports == null || !supports) {
+ 				throw new BadRequestException(
+ 						"ReportResource: This Report does not support Invocation Mode: "
+ 	        			+invocationMode);
+ 			}
+ 	    	if(checkDocType) {
+ 	    		List<String> forDocTypeList = 
+ 	    			(List<String>)docModel.getPropertyValue(InvocableJAXBSchema.FOR_DOC_TYPES);
+ 	    		if(forDocTypeList==null
+ 	    				|| !forDocTypeList.contains(invContext.getDocType())) {
+ 	        		throw new BadRequestException(
+ 	        				"ReportResource: Invoked with unsupported document type: "
+ 	        				+invContext.getDocType());
+ 	        	}
+ 	    	}
+ 			reportFileName = (String)docModel.getPropertyValue(ReportJAXBSchema.FILENAME);
+ 			String reportOutputMime = (String)docModel.getPropertyValue(ReportJAXBSchema.OUTPUT_MIME);
+ 			if(!Tools.isEmpty(reportOutputMime)) {
+ 				outputMimeType = reportOutputMime;
+ 			}
+ 		} catch (PropertyException pe) {
+ 			if (logger.isDebugEnabled()) {
+ 				logger.debug("Property exception getting batch values: ", pe);
+ 			}
+ 			throw pe;
+ 		} catch (DocumentException de) {
+ 			if (logger.isDebugEnabled()) {
+ 				logger.debug("Problem getting batch doc: ", de);
+ 			}
+ 			throw de;
+ 		} catch (Exception e) {
+ 			if (logger.isDebugEnabled()) {
+ 				logger.debug("Caught exception ", e);
+ 			}
+ 			throw new DocumentException(e);
+ 		} finally {
+ 			if (releaseRepoSession && repoSession != null) {
+ 				repoClient.releaseRepositorySession(ctx, repoSession);
+ 			}
+ 		}
+        	return buildReportResponse(csid, params, reportFileName, outputMimeType);
+ 	}
+	
+	private void setParamsFromContext(Map<String, Object> params, InvocationContext invContext) {
+		InvocationContext.Params icParams = invContext.getParams();
+		if(icParams!= null) {
+			List<InvocationContext.Params.Param> icParamList = icParams.getParam();
+			if(icParamList != null) {
+				for(InvocationContext.Params.Param param:icParamList) {
+					String key = param.getKey();
+					String value = param.getValue();
+					if(!Tools.isEmpty(key) && !Tools.isEmpty(value)) {
+						params.put(key, value);
+					}
+				}
+			}
+		}
+		
+	}
+
+ 
+ 
+     private Response buildReportResponse(String reportCSID, 
+     		HashMap<String, Object> params, String reportFileName, String outputMimeType)
+     				throws Exception {
+ 		Connection conn = null;
+ 		Response response = null;
+     	try {
+ 			String fullPath = ServiceMain.getInstance().getServerRootDir() +
+ 								File.separator + ConfigReader.CSPACE_DIR_NAME + 
+ 								File.separator + REPORTS_FOLDER +
+ 								// File.separator + tenantName +
+ 								File.separator + reportFileName;
+ 			conn = getConnection();
+ 	
+             if (logger.isTraceEnabled()) {
+             	logger.trace("ReportResource for csid=" + reportCSID
+             			+" output as "+outputMimeType+" using report file: "+fullPath);
+             }
+ 			FileInputStream fileStream = new FileInputStream(fullPath);
+ 	
+ 			// export report to pdf and build a response with the bytes
+ 			//JasperExportManager.exportReportToPdf(jasperprint);
+ 			
+ 			// Report will be to a byte output array.
+ 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+ 
+ 			JRExporter exporter = null;
+ 			// Strip extension from report filename.
+ 			String outputFilename = reportFileName;
+ 			// Strip extension from report filename.
+ 			int idx = outputFilename.lastIndexOf("."); 
+ 			if(idx>0)
+ 				outputFilename = outputFilename.substring(0, idx);
+ 			// Strip any sub-dir from report filename.
+ 			idx = outputFilename.lastIndexOf(File.separator); 
+ 			if(idx>0)
+ 				outputFilename = outputFilename.substring(idx+1);
+ 			if(outputMimeType.equals(MediaType.APPLICATION_XML)) {
+ 				params.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
+ 				exporter = new JRXmlExporter();
+ 				outputFilename = outputFilename+".xml";
+ 			} else if(outputMimeType.equals(MediaType.TEXT_HTML)) {
+ 				exporter = new JRHtmlExporter();
+ 				outputFilename = outputFilename+".html";
+ 			} else if(outputMimeType.equals(ReportClient.PDF_MIME_TYPE)) {
+ 				exporter = new JRPdfExporter();
+ 				outputFilename = outputFilename+".pdf";
+ 			} else if(outputMimeType.equals(ReportClient.CSV_MIME_TYPE)) {
+ 				params.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
+ 				exporter = new JRCsvExporter();
+ 				exporter.setParameter(JRCsvExporterParameter.FIELD_DELIMITER, ",");
+ 				outputFilename = outputFilename+".csv";
+ 			} else if(outputMimeType.equals(ReportClient.TSV_MIME_TYPE)) {
+ 				params.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
+ 				exporter = new JRCsvExporter();
+ 				exporter.setParameter(JRCsvExporterParameter.FIELD_DELIMITER, "\t");
+ 				outputFilename = outputFilename+".csv";
+ 			}
+ 	        // fill the report
+ 			JasperPrint jasperPrint = JasperFillManager.fillReport(fileStream, params,conn);
+ 				
+ 			exporter.setParameter(JRExporterParameter.JASPER_PRINT, jasperPrint);
+ 			exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, baos);
+ 			exporter.exportReport();
+ 			byte[] reportAsBytes = baos.toByteArray();
+ 
+ 			// Need to set response type for what is requested...
+ 			ResponseBuilder builder = Response.ok(reportAsBytes, outputMimeType);
+ 			builder = builder.header("Content-Disposition","inline;filename=\""+outputFilename+"\"");
+ 	        response = builder.build();
+ 	
+ 	       	return response;    	
+         } catch (SQLException sqle) {
+             // SQLExceptions can be chained. We have at least one exception, so
+             // set up a loop to make sure we let the user know about all of them
+             // if there happens to be more than one.
+             if (logger.isDebugEnabled()) {
+ 	            SQLException tempException = sqle;
+ 	            while (null != tempException) {
+ 	                	logger.debug("SQL Exception: " + sqle.getLocalizedMessage());
+ 	
+ 	                // loop to the next exception
+ 	                tempException = tempException.getNextException();
+ 	            }
+             }
+             response = Response.status(
+                     Response.Status.INTERNAL_SERVER_ERROR).entity(
+                     		"Invoke failed (SQL problem) on Report csid=" + reportCSID).type("text/plain").build();
+             throw new WebApplicationException(response);
+         } catch (JRException jre) {
+             if (logger.isDebugEnabled()) {
+             	logger.debug("JR Exception: " + jre.getLocalizedMessage() + " Cause: "+jre.getCause());
+             }
+             response = Response.status(
+                     Response.Status.INTERNAL_SERVER_ERROR).entity(
+                     		"Invoke failed (Jasper problem) on Report csid=" + reportCSID).type("text/plain").build();
+             throw new WebApplicationException(response);
+         } catch (FileNotFoundException fnfe) {
+             if (logger.isDebugEnabled()) {
+             	logger.debug("FileNotFoundException: " + fnfe.getLocalizedMessage());
+             }
+             response = Response.status(
+                     Response.Status.INTERNAL_SERVER_ERROR).entity(
+                     		"Invoke failed (SQL problem) on Report csid=" + reportCSID).type("text/plain").build();
+             throw new WebApplicationException(response);
+ 		} finally {
+         	if(conn!=null) {
+         		try {
+         		conn.close();
+                 } catch (SQLException sqle) {
+                     // SQLExceptions can be chained. We have at least one exception, so
+                     // set up a loop to make sure we let the user know about all of them
+                     // if there happens to be more than one.
+                     if (logger.isDebugEnabled()) {
+    	                	logger.debug("SQL Exception closing connection: " 
+    	                			+ sqle.getLocalizedMessage());
+                     }
+                 } catch (Exception e) {
+                     if (logger.isDebugEnabled()) {
+                         logger.debug("Exception closing connection", e);
+                     }
+                 }
+         	}
+         }
+     }
+ 
+     private Connection getConnection() throws NamingException, SQLException {
+     	Connection result = null;
+     	
+     	ServiceContext ctx = this.getServiceContext();
+     	try {
+     		String repositoryName = ctx.getRepositoryName();
+ 	    	if (repositoryName != null && repositoryName.trim().isEmpty() == false) {
+ 	    		result = JDBCTools.getConnection(JDBCTools.NUXEO_DATASOURCE_NAME, repositoryName);
+ 	    	}
+ 		} catch (Exception e) {
+ 			Log.error(e);
+ 			throw new NamingException();
+ 		}
+     	
+     	return result;
+     }
+ 
+ }
+ 

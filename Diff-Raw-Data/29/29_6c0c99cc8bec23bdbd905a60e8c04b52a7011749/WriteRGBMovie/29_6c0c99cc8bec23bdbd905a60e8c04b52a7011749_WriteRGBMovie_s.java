@@ -1,0 +1,79 @@
+ //
+ // WriteRGBMovie.java
+ //
+ 
+ import loci.common.services.ServiceFactory;
+ import loci.formats.*;
+ import loci.formats.meta.IMetadata;
+ import loci.formats.services.OMEXMLService;
+ 
+ import ome.xml.model.enums.DimensionOrder;
+ import ome.xml.model.enums.EnumerationException;
+ import ome.xml.model.enums.PixelType;
+ import ome.xml.model.primitives.PositiveInteger;
+ 
+ /**
+  * Demonstrates writing multiple RGB image planes to a movie.
+  *
+  * <dl><dt><b>Source code:</b></dt>
+  * <dd><a href="https://skyking.microscopy.wisc.edu/trac/java/browser/trunk/components/bio-formats/utils/WriteRGBMovie.java">Trac</a>,
+  * <a href="https://skyking.microscopy.wisc.edu/svn/java/trunk/components/bio-formats/utils/WriteRGBMovie.java">SVN</a></dd></dl>
+  */
+ public class WriteRGBMovie {
+ 
+   public static void main(String[] args) throws Exception {
+     if (args.length < 1) {
+       System.out.println("Please specify an output file name.");
+       System.exit(1);
+     }
+     String id = args[0];
+ 
+     // create 20 blank 512x512 image planes
+     System.out.println("Creating random image planes...");
+     int w = 511, h = 507, numFrames = 20, numChannels = 3;
+     int pixelType = FormatTools.UINT8;
+     int bpp = FormatTools.getBytesPerPixel(pixelType);
+     int planeSize = h * w * numChannels * bpp;
+     byte[][] img = new byte[numFrames][planeSize];
+ 
+     // fill with random data
+     for (int t=0; t<numFrames; t++) {
+       for (int i=0; i<img[t].length; i+=numChannels) {
+         for (int c=0; c<numChannels; c++) {
+           img[t][i + c] = (byte) (256 * Math.random());
+         }
+       }
+     }
+ 
+     // create metadata object with required metadata fields
+     System.out.println("Populating metadata...");
+     ServiceFactory factory = new ServiceFactory();
+     OMEXMLService service = factory.getInstance(OMEXMLService.class);
+     IMetadata meta = service.createOMEXMLMetadata();
+     meta.createRoot();
+     meta.setPixelsBinDataBigEndian(Boolean.TRUE, 0, 0);
+     meta.setPixelsDimensionOrder(DimensionOrder.XYZCT, 0);
+     meta.setPixelsType(
+       PixelType.fromString(FormatTools.getPixelTypeString(pixelType)), 0);
+     meta.setPixelsSizeX(new PositiveInteger(w), 0);
+     meta.setPixelsSizeY(new PositiveInteger(h), 0);
+     meta.setPixelsSizeZ(new PositiveInteger(1), 0);
+     meta.setPixelsSizeC(new PositiveInteger(numChannels), 0);
+     meta.setPixelsSizeT(new PositiveInteger(numFrames), 0);
+    meta.setChannelSamplesPerPixel(numChannels, 0, 0);
+ 
+     // write image planes to disk
+     System.out.print("Writing planes to '" + id + "'");
+     IFormatWriter writer = new ImageWriter();
+     writer.setMetadataRetrieve(meta);
+     writer.setId(id);
+     for (int t=0; t<numFrames; t++) {
+       System.out.print(".");
+       writer.saveBytes(t, img[t]);
+     }
+     writer.close();
+ 
+     System.out.println("Done.");
+   }
+ 
+ }

@@ -1,0 +1,69 @@
+ /*
+  * #%L
+  * xcode-maven-plugin
+  * %%
+  * Copyright (C) 2012 SAP AG
+  * %%
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  * 
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  * #L%
+  */
+ package com.sap.prd.mobile.ios.mios;
+ 
+ import java.io.ByteArrayOutputStream;
+ import java.io.File;
+ import java.io.PrintStream;
+ 
+ import junit.framework.Assert;
+ 
+ import org.junit.Rule;
+ import org.junit.Test;
+ import org.junit.rules.TemporaryFolder;
+ 
+ public class FileUtilsTest
+ {
+ 
+   @Rule
+   public TemporaryFolder tmpFolder = new TemporaryFolder();
+   
+   @Test
+   public void testStraightForward() throws Exception
+   {
+ 
+     Assert.assertEquals("source/dir",
+           FileUtils.getDelta(new File("/home/abc/def"), new File("/home/abc/def/source/dir")));
+   }
+ 
+   @Test(expected = IllegalStateException.class)
+   public void testNoCommonPath() throws Exception
+   {
+     FileUtils.getDelta(new File("/home/abc"), new File("/home/def"));
+   }
+   
+ 
+   @Test
+   public void testCreateSymbolicLink() throws Exception
+   {
+     File source = tmpFolder.newFile("source");
+     File target = tmpFolder.newFile("target");
+     org.apache.commons.io.FileUtils.writeStringToFile(source, "abc");
+    FileUtils.createSybolicLink(source, target);
+     
+     ByteArrayOutputStream byteOs = new ByteArrayOutputStream();
+     PrintStream stream = new PrintStream(byteOs);
+     
+     Forker.forkProcess(stream, null, "ls", "-l", target.getAbsolutePath());
+ 
+     stream.flush();
+     Assert.assertTrue(byteOs.toString().startsWith("l"));   
+   }
+ }

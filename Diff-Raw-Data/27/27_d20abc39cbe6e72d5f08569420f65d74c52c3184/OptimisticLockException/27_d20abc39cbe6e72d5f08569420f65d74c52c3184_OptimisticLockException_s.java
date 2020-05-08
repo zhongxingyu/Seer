@@ -1,0 +1,25 @@
+ package com.vaadin.addon.sqlcontainer;
+ 
+ /**
+  * An OptimisticLockException is thrown when trying to update or delete a row
+  * that has been changed since last read from the database.
+  * 
+  * OptimisticLockException is a runtime exception because optimistic locking is
+  * turned off by default, and as such will never be thrown in a default
+  * configuration. In order to turn on optimistic locking, you need to specify
+  * the version column in your TableQuery instance.
+  * 
+  * @see com.vaadin.addon.sqlcontainer.query.TableQuery#setVersionColumn(String)
+  * 
+  * @author Jonatan Kronqvist / Vaadin Ltd
+  */
+ public class OptimisticLockException extends RuntimeException {
+ 
+    public OptimisticLockException() {
+         super();
+     }
+ 
+    public OptimisticLockException(String msg) {
+         super(msg);
+     }
+ }

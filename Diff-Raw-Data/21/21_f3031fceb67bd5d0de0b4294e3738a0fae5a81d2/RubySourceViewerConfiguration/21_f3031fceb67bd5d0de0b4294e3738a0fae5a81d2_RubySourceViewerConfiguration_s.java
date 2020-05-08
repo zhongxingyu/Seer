@@ -1,0 +1,271 @@
+ package org.eclipse.dltk.ruby.internal.ui.text;
+ 
+ import org.eclipse.dltk.internal.ui.editor.EditorUtility;
+ import org.eclipse.dltk.internal.ui.editor.ScriptSourceViewer;
+ import org.eclipse.dltk.internal.ui.text.ScriptElementProvider;
+import org.eclipse.dltk.internal.ui.typehierarchy.HierarchyInformationControl;
+ import org.eclipse.dltk.ruby.internal.ui.text.completion.RubyCompletionProcessor;
+ import org.eclipse.dltk.ruby.internal.ui.text.completion.RubyContentAssistPreference;
+ import org.eclipse.dltk.ruby.internal.ui.typehierarchy.RubyHierarchyInformationControl;
+ import org.eclipse.dltk.ruby.ui.text.IRubyPartitions;
+ import org.eclipse.dltk.ui.CodeFormatterConstants;
+ import org.eclipse.dltk.ui.text.AbstractScriptScanner;
+ import org.eclipse.dltk.ui.text.DLTKSourceViewerConfiguration;
+ import org.eclipse.dltk.ui.text.IColorManager;
+ import org.eclipse.dltk.ui.text.SingleTokenScriptScanner;
+ import org.eclipse.jface.preference.IPreferenceStore;
+ import org.eclipse.jface.text.AbstractInformationControlManager;
+ import org.eclipse.jface.text.IAutoEditStrategy;
+ import org.eclipse.jface.text.IDocument;
+ import org.eclipse.jface.text.IInformationControl;
+ import org.eclipse.jface.text.IInformationControlCreator;
+ import org.eclipse.jface.text.contentassist.ContentAssistant;
+ import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
+ import org.eclipse.jface.text.contentassist.IContentAssistant;
+ import org.eclipse.jface.text.information.IInformationPresenter;
+ import org.eclipse.jface.text.information.IInformationProvider;
+ import org.eclipse.jface.text.information.InformationPresenter;
+ import org.eclipse.jface.text.presentation.IPresentationReconciler;
+ import org.eclipse.jface.text.presentation.PresentationReconciler;
+ import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
+ import org.eclipse.jface.text.rules.ITokenScanner;
+ import org.eclipse.jface.text.rules.RuleBasedScanner;
+ import org.eclipse.jface.text.source.ISourceViewer;
+ import org.eclipse.jface.util.Assert;
+ import org.eclipse.jface.util.PropertyChangeEvent;
+ import org.eclipse.swt.SWT;
+ import org.eclipse.swt.widgets.Shell;
+ import org.eclipse.ui.texteditor.ITextEditor;
+ 
+ public class RubySourceViewerConfiguration extends
+ 		DLTKSourceViewerConfiguration {
+ 
+ 	private RubyTextTools fTextTools;
+ 
+ 	private RubyCodeScanner fCodeScanner;
+ 
+ 	private AbstractScriptScanner fStringScanner;
+ 
+ 	private AbstractScriptScanner fCommentScanner;
+ 	
+ 	private AbstractScriptScanner fDocScanner;
+ 
+ 	public RubySourceViewerConfiguration(IColorManager colorManager,
+ 			IPreferenceStore preferenceStore, ITextEditor editor,
+ 			String partitioning) {
+ 		super(colorManager, preferenceStore, editor, partitioning);
+ 	}
+ 
+ 	public String[] getConfiguredContentTypes(ISourceViewer sourceViewer) {
+ 		return new String[] { IDocument.DEFAULT_CONTENT_TYPE,
+ 				IRubyPartitions.RUBY_STRING, IRubyPartitions.RUBY_COMMENT, IRubyPartitions.RUBY_DOC};
+ 	}
+ 
+ 	public String[] getIndentPrefixes(ISourceViewer sourceViewer,
+ 			String contentType) {
+ 		//XXX: what happens here?.. why "    " ?
+ 		return new String[] { "\t", "    " }; 
+ 	}
+ 	
+ 	/*
+ 	 * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getTabWidth(org.eclipse.jface.text.source.ISourceViewer)
+ 	 */
+ 	public int getTabWidth(ISourceViewer sourceViewer) {
+ 		if (fPreferenceStore == null)
+ 			return super.getTabWidth(sourceViewer);
+ 		return fPreferenceStore.getInt(CodeFormatterConstants.FORMATTER_TAB_SIZE);
+ 	}
+ 
+ 	protected void initializeScanners() {
+ 		Assert.isTrue(isNewSetup());
+ 		fCodeScanner = new RubyCodeScanner(getColorManager(),
+ 				fPreferenceStore);
+ 		fStringScanner = new RubyStringScanner(getColorManager(),
+ 				fPreferenceStore);
+ 		fCommentScanner = new SingleTokenScriptScanner(getColorManager(),
+ 				fPreferenceStore, RubyColorConstants.RUBY_SINGLE_LINE_COMMENT);
+ 		
+ 		fDocScanner = new RubyDocScanner(getColorManager(), fPreferenceStore );
+ 	}
+ 
+ 	/**
+ 	 * @return <code>true</code> iff the new setup without text tools is in
+ 	 *         use.
+ 	 */
+ 	private boolean isNewSetup() {
+ 		return fTextTools == null;
+ 	}
+ 
+ 	/**
+ 	 * Returns the TCL string scanner for this configuration.
+ 	 * 
+ 	 * @return the TCL string scanner
+ 	 */
+ 	protected RuleBasedScanner getStringScanner() {
+ 		return fStringScanner;
+ 	}
+ 
+ 	/**
+ 	 * Returns the TCL comment scanner for this configuration.
+ 	 * 
+ 	 * @return the TCL comment scanner
+ 	 */	
+ 	protected RuleBasedScanner getCommentScanner() { return fCommentScanner; }
+ 	
+ 	public IPresentationReconciler getPresentationReconciler(
+ 			ISourceViewer sourceViewer) {
+ 		PresentationReconciler reconciler = new PresentationReconciler();
+ 		reconciler
+ 				.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+ 
+ 		DefaultDamagerRepairer dr = new DefaultDamagerRepairer(
+ 				this.fCodeScanner);
+ 		reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE);
+ 		reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE);
+ 
+ 		dr = new DefaultDamagerRepairer(getStringScanner());
+ 		reconciler.setDamager(dr, IRubyPartitions.RUBY_STRING);
+ 		reconciler.setRepairer(dr, IRubyPartitions.RUBY_STRING);
+ 		
+ 		dr = new DefaultDamagerRepairer(getDocScanner());
+ 		reconciler.setDamager(dr, IRubyPartitions.RUBY_DOC);
+ 		reconciler.setRepairer(dr, IRubyPartitions.RUBY_DOC);
+ 
+ 		
+ 		dr = new DefaultDamagerRepairer(getCommentScanner());
+ 		reconciler.setDamager(dr, IRubyPartitions.RUBY_COMMENT);
+ 		reconciler.setRepairer(dr, IRubyPartitions.RUBY_COMMENT);
+ 
+ 
+ 		return reconciler;
+ 	}
+ 
+ 	private ITokenScanner getDocScanner() {
+ 		return fDocScanner;
+ 	}
+ 
+ 	/**
+ 	 * Adapts the behavior of the contained components to the change encoded in
+ 	 * the given event.
+ 	 * <p>
+ 	 * Clients are not allowed to call this method if the old setup with text
+ 	 * tools is in use.
+ 	 * </p>
+ 	 * 
+ 	 * @param event
+ 	 *            the event to which to adapt
+ 	 * @see RubySourceViewerConfiguration#ScriptSourceViewerConfiguration(IColorManager,
+ 	 *      IPreferenceStore, ITextEditor, String)
+ 	 */
+ 	public void handlePropertyChangeEvent(PropertyChangeEvent event) {
+ 		Assert.isTrue(isNewSetup());
+ 		if (fCodeScanner.affectsBehavior(event))
+ 			fCodeScanner.adaptToPreferenceChange(event);
+ 		if (fStringScanner.affectsBehavior(event))
+ 			fStringScanner.adaptToPreferenceChange(event);
+ 		if (fDocScanner.affectsBehavior(event))
+ 			fDocScanner.adaptToPreferenceChange(event);
+ 	}
+ 
+ 	/**
+ 	 * Determines whether the preference change encoded by the given event
+ 	 * changes the behavior of one of its contained components.
+ 	 * 
+ 	 * @param event
+ 	 *            the event to be investigated
+ 	 * @return <code>true</code> if event causes a behavioral change
+ 	 *
+ 	 */
+ 	public boolean affectsTextPresentation(PropertyChangeEvent event) {
+ 		return fCodeScanner.affectsBehavior(event)
+ 				|| fStringScanner.affectsBehavior(event)|| fDocScanner.affectsBehavior(event);
+ 	}
+ 	
+ 	private IInformationControlCreator getHierarchyPresenterControlCreator(ISourceViewer sourceViewer) {
+ 		return new IInformationControlCreator() {
+ 			public IInformationControl createInformationControl(Shell parent) {
+ 				int shellStyle= SWT.RESIZE;
+ 				int treeStyle= SWT.V_SCROLL | SWT.H_SCROLL;
+ 				return new RubyHierarchyInformationControl(parent, shellStyle, treeStyle);
+ 			}
+ 		};
+ 	}
+ 
+ 	public IInformationPresenter getHierarchyPresenter(
+ 			ScriptSourceViewer sourceViewer, boolean doCodeResolve) {
+ //		 Do not create hierarchy presenter if there's no CU.
+ 		if (getEditor() != null && getEditor().getEditorInput() != null && 
+ 				EditorUtility.getEditorInputModelElement(getEditor(), true) == null)
+ 			return null;
+ 		
+ 		InformationPresenter presenter= new InformationPresenter(getHierarchyPresenterControlCreator(sourceViewer));
+ 		presenter.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+ 		presenter.setAnchor(AbstractInformationControlManager.ANCHOR_GLOBAL);
+ 		IInformationProvider provider= new ScriptElementProvider(getEditor(), doCodeResolve);
+ 		presenter.setInformationProvider(provider, IDocument.DEFAULT_CONTENT_TYPE);
+ //		presenter.setInformationProvider(provider, IJavaPartitions.JAVA_DOC);
+ //		presenter.setInformationProvider(provider, IJavaPartitions.JAVA_MULTI_LINE_COMMENT);
+ //		presenter.setInformationProvider(provider, IJavaPartitions.JAVA_SINGLE_LINE_COMMENT);
+ //		presenter.setInformationProvider(provider, IJavaPartitions.JAVA_STRING);
+ //		presenter.setInformationProvider(provider, IJavaPartitions.JAVA_CHARACTER);
+ 		presenter.setSizeConstraints(50, 20, true, false);
+ 		return presenter;
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getAutoEditStrategies(org.eclipse.jface.text.source.ISourceViewer,
+ 	 *      java.lang.String)
+ 	 */
+ 	public IAutoEditStrategy[] getAutoEditStrategies(
+ 			ISourceViewer sourceViewer, String contentType) {
+ //		// TODO: check contentType. think, do we really need it? :)
+ 		String partitioning = getConfiguredDocumentPartitioning(sourceViewer);
+ 		return new IAutoEditStrategy[] { new RubyAutoEditStrategy(fPreferenceStore, partitioning) };
+ 	}
+ 
+ 	protected IInformationControlCreator getOutlinePresenterControlCreator(ISourceViewer sourceViewer, final String commandId) {
+ 		return new IInformationControlCreator() {
+ 			public IInformationControl createInformationControl(Shell parent) {
+ 				int shellStyle= SWT.RESIZE;
+ 				int treeStyle= SWT.V_SCROLL | SWT.H_SCROLL;
+ 				return new RubyOutlineInformationControl(parent, shellStyle, treeStyle, commandId);
+ 			}
+ 		};
+ 	}
+ 
+ 	public String[] getDefaultPrefixes(ISourceViewer sourceViewer, String contentType) {
+ 		return new String[] { "#", "" }; //$NON-NLS-1$ //$NON-NLS-2$
+ 	}
+ 	
+ 	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
+ 
+ 		if (getEditor() != null) {
+ 
+ 			ContentAssistant assistant= new ContentAssistant();
+ 			assistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+ 
+ 			assistant.setRestoreCompletionProposalSize(getSettings("completion_proposal_size")); //$NON-NLS-1$
+ 
+ 			IContentAssistProcessor scriptProcessor= new RubyCompletionProcessor(getEditor(), assistant, IDocument.DEFAULT_CONTENT_TYPE);
+ 			assistant.setContentAssistProcessor(scriptProcessor, IDocument.DEFAULT_CONTENT_TYPE);
+ 
+ //			ContentAssistProcessor singleLineProcessor= new RubyCompletionProcessor(getEditor(), assistant, IJavaScriptPartitions.JS_COMMENT);
+ //			assistant.setContentAssistProcessor(singleLineProcessor, IJavaScriptPartitions.JS_COMMENT);
+ //
+ //			ContentAssistProcessor stringProcessor= new RubyCompletionProcessor(getEditor(), assistant, IJavaScriptPartitions.JS_STRING);
+ //			assistant.setContentAssistProcessor(stringProcessor, IRubyPartitions.JS_STRING);
+ 
+ 			RubyContentAssistPreference.getDefault().configure(assistant, fPreferenceStore);
+ 
+ 			assistant.setContextInformationPopupOrientation(IContentAssistant.CONTEXT_INFO_ABOVE);
+ 			assistant.setInformationControlCreator(getInformationControlCreator(sourceViewer));
+ 			
+ 			return assistant;
+ 		}
+ 
+ 		return null;
+ 	}
+
+ }

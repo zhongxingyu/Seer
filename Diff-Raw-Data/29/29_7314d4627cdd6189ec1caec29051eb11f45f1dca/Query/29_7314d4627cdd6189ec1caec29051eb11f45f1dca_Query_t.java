@@ -1,0 +1,440 @@
+ package queries;
+ 
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+ 
+ import database.DB;
+ 
+ public abstract class Query {
+ 
+ 	protected String headline;
+   protected final int kCurrentElectionYear = 2009;
+   protected final int kPreviousElectionYear = 2005;
+ 	
+ 	protected DB db;
+ 	
+ 	String withQuery = "";
+ 	
+ 	public Query(String headline) {
+ 		this.headline = headline;
+ 	}
+ 
+ 	public void setDatabase(DB db) {
+ 		this.db = db;
+ 	}
+ 	
+ 	public String replaceUmlaute(String input) {
+ 		input = input.replace("", "&uuml;");
+ 		input = input.replace("", "&Uuml;");
+ 		input = input.replace("", "&ouml;");
+ 		input = input.replace("", "&Ouml;");
+ 		input = input.replace("", "&auml;");
+ 		input = input.replace("", "&Auml;");
+ 		input = input.replace("", "&szlig;");
+ 		input = input.replace("", "&eacute;");
+ 		input = input.replace("", "&egrave;");
+ 		
+ 		return input;
+ 	}
+ 
+ 	public String generateHtmlOutput() {
+ 		try {
+ 			final long startTime = System.currentTimeMillis();
+ 			ResultSet resultSet = doQuery();
+ 			String body = generateBody(resultSet);
+ 			body = replaceUmlaute(body);
+ 			String html = "<html>";
+ 			html += "<head>" + getHtmlHeader() + "</head>";
+ 			html += "<body><div class=\"container\"><h1>" + headline + "</h1><hr/>";
+ 			html += "<div class=\"span-6\">" + getNavigation() + "</div>";
+ 			html += "<div class=\"span-18 last\">" + body + "</div>";
+ 			html += "<hr/><p>Die Berechnung hat " + (System.currentTimeMillis() - startTime) + " Millisekunden gedauert.<p>";
+ 			html += "</div></body></html>";
+ 			return html;
+ 		} catch (SQLException e) {
+ 			e.printStackTrace();
+ 			return null;
+ 		}
+ 	}
+ 	
+ 	private String getNavigation() {
+ 		String navigation = "<h3>Navigation</h3>";
+ 
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q1.WITH\">Q1: Sitzverteilung</a> (<a href=\"/WahlWebsite/ShowResult?query=Q1\">tmp</a>)<br/>";
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q2.WITH\">Q2: Abgeordnete</a> (<a href=\"/WahlWebsite/ShowResult?query=Q2\">tmp</a>)<br/>";
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q3.WITH\">Q3: Wahlkreisinfo</a> (<a href=\"/WahlWebsite/ShowResult?query=Q3\">tmp</a>)<br/>";
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q4.WITH\">Q4: Wahlkreisergebnisse</a> (<a href=\"/WahlWebsite/ShowResult?query=Q4\">tmp</a>)<br/>";
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q5.WITH\">Q5: berhangsmandate</a> (<a href=\"/WahlWebsite/ShowResult?query=Q5\">tmp</a>)<br/>";
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q6\">Q6: Knappste Sieger</a><br/>";
+		navigation += "<a href=\"/WahlWebsite/ShowResult?query=Q7.WITH\">Q7: Wahlkreisinfo Einzelstimmen</a> (<a href=\"/WahlWebsite/ShowResult?query=Q7\">tmp</a>)<br/><br/>";
+		navigation += "<a href=\"/WahlWebsite/ChooseWahllokal.jsp\">Wahllokal Admin</a><br/>";
+ 
+ 		return navigation;
+ 	}
+ 
+ 	private String getHtmlHeader() {
+ 		String header = "";
+ 		header += "<link rel=\"stylesheet\" href=\"css/screen.css\" type=\"text/css\" media=\"screen, projection\">";
+ 		header += "<link rel=\"stylesheet\" href=\"css/custom.css\" type=\"text/css\" media=\"screen, projection\">";
+ 		return header;
+ 	}
+ 	
+ 	protected abstract ResultSet doQuery() throws SQLException;
+ 	
+ 	protected abstract String generateBody(ResultSet resultSet) throws SQLException;
+ 	
+ 	protected String stmtCount(String table) {
+ 		return "(SELECT COUNT(*) FROM " + table + ")";
+ 	}
+ 
+ 	protected String stmtZweitStimmenNachBundesland() {
+ 		return ""
+ 			+ "SELECT w2." + DB.kForeignKeyParteiID + ", wk." + DB.kForeignKeyBundeslandID + ", "
+ 			 			 + "sum(w2." + DB.kWahlergebnis2Anzahl + ") as " + DB.kAnzahlStimmen + " "
+ 			+ "FROM " + db.zweitStimmenNachWahlkreis() + " w2" + ", " + db.wahlkreis() + " wk" + " "
+ 			+ "WHERE w2." + DB.kForeignKeyWahlkreisID + " = wk." + DB.kID + " "
+ 			+   "AND w2." + DB.kJahr + " = " + kCurrentElectionYear + " "
+ 			+ "GROUP BY " + "wk." + DB.kForeignKeyBundeslandID + ", w2." + DB.kForeignKeyParteiID;
+ 	}
+ 	
+ 	protected String createZweitStimmenNachBundeslandTable() throws SQLException {
+ 		db.createFilledTemporaryTable(db.zweitStimmenNachBundesland(), DB.kForeignKeyParteiID + " BIGINT, "
+ 		 			+ DB.kForeignKeyBundeslandID + " BIGINT, " + DB.kAnzahlStimmen + " BIGINT", stmtZweitStimmenNachBundesland());
+ 	  return db.zweitStimmenNachBundesland();
+ 	}
+ 	
+ 	protected String stmtZweitStimmenNachPartei(String zweitStimmenNachBundeslandTable) {
+ 		return ""
+ 			+ "SELECT " + DB.kForeignKeyParteiID + ", SUM(" + DB.kAnzahlStimmen + ") AS " + DB.kAnzahlStimmen + " "
+ 			+ "FROM " + zweitStimmenNachBundeslandTable + " "
+ 			+ "GROUP BY " + DB.kForeignKeyParteiID;
+ 	}
+ 
+ 	protected String createZweitStimmenNachParteiTable(String zweitStimmenNachBundeslandTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.zweitStimmenNachPartei(), DB.kForeignKeyParteiID
+         + " BIGINT, " + DB.kAnzahlStimmen + " BIGINT", stmtZweitStimmenNachPartei(zweitStimmenNachBundeslandTable));
+ 		return db.zweitStimmenNachPartei();
+ 	}
+ 
+ 	protected String createDirektmandateTable() throws SQLException {
+ 		return createDirektmandateTable(db.erstStimmenNachWahlkreis());
+ 	}
+ 	
+ 	protected String stmtMaxErststimmenNachWahlkreis(String erstStimmenNachWahlkreisTable) {
+ 		return "" +
+   	"SELECT v." + DB.kForeignKeyWahlkreisID + ", " + 
+   				 "MAX(v." + DB.kAnzahl + ") AS " + DB.kMaxStimmen + " " + 
+   	"FROM " + erstStimmenNachWahlkreisTable + " v " + 
+   	"WHERE v." + DB.kJahr + " = " + kCurrentElectionYear + " " +
+   	"GROUP BY v." + DB.kForeignKeyWahlkreisID;
+ 	}
+ 	
+ 	protected String stmtDirektmandateNummer(String maxErstStimmenNachWahlkreisTable,
+ 			String erstStimmenNachWahlkreisTable) {
+ 		return ""
+ 			+ "SELECT e." + DB.kForeignKeyKandidatID + ", e." + DB.kForeignKeyWahlkreisID
+ 				+ ", Row_Number() OVER (PARTITION BY e." + DB.kForeignKeyWahlkreisID + ") AS " + DB.kNummer + " "
+ 			+ "FROM " + maxErstStimmenNachWahlkreisTable + " m, " + erstStimmenNachWahlkreisTable + " e "
+ 			+ "WHERE e." + DB.kForeignKeyWahlkreisID + " = m." + DB.kForeignKeyWahlkreisID + " "
+ 				+ "AND	m." + DB.kMaxStimmen + " = e." + DB.kAnzahl + " AND e." + DB.kJahr + " = " + kCurrentElectionYear;
+ 	}
+ 	
+ 	protected String stmtDirektmandateMaxNummer(String direktmandateNummerTable) {
+ 		return ""
+ 			+ "SELECT " + DB.kForeignKeyWahlkreisID + ", MAX(" + DB.kNummer + ") AS " + DB.kMaxNummer + " "
+ 			+ "FROM " + direktmandateNummerTable + " "
+ 			+ "GROUP BY " + DB.kForeignKeyWahlkreisID;
+ 	}
+ 
+ 	protected String stmtDirektmandate(String direkmandateNummerTable, String direktMandateMaxNummerTable) {
+ 		return ""
+ 			+ "SELECT n." + DB.kForeignKeyKandidatID + ", k." + DB.kForeignKeyParteiID + ", "
+ 				+ "k." + DB.kKandidatDMWahlkreisID + " "
+ 			+ "FROM " + direkmandateNummerTable + " n, " + direktMandateMaxNummerTable + " mn, "
+ 				+ db.zufallsZahlenDirektmandate() + " z, " + db.kandidat() + " k "
+ 			+ "WHERE n." + DB.kForeignKeyWahlkreisID + " = mn." + DB.kForeignKeyWahlkreisID + " "
+ 				+ "AND k." + DB.kID + " = n." + DB.kForeignKeyKandidatID + " "
+ 				+ "AND z." + DB.kZeile + " = mod(n." + DB.kForeignKeyWahlkreisID + ", " + stmtCount(db.zufallsZahlenDirektmandate()) + ") "
+ 				+ "AND n." + DB.kNummer + " = mod(z." + DB.kZahl + ", mn." + DB.kMaxNummer + ") + 1";
+ 	}
+ 	
+ 	protected String createDirektmandateTable(String erstStimmenNachWahlkreisTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.direktmandate(), DB.kForeignKeyKandidatID + " BIGINT, "
+         	+ DB.kForeignKeyParteiID + " BIGINT, " + DB.kKandidatDMWahlkreisID + " BIGINT",
+         "WITH " + db.maxErststimmenNachWahlkreis() 
+     			+ " AS ( " + stmtMaxErststimmenNachWahlkreis(erstStimmenNachWahlkreisTable) + "), "
+   			+ db.direktMandateNummer() + " AS ( "
+   				+ stmtDirektmandateNummer(db.maxErststimmenNachWahlkreis(), erstStimmenNachWahlkreisTable) + "), "
+   			+ db.direktMandateMaxNummer() + " AS ( "
+   				+ stmtDirektmandateMaxNummer(db.direktMandateNummer()) + ") "
+     		+	stmtDirektmandate(db.direktMandateNummer(), db.direktMandateMaxNummer()));
+     return db.direktmandate();
+ 	}
+ 
+ 	protected String stmtFuenfProzentParteien(String zweitStimmenNachParteiTable) {
+ 		return ""
+ 			+ "SELECT z." + DB.kForeignKeyParteiID + " "
+ 			+ "FROM " + zweitStimmenNachParteiTable + " z "
+ 	    + "GROUP BY z." + DB.kForeignKeyParteiID + " "
+ 	    + "HAVING CAST(SUM(z." + DB.kAnzahlStimmen + ") AS FLOAT)" + " / "
+ 	    	+ "(SELECT SUM(" + DB.kAnzahlStimmen + ") "	+ "FROM " + zweitStimmenNachParteiTable + ") >= 0.05";
+ 	}
+ 	
+ 	protected String createFuenfProzentParteienTable(String zweitStimmenNachBundeslandTable,
+ 			String zweitStimmenNachParteiTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.fuenfProzentParteien(), DB.kForeignKeyParteiID + " BIGINT",
+ 				stmtFuenfProzentParteien(zweitStimmenNachParteiTable));
+     return db.fuenfProzentParteien();
+ 	}
+ 
+ 	
+ 	protected String stmtDreiDirektmandateParteien(String direktMandateTable) {
+ 		return "SELECT dm."
+     	+ DB.kForeignKeyParteiID + " FROM " + direktMandateTable + " dm " + " GROUP BY dm."
+     	+ DB.kForeignKeyParteiID + " HAVING COUNT(*) >= 3";
+ 	}
+ 	protected String createDreiDirektmandateParteienTable(String direktMandateTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.dreiDirektMandatParteien(), DB.kForeignKeyParteiID + " BIGINT",
+ 				stmtDreiDirektmandateParteien(direktMandateTable));
+     return db.dreiDirektMandatParteien();
+ 	}
+ 	
+ 	protected String stmtParteienImBundestag(String fuenfProzentParteienTable, String dreiDirektMandateTable) {
+ 		return  " SELECT * FROM " + fuenfProzentParteienTable + " UNION " + " SELECT * FROM " + dreiDirektMandateTable;
+ 	}
+ 	
+ 	protected String createParteienImBundestagTable(String fuenfProzentParteienTable, String dreiDirektMandateTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.parteienImBundestag(), DB.kForeignKeyParteiID + " BIGINT",
+ 				stmtParteienImBundestag(fuenfProzentParteienTable, dreiDirektMandateTable));
+     return db.parteienImBundestag();
+ 	}
+ 	
+ 	protected String stmtDivisoren() {
+ 		return ""
+ 			+ "SELECT (ROW_NUMBER() OVER (order by w." + DB.kID + ")  - 0.5) as Wert "
+ 			+ "FROM " + db.wahlkreis() + " w "
+ 			+ "UNION "
+ 			+ "SELECT (ROW_NUMBER() OVER (order by w." + DB.kID + ") + " + stmtCount(db.wahlkreis()) + " - 0.5) AS Wert "
+ 			+ "FROM " + db.wahlkreis() + " w";
+ 	}
+ 	
+ 	protected String stmtZugriffsreihenfolgeSitzeNachPartei(String parteienImBundestagTable,
+ 			String zweitStimmenNachParteiTable, String DivisorenTable) {
+ 		return ""
+ 			+ "SELECT p." + DB.kForeignKeyParteiID + ", z." + DB.kAnzahlStimmen + ", "
+ 			+ "(z." + DB.kAnzahlStimmen + " / d.wert) as DivWert, "
+ 			+ "ROW_NUMBER() OVER (ORDER BY (z." + DB.kAnzahlStimmen + " / d.wert) DESC, rnd." + DB.kZahl + " DESC) as Rang "
+ 			+ "FROM " + parteienImBundestagTable + " p, " + zweitStimmenNachParteiTable + " z, " + DivisorenTable + " d, "
+ 				+ db.zufallsZahlenSitzeNachPartei() + " rnd "
+ 			+ "WHERE p." + DB.kForeignKeyParteiID + " = z." + DB.kForeignKeyParteiID + " "
+ 				+ "AND rnd." + DB.kZeile + " = MOD(p." + DB.kForeignKeyParteiID	+ " + (d.wert / 1)*" + stmtCount(db.partei())
+ 					+ ", " + stmtCount(db.zufallsZahlenSitzeNachPartei()) + ")";
+ 	
+ 	}
+ 	
+ 	protected String stmtSitzeNachParteiTable(String zweitStimmenNachParteiTable, String parteienImBundestagTable,
+ 			String zugriffsreihenfolgeSitzeNachParteiTable) {
+ 		return ""
+ 		+ "SELECT " + DB.kForeignKeyParteiID + ", COUNT(Rang) as " + DB.kAnzahlSitze + " "
+ 		+ "FROM " + zugriffsreihenfolgeSitzeNachParteiTable + " "
+ 		+ "WHERE Rang <= 2*" + stmtCount(db.wahlkreis()) + " "
+     + "GROUP BY " + DB.kForeignKeyParteiID;
+ 	}
+ 	
+ 	protected String createSitzeNachPartei(String zweitStimmenNachParteiTable, String parteienImBundestagTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.sitzeNachPartei(), DB.kForeignKeyParteiID + " BIGINT, "
+         + DB.kAnzahlSitze + " BIGINT",
+         "WITH " + db.divisoren() + " AS (" + stmtDivisoren() + "), "
+         + db.zugriffsreihenfolgeSitzeNachPartei() + " AS ("
+          + stmtZugriffsreihenfolgeSitzeNachPartei(parteienImBundestagTable, zweitStimmenNachParteiTable, db.divisoren())
+          + ") "
+         + stmtSitzeNachParteiTable(
+         		zweitStimmenNachParteiTable, parteienImBundestagTable, db.zugriffsreihenfolgeSitzeNachPartei()));
+     return db.sitzeNachPartei();
+ 	}
+ 	
+ 	protected String stmtZugriffsreihenfolgeSitzeNachLandeslisten(String parteienImBundestagTable,
+ 			String zweitStimmenNachBundeslandTable, String divisorenTable) {
+ 		return ""
+ 		+ "SELECT p." + DB.kForeignKeyParteiID + ", z." + DB.kForeignKeyBundeslandID + ", z." + DB.kAnzahlStimmen + ", "
+ 		  		 + "(z." + DB.kAnzahlStimmen + " / d.wert) as DivWert, "
+ 		  		 + "ROW_NUMBER() OVER (PARTITION BY p." + DB.kForeignKeyParteiID + " "
+ 		  		 	 + "ORDER BY (z." + DB.kAnzahlStimmen + " / d.wert) DESC, rnd." + DB.kZahl + " DESC) as Rang "
+ 		+ "FROM " + parteienImBundestagTable + " p, " + zweitStimmenNachBundeslandTable + " z, " + divisorenTable + " d, "
+ 			+ db.zufallsZahlenSitzeNachLandeslisten() + " rnd "
+ 		+ "WHERE p." + DB.kForeignKeyParteiID + " = z." + DB.kForeignKeyParteiID + " "
+ 			+ "AND rnd." + DB.kZeile + " = MOD(" + "p." + DB.kForeignKeyParteiID + " + " + stmtCount(db.partei())
+ 				+ "*(z." + DB.kForeignKeyBundeslandID + " + " + stmtCount(db.bundesland()) + "*(d.wert / 1)), "
+ 				+ stmtCount(db.zufallsZahlenSitzeNachLandeslisten()) + ")";
+ 
+ 	}
+ 	
+ 	protected String stmtSitzeNachLandeslisten(String parteienImBundestagTable, 
+ 			String zweitStimmenNachBundeslandTable, String sitzeNachParteiTable,
+ 			String zugriffsreihenfolgeSitzeNachLandeslistenTable) {
+ 		return ""
+ 			+ "SELECT z." + DB.kForeignKeyParteiID + ", " + DB.kForeignKeyBundeslandID 
+ 					 + ", COUNT(Rang) as " + DB.kAnzahlSitze + " "
+ 	    + "FROM " + zugriffsreihenfolgeSitzeNachLandeslistenTable +" z, " + sitzeNachParteiTable + " s "
+ 	    + "WHERE z." + DB.kForeignKeyParteiID + " = s." + DB.kForeignKeyParteiID + " "
+ 	    	+ "AND z.Rang <= s." + DB.kAnzahlSitze + " "
+ 	    + "GROUP BY z." + DB.kForeignKeyParteiID + ", z." + DB.kForeignKeyBundeslandID + ", s." + DB.kForeignKeyParteiID;
+ 	}
+ 	
+ 	protected String createSitzeNachLandeslistenTable(String parteienImBundestagTable, 
+ 			String zweitStimmenNachBundeslandTable, String sitzeNachParteiTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.sitzeNachLandeslisten(), DB.kForeignKeyParteiID
+         + " BIGINT, " + DB.kForeignKeyBundeslandID + " BIGINT, " + DB.kAnzahlSitze + " BIGINT",
+         "WITH " + db.divisoren() + " AS (" + stmtDivisoren() + "), "
+     		+ db.zugriffsreihenfolgeSitzeNachLandeslisten() + " AS ("
+     			+ stmtZugriffsreihenfolgeSitzeNachLandeslisten(
+     					parteienImBundestagTable, zweitStimmenNachBundeslandTable, db.divisoren()) + ") "
+     		+ stmtSitzeNachLandeslisten(parteienImBundestagTable, zweitStimmenNachBundeslandTable, sitzeNachParteiTable, 
+     				db.zugriffsreihenfolgeSitzeNachLandeslisten()));
+     return db.sitzeNachLandeslisten();
+ 	}	
+ 
+ 	protected String stmtDirektMandateProParteiUndBundesland(String direktMandateTable) {
+ 		return "" +
+ 			"SELECT k." + DB.kForeignKeyParteiID + ", w." + DB.kForeignKeyBundeslandID + ", COUNT(*) AS AnzahlDirektmandate " +
+ 			"FROM " + direktMandateTable + " dm, " + db.kandidat() + " k, " + db.wahlkreis() + " w " +
+ 			"WHERE dm." + DB.kForeignKeyKandidatID + " = k." + DB.kID + " " + 
+ 			"AND w." + DB.kID + " = k." + DB.kKandidatDMWahlkreisID + " " + 
+ 			"GROUP BY k." + DB.kForeignKeyParteiID + ", w." + DB.kForeignKeyBundeslandID;
+ 	}
+ 	
+ 	protected String stmtUeberhangsmandate(String direktMandateTable, String sitzeNachLandeslistenTable,
+ 			String direktMandateProParteiUndBundeslandTable) {
+ 		return ""
+ 			+ "SELECT b." + DB.kID + " AS " + DB.kForeignKeyBundeslandID + ", b." + DB.kBundeslandName + ", "
+ 				+ "p." + DB.kID + " AS " + DB.kForeignKeyParteiID + ", p." + DB.kParteiKuerzel + ", "
+ 				+ "dmpb.AnzahlDirektmandate - s." + DB.kAnzahlSitze + " AS " + DB.kAnzahlUeberhangsmandate + " "
+ 			+ "FROM " + direktMandateProParteiUndBundeslandTable + " dmpb, " + sitzeNachLandeslistenTable + " s, "
+ 				+ db.partei() + " p, " + db.bundesland() + " b "
+ 			+ "WHERE dmpb." + DB.kForeignKeyBundeslandID + " = s." + DB.kForeignKeyBundeslandID + " "
+ 				+ "AND dmpb." + DB.kForeignKeyParteiID + " = s." + DB.kForeignKeyParteiID + " "
+ 				+ "AND dmpb." + DB.kForeignKeyParteiID + " = p." + DB.kID + " "
+ 				+ "AND dmpb." + DB.kForeignKeyBundeslandID + " = b." + DB.kID + " "
+ 				+ "AND dmpb.AnzahlDirektmandate - s." + DB.kAnzahlSitze + " > 0";
+ 	}
+ 
+ 	protected String createUeberhangsmandateTable(String direktMandateTable, String sitzeNachLandeslistenTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.ueberhangsMandate(), DB.kForeignKeyBundeslandID + " BIGINT, " +
+ 				DB.kBundeslandName + " VARCHAR(255), " + 
+ 				DB.kForeignKeyParteiID + " BIGINT, " +
+ 				DB.kParteiKuerzel + " VARCHAR(64), " +
+ 				DB.kAnzahlUeberhangsmandate + " BIGINT ", 
+ 
+ 				"WITH " + db.direktMandateProParteiUndBundesland() + " AS ("
+ 				+ stmtDirektMandateProParteiUndBundesland(direktMandateTable) + ") "
+ 			+ stmtUeberhangsmandate(direktMandateTable, sitzeNachLandeslistenTable,
+ 					db.direktMandateProParteiUndBundesland()));
+ 		return db.ueberhangsMandate();
+ 	}
+ 	
+ 	protected String stmtMaxZweitStimmenNachWahlkreis() {
+ 		return "" +
+ 			"SELECT we." + DB.kForeignKeyWahlkreisID + ", MAX(we." + DB.kWahlergebnis2Anzahl + ") AS " + DB.kMaxStimmen + " " +
+ 			"FROM " + db.zweitStimmenNachWahlkreis() + " we " +
+ 			"WHERE we." + DB.kJahr + " = " + kCurrentElectionYear + " " +
+ 			"GROUP BY " + DB.kForeignKeyWahlkreisID;
+ 	}
+ 	
+ 	protected String stmtGewinnerErststimmen(String maxErstStimmenNachWahlkreisTable) {
+ 		return "" +
+ 			"SELECT we." + DB.kForeignKeyWahlkreisID + ", we." + DB.kForeignKeyKandidatID + " " + 
+ 			"FROM " + db.erstStimmenNachWahlkreis() + " we, " + maxErstStimmenNachWahlkreisTable + " ms " + 
+ 			"WHERE we." + DB.kForeignKeyWahlkreisID + " = ms.WahlkreisID " + 
+ 				"AND we." + DB.kAnzahl + " = ms." + DB.kMaxStimmen + " " +
+ 				"AND we." + DB.kJahr + " = " + kCurrentElectionYear;
+ 	}
+ 	
+ 	protected String stmtGewinnerZweitStimmen(String maxZweitStimmenNachWahlkreisTable) {
+ 		return "" +
+ 			"SELECT we." + DB.kForeignKeyWahlkreisID + ", we." + DB.kForeignKeyParteiID + " " + 
+ 			"FROM " + db.zweitStimmenNachWahlkreis() + " we, " + maxZweitStimmenNachWahlkreisTable + " ms " + 
+ 			"WHERE we." + DB.kForeignKeyWahlkreisID + " = ms.WahlkreisID " + 
+ 				"AND we." + DB.kWahlergebnis2Anzahl + " = ms." + DB.kMaxStimmen + " " +
+ 				"AND we." + DB.kJahr + " = " + kCurrentElectionYear; 
+ 	}
+ 	
+ 	protected String stmtWahlkreissieger(String gewinnerErstStimmenTable, String gewinnerZweitStimmenTable) {
+ 		return "" +
+ 			"SELECT g1.WahlkreisID, wk." + DB.kForeignKeyBundeslandID + ", " +
+ 				"p1." + DB.kParteiKuerzel + " AS P1, p2." + DB.kParteiKuerzel + " AS P2 " +
+ 			"FROM " + gewinnerErstStimmenTable + " g1, " + gewinnerZweitStimmenTable + " g2, " + db.partei() + " p1, " + 
+ 				db.partei() + " p2, " + db.kandidat() + " k, " + db.wahlkreis() + " wk " + 
+ 			"WHERE g1.WahlkreisID = g2.WahlkreisID " + 
+ 				"AND g1.KandidatID = k." + DB.kID + " " +
+ 				"AND k.ParteiID = p1." + DB.kID + " " +
+ 				"AND g2.ParteiID = p2." + DB.kID + " " + 
+ 				"AND wk." + DB.kID + " = g1." + DB.kForeignKeyWahlkreisID;
+ 	}
+ 	
+ 	public String createWahlkreissiegerTable() throws SQLException {
+ 		db.createFilledTemporaryTable(db.wahlkreisSieger(), DB.kForeignKeyWahlkreisID + " BIGINT, " +
+ 				DB.kForeignKeyBundeslandID + " BIGINT, " + "P1 VARCHAR(64), " + "P2 VARCHAR(64)",
+ 				"WITH "
+ 				+ db.maxZweitStimmenNachWahlkreis() + " AS (" + stmtMaxZweitStimmenNachWahlkreis() + "), "
+ 				+ db.maxErststimmenNachWahlkreis() + " AS ("
+ 					+ stmtMaxErststimmenNachWahlkreis(db.erstStimmenNachWahlkreis()) + "), "
+ 				+ db.gewinnerZweitstimmen() + " AS (" + stmtGewinnerZweitStimmen(db.maxZweitStimmenNachWahlkreis()) + "), "
+ 				+ db.gewinnerErststimmen() + " AS (" + stmtGewinnerErststimmen(db.maxErststimmenNachWahlkreis()) + ") "
+ 				+ stmtWahlkreissieger(db.gewinnerErststimmen(), db.gewinnerZweitstimmen()));
+ 		return db.wahlkreisSieger();
+ 	}
+ 	
+ 	public String stmtParteiloseDirektmandate(String direktmandateTable) {
+ 		return ""
+ 			+ "SELECT k." + DB.kID + " "
+ 			+ "FROM " + db.kandidat() + " k, " + db.direktmandate() + " d, " + db.wahlkreis() + " wk "
+ 			+ "WHERE k." + DB.kID + " = d." + DB.kForeignKeyKandidatID + " "
+ 				+ "AND k." + DB.kKandidatDMWahlkreisID + " = wk." + DB.kID + " "
+ 				+ "AND NOT EXISTS ("
+ 					+ "SELECT * FROM " + db.kandidat() + " ku "
+ 					+ "WHERE ku." + DB.kForeignKeyParteiID + " = k." + DB.kKandidatDMParteiID + " "
+ 					+ "AND ku." + DB.kForeignKeyBundeslandID + " = wk." + DB.kForeignKeyBundeslandID + " "
+ 					+ "AND ku." + DB.kKandidatListenplatz + " IS NOT NULL)";
+ 	}
+ 	
+ 	public String stmtZweitstimmenNachWahlkreis(String parteiLoseDirektmandateTable) {
+ 		return ""
+ 		+ "SELECT s." + DB.kForeignKeyParteiID + ", s." + DB.kForeignKeyWahlkreisID + ", " + DB.kJahr + ", COUNT(*) "
+ 		+ "FROM " + db.stimme() + " s "
+ 		+ "WHERE " + DB.kForeignKeyParteiID + " IS NOT NULL "
+ 			+ "AND " + DB.kForeignKeyKandidatID + " NOT IN " + parteiLoseDirektmandateTable
+ 		+ "GROUP BY s." + DB.kForeignKeyParteiID + ", s." + DB.kForeignKeyWahlkreisID + ", s." + DB.kJahr;
+ 	}
+   
+ 	public String stmtErststimmenNachWahlkreis() {
+ 		return ""
+ 		+ "SELECT s." + DB.kForeignKeyKandidatID + ", s." + DB.kForeignKeyWahlkreisID + ", " + DB.kJahr + ", COUNT(*) "
+ 		+ "FROM " + db.stimme() + " s "
+ 		+ "WHERE " + DB.kForeignKeyKandidatID + " IS NOT NULL "
+ 		+ "GROUP BY s." + DB.kForeignKeyKandidatID + ", s." + DB.kForeignKeyWahlkreisID + ", s." + DB.kJahr;
+ 	}
+   
+ 	public String updateZweitstimmenNachWahlkreisTable(String erstStimmenNachWahlkreisTable) throws SQLException {
+ 		db.createFilledTemporaryTable(db.zweitStimmenNachWahlkreis(), DB.kForeignKeyParteiID + " BIGINT, "
+ 				+ DB.kForeignKeyWahlkreisID + " BIGINT, " + DB.kJahr + " INTEGER, " + DB.kAnzahl + " INTEGER" , 
+ 				"WITH "
+         	+ db.maxErststimmenNachWahlkreis() + " AS ( "
+         		+ stmtMaxErststimmenNachWahlkreis(erstStimmenNachWahlkreisTable) + "), "
+ 					+ db.direktMandateNummer() + " AS ( "
+ 						+ stmtDirektmandateNummer(db.maxErststimmenNachWahlkreis(), erstStimmenNachWahlkreisTable) + "), "
+ 					+ db.direktMandateMaxNummer() + " AS ( "
+ 						+ stmtDirektmandateMaxNummer(db.direktMandateNummer()) + "), "
+ 					+ db.direktmandate() + " AS ( "
+ 		  			+	stmtDirektmandate(db.direktMandateNummer(), db.direktMandateMaxNummer()) + "), "
+ 		  	  + db.parteiloseDirektmandate() + " AS ( " + stmtParteiloseDirektmandate(db.direktmandate()) + ") "
+ 		  	  + stmtZweitstimmenNachWahlkreis(db.parteiloseDirektmandate()));
+ 		return db.zweitStimmenNachWahlkreis();
+ 	}
+ 	
+ 	public String updateErststimmenNachWahlkreisTable() throws SQLException {
+ 		db.createFilledTemporaryTable(db.erstStimmenNachWahlkreis(), DB.kForeignKeyKandidatID + " BIGINT, "
+ 				+ DB.kForeignKeyWahlkreisID + " BIGINT, " + DB.kJahr + " INTEGER, " + DB.kAnzahl + " INTEGER" , 
+ 				stmtErststimmenNachWahlkreis());
+ 		return db.erstStimmenNachWahlkreis();
+ 	}
+ }

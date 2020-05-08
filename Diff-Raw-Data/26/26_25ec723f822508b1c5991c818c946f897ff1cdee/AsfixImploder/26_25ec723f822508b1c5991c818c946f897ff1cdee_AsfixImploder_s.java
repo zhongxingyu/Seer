@@ -1,0 +1,383 @@
+ package org.strategoxt.imp.runtime.parser.ast;
+ 
+ import java.util.ArrayList;
+ import static java.lang.Math.min;
+ 
+ import lpg.runtime.IToken;
+ import lpg.runtime.PrsStream;
+ 
+ import static org.spoofax.jsglr.Term.*;
+ 
+ import static org.strategoxt.imp.runtime.parser.tokens.TokenKind.*;
+ 
+ import org.strategoxt.imp.runtime.Debug;
+ import org.strategoxt.imp.runtime.parser.tokens.TokenKindManager;
+ import org.strategoxt.imp.runtime.parser.tokens.SGLRTokenizer;
+ 
+ import aterm.ATerm;
+ import aterm.ATermAppl;
+ import aterm.ATermInt;
+ import aterm.ATermList;
+ import aterm.pure.ATermListImpl;
+ 
+ /**
+  * Class to convert an Asfix tree to another format.
+  * 
+  * @author Lennart Kats <L.C.L.Kats add tudelft.nl>
+  */
+ public class AsfixImploder {
+ 	private final static int PARSE_TREE = 0;
+ 	
+ 	private final static int APPL_PROD = 0;
+ 	
+ 	private final static int APPL_CONTENTS = 1;
+ 
+ 	private final static int PROD_LHS = 0;
+ 	
+ 	private final static int PROD_RHS = 1;
+ 
+ 	private final static int PROD_ATTRS = 2;
+ 	
+ 	private final static int TERM_CONS = 0;
+ 	
+ 	private final static int CONS_NAME = 0;
+ 	
+ 	private final static int PARAMETRIZED_SORT_NAME = 0;
+ 	
+ 	private final static int PARAMETRIZED_SORT_ARGS = 1;
+ 	
+ 	private final static int ALT_SORT_LEFT = 0;
+ 	
+ 	private final static int ALT_SORT_RIGHT = 1;
+ 	
+ 	private final static int EXPECTED_NODE_CHILDREN = 5;
+ 	
+ 	private final AstNodeFactory factory = new AstNodeFactory();
+ 	
+ 	private final SGLRTokenizer tokenizer;
+ 	
+ 	private final TokenKindManager tokenManager;
+ 	
+ 	/** Character offset for the current implosion. */ 
+ 	private int offset;
+ 	
+ 	private boolean lexicalContext;
+ 	
+     public AsfixImploder(TokenKindManager tokenManager, SGLRTokenizer tokenizer) {
+ 		this.tokenManager = tokenManager;
+ 		this.tokenizer = tokenizer;
+ 	}
+ 	
+ 	public AstNode implode(ATerm asfix) {
+ 		if (!(asfix instanceof ATermAppl || ((ATermAppl) asfix).getName().equals("parsetree")))
+ 			throw new IllegalArgumentException("Parse tree expected");
+ 		
+ 		ATerm top = (ATerm) asfix.getChildAt(PARSE_TREE);
+ 		offset = 0;
+ 		lexicalContext = false;
+ 		
+ 		AstNode root = implodeAppl(resolveAmbiguities(top));
+ 
+ 		tokenizer.endStream();
+ 		
+ 		return root;
+ 	}
+ 	
+ 	// TODO2: Cleanup implodeAppl
+ 	
+ 	/** Implode any appl(_, _). */
+ 	private AstNode implodeAppl(ATermAppl appl) {
+ 		ATermAppl prod = termAt(appl, APPL_PROD);
+ 		ATermList lhs = termAt(prod, PROD_LHS);
+ 		ATermAppl rhs = termAt(prod, PROD_RHS);
+ 		ATermAppl attrs = termAt(prod, PROD_ATTRS);
+ 		ATermList contents = termAt(appl, APPL_CONTENTS);
+ 		
+ 		// TODO: Support <int> nodes in implosion (e.g., chars in Java)
+ 		
+ 		IToken prevToken = tokenizer.currentToken();
+ 		
+ 		// Enter lexical context if this is a lex node
+ 		boolean lexicalStart = !lexicalContext
+ 			&& (rhs.getName().equals("lex") || AsfixAnalyzer.isLiteral(rhs)
+ 			    || AsfixAnalyzer.isLayout(rhs));
+ 		
+ 		if (lexicalStart) lexicalContext = true;
+ 		
+ 		boolean isList = !lexicalContext && AsfixAnalyzer.isList(rhs);
+ 		boolean isVar  = !lexicalContext && !isList && rhs.getName().equals("varsym");
+ 		
+ 		if (isVar) lexicalContext = true;
+ 		
+ 		// Recurse the tree (and set children if applicable)
+ 		ArrayList<AstNode> children =
+ 			implodeChildNodes(contents, lexicalContext);
+ 		
+ 		if (lexicalStart || isVar) {
+ 			return createTerminal(lhs, rhs);
+ 		} else if (lexicalContext) {
+ 			return null; // don't create tokens inside lexical context; just create one big token at the top
+ 		} else {
+ 			return createNonTerminalOrInjection(lhs, rhs, attrs, prevToken, children, isList);
+ 		}
+ 	}
+ 
+ 	private ArrayList<AstNode> implodeChildNodes(ATermList contents, boolean tokensOnly) {
+ 		ArrayList<AstNode> result = tokensOnly
+ 				? null
+ 				: new ArrayList<AstNode>(
+ 						min(EXPECTED_NODE_CHILDREN, contents.getChildCount()));
+ 
+ 		for (int i = 0; i < contents.getLength(); i++) {
+ 			ATerm child = contents.elementAt(i);
+ 
+ 			if (isInt(child)) {
+ 				implodeLexical(child);
+ 			} else {
+ 				// Recurse
+ 				AstNode childNode = implodeAppl(resolveAmbiguities(child));
+ 
+ 				if (childNode != null)
+ 					result.add(childNode);
+ 			}
+ 		}
+ 
+ 		return result;
+ 	}
+ 
+ 	private AstNode createTerminal(ATermList lhs, ATermAppl rhs) {
+ 		// TODO: Also create int terminals
+ 		// TODO2: Optimize - don't construct a token's string value until it is used
+ 		
+ 		lexicalContext = false;
+ 		IToken token = tokenizer.makeToken(offset, tokenManager.getTokenKind(lhs, rhs), true);
+ 		String sort = getSort(rhs);
+ 		
+ 		if (sort == null) return null;
+ 		
+ 		//Debug.log("Creating node ", sort, " from ", SGLRTokenizer.dumpToString(token));	
+ 		
+ 		return factory.createTerminal(sort, token);
+ 	}
+ 
+ 	private AstNode createNonTerminalOrInjection(ATermList lhs, ATermAppl rhs, ATermAppl attrs,
+ 			IToken prevToken, ArrayList<AstNode> children, boolean isList) {
+ 		
+ 		String constructor = getConstructor(attrs);
+ 		String sort = getSort(rhs);
+ 		
+ 		if(constructor == null) {
+ 			if (isList) {
+ 				return createNonTerminal(sort, null, prevToken, children, true);
+ 			} else {
+ 				assert children.size() == 1;
+ 				return children.get(0);
+ 			}
+ 		} else {
+ 			tokenizer.makeToken(offset, tokenManager.getTokenKind(lhs, rhs));
+ 			return createNonTerminal(sort, constructor, prevToken, children, isList);
+ 		}
+ 	}
+ 
+ 	/** Implode a context-free node. */
+ 	private AstNode createNonTerminal(String sort, String constructor, IToken prevToken,
+ 			ArrayList<AstNode> children, boolean isList) {
+ 		
+ 		IToken left = getStartToken(prevToken);
+ 		IToken right = getEndToken(left, tokenizer.currentToken());
+ 		
+ 		/*
+ 		if (Debug.ENABLED) {
+ 			String name = isList ? "list" : sort;
+ 			Debug.log("Creating node ", name, ":", constructor, AstNode.getSorts(children), " from ", SGLRTokenizer.dumpToString(left, right));
+ 		}
+ 		*/
+ 		
+ 		if (isList) {
+ 			return factory.createList(sort, left, right, children);
+ 		} else if (constructor == null && children.size() == 1 && children.get(0).getSort() == AstNode.STRING_SORT) {
+ 			// Child node was a <string> node (rare case); unpack it and create a new terminal
+ 			assert left == right && children.get(0).getChildren().size() == 0;
+ 			return factory.createTerminal(sort, left);
+ 		} else {
+ 			return factory.createNonTerminal(sort, constructor, left, right, children);
+ 		}
+ 	}
+ 	
+ 	/** Resolve or ignore any ambiguities in the parse tree. */
+ 	private ATermAppl resolveAmbiguities(ATerm node) {
+ 		if (!"amb".equals(((ATermAppl) node).getName()))
+ 			return (ATermAppl) node;
+ 		
+ 		final ATermListImpl ambs = termAt(node, 0);
+ 		ATermAppl result = null;
+ 		ATermAppl lastNonAvoid = null;
+ 		boolean multipleNonAvoids = false;
+ 		
+ 	alts:
+ 		for (int i = 0; i < ambs.getLength(); i++) {
+ 			ATermAppl prod = resolveAmbiguities(termAt(ambs, i));
+ 			ATermAppl appl = termAt(prod, APPL_PROD);
+ 			ATermAppl attrs = termAt(appl, PROD_ATTRS);
+ 			
+ 			if ("attrs".equals(attrs.getName())) {
+ 				ATermList attrList = termAt(attrs, 0);
+ 				
+ 				for (int j = 0; j < attrList.getLength(); j++) {
+ 					ATerm attr = termAt(attrList, j);
+ 					if (isAppl(attr) && "prefer".equals(asAppl(attr).getName())) {
+ 						result = resolveAmbiguities(prod);
+ 						break alts;
+ 					} else if (isAppl(attr) && "avoid".equals(asAppl(attr).getName())) {
+ 						continue alts;
+ 					}
+ 				}
+ 				
+ 				if (lastNonAvoid == null) {
+ 					lastNonAvoid = prod;
+ 				} else {
+ 					multipleNonAvoids = true;
+ 				}
+ 			}
+ 		}
+ 		
+ 		if (result == null && !multipleNonAvoids) {
+ 			result = lastNonAvoid;
+ 		}
+ 		
+ 		if (result == null) {
+ 			if (Debug.ENABLED && !lexicalContext) reportUnresolvedAmb(ambs);
+ 			result = resolveAmbiguities(ambs.getFirst());
+ 		}
+ 		
+ 		return result;
+ 	}
+ 	
+ 	private void reportUnresolvedAmb(ATermList ambs) {
+ 		Debug.log("Ambiguity found during implosion: ");
+ 		
+ 		for (ATerm amb : ambs) {
+ 			String ambString = amb.toString();
+ 			if (ambString.length() > 1000) ambString = ambString.substring(0, 1000) + "...";
+ 			Debug.log("  amb: ", ambString);
+ 		}
+ 	}
+ 	
+ 	/** Get the token after the previous node's ending token, or null if N/A. */
+ 	private IToken getStartToken(IToken prevToken) {
+ 		PrsStream parseStream = tokenizer.getParseStream();
+ 		
+ 		if (prevToken == null) {
+ 			return parseStream.getSize() == 0 ? null
+ 			                                  : parseStream.getTokenAt(0);
+ 		} else {
+ 			int index = prevToken.getTokenIndex();
+ 			
+ 			if (parseStream.getSize() - index <= 1) {
+ 				// UNDONE: Assumed empty tokens were harmful
+ 				// throw new InvalidParseTreeException("Cannot create a AST node for an empty token");
+ 
+ 				// Create new empty token
+ 				// HACK: Assume TK_LAYOUT kind for empty tokens in AST nodes
+ 				return tokenizer.makeToken(offset, TK_LAYOUT, true);
+ 			} else {
+ 				return parseStream.getTokenAt(index + 1); 
+ 			}
+ 		}
+ 	}
+ 	
+ 	/** Get the last no-layout token for an AST node. */
+ 	private IToken getEndToken(IToken startToken, IToken lastToken) {
+ 		PrsStream parseStream = tokenizer.getParseStream();
+ 		int begin = startToken.getTokenIndex();
+ 		
+ 		for (int i = lastToken.getTokenIndex(); i > begin; i--) {
+ 			lastToken = parseStream.getTokenAt(i);
+ 			if (lastToken.getKind() != TK_LAYOUT.ordinal()
+ 					|| lastToken.getStartOffset() == lastToken.getEndOffset()-1)
+ 				break;
+ 		}
+ 		
+ 		return lastToken;
+ 	}
+ 	
+ 	/** Implode any appl(_, _) that constructs a lex terminal. */
+ 	private void implodeLexical(ATerm character) {		
+ 		// Add character
+ 		assert ((ATermInt) character).getInt()
+ 			== tokenizer.getLexStream().getCharValue(offset)
+ 			: "Character from asfix stream must be in lex stream";
+ 		offset++;
+ 	}
+ 	
+ 	/** Return the contents of the cons() attribute, or null if not found. */
+ 	private static String getConstructor(ATermAppl attrs) {
+ 		if (attrs.getName().equals("no-attrs"))
+ 			return null;
+ 		
+ 		ATermList list = termAt(attrs, 0);
+ 		
+ 		for (int i = 0; i < list.getLength(); i++) {
+ 			ATerm attr = list.elementAt(i);
+ 			
+ 			if (attr instanceof ATermAppl) {
+ 				ATermAppl namedAttr = (ATermAppl) attr;
+ 				if (namedAttr.getName().equals("term")) {
+ 					namedAttr = (ATermAppl) namedAttr.getChildAt(TERM_CONS);
+ 					
+ 					if (namedAttr.getName().equals("cons")) {
+ 						namedAttr = (ATermAppl) namedAttr.getChildAt(CONS_NAME);
+ 						return namedAttr.getName();
+ 					}
+ 				}				
+ 			}
+ 		}
+ 		
+ 		return null; // no cons found
+ 	}
+ 
+ 	// TODO2: Optimize - cache getSort (especially for parametrized-sort!)
+ 	/** 
+ 	 * Get the RTG sort name of a production RHS, or for lists, the RTG element sort name.
+ 	 */
+     private static String getSort(ATermAppl rhs) {
+     	ATerm node = rhs;
+     	
+     	while (node.getChildCount() > 0 && isAppl(node)) {
+     		if (asAppl(node).getName().equals("sort"))
+     			return applAt(node, 0).getName();
+     		if (asAppl(node).getName().equals("alt"))
+     			return getAltSortName(node);
+     		if (asAppl(node).getName().equals("parameterized-sort"))
+     			return getParameterizedSortName(node);
+     		
+     		node = termAt(node, 0);
+     	}
+     	
+     	return null;
+     }
+     
+     private static String getParameterizedSortName(ATerm node) {
+     	StringBuilder result = new StringBuilder();
+     	
+     	result.append(applAt(node, PARAMETRIZED_SORT_NAME).getName());
+     	result.append('_');
+     	
+ 		ATermList args = termAt(node, PARAMETRIZED_SORT_ARGS);
+ 		
+ 		for (int i = 0; i < args.getChildCount(); i++) {
+ 			ATermAppl arg = termAt(termAt(args, i), 0);
+ 			result.append(arg.getName());
+ 		}
+ 		
+ 		return result.toString();
+     }
+     
+     private static String getAltSortName(ATerm node) {
+ 		String left = getSort(applAt(node, ALT_SORT_LEFT));
+ 		String right = getSort(applAt(node, ALT_SORT_RIGHT));
+ 		
+ 		// HACK: In the RTG, alt sorts appear with a number at the end
+ 		return left + "_" + right + "0";
+     }
+ }

@@ -1,0 +1,168 @@
+ package com.chrisfolger.needsmoredojo.core.amd;
+ 
+ import com.chrisfolger.needsmoredojo.testutil.MockPsiFile;
+ import com.intellij.psi.PsiFile;
+ import org.junit.Before;
+ import org.junit.Test;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ import static org.junit.Assert.assertEquals;
+ 
+ /**
+  * the *Priority tests are to check if suggested imports for some common modules come up in the expected order
+  */
+ public class TestImportCreator
+ {
+     private ImportCreator creator;
+     private List<SourceLibrary> libraries;
+ 
+     @Before
+     public void setup()
+     {
+         creator = new ImportCreator();
+         libraries = new ArrayList<SourceLibrary>();
+ 
+         libraries.add(new SourceLibrary("dijit", "js/dijit"));
+         libraries.add(new SourceLibrary("dojox", "js/dojox"));
+         libraries.add(new SourceLibrary("dojo", "js/dojo"));
+         libraries.add(new SourceLibrary("util", "js/util"));
+         libraries.add(new SourceLibrary("dgrid", "js/dgrid"));
+     }
+ 
+     @Test
+     public void testDijitLibraryPriority()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("BorderContainer.js", "js/dojox/layout"),
+                 new MockPsiFile("BorderContainer.js", "js/dijit/layout")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "BorderContainer");
+ 
+         assertEquals("dijit/layout/BorderContainer", choices[0]);
+     }
+ 
+     @Test
+     public void testFunctionalPriority()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("functional.js", "js/dojox/lang"),
+                 new MockPsiFile("functional.js", "js/util/docscripts/tests")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "functional");
+ 
+         assertEquals("dojox/lang/functional", choices[0]);
+     }
+ 
+     @Test
+     // see Issue #24 entering a module with an underscore resolves into two underscores
+     public void testWidgetWithUnderscoreDoesNotGetTwoUnderscoresInserted()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("_WidgetBase.js", "js/dijit")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "_WidgetBase");
+ 
+         assertEquals("dijit/_WidgetBase", choices[0]);
+     }
+ 
+     @Test
+     // a little unrealistic, but let's make sure this case works anyway
+     public void testWidgetWithDoubleUnderscoresIsStillInsertedCorrectly()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("__WidgetBase.js", "js/dijit")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "__WidgetBase");
+ 
+         assertEquals("dijit/__WidgetBase", choices[0]);
+     }
+ 
+     @Test
+     public void testDgridPriority()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("Grid.js", "js/dojox/drawing/plugins/drawing"),
+                 new MockPsiFile("Grid.js", "js/dojox/grid"),
+                 new MockPsiFile("Grid.js", "js/dgrid"),
+                 new MockPsiFile("Grid.js", "js/dojox/charting/plot2d")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "Grid");
+ 
+         assertEquals("dgrid/Grid", choices[0]);
+     }
+ 
+     @Test
+     public void testDojoTestPriority()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("on.js", "js/dojo/tests"),
+                 new MockPsiFile("on.js", "js/dojo")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "on");
+ 
+         assertEquals("dojo/on", choices[0]);
+     }
+ 
+     @Test
+     public void testExternalLibrary()
+     {
+         PsiFile[] files = new PsiFile[] {
+                new MockPsiFile("Grid.js", "website/static/js/website/foo")
+         };
+ 
+        libraries.add(new SourceLibrary("website", "website/static/js"));
+ 
+        String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]) , "Grid" );
+ 
+        assertEquals("website/foo/Grid", choices[0]);
+     }
+ 
+     @Test
+     public void testLibrary_withNoSourceRoot()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("Grid.js", "website/static/js/dojo/foo")
+         };
+ 
+         libraries.add(new SourceLibrary("dojo", "website/static/js"));
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]) , "Grid" );
+ 
+         assertEquals("dojo/foo/Grid", choices[0]);
+     }
+ 
+     @Test
+     public void testDojoLibraryPriority()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("BorderContainer.js", "js/dojox"),
+                 new MockPsiFile("BorderContainer.js", "js/dojo")
+         };
+ 
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]), "BorderContainer");
+ 
+         assertEquals("dojo/BorderContainer", choices[0]);
+     }
+ 
+     @Test
+     public void correctDojoSourceReferenceWithExternalLibrary()
+     {
+         PsiFile[] files = new PsiFile[] {
+                 new MockPsiFile("ContentPane.js", "website/static/deps/dijit/layout")
+         };
+ 
+         libraries = new ArrayList<SourceLibrary>();
+         libraries.add(new SourceLibrary("dijit", "website/static/deps/dijit"));
+         libraries.add(new SourceLibrary("website", "website/static/js/website"));
+         String[] choices = creator.getChoicesFromFiles(files, libraries.toArray(new SourceLibrary[0]) , "ContentPane" );
+ 
+         assertEquals("dijit/layout/ContentPane", choices[0]);
+     }
+ }

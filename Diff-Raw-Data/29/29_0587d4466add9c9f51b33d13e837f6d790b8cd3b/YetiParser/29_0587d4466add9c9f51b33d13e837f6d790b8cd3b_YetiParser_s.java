@@ -1,0 +1,810 @@
+ // ex: se sts=4 sw=4 expandtab:
+ 
+ /**
+  * Yeti language parser.
+  *
+  * Copyright (c) 2007 Madis Janson
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions
+  * are met:
+  * 1. Redistributions of source code must retain the above copyright
+  *    notice, this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright
+  *    notice, this list of conditions and the following disclaimer in the
+  *    documentation and/or other materials provided with the distribution.
+  * 3. The name of the author may not be used to endorse or promote products
+  *    derived from this software without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+  * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+ /*
+ Syntax.
+ 
+ binding: foo a b c... = <expr>
+ expr: <application> | <constant>
+ application: <expr> <expr>
+ constant: "blaah" | 1.23 | ()
+ struct: '{' { binding } '}'
+ */
+ 
+ package yeti.lang.compiler;
+ 
+ import java.util.List;
+ import java.util.ArrayList;
+ import yeti.lang.Core;
+ import yeti.lang.Num;
+ import yeti.lang.AList;
+ import yeti.lang.LList;
+ 
+ interface YetiParser {
+     ThreadLocal currentSrc = new ThreadLocal();
+ 
+     class Node {
+         int line;
+         int col;
+ 
+         String show() {
+             return str();
+         }
+ 
+         String str() {
+             return toString();
+         }
+ 
+         String showList(char open, char close, Node[] list) {
+             StringBuffer res = new StringBuffer();
+             res.append(open);
+             if (list == null) {
+                 res.append(':');
+             } else {
+                 for (int i = 0; i < list.length; ++i) {
+                     if (i != 0) {
+                         res.append(", ");
+                     }
+                     res.append(list[i].show());
+                 }
+             }
+             res.append(close);
+             return res.toString();
+         }
+ 
+         Node pos(int line, int col) {
+             this.line = line;
+             this.col = col;
+             return this;
+         }
+ 
+         public String toString() {
+             char[] s = (char[]) currentSrc.get();
+             if (s == null)
+                 return getClass().getName();
+             int p = 0, l = line;
+             if (--l > 0)
+                 while (p < s.length && (s[p++] != '\n' || --l > 0));
+             p += col - 1;
+             if (p < 0)
+                 p = 0;
+             int e = p;
+             char c;
+             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
+                     c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
+                     c != '[' && c != ']' && c != '{' && c != '}'));
+             return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\'';
+         }
+     }
+ 
+     class BindOp extends Node {
+     }
+ 
+     class SepOp extends Node {
+         char sep;
+ 
+         SepOp(char sep) {
+             this.sep = sep;
+         }
+     }
+ 
+     class VarSym extends Node {
+     }
+ 
+     class UnitLiteral extends Node {
+         String str() {
+             return "()";
+         }
+     }
+ 
+     class Bind extends Node {
+         String name;
+         Node expr;
+         boolean var;
+ 
+         Bind(List args, Node expr) {
+             int first = 1;
+             Node nameNode = (Node) args.get(0);
+             if (nameNode instanceof VarSym) {
+                 if (args.size() == 1) {
+                     throw new CompileException(nameNode,
+                         "Variable name is missing");
+                 }
+                 nameNode = (Node) args.get(1);
+                 first = 2;
+                 var = true;
+             }
+             if (!(nameNode instanceof Sym)) {
+                 throw new CompileException(nameNode,
+                     "Illegal binding name: " + nameNode);
+             }
+             line = nameNode.line;
+             col = nameNode.col;
+             this.name = ((Sym) nameNode).sym;
+             if (first < args.size() && args.get(first) instanceof BinOp &&
+                 ((BinOp) args.get(first)).op == ".") {
+                 throw new CompileException((BinOp) args.get(first),
+                     "Bad argument on binding (use := for assignment, not =)");
+             }
+             for (int i = args.size(); --i >= first;) {
+                 expr = new Lambda((Node) args.get(i), expr,
+                                   i == first ? name : null);
+             }
+             this.expr = expr;
+         }
+ 
+         String str() {
+             return name + " = " + expr.show();
+         }
+     }
+ 
+     class Lambda extends Node {
+         Node arg;
+         Node expr;
+         String bindName;
+ 
+         Lambda(Node arg, Node expr, String name) {
+             this.arg = arg;
+             this.expr = expr;
+             this.bindName = name;
+             line = arg.line;
+             col = arg.col;
+         }
+ 
+         String str() {
+             return "\\" + arg.show() + " -> " + expr.show();
+         }
+     }
+ 
+     class Load extends Node {
+         String moduleName;
+ 
+         Load(String moduleName) {
+             this.moduleName = moduleName;
+         }
+ 
+         String str() {
+             return "load " + moduleName.replace('/', '.');
+         }
+     }
+ 
+     class Seq extends Node {
+         Node[] st;
+ 
+         Seq(Node[] st) {
+             this.st = st;
+         }
+ 
+         String str() {
+             return showList('(', ')', st);
+         }
+     }
+ 
+     class Struct extends Node {
+         Node[] fields;
+ 
+         Struct(Node[] fields) {
+             this.fields = fields;
+         }
+ 
+         String str() {
+             return showList('{', '}', fields);
+         }
+     }
+ 
+     class NList extends Node {
+         Node[] items;
+ 
+         NList(Node[] items) {
+             this.items = items;
+         }
+ 
+         String str() {
+             return showList('[', ']', items);
+         }
+     }
+ 
+     class Condition extends Node {
+         Node[][] choices;
+ 
+         Condition(Node[][] choices) {
+             this.choices = choices;
+         }
+ 
+         String str() {
+             StringBuffer buf = new StringBuffer();
+             buf.append("\nif ");
+             for (int i = 0; i < choices.length; ++i) {
+                 Node[] choice = choices[i];
+                 if (choice.length >= 2) {
+                     if (i != 0) {
+                         buf.append("\nelif ");
+                     }
+                     buf.append(choice[1].show());
+                     buf.append(" then\n  ");
+                 } else {
+                     buf.append("\nelse\n  ");
+                 }
+                 buf.append(choice[0].show());
+             }
+             buf.append("\nfi\n");
+             return buf.toString();
+         }
+     }
+ 
+     class Case extends Node {
+         Node value;
+         Node[] choices;
+         
+         Case(Node value, Node[] choices) {
+             this.value = value;
+             this.choices = choices;
+         }
+ 
+         String str() {
+             StringBuffer buf = new StringBuffer();
+             buf.append("\ncase ");
+             buf.append(value.show());
+             buf.append(" of");
+             for (int i = 0; i < choices.length; ++i) {
+                 buf.append("\n ");
+                 buf.append(choices[i].show());
+             }
+             buf.append("\nesac\n");
+             return buf.toString();
+         }
+     }
+ 
+     class Sym extends Node {
+         String sym;
+ 
+         Sym(String sym) {
+             this.sym = sym;
+         }
+ 
+         String str() {
+             return sym;
+         }
+ 
+         public String toString() {
+             return sym;
+         }
+     }
+ 
+     class Str extends Node {
+         String str;
+ 
+         Str(String str) {
+             this.str = str;
+         }
+ 
+         String show() {
+             return '"' + str + '"';
+         }
+     }
+ 
+     class ConcatStr extends Node {
+         Node[] param;
+ 
+         ConcatStr(Node[] param) {
+             this.param = param;
+         }
+ 
+         String show() {
+             StringBuffer buf = new StringBuffer("\"");
+             for (int i = 0; i < param.length; ++i) {
+                 if (param[i] instanceof Str) {
+                     buf.append(((Str) param[i]).str);
+                 } else {
+                     buf.append("\\(");
+                     buf.append(param[i].show());
+                     buf.append(")");
+                 }
+             }
+             buf.append('"');
+             return buf.toString();
+         }
+     }
+ 
+     class NumLit extends Node {
+         Num num;
+ 
+         NumLit(Num num) {
+             this.num = num;
+         }
+ 
+         String show() {
+             return String.valueOf(num);
+         }
+     }
+ 
+     class Eof extends Node {
+     }
+ 
+     class Elif extends Eof {
+     }
+ 
+     class Else extends Eof {
+     }
+ 
+     class Fi extends Eof {
+     }
+ 
+     class Esac extends Eof {
+     }
+ 
+     class Done extends Eof {
+     }
+ 
+     class BinOp extends Node {
+         int prio;
+         String op;
+         boolean toRight;
+         Node left;
+         Node right;
+         BinOp parent;
+ 
+         BinOp(String op, int prio, boolean toRight) {
+             this.op = op;
+             this.prio = prio;
+             this.toRight = toRight;
+         }
+ 
+         String str() {
+             return '(' + (left == null ? "<>" : left.show()) + ' ' + op + ' '
+                        + (right == null ? "<>" : right.show()) + ')';
+         }
+     }
+ 
+     class ParseExpr {
+         private boolean lastOp = true;
+         private BinOp root = new BinOp(null, -1, false);
+         private BinOp cur = root;
+ 
+         private void apply(Node node) {
+             BinOp apply = new BinOp("", 2, true);
+             apply.line = node.line;
+             apply.col = node.col;
+             addOp(apply);
+         }
+ 
+         private void addOp(BinOp op) {
+             BinOp to = cur;
+             if (op.op == "-" && lastOp || op.op == "\\") {
+                 if (!lastOp) {
+                     apply(op);
+                     to = cur;
+                 }
+                 op.prio = 1;
+                 to.left = to.right;
+             } else if (lastOp) {
+                 throw new CompileException(op, "Do not stack operators");
+             } else {
+                 while (to.parent != null && (to.prio < op.prio
+                                         || to.prio == op.prio && op.toRight)) {
+                     to = to.parent;
+                 }
+                 op.right = to.right;
+             }
+             op.parent = to;
+             to.right = op;
+             cur = op;
+             lastOp = true;
+         }
+ 
+         void add(Node node) {
+             if (node instanceof BinOp && ((BinOp) node).parent == null) {
+                 addOp((BinOp) node);
+             } else {
+                 if (!lastOp) {
+                     apply(node);
+                 }
+                 lastOp = false;
+                 cur.left = cur.right;
+                 cur.right = node;
+             }
+         }
+ 
+         Node result() {
+             if (cur.left == null && cur.prio != -1 && cur.prio != 1 ||
+                 cur.right == null) {
+                 throw new CompileException(cur, "Expecting some value");
+             }
+             return root.right;
+         }
+     }
+ 
+     class Parser {
+         private static final String[][] OPS = {
+             { "*", "/" },
+             { "+", "-" },
+             { "::" },
+             { "<", ">", "<=", ">=", "==", "!=" },
+             { "and", "or" },
+             { "," },
+             { ":=" },
+             { ":" }
+         };
+         private static final Eof EOF = new Eof() {
+             public String toString() {
+                 return "EOF";
+             }
+         };
+         private char[] src;
+         private int p;
+         private Node eofWas;
+         private int flags;
+         private String sourceName;
+         private int line = 1;
+         private int lineStart;
+         private AList prefetched;
+         String moduleName;
+ 
+         Parser(String sourceName, char[] src, int flags) {
+             this.sourceName = sourceName;
+             this.src = src;
+             this.flags = flags;
+         }
+ 
+         private Node fetch() {
+             Node res;
+             if (prefetched != null) {
+                 res = (Node) prefetched.first();
+                 prefetched = prefetched.rest();
+                 return res;
+             }
+             char[] src = this.src;
+             int i = p;
+             char c;
+             while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
+                 ++i;
+                 if (c == '\n') {
+                     ++line;
+                     lineStart = i;
+                 }
+             }
+             if (i >= src.length || src[i] == ')'
+                 || src[i] == ']' || src[i] == '}') {
+                 p = i;
+                 return EOF;
+             }
+             p = i + 1;
+             int line = this.line, col = p - lineStart;
+             switch (src[i]) {
+                 case '.':
+                     return new BinOp(".", 0, true).pos(line, col);
+                 case '=':
+                     if (p < src.length && src[p] > ' ') {
+                         break;
+                     }
+                     return new BindOp().pos(line, col);
+                 case ';':
+                     return new SepOp(';').pos(line, col);
+                 case ',':
+                     return new SepOp(',').pos(line, col);
+                 case '(':
+                     return readSeq(')');
+                 case '[':
+                     if (i + 2 < src.length && src[i + 1] == ':' &&
+                         src[i + 2] == ']') {
+                         p = i + 3;
+                         return new NList(null).pos(line,col);
+                     }
+                     return new NList(readMany(',', ']')).pos(line, col);
+                 case '{':
+                     return new Struct(readMany(';', '}')).pos(line, col);
+                 case '"':
+                     return readStr().pos(line, col);
+                 case '\\':
+                     return new BinOp("\\", 1, false).pos(line, col);
+             }
+             p = i;
+             if ((c = src[i]) >= '0' && c <= '9') {
+                 while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
+                        c != '[' && c != ']' && c != '{' && c != '}' &&
+                        c != ':' && c != ';' && c != ',' && c > ' ');
+                 String s = new String(src, p, i - p);
+                 p = i;
+                 try {
+                     return new NumLit(Core.parseNum(s)).pos(line, col);
+                 } catch (Exception e) {
+                     throw new CompileException(line, col,
+                         "Bad number literal '" + s + "'");
+                 }
+             }
+             while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
+                    c != ';' && c > ' ' && c != '[' && c != ']' &&
+                    c != '{' && c != '}' && c != '.' && c != ',' &&
+                    (c != ':' || i + 1 < src.length && src[i + 1] > ' '
+                              || i > 0 && src[i - 1] == ':'));
+             String s = new String(src, p, i - p);
+             p = i;
+             s = s.intern(); // Sym's are expected to have interned strings
+             if (s == "if") {
+                 res = readIf();
+             } else if (s == "elif") {
+                 res = new Elif();
+             } else if (s == "else") {
+                 res = new Else();
+             } else if (s == "fi") {
+                 res = new Fi();
+             } else if (s == "case") {
+                 res = readCase();
+             } else if (s == "esac") {
+                 res = new Esac();
+             } else if (s == "do") {
+                 res = readDo();
+             } else if (s == "done") {
+                 res = new Done();
+             } else if (s == "var") {
+                 res = new VarSym();
+             } else if (s == "load") {
+                 res = new Load(readDotted(false));
+             } else {
+                 for (i = OPS.length; --i >= 0;) {
+                     for (int j = OPS[i].length; --j >= 0;) {
+                         if (OPS[i][j] == s) {
+                             return new BinOp(s, i + 3, s != "::")
+                                          .pos(line, col);
+                         }
+                     }
+                 }
+                 res = new Sym(s);
+             }
+             return res.pos(line, col);
+         }
+ 
+         private Node def(List args, List expr) {
+             ParseExpr parseExpr = new ParseExpr();
+             for (int i = 0, cnt = expr.size(); i < cnt; ++i) {
+                 parseExpr.add((Node) expr.get(i));
+             }
+             Node e = parseExpr.result();
+             if (args == null) {
+                 return e;
+             }
+             return new Bind(args, e);
+         }
+ 
+         private Node readExpr(String to) {
+             for (List res = new ArrayList();;) {
+                 Node node = fetch();
+                 if (node instanceof Eof) {
+                     throw new CompileException(node,
+                                     to + " expected, not " + node);
+                 }
+                 if (node instanceof Sym && to == ((Sym) node).sym) {
+                     if (res.isEmpty()) {
+                         throw new CompileException(node, "no condition?");
+                     }
+                     return def(null, res);
+                 }
+                 res.add(node);
+             }
+         }
+ 
+         private Node readIf() {
+             List branches = new ArrayList();
+             do {
+                 Node cond = readExpr("then");
+                 branches.add(new Node[] { readSeq(' '), cond });
+             } while (eofWas instanceof Elif);
+             branches.add(new Node[] {
+                 eofWas instanceof Else ? readSeq(' ')
+                    : new Seq(new Node[] {}).pos(eofWas.line, eofWas.col) });
+             if (!(eofWas instanceof Fi)) {
+                 throw new CompileException(eofWas,
+                     "Expected fi, found " + eofWas);
+             }
+             return new Condition((Node[][]) branches.toArray(
+                             new Node[branches.size()][]));
+         }
+ 
+         private Node readCase() {
+             Node val = readExpr("of");
+             Node[] choices = readMany(';', ' ');
+             if (!(eofWas instanceof Esac)) {
+                 throw new CompileException(eofWas,
+                     "Expected esac, found " + eofWas);
+             }
+             return new Case(val, choices);
+         }
+ 
+         private Node readDo() {
+             for (List args = new ArrayList();;) {
+                 Node arg = fetch();
+                 if (arg instanceof Eof) {
+                     throw new CompileException(arg, "Unexpected " + arg);
+                 }
+                 if (arg instanceof BinOp && ((BinOp) arg).op == ":") {
+                     Node expr = readSeq(' ');
+                     if (!(eofWas instanceof Done)) {
+                         throw new CompileException(eofWas,
+                                     "Expected done, found " + eofWas);
+                     }
+                     if (args.isEmpty()) {
+                         return new Lambda(new Sym("_"), expr, null);
+                     }
+                     for (int i = args.size(); --i >= 0;) {
+                         expr = new Lambda((Node) args.get(i), expr, null);
+                     }
+                     return expr;
+                 }
+                 args.add(arg);
+             }
+         }
+ 
+         private String readDotted(boolean decl) {
+             String result = "";
+             for (;;) {
+                 Node n = fetch();
+                 if (!(n instanceof Sym)) {
+                     throw new CompileException(n,
+                         (decl ? "Expected module name, not a " :
+                             "Expected module name after 'load', not a ") + n);
+                 }
+                 result += ((Sym) n).sym;
+                 n = fetch();
+                 if (!(n instanceof BinOp) || ((BinOp) n).op != ".") {
+                     if (!decl) {
+                         prefetched = new LList(n, prefetched);
+                         return result;
+                     }
+                     if (n instanceof SepOp && ((SepOp) n).sep == ';') {
+                         return result;
+                     }
+                     throw new CompileException(n,
+                         "Expected ';', not a " + n);
+                 }
+                 result += "/";
+             }
+         }
+ 
+         private Node[] readMany(char sep, char end) {
+             List res = new ArrayList();
+             List args = null;
+             List l = new ArrayList();
+             // TODO check for (blaah=) error
+             Node sym;
+             while (!((sym = fetch()) instanceof Eof)) {
+                 if (sym instanceof BindOp) {
+                     args = l;
+                     l = new ArrayList();
+                     continue;
+                 }
+                 if (sym instanceof SepOp && ((SepOp) sym).sep == sep) {
+                     res.add(def(args, l));
+                     args = null;
+                     l = new ArrayList();
+                     continue;
+                 }
+                 l.add(sym);
+             }
+             eofWas = sym;
+             if (end != ' ' && (p >= src.length || src[p++] != end)) {
+                 throw new CompileException(line, p - lineStart + 1,
+                                            "Expecting " + end);
+             }
+             if (!l.isEmpty()) {
+                 res.add(def(args, l));
+             }
+             return (Node[]) res.toArray(new Node[res.size()]);
+         }
+ 
+         private Node readSeq(char end) {
+             Node[] list = readMany(';', end);
+             if (list.length == 1) {
+                 return list[0];
+             }
+             if (list.length == 0) {
+                 return new UnitLiteral().pos(line, p - lineStart);
+             }
+             Node w = list[list.length - 1];
+             for (BinOp bo; w instanceof BinOp &&
+                            (bo = (BinOp) w).left != null;) {
+                 w = bo.left;
+             }
+             return new Seq(list).pos(w.line, w.col);
+         }
+ 
+         private Node readStr() {
+             int st = p;
+             List parts = null;
+             String res = "";
+             int sline = line, scol = p - lineStart;
+             for (; p < src.length && src[p] != '"'; ++p) {
+                 if (src[p] == '\n') {
+                     lineStart = p + 1;
+                     ++line;
+                 }
+                 if (src[p] == '\\') {
+                     res = res.concat(new String(src, st, p - st));
+                     st = ++p;
+                     if (p >= src.length) {
+                         break;
+                     }
+                     switch (src[p]) {
+                         case '\\':
+                         case '"':
+                             continue;
+                         case 'n':
+                             res = res.concat("\n");
+                             break;
+                         case 'r':
+                             res = res.concat("\r");
+                             break;
+                         case 't':
+                             res = res.concat("\t");
+                             break;
+                         case '(':
+                             ++p;
+                             if (parts == null) {
+                                 parts = new ArrayList();
+                             }
+                             if (res.length() != 0) {
+                                 parts.add(new Str(res));
+                             }
+                             parts.add(readSeq(')'));
+                             res = "";
+                             st = --p;
+                             break;
+                         default:
+                             throw new CompileException(line, p - lineStart,
+                                 "Unexpected escape: \\" + src[p]);
+                     }
+                     ++st;
+                 }
+             }
+             if (p >= src.length) {
+                 throw new CompileException(sline, scol, "Unclosed \"");
+             }
+             res = res.concat(new String(src, st, p++ - st));
+             if (parts == null) {
+                 return new Str(res);
+             }
+             if (res.length() != 0) {
+                 parts.add(new Str(res));
+             }
+             return new ConcatStr((Node[]) parts.toArray(
+                                             new Node[parts.size()]));
+         }
+ 
+         Node parse() {
+             Node n = fetch();
+             if (n instanceof Sym && ((Sym) n).sym == "module") {
+                 moduleName = readDotted(true);
+             } else {
+                 prefetched = new LList(n, prefetched);
+             }
+             return readSeq(' ');
+         }
+     }
+ }

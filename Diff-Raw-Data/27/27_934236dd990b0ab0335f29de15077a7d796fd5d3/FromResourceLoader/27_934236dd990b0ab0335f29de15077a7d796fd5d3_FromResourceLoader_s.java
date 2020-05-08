@@ -1,0 +1,72 @@
+ package org.meta_environment.rascal.interpreter.load;
+ 
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.net.URL;
+ 
+ import org.eclipse.imp.pdb.facts.IConstructor;
+ 
+ public class FromResourceLoader implements IModuleFileLoader{
+ 	private final String sourceFolder;
+ 	private final Class<?> clazz;
+ 
+ 	/**
+ 	 * Creates a loader that will find modules in the resources
+ 	 * of the given class
+ 	 * 
+ 	 * @param clazz
+ 	 */
+ 	public FromResourceLoader(Class<?> clazz) {
+ 		this(clazz, "");
+ 	}
+ 	
+ 	/**
+ 	 * Creates a loader that will find modules in the resources
+ 	 * of the given class. The given sourceFolder is where the search
+ 	 * for modules in the class's resources will start.
+ 	 * 
+ 	 * @param clazz
+ 	 */
+ 	public FromResourceLoader(Class<?> clazz, String sourceFolder) {
+ 		this.clazz = clazz;
+ 		
+ 		if (!sourceFolder.startsWith("/")) {
+ 			sourceFolder = "/" + sourceFolder;
+ 		}
+ 		if (!sourceFolder.endsWith("/")) {
+ 			sourceFolder = sourceFolder + "/";
+ 		}
+ 		this.sourceFolder = sourceFolder;
+ 	}
+ 	
+ 	public boolean fileExists(String filename){
+ 		try{
+ 			URL url = clazz.getResource(sourceFolder + filename);
+ 			return (url != null);
+ 		}catch(RuntimeException rex){
+ 			return false;
+ 		}
+ 	}
+ 
+ 	public InputStream getInputStream(String filename){
+ 		try{
+ 			URL url = clazz.getResource(sourceFolder + filename);
+ 			if(url != null){
+ 				return url.openStream();
+ 			}
+ 		}catch(IOException ioex){
+ 			// Ignore, this is fine.
+ 		}
+ 		
+ 		return null;
+ 	}
+ 	
+ 	public boolean supportsLoadingBinaries(){
+ 		return true;
+ 	}
+ 	
+ 	public boolean tryWriteBinary(String filename, String binaryName, IConstructor tree){
+		// Unsupported operation.
+ 		return false;
+ 	}
+ }

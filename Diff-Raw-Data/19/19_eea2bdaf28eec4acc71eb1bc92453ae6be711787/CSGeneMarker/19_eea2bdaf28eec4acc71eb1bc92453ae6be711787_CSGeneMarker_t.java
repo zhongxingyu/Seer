@@ -1,0 +1,264 @@
+ package org.geworkbench.bison.datastructure.bioobjects.markers;
+ 
+ import org.geworkbench.bison.datastructure.bioobjects.markers.annotationparser.AnnotationParser;
+ import org.geworkbench.bison.datastructure.properties.CSUnigene;
+ import org.geworkbench.bison.datastructure.properties.DSUnigene;
+ 
+ import java.io.*;
+ 
+ /**
+  * <p>
+  * Title: Bioworks
+  * </p>
+  * <p>
+  * Description: Modular Application Framework for Gene Expession, Sequence and
+  * Genotype Analysis
+  * </p>
+  * <p>
+  * Copyright: Copyright (c) 2003 -2004
+  * </p>
+  * <p>
+  * Company: Columbia University
+  * </p>
+  * 
+  * @author not attributable
+  * @version $Id$
+  */
+ 
+ public class CSGeneMarker implements DSGeneMarker, Serializable {
+ 
+ 	private static final long serialVersionUID = -8778666154593978009L;
+ 
+ 	protected String label = null;
+ 	protected String description = null;
+ 	protected String abrev = null;
+ 	protected int markerId = 0;
+ 
+ 	protected int geneId = -1;
+ 	protected int[] geneIds;
+ 	protected DSUnigene unigene = new CSUnigene();
+ 
+ 	private String geneName = null;
+ 
+ 	public Object clone() {
+ 		try {
+ 			return super.clone();
+ 		} catch (CloneNotSupportedException e) {
+ 			// Shouldn't happen
+ 			e.printStackTrace();
+ 			return null;
+ 		}
+ 	}
+ 
+ 	public CSGeneMarker() {
+ 	}
+ 
+ 	public CSGeneMarker(String label) {
+ 		this.label = label;
+ 	}
+ 
+ 	/**
+ 	 * getLabel
+ 	 * 
+ 	 * @return String
+ 	 */
+ 	public String getDescription() {
+ 		return description;
+ 	}
+ 
+ 	public void setDescription(String label) {
+ 		this.description = new String(label);
+ 	}
+ 
+ 	/**
+ 	 * getAccession
+ 	 * 
+ 	 * @return String
+ 	 */
+ 	public String getLabel() {
+ 		return label;
+ 	}
+ 
+ 	public int getGeneId() {
+ 		return geneId;
+ 	}
+ 
+ 	public void setLabel(String label) {
+ 		this.label = new String(label);
+ 	}
+ 
+ 	public void setGeneId(int locusLink) {
+ 		this.geneId = locusLink;
+ 		geneIds = new int[1];
+ 		geneIds[0] = geneId;
+ 	}
+ 
+ 	public void setGeneName(String geneName) {
+ 		this.geneName = geneName;
+ 	}
+ 
+ 	/**
+ 	 * getSerial
+ 	 * 
+ 	 * @return int
+ 	 */
+ 	public int getSerial() {
+ 		return markerId;
+ 	}
+ 
+ 	public void setSerial(int id) {
+ 		markerId = id;
+ 	}
+ 
+ 	protected void writeObject(ObjectOutputStream oos) throws IOException {
+ 		oos.defaultWriteObject();
+ 	}
+ 
+ 	protected void readObject(ObjectInputStream ois)
+ 			throws ClassNotFoundException, IOException {
+ 		ois.defaultReadObject();
+ 	}
+ 
+ 	public boolean equals(Object marker) {
+ 		if (marker instanceof CSGeneMarker) {
+ 			CSGeneMarker mInfo = (CSGeneMarker) marker;
+ 
+ 			String markerLabel = mInfo.getLabel();
+ 			if (markerLabel != null) {
+ 				return markerLabel.equals(label);
+ 			} else {
+ 				return (label == null);
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	/**
+ 	 * Implementation of the <code>Comparable</code> interface.
+ 	 * 
+ 	 * @param o
+ 	 * @return
+ 	 */
+ 	public int compareTo(DSGeneMarker marker) {
+ 		return label.compareToIgnoreCase(marker.getLabel());
+ 	}
+ 
+ 	public String toString() {
+ 		return getCanonicalLabel();
+ 	}
+ 
+ 	// The behavior of this method depends on <code>currentDataSet</code> in AnnotationParser. That is bad.
+ 	public String getShortName() {
+ 		String name = label;
+ 		try {
+ 			String[] geneSymbol = AnnotationParser.getInfo(label, AnnotationParser.GENE_SYMBOL);
+ 			name = geneSymbol[0];
+ 			for(int i=1; i<geneSymbol.length; i++)
+ 				name += " /// "+geneSymbol[i];
+ 		} catch (NullPointerException e) {
+ 			// do thing. keep label.
+ 		}
+ 		return name;
+ 	}
+ 
+ 	public int hashCode() {
+ 		// watkin -- made consistent with equals()
+ 		return label.hashCode();
+ 	}
+ 
+ 	public void write(BufferedWriter writer) throws IOException {
+ 		writer.write(label);
+ 		writer.write('\t');
+ 		writer.write(description);
+ 	}
+ 
+ 	public DSUnigene getUnigene() {
+ 		return unigene;
+ 	}
+ 
+ 	public String getGeneName() {
+ 		if (geneName == null) {
+ 			geneName = getShortName();
+ 		}
+ 		return geneName;
+ 	}
+ 
+ 	public DSGeneMarker deepCopy() {
+ 		CSGeneMarker copy = null;
+ 		try {
+ 			copy = (CSGeneMarker) this.getClass().newInstance();
+ 		} catch (IllegalAccessException iae) {
+ 			iae.printStackTrace();
+ 		} catch (InstantiationException ie) {
+ 			ie.printStackTrace();
+ 		}
+ 
+ 		copy.setLabel(getLabel());
+ 		copy.setSerial(markerId);
+ 		copy.setDescription(description);
+ 		copy.abrev = abrev;
+ 		copy.geneId = geneId;
+ 		copy.unigene = unigene;
+ 		return copy;
+ 	}
+ 
+ 	private String getCanonicalLabel() {
+ 		String text0 = "";
+ 
+		String[] descriptions = AnnotationParser.getInfo(label,
+				AnnotationParser.DESCRIPTION);
+		String text1 = "";
+		if (descriptions != null && descriptions.length > 0) {
+			text1 = descriptions[0];
+		}
+		String[] geneSymbol = AnnotationParser.getInfo(label,
+				AnnotationParser.GENE_SYMBOL);
+		if (geneSymbol != null) {
+ 			text0 = label + ": (" + getShortName() + ") " + text1;
+		} else { // no gene symbol
+ 			text0 = this.getDescription();
+ 			if (text0 != null) {
+ 				int index = text0.indexOf("/DEFINITION");
+ 				if (index >= 0) {
+ 					String text = text0.substring(index + 12);
+ 					text0 = label + ": " + text.replace('"', ' ').trim();
+ 				} else {
+ 					String text = new String(text0);
+ 					if (text0.indexOf("Cluster Incl.") >= 0) {
+ 						index = text0.indexOf(":");
+ 						text = text.substring(index + 1);
+ 					}
+ 					String[] labels = text.split("/");
+ 					if (labels != null && labels.length > 0)
+ 						text0 = label + ": "
+ 								+ labels[0].replace('"', ' ').trim();
+ 				}
+ 			}
+ 		}
+ 
+ 		if (text0 == null || text0.length() == 0) {
+ 			return label;
+ 		} else {
+ 			return text0;
+ 		}
+ 	}
+ 
+ 	public int[] getGeneIds() {
+ 		if (geneIds == null)
+ 			return new int[] { geneId };
+ 		else
+ 			return geneIds;
+ 	}
+ 
+ 	public String[] getShortNames() {
+ 		if (label == null)
+ 			return new String[0];
+ 		String[] names = getShortName().split(AnnotationParser.MAIN_DELIMITER);
+ 		for (int i = 0; i < names.length; i++) {
+ 			if (names[i] != null)
+ 				names[i] = names[i].trim();
+ 		}
+ 
+ 		return names;
+ 	}
+ }

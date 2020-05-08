@@ -1,0 +1,71 @@
+ package net.md_5.bungee;
+ 
+ import io.netty.buffer.ByteBuf;
+ import net.md_5.bungee.protocol.DefinedPacket;
+ 
+ /**
+  * Class to rewrite integers within packets.
+  */
+ public class EntityMap
+ {
+ 
+     public final static int[][] entityIds = new int[ 256 ][];
+ 
+     static
+     {
+         entityIds[0x0A] = new int[]
+         {
+             0
+         };
+         entityIds[0x0D] = new int[]
+         {
+             4
+         };
+         entityIds[0x12] = new int[]
+         {
+             0
+         };
+         entityIds[0x1B] = new int[]
+         {
+             0, 4
+         };
+         entityIds[0x1C] = new int[]
+         {
+             0 // TODO: Meta
+         };
+         entityIds[0x1D] = new int[]
+         {
+             0
+         };
+         entityIds[0x1E] = new int[]
+         {
+             0
+         };
+         entityIds[0x20] = new int[]
+         {
+             0
+         };
+     }
+ 
+     public static void rewrite(ByteBuf packet, int oldId, int newId)
+     {
+         int readerIndex = packet.readerIndex();
+         int packetId = DefinedPacket.readVarInt( packet );
+         int packetIdLength = packet.readerIndex() - readerIndex;
+         int[] idArray = entityIds[packetId];
+ 
+         if ( idArray != null )
+         {
+             for ( int pos : idArray )
+             {
+                 int readId = packet.getInt( packetIdLength + pos );
+                 if ( readId == oldId )
+                 {
+                     packet.setInt( packetIdLength + pos, newId );
+                 }
+             }
+         }
+ 
+         packet.readerIndex( readerIndex );
+     }
+ }

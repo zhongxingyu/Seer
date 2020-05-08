@@ -1,0 +1,102 @@
+ /*
+  * Copyright 2010 JBoss Inc
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package org.drools.planner.core.localsearch.decider.acceptor.simulatedannealing;
+ 
+ import org.drools.planner.core.localsearch.LocalSearchSolverScope;
+ import org.drools.planner.core.localsearch.LocalSearchStepScope;
+ import org.drools.planner.core.localsearch.decider.MoveScope;
+ import org.drools.planner.core.localsearch.decider.acceptor.AbstractAcceptor;
+ import org.drools.planner.core.score.Score;
+ 
+ /**
+  * The time gradient implementation of simulated annealing.
+  */
+ public class SimulatedAnnealingAcceptor extends AbstractAcceptor {
+ 
+     protected Score startingTemperature;
+ 
+    protected Score temperature;
+    protected double[] temperatureParts;
+     protected int partsLength;
+ 
+     protected double temperatureMinimum = 1.0E-100; // Double.MIN_NORMAL is E-308
+ 
+     public void setStartingTemperature(Score startingTemperature) {
+         this.startingTemperature = startingTemperature;
+     }
+ 
+     // ************************************************************************
+     // Worker methods
+     // ************************************************************************
+ 
+     @Override
+     public void solvingStarted(LocalSearchSolverScope localSearchSolverScope) {
+         for (double startingTemperaturePart : startingTemperature.toDoubleArray()) {
+             if (startingTemperaturePart < 0.0) {
+                 throw new IllegalArgumentException("The startingTemperature (" + startingTemperature
+                         + ") cannot have negative part (" + startingTemperaturePart + ").");
+             }
+         }
+        temperature = startingTemperature;
+        temperatureParts = temperature.toDoubleArray();
+        partsLength = temperatureParts.length;
+     }
+ 
+     public double calculateAcceptChance(MoveScope moveScope) {
+         LocalSearchSolverScope localSearchSolverScope = moveScope.getLocalSearchStepScope().getLocalSearchSolverScope();
+         Score lastStepScore = localSearchSolverScope.getLastCompletedLocalSearchStepScope().getScore();
+         Score moveScore = moveScope.getScore();
+         if (moveScore.compareTo(lastStepScore) >= 0) {
+             return 1.0;
+         }
+         Score scoreDifference = lastStepScore.subtract(moveScore);
+         double acceptChance = 1.0;
+         double[] scoreDifferenceParts = scoreDifference.toDoubleArray();
+         for (int i = 0; i < partsLength; i++) {
+             double scoreDifferencePart = scoreDifferenceParts[i];
+             double temperaturePart = temperatureParts[i];
+             double acceptChancePart;
+             if (scoreDifferencePart <= 0.0) {
+                 // In this part it is moveScore is better than the lastStepScore, so do not disrupt the acceptChance
+                 acceptChancePart = 1.0;
+             } else {
+                 acceptChancePart = Math.exp(-scoreDifferencePart / temperaturePart);
+             }
+             acceptChance *= acceptChancePart;
+         }
+         if (moveScope.getWorkingRandom().nextDouble() < acceptChance) {
+             return 1.0;
+         } else {
+             return 0.0;
+         }
+     }
+ 
+     @Override
+     public void stepTaken(LocalSearchStepScope localSearchStepScope) {
+         super.stepTaken(localSearchStepScope);
+         double timeGradient = localSearchStepScope.getTimeGradient();
+        temperature = startingTemperature.multiply(1.0 - timeGradient);
+        temperatureParts = temperature.toDoubleArray();
+         for (int i = 0; i < partsLength; i++) {
+             if (temperatureParts[i] < temperatureMinimum) {
+                 temperatureParts[i] = temperatureMinimum;
+             }
+         }
+         // TODO implement reheating
+     }
+ 
+ }

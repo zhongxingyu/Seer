@@ -1,0 +1,238 @@
+ package brooklyn.location.jclouds;
+ 
+ import static brooklyn.util.GroovyJavaMethods.truth;
+ 
+ import java.net.InetAddress;
+ import java.net.UnknownHostException;
+ import java.util.Iterator;
+import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.ExecutionException;
+ import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.TimeoutException;
+ 
+ import javax.annotation.Nullable;
+ 
+ import org.jclouds.compute.ComputeServiceContext;
+ import org.jclouds.compute.callables.RunScriptOnNode;
+ import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.compute.domain.Hardware;
+ import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.Processor;
+ import org.jclouds.compute.options.RunScriptOptions;
+ import org.jclouds.domain.LoginCredentials;
+ import org.jclouds.scriptbuilder.domain.InterpretableStatement;
+ import org.jclouds.scriptbuilder.domain.Statement;
+ 
+ import brooklyn.location.OsDetails;
+ import brooklyn.location.basic.BasicOsDetails;
+ import brooklyn.location.basic.HasSubnetHostname;
+ import brooklyn.location.basic.SshMachineLocation;
+ import brooklyn.util.flags.SetFromFlag;
+ import brooklyn.util.net.Networking;
+ 
+ import com.google.common.base.Objects;
+ import com.google.common.base.Optional;
+ import com.google.common.base.Throwables;
+ import com.google.common.collect.ImmutableMap;
+ import com.google.common.util.concurrent.ListenableFuture;
+ 
+ public class JcloudsSshMachineLocation extends SshMachineLocation implements HasSubnetHostname {
+     
+     @SetFromFlag
+     JcloudsLocation jcloudsParent;
+     
+     @SetFromFlag
+     NodeMetadata node;
+     
+     private RunScriptOnNode.Factory runScriptFactory;
+     
+     public JcloudsSshMachineLocation() {
+     }
+     
+     /**
+      * @deprecated since 0.6; use LocationSpec (which calls no-arg constructor)
+      */
+     @Deprecated
+     public JcloudsSshMachineLocation(Map flags, JcloudsLocation jcloudsParent, NodeMetadata node) {
+         super(flags);
+         this.jcloudsParent = jcloudsParent;
+         this.node = node;
+         
+         init();
+     }
+ 
+     @Override
+     public void init() {
+         super.init();
+         ComputeServiceContext context = jcloudsParent.getComputeService().getContext();
+         runScriptFactory = context.utils().injector().getInstance(RunScriptOnNode.Factory.class);
+     }
+     
+     @Override
+     public String toVerboseString() {
+         return Objects.toStringHelper(this).omitNullValues()
+                 .add("id", getId()).add("name", getDisplayName())
+                 .add("user", getUser()).add("address", getAddress()).add("port", getConfig(SSH_PORT))
+                 .add("node", getNode())
+                 .add("jcloudsId", getJcloudsId())
+                 .add("privateAddresses", node.getPrivateAddresses())
+                 .add("publicAddresses", node.getPublicAddresses())
+                 .add("parentLocation", getParent())
+                 .add("osDetails", getOsDetails())
+                 .toString();
+     }
+ 
+     public NodeMetadata getNode() {
+         return node;
+     }
+     
+     public JcloudsLocation getParent() {
+         return jcloudsParent;
+     }
+     
+     /** returns the hostname (or sometimes IP) for use by peers in the same subnet,
+      * defaulting to public hostname if nothing special
+      * <p>
+      * for use e.g. in clouds like amazon where other machines
+      * in the same subnet need to use a different IP
+      */
+     @Override
+     public String getSubnetHostname() {
+         String publicHostname = jcloudsParent.getPublicHostname(node, getRawLocalConfigBag());
+         
+         if ("aws-ec2".equals(jcloudsParent.getProvider())) {
+             // prefer hostname over IP for aws (resolves to private ip in subnet, and to public from outside)
+             if (!Networking.isValidIp4(publicHostname)) {
+                 return publicHostname; // assume it's a hostname; could check for ip6!
+             }
+         }
+         Optional<String> privateAddress = getPrivateAddress();
+         return privateAddress.isPresent() ? privateAddress.get() : publicHostname;
+     }
+ 
+     @Override
+     public String getSubnetIp() {
+         Optional<String> privateAddress = getPrivateAddress();
+         if (privateAddress.isPresent()) {
+             return privateAddress.get();
+         }
+         
+         String hostname = jcloudsParent.getPublicHostname(node, getRawLocalConfigBag());
+         if (hostname != null && !Networking.isValidIp4(hostname)) {
+             try {
+                 return InetAddress.getByName(hostname).getHostAddress();
+             } catch (UnknownHostException e) {
+                 LOG.debug("Cannot resolve IP for hostname {} of machine {} (so returning hostname): {}", new Object[] {hostname, this, e});
+             }
+         }
+         return hostname;
+     }
+ 
+     protected Optional<String> getPrivateAddress() {
+         if (truth(node.getPrivateAddresses())) {
+             Iterator<String> pi = node.getPrivateAddresses().iterator();
+             while (pi.hasNext()) {
+                 String p = pi.next();
+                 // disallow local only addresses
+                 if (Networking.isLocalOnly(p)) continue;
+                 // other things may be public or private, but either way, return it
+                 return Optional.of(p);
+             }
+         }
+         return Optional.absent();
+     }
+     
+     public String getJcloudsId() {
+         return node.getId();
+     }
+     
+     /** executes the given statements on the server using jclouds ScriptBuilder,
+      * wrapping in a script which is polled periodically.
+      * the output is returned once the script completes (disadvantage compared to other methods)
+      * but the process is nohupped and the SSH session is not kept, 
+      * so very useful for long-running processes
+      */
+     public ListenableFuture<ExecResponse> submitRunScript(String ...statements) {
+         return submitRunScript(new InterpretableStatement(statements));
+     }
+     public ListenableFuture<ExecResponse> submitRunScript(Statement script) {
+         return submitRunScript(script, new RunScriptOptions());            
+     }
+     public ListenableFuture<ExecResponse> submitRunScript(Statement script, RunScriptOptions options) {
+         return runScriptFactory.submit(node, script, options);
+     }
+     /** uses submitRunScript to execute the commands, and throws error if it fails or returns non-zero */
+     public void execRemoteScript(String ...commands) {
+         try {
+             ExecResponse result = submitRunScript(commands).get();
+             if (result.getExitStatus()!=0)
+                 throw new IllegalStateException("Error running remote commands (code "+result.getExitStatus()+"): "+commands);
+         } catch (InterruptedException e) {
+             Thread.currentThread().interrupt();
+             throw Throwables.propagate(e);
+         } catch (ExecutionException e) {
+             throw Throwables.propagate(e);
+         }
+     }
+ 
+     /**
+      * Retrieves the password for this VM, if one exists. The behaviour/implementation is different for different clouds.
+      * e.g. on Rackspace, the password for a windows VM is available immediately; on AWS-EC2, for a Windows VM you need 
+      * to poll repeatedly until the password is available which can take up to 15 minutes.
+      */
+     public String waitForPassword() {
+         // TODO Hacky; don't want aws specific stuff here but what to do?!
+         if (jcloudsParent.getProvider().equals("aws-ec2")) {
+             try {
+                 return JcloudsUtil.waitForPasswordOnAws(jcloudsParent.getComputeService(), node, 15, TimeUnit.MINUTES);
+             } catch (TimeoutException e) {
+                 throw Throwables.propagate(e);
+             }
+         } else {
+             LoginCredentials credentials = node.getCredentials();
+             return (credentials != null) ? credentials.getPassword() : null;
+         }
+     }
+ 
+     @Override
+     public OsDetails getOsDetails() {
+         if (node.getOperatingSystem() != null) {
+             return new BasicOsDetails(
+                     node.getOperatingSystem().getName() != null
+                             ? node.getOperatingSystem().getName() : "linux",
+                     node.getOperatingSystem().getArch() != null
+                             ? node.getOperatingSystem().getArch() : BasicOsDetails.OsArchs.I386,
+                     node.getOperatingSystem().getVersion() != null
+                             ? node.getOperatingSystem().getVersion() : "unknown",
+                     node.getOperatingSystem().is64Bit());
+         }
+         return super.getOsDetails();
+     }
+     
+     @Override
+     public Map<String, String> toMetadataRecord() {
+        Hardware hardware = node.getHardware();
+        List<? extends Processor> processors = (hardware != null) ? hardware.getProcessors() : null;
+        
+         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+         builder.putAll(super.toMetadataRecord());
+         putIfNotNull(builder, "provider", getParent().getProvider());
+         putIfNotNull(builder, "account", getParent().getIdentity());
+         putIfNotNull(builder, "serverId", node.getProviderId());
+         putIfNotNull(builder, "imageId", node.getImageId());
+        putIfNotNull(builder, "instanceTypeName", (hardware != null ? hardware.getName() : null));
+        putIfNotNull(builder, "instanceTypeId", (hardware != null ? hardware.getProviderId() : null));
+        putIfNotNull(builder, "ram", "" + (hardware != null ? hardware.getRam() : null));
+        putIfNotNull(builder, "cpus", "" + (processors != null ? processors.size() : null));
+         putIfNotNull(builder, "osName", getOsDetails().getName());
+         putIfNotNull(builder, "osArch", getOsDetails().getArch());
+         putIfNotNull(builder, "64bit", getOsDetails().is64bit() ? "true" : "false");
+         return builder.build();
+     }
+     
+     private void putIfNotNull(ImmutableMap.Builder<String, String> builder, String key, @Nullable String value) {
+         if (value != null) builder.put(key, value);
+     }
+ 
+ }

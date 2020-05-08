@@ -1,0 +1,204 @@
+ /* Soot - a J*va Optimization Framework
+  * Copyright (C) 1997-1999 Raja Vallee-Rai
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the
+  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+  * Boston, MA 02111-1307, USA.
+  */
+ 
+ /*
+  * Modified by the Sable Research Group and others 1997-1999.  
+  * See the 'credits' file distributed with Soot for the complete list of
+  * contributors.  (Soot is distributed at http://www.sable.mcgill.ca/soot)
+  */
+ 
+ 
+ package soot.toolkits.scalar;
+ 
+ import soot.*;
+ import soot.toolkits.graph.*;
+ import soot.util.*;
+ import java.util.*;
+ import soot.options.*;
+ import soot.toolkits.graph.interaction.*;
+ 
+ /**
+  *   Abstract class that provides the fixed point iteration functionality
+  *   required by all ForwardFlowAnalyses.
+  *  
+  */
+ public abstract class ForwardFlowAnalysis extends FlowAnalysis
+ {
+     /** Construct the analysis from a DirectedGraph representation of a Body. */
+     public ForwardFlowAnalysis(DirectedGraph graph)
+     {
+         super(graph);
+     }
+ 
+     protected boolean isForward()
+     {
+         return true;
+     }
+ 
+     protected void doAnalysis()
+     {
+         LinkedList changedUnits = new LinkedList();
+         HashSet changedUnitsSet = new HashSet();
+ 
+         int numNodes = graph.size();
+         int numComputations = 0;
+         
+         // Set initial values and nodes to visit.
+         {
+             Iterator it = graph.iterator();
+ 
+             while(it.hasNext())
+             {
+                 Object s = it.next();
+ 
+                 // Strictly speaking, we only need to add
+                 // the heads of the graph to changedUnits;
+                 // however, Oksana Tkachuk reports that this
+                 // results in a slowdown!
+                 changedUnits.addLast(s);
+                 changedUnitsSet.add(s);
+ 
+                 unitToBeforeFlow.put(s, newInitialFlow());
+                 unitToAfterFlow.put(s, newInitialFlow());
+             }
+         }
+ 
+         // Feng Qian: March 07, 2002
+         // Set initial values for entry points
+         {
+             Iterator it = graph.getHeads().iterator();
+             
+             while (it.hasNext()) {
+                 Object s = it.next();
+                 // this is a forward flow analysis
+                 unitToBeforeFlow.put(s, entryInitialFlow());
+             }
+         }
+         
+         // Perform fixed point flow analysis
+         {
+             Object previousAfterFlow = newInitialFlow();
+ 
+             int iterationCounter = 0;
+             while(!changedUnits.isEmpty())
+             {
+                 Object beforeFlow;
+                 Object afterFlow;
+ 
+                 Object s = changedUnits.removeFirst();
+ 
+                 changedUnitsSet.remove(s);
+ 
+                 copy(unitToAfterFlow.get(s), previousAfterFlow);
+ 
+                 // Compute and store beforeFlow
+                 {
+                     List preds = graph.getPredsOf(s);
+ 
+                     beforeFlow = unitToBeforeFlow.get(s);
+ 
+                     if(preds.size() == 1)
+                         copy(unitToAfterFlow.get(preds.get(0)), beforeFlow);
+                     else if(preds.size() != 0)
+                     {
+                         Iterator predIt = preds.iterator();
+ 
+                         copy(unitToAfterFlow.get(predIt.next()), beforeFlow);
+ 
+                         while(predIt.hasNext())
+                         {
+                             Object otherBranchFlow = unitToAfterFlow.get(predIt.
+ next());
+                            Object newBeforeFlow = newInitialFlow();
+                            merge(beforeFlow, otherBranchFlow, newBeforeFlow);
+                            copy(newBeforeFlow, beforeFlow);
+                         }
+                     }
+                 }
+ 
+                 // Compute afterFlow and store it.
+                 {
+                     afterFlow = unitToAfterFlow.get(s);
+                     if (Options.v().interactive_mode()){
+                         Object savedInfo = newInitialFlow();
+                         if (filterUnitToBeforeFlow != null){
+                             //System.out.println("unit: "+s);
+                             savedInfo = filterUnitToBeforeFlow.get(s);
+                             //System.out.println("copying filtered: "+filterUnitToBeforeFlow.get(s));
+                             copy(filterUnitToBeforeFlow.get(s), savedInfo);
+                         }
+                         else {
+                             //System.out.println("copying unfiltered");
+                             copy(beforeFlow, savedInfo);
+                         }
+                         //System.out.println("beforeFlow: "+beforeFlow);
+                         //System.out.println("unitToBeforeFlow: "+unitToBeforeFlow.get(s));
+                         //System.out.println("flow before: "+getFlowBefore(s));
+                         if (filterUnitToBeforeFlow != null){
+                             //System.out.println("filtered info before: "+filterUnitToBeforeFlow);
+                         }
+                         //System.out.println("saved info: "+savedInfo);
+                         FlowInfo fi = new FlowInfo(savedInfo, s, true);
+                         InteractionHandler.v().handleBeforeAnalysisEvent(fi);
+                     }
+                     flowThrough(beforeFlow, s, afterFlow);
+                     if (Options.v().interactive_mode()){
+                         Object aSavedInfo = newInitialFlow();
+                         if (filterUnitToAfterFlow != null){
+                             //System.out.println("getting filter info for: "+s);
+                             aSavedInfo = filterUnitToAfterFlow.get(s);
+                             copy(filterUnitToAfterFlow.get(s), aSavedInfo);
+                         }
+                         else {
+                             copy(afterFlow, aSavedInfo);
+                         }
+                         FlowInfo fi = new FlowInfo(aSavedInfo, s, false);
+                         InteractionHandler.v().handleAfterAnalysisEvent(fi);
+                     }
+                     numComputations++;
+                 }
+ 
+                 // Update queue appropriately
+                     if(!afterFlow.equals(previousAfterFlow))
+                     {
+                         Iterator succIt = graph.getSuccsOf(s).iterator();
+ 
+                         while(succIt.hasNext())
+                         {
+                             Object succ = succIt.next();
+                             
+                             if(!changedUnitsSet.contains(succ))
+                             {
+                                 changedUnits.addLast(succ);
+                                 changedUnitsSet.add(succ);
+                             }
+                         }
+                     }
+             }
+         }
+         
+         // G.v().out.println(graph.getBody().getMethod().getSignature() + " numNodes: " + numNodes + 
+         //    " numComputations: " + numComputations + " avg: " + Main.truncatedOf((double) numComputations / numNodes, 2));
+         
+         Timers.v().totalFlowNodes += numNodes;
+         Timers.v().totalFlowComputations += numComputations;
+     }
+ }
+ 
+ 

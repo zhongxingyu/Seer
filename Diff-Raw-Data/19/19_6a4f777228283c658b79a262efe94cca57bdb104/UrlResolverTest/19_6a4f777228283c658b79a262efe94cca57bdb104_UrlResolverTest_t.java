@@ -1,0 +1,159 @@
+ /*
+  * Copyright 2013-2014 @BijdorpStudio
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.emartynov.android.app.urlsetter.model;
+ 
+ import android.net.Uri;
+ import com.emartynov.android.app.urlsetter.model.event.DownloadingError;
+ import com.emartynov.android.app.urlsetter.model.event.FoundUrl;
+ import com.emartynov.android.app.urlsetter.model.event.ResolveUrl;
+ import com.emartynov.android.app.urlsetter.model.event.UrlEvent;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.junit.runner.RunWith;
+ import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+ 
+ import java.io.IOException;
+ import java.net.HttpURLConnection;
+ import java.net.URL;
+ 
+ import static org.fest.assertions.api.Assertions.assertThat;
+ import static org.mockito.Matchers.any;
+ import static org.mockito.Mockito.*;
+ 
+@Config( emulateSdk = 18 )
+ @RunWith(RobolectricTestRunner.class)
+ public class UrlResolverTest
+ {
+     private UrlResolver target;
+ 
+     private HttpClient client = mock( HttpClient.class );
+ 
+     private HttpURLConnection connection = mock( HttpURLConnection.class );
+ 
+     @Before
+     public void setUp()
+         throws Exception
+     {
+         when( client.open( any( URL.class ) ) ).thenReturn( connection );
+ 
+         target = new UrlResolver( client );
+     }
+ 
+     @Test
+     public void resolveMovePermanent()
+         throws Exception
+     {
+         String endUrl = "http://test.com";
+         redirectTo( endUrl, HttpURLConnection.HTTP_MOVED_PERM );
+ 
+         FoundUrl result = (FoundUrl) resolveUrl( "http://google.com" );
+ 
+         checkUrlFound( result, endUrl );
+     }
+ 
+     private void redirectTo( String endUrl, int moveResponseCode )
+         throws IOException
+     {
+         when( connection.getResponseCode() ).thenReturn( moveResponseCode, HttpURLConnection.HTTP_OK );
+         when( connection.getHeaderField( UrlResolver.LOCATION_HEADER ) ).thenReturn( endUrl );
+     }
+ 
+     private UrlEvent resolveUrl( String uriString )
+     {
+         ResolveUrl event = new ResolveUrl( Uri.parse( uriString ) );
+         return target.resolveURL( event );
+     }
+ 
+     private void checkUrlFound( FoundUrl result, String endUrl )
+     {
+         assertThat( result.getResolvedUri().toString() ).isEqualTo( endUrl );
+     }
+ 
+     @Test
+     public void nonShortenedUrlReturnsSame()
+         throws Exception
+     {
+         String endUrl = "http://test.com";
+         when( connection.getResponseCode() ).thenReturn( HttpURLConnection.HTTP_OK );
+ 
+         FoundUrl result = (FoundUrl) resolveUrl( endUrl );
+ 
+         checkUrlFound( result, endUrl );
+     }
+ 
+     @Test
+     public void resolveMovedTemporary()
+         throws Exception
+     {
+         String endUrl = "http://test.com";
+         redirectTo( endUrl, HttpURLConnection.HTTP_MOVED_TEMP );
+ 
+         FoundUrl result = (FoundUrl) resolveUrl( "http://google.com" );
+ 
+         checkUrlFound( result, endUrl );
+     }
+ 
+     @Test
+     public void resolveSeeOther()
+         throws Exception
+     {
+         String endUrl = "http://test.com";
+         redirectTo( endUrl, HttpURLConnection.HTTP_SEE_OTHER );
+ 
+         FoundUrl result = (FoundUrl) resolveUrl( "http://google.com" );
+ 
+         checkUrlFound( result, endUrl );
+     }
+ 
+     @Test
+     public void resolveTemporaryRedirect()
+         throws Exception
+     {
+         String endUrl = "http://test.com";
+         redirectTo( endUrl, UrlResolver.HTTP_TEMP_REDIRECT );
+ 
+         FoundUrl result = (FoundUrl) resolveUrl( "http://google.com" );
+ 
+         checkUrlFound( result, endUrl );
+     }
+ 
+     private void verifyErrorEventWithException( DownloadingError result, Class<? extends Exception> exceptionType )
+     {
+         assertThat( result.getException() ).isInstanceOf( exceptionType );
+     }
+ 
+     @Test
+     public void whenIOExceptionThenEventFired()
+         throws Exception
+     {
+         when( connection.getResponseCode() ).thenThrow( IOException.class );
+ 
+         DownloadingError result = (DownloadingError) resolveUrl( "http://google.com" );
+ 
+         verifyErrorEventWithException( result, IOException.class );
+     }
+ 
+     @Test
+     public void runHeadRequestFirst()
+         throws Exception
+     {
+         resolveUrl( "http://google.com" );
+ 
+         verify( connection, atLeastOnce() ).setRequestMethod( UrlResolver.HEAD_METHOD );
+     }
+ }

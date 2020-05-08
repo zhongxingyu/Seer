@@ -1,0 +1,244 @@
+ /*
+  * Copyright (C) 2008 The Android Open Source Project
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.android.email.mail;
+ 
+ import com.android.email.Email;
+ import com.android.email.R;
+ 
+ import org.xmlpull.v1.XmlPullParserException;
+ 
+ import android.content.Context;
+ import android.content.res.XmlResourceParser;
+ import android.util.Log;
+ 
+ import java.io.IOException;
+ 
+ /**
+  * Store is the access point for an email message store. It's location can be
+  * local or remote and no specific protocol is defined. Store is intended to
+  * loosely model in combination the JavaMail classes javax.mail.Store and
+  * javax.mail.Folder along with some additional functionality to improve
+  * performance on mobile devices. Implementations of this class should focus on
+  * making as few network connections as possible.
+  */
+ public abstract class Store {
+     
+     /**
+      * String constants for known store schemes.
+      */
+     public static final String STORE_SCHEME_IMAP = "imap";
+     public static final String STORE_SCHEME_POP3 = "pop3";
+     public static final String STORE_SCHEME_LOCAL = "local";
+     
+     /**
+      * A global suggestion to Store implementors on how much of the body
+      * should be returned on FetchProfile.Item.BODY_SANE requests.
+      */
+     public static final int FETCH_BODY_SANE_SUGGESTED_SIZE = (50 * 1024);
+ 
+     private static java.util.HashMap<String, Store> mStores =
+         new java.util.HashMap<String, Store>();
+ 
+     /**
+      * Static named constructor.  It should be overrode by extending class.
+      * Because this method will be called through reflection, it can not be protected. 
+      */
+     public static Store newInstance(String uri, Context context, PersistentDataCallbacks callbacks)
+             throws MessagingException {
+         throw new MessagingException("Store.newInstance: Unknown scheme in " + uri);
+     }
+ 
+     private static Store instantiateStore(String className, String uri, Context context, 
+             PersistentDataCallbacks callbacks)
+         throws MessagingException {
+         Object o = null;
+         try {
+             Class<?> c = Class.forName(className);
+             // and invoke "newInstance" class method and instantiate store object.
+             java.lang.reflect.Method m =
+                 c.getMethod("newInstance", String.class, Context.class, 
+                         PersistentDataCallbacks.class);
+             o = m.invoke(null, uri, context, callbacks);
+         } catch (Exception e) {
+             Log.d(Email.LOG_TAG, String.format(
+                     "exception %s invoking %s.newInstance.(String, Context) method for %s",
+                     e.toString(), className, uri));
+             throw new MessagingException("can not instantiate Store object for " + uri);
+         }
+         if (!(o instanceof Store)) {
+             throw new MessagingException(
+                     uri + ": " + className + " create incompatible object");
+         }
+         return (Store) o;
+     }
+ 
+     /**
+      * Look up descriptive information about a particular type of store.
+      */
+     public static class StoreInfo {
+         public String mScheme;
+         public String mClassName;
+         public boolean mPushSupported = false;
+         public int mVisibleLimitDefault;
+         public int mVisibleLimitIncrement;
+         
+         // TODO cache result for performance - silly to keep reading the XML
+         public static StoreInfo getStoreInfo(String scheme, Context context) {
+             StoreInfo result = getStoreInfo(R.xml.stores_product, scheme, context);
+             if (result == null) {
+                 result = getStoreInfo(R.xml.stores, scheme, context);
+             }
+             return result;
+         }
+         
+         public static StoreInfo getStoreInfo(int resourceId, String scheme, Context context) {
+             try {
+                 XmlResourceParser xml = context.getResources().getXml(resourceId);
+                 int xmlEventType;
+                 // walk through stores.xml file.
+                 while ((xmlEventType = xml.next()) != XmlResourceParser.END_DOCUMENT) {
+                     if (xmlEventType == XmlResourceParser.START_TAG && 
+                             "store".equals(xml.getName())) {
+                         String xmlScheme = xml.getAttributeValue(null, "scheme");
+                         if (scheme.startsWith(xmlScheme)) {
+                             StoreInfo result = new StoreInfo();
+                             result.mScheme = scheme;
+                             result.mClassName = xml.getAttributeValue(null, "class");
+                             result.mPushSupported = xml.getAttributeBooleanValue(
+                                     null, "push", false);
+                             result.mVisibleLimitDefault = xml.getAttributeIntValue(
+                                     null, "visibleLimitDefault", Email.VISIBLE_LIMIT_DEFAULT);
+                             result.mVisibleLimitIncrement = xml.getAttributeIntValue(
+                                     null, "visibleLimitIncrement", Email.VISIBLE_LIMIT_INCREMENT);
+                             return result;
+                         }
+                     }
+                 }
+             } catch (XmlPullParserException e) {
+                 // ignore
+             } catch (IOException e) {
+                 // ignore
+             }
+             return null;
+         }
+     }
+ 
+     /**
+      * Get an instance of a mail store. The URI is parsed as a standard URI and
+      * the scheme is used to determine which protocol will be used.
+      * 
+      * Although the URI format is somewhat protocol-specific, we use the following 
+      * guidelines wherever possible:
+      * 
+      * scheme [+ security [+]] :// username : password @ host [ / resource ]
+      * 
+      * Typical schemes include imap, pop3, local, eas.
+      * Typical security models include SSL or TLS.
+      * A + after the security identifier indicates "required".
+      * 
+      * Username, password, and host are as expected.
+      * Resource is protocol specific.  For example, IMAP uses it as the path prefix.  EAS uses it
+      * as the domain.
+      *
+      * @param uri The URI of the store.
+      * @return an initialized store of the appropriate class
+      * @throws MessagingException
+      */
+     public synchronized static Store getInstance(String uri, Context context, 
+             PersistentDataCallbacks callbacks)
+         throws MessagingException {
+         Store store = mStores.get(uri);
+         if (store == null) {
+             StoreInfo info = StoreInfo.getStoreInfo(uri, context);
+             if (info != null) {
+                 store = instantiateStore(info.mClassName, uri, context, callbacks);
+             }
+ 
+             if (store != null) {
+                 mStores.put(uri, store);
+             }
+         }
+ 
+         if (store == null) {
+             throw new MessagingException("Unable to locate an applicable Store for " + uri);
+         }
+ 
+         return store;
+     }
+ 
+     /**
+      * Get class of SettingActivity for this Store class.
+      * @return Activity class that has class method actionEditIncomingSettings(). 
+      */
+     public Class<? extends android.app.Activity> getSettingActivityClass() {
+         // default SettingActivity class
+         return com.android.email.activity.setup.AccountSetupIncoming.class;
+     }
+     
+     public abstract Folder getFolder(String name) throws MessagingException;
+ 
+     public abstract Folder[] getPersonalNamespaces() throws MessagingException;
+ 
+     public abstract void checkSettings() throws MessagingException;
+     
+     /**
+      * Enable or disable push mode delivery for a given Store.  
+      * 
+      * <p>For protocols that do not support push mode, be sure that push="true" is not 
+      * set by the stores.xml definition file(s).  This function need not be implemented.
+      * 
+      * <p>For protocols that do support push mode, this will be called at startup (boot) time
+      * so that the Store can launch its own underlying connection service.  It will also be called
+      * any time the user changes the settings for the account (because the user may switch back
+      * to polling mode (or disable checking completely).
+      * 
+      * <p>This API will be called repeatedly, even after push mode has already been started or
+      * stopped.  Stores that support push mode should return quickly if the configuration has not
+      * changed.
+      * 
+      * @param enablePushMode start or stop push mode delivery
+      */
+     public void enablePushModeDelivery(boolean enablePushMode) {
+         // does nothing for non-push protocols
+     }
+     
+     /**
+      * Delete Store and its corresponding resources.
+      * @throws MessagingException
+      */
+     public void delete() throws MessagingException {
+     }
+     
+     /**
+      * Callback interface by which a Store can read and write persistent data.
+      * TODO This needs to be made more generic & flexible
+      */
+     public interface PersistentDataCallbacks {
+         
+         /**
+          * Provides a small place for Stores to store persistent data.
+          * @param storeData Data to persist.  All data must be encoded into a string,
+          * so use base64 or some other encoding if necessary.
+          */
+         public void setPersistentString(String storeData);
+ 
+         /**
+          * @return the data saved by the Store, or null if never set.
+          */
+         public String getPersistentString();
+     }
+ }

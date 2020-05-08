@@ -1,0 +1,97 @@
+ package com.gallatinsystems.survey.dao;
+ 
+ import java.util.List;
+ import java.util.Map;
+ import java.util.TreeMap;
+ 
+ import javax.jdo.PersistenceManager;
+ 
+ import com.gallatinsystems.framework.dao.BaseDAO;
+ import com.gallatinsystems.framework.servlet.PersistenceFilter;
+ import com.gallatinsystems.survey.domain.Question;
+ import com.gallatinsystems.survey.domain.QuestionGroup;
+ 
+ public class QuestionGroupDao extends BaseDAO<QuestionGroup> {
+ 
+ 	public QuestionGroupDao() {
+ 		super(QuestionGroup.class);
+ 	}
+ 
+ 	public QuestionGroup save(QuestionGroup item, Long surveyId, Integer order) {
+		if(item.getSurveyId()==null||item.getSurveyId()==0){
+ 			item.setSurveyId(surveyId);
+ 		}
+ 		item = save(item);
+ 		return item;
+ 	}
+ 
+ 	public void delete(QuestionGroup item, Long surveyId) {
+ 
+ 		delete(item);
+ 	}
+ 
+ 	public QuestionGroup getId(String questionGroupCode) {
+ 		return findByProperty("code", questionGroupCode, "String");
+ 	}
+ 
+ 	public TreeMap<Integer, QuestionGroup> listQuestionGroupsBySurvey(
+ 			Long surveyId) {
+ 		List<QuestionGroup> groups = listByProperty("surveyId", surveyId,
+ 				"Long");
+ 		TreeMap<Integer, QuestionGroup> map = new TreeMap<Integer, QuestionGroup>();
+ 		if (groups != null) {
+ 			int i = 1;
+ 			for (QuestionGroup group : groups) {
+				map.put(group.getOrder() != null ? group.getOrder() : i, group);
+ 				i++;
+ 			}
+ 
+ 		}
+ 		return map;
+ 	}
+	
+	public QuestionGroup getByParentIdandCode(String code, Long surveyId){
+ 		PersistenceManager pm = PersistenceFilter.getManager();
+ 		javax.jdo.Query query = pm.newQuery(QuestionGroup.class);
+ 		query.setFilter(" code==codeParam && surveyId == surveyIdParam");
+ 		query.declareParameters("String codeParam, Long surveyIdParam");
+ 		List<QuestionGroup> results = (List<QuestionGroup>) query.execute(code,
+ 				surveyId);
+ 		if (results != null && results.size() > 0) {
+ 			return results.get(0);
+ 		} else {
+ 			return null;
+ 		}
+		
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+ 	public QuestionGroup getByPath(String code, String path) {
+ 		PersistenceManager pm = PersistenceFilter.getManager();
+ 		javax.jdo.Query query = pm.newQuery(QuestionGroup.class);
+ 		query.setFilter(" path == pathParam && code == codeParam");
+ 		query.declareParameters("String pathParam, String codeParam");
+ 		List<QuestionGroup> results = (List<QuestionGroup>) query.execute(path,
+ 				code);
+ 		if (results != null && results.size() > 0) {
+ 			return results.get(0);
+ 		} else {
+ 			return null;
+ 		}
+ 	}
+ 
+	public void delete(QuestionGroup item) {		
+ 		QuestionDao qDao = new QuestionDao();
+ 		for (Map.Entry<Integer, Question> qItem : qDao
+ 				.listQuestionsByQuestionGroup(item.getKey().getId(), false)
+ 				.entrySet()) {
+ 			SurveyTaskUtil.spawnDeleteTask("deleteQuestion", qItem.getValue()
+ 					.getKey().getId());
+ 		}
+ 		QuestionGroup group = getByKey(item.getKey());
+ 		if (group != null) {
+ 			super.delete(item);
+ 		}
+ 	}
+ 
+ }

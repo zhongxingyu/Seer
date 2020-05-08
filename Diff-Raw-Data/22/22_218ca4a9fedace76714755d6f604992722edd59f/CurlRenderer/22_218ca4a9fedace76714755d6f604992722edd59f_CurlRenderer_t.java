@@ -1,0 +1,253 @@
+ package fi.harism.curl;
+ 
+ import java.util.Vector;
+ 
+ import javax.microedition.khronos.egl.EGLConfig;
+ import javax.microedition.khronos.opengles.GL10;
+ 
+ import android.graphics.Color;
+ import android.graphics.PointF;
+ import android.graphics.RectF;
+ import android.opengl.GLSurfaceView;
+ import android.opengl.GLU;
+ 
+ /**
+  * Actual renderer class.
+  * 
+  * @author harism
+  */
+ public class CurlRenderer implements GLSurfaceView.Renderer {
+ 
+ 	public static final int SHOW_ONE_PAGE = 1;
+ 	public static final int SHOW_TWO_PAGES = 2;
+ 
+ 	public static final int PAGE_LEFT = 1;
+ 	public static final int PAGE_RIGHT = 2;
+ 
+	private static final boolean USE_PERSPECTIVE_PROJECTION = false;
+
+ 	private int mViewMode = SHOW_ONE_PAGE;
+ 	// Rect for render area.
+ 	private RectF mViewRect = new RectF();
+ 	private RectF mMargins = new RectF();
+ 	// Screen size.
+ 	private int mViewportWidth;
+ 	private int mViewportHeight;
+ 
+ 	// Curl meshes used for static and dynamic rendering.
+ 	private Vector<CurlMesh> mCurlMeshes;
+ 
+ 	private boolean mBackgroundColorChanged = false;
+ 	private int mBackgroundColor;
+ 
+ 	private CurlRenderer.Observer mObserver;
+ 
+ 	private RectF mPageRectLeft;
+ 	private RectF mPageRectRight;
+ 
+ 	/**
+ 	 * Basic constructor.
+ 	 */
+ 	public CurlRenderer(CurlRenderer.Observer observer) {
+ 		mObserver = observer;
+ 		mCurlMeshes = new Vector<CurlMesh>();
+ 		mPageRectLeft = new RectF();
+ 		mPageRectRight = new RectF();
+ 	}
+ 
+ 	/**
+ 	 * Adds CurlMesh to this renderer.
+ 	 */
+ 	public synchronized void addCurlMesh(CurlMesh mesh) {
+ 		removeCurlMesh(mesh);
+ 		mCurlMeshes.add(mesh);
+ 	}
+ 
+ 	/**
+ 	 * Returns rect reserved for left or right page.
+ 	 */
+ 	public RectF getPageRect(int page) {
+ 		if (page == PAGE_LEFT) {
+ 			return mPageRectLeft;
+ 		} else if (page == PAGE_RIGHT) {
+ 			return mPageRectRight;
+ 		}
+ 		return null;
+ 	}
+ 
+ 	/**
+ 	 * Getter for current view mode.
+ 	 */
+ 	public int getViewMode() {
+ 		return mViewMode;
+ 	}
+ 
+ 	@Override
+ 	public synchronized void onDrawFrame(GL10 gl) {
+ 		if (mBackgroundColorChanged) {
+ 			gl.glClearColor(Color.red(mBackgroundColor) / 255f,
+ 					Color.green(mBackgroundColor) / 255f,
+ 					Color.blue(mBackgroundColor) / 255f,
+ 					Color.alpha(mBackgroundColor) / 255f);
+ 			mBackgroundColorChanged = false;
+ 		}
+ 
+ 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT); // | GL10.GL_DEPTH_BUFFER_BIT);
+ 		gl.glLoadIdentity();
+ 
+		if (USE_PERSPECTIVE_PROJECTION) {
+			gl.glTranslatef(0, 0, -6f);
+		}
+
+ 		for (int i = 0; i < mCurlMeshes.size(); ++i) {
+ 			mCurlMeshes.get(i).draw(gl);
+ 		}
+ 
+ 		mObserver.onRenderDone();
+ 	}
+ 
+ 	@Override
+ 	public void onSurfaceChanged(GL10 gl, int width, int height) {
+ 		gl.glViewport(0, 0, width, height);
+ 		mViewportWidth = width;
+ 		mViewportHeight = height;
+ 
+ 		float ratio = (float) width / height;
+ 		mViewRect.top = 1.0f;
+ 		mViewRect.bottom = -1.0f;
+ 		mViewRect.left = -ratio;
+ 		mViewRect.right = ratio;
+ 		updatePageRects();
+ 
+ 		gl.glMatrixMode(GL10.GL_PROJECTION);
+ 		gl.glLoadIdentity();
+		if (USE_PERSPECTIVE_PROJECTION) {
+			GLU.gluPerspective(gl, 20f, (float) width / height, .1f, 100f);
+		} else {
+			GLU.gluOrtho2D(gl, mViewRect.left, mViewRect.right,
+					mViewRect.bottom, mViewRect.top);
+		}
+ 
+ 		gl.glMatrixMode(GL10.GL_MODELVIEW);
+ 		gl.glLoadIdentity();
+ 	}
+ 
+ 	@Override
+ 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+ 		setBackgroundColor(0xFF303030);
+ 		gl.glShadeModel(GL10.GL_SMOOTH);
+ 		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
+ 		gl.glHint(GL10.GL_LINE_SMOOTH_HINT, GL10.GL_NICEST);
+ 		gl.glHint(GL10.GL_POLYGON_SMOOTH_HINT, GL10.GL_NICEST);
+ 		gl.glEnable(GL10.GL_LINE_SMOOTH);
+ 		gl.glDisable(GL10.GL_DEPTH_TEST);
+ 		gl.glDisable(GL10.GL_CULL_FACE);
+ 	}
+ 
+ 	/**
+ 	 * Removes CurlMesh from this renderer.
+ 	 */
+ 	public synchronized void removeCurlMesh(CurlMesh mesh) {
+ 		while (mCurlMeshes.remove(mesh))
+ 			;
+ 	}
+ 
+ 	/**
+ 	 * Change background/clear color.
+ 	 */
+ 	public void setBackgroundColor(int color) {
+ 		mBackgroundColor = color;
+ 		mBackgroundColorChanged = true;
+ 	}
+ 
+ 	/**
+ 	 * Set margins or padding. Note: margins are proportional. Meaning a value
+ 	 * of .1f will produce a 10% margin.
+ 	 */
+ 	public synchronized void setMargins(float left, float top, float right,
+ 			float bottom) {
+ 		mMargins.left = left;
+ 		mMargins.top = top;
+ 		mMargins.right = right;
+ 		mMargins.bottom = bottom;
+ 		updatePageRects();
+ 	}
+ 
+ 	/**
+ 	 * Sets visible page count to one or two.
+ 	 */
+ 	public synchronized void setViewMode(int viewmode) {
+ 		if (viewmode == SHOW_ONE_PAGE) {
+ 			mViewMode = viewmode;
+ 			updatePageRects();
+ 		} else if (viewmode == SHOW_TWO_PAGES) {
+ 			mViewMode = viewmode;
+ 			updatePageRects();
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Translates screen coordinates into view coordinates.
+ 	 */
+ 	public void translate(PointF pt) {
+ 		pt.x = mViewRect.left + (mViewRect.width() * pt.x / mViewportWidth);
+ 		pt.y = mViewRect.top - (-mViewRect.height() * pt.y / mViewportHeight);
+ 	}
+ 
+ 	/**
+ 	 * Recalculates page rectangles.
+ 	 */
+ 	private void updatePageRects() {
+ 		if (mViewRect.width() == 0 || mViewRect.height() == 0) {
+ 			return;
+ 		} else if (mViewMode == SHOW_ONE_PAGE) {
+ 			mPageRectRight.set(mViewRect);
+ 			mPageRectRight.left += mViewRect.width() * mMargins.left;
+ 			mPageRectRight.right -= mViewRect.width() * mMargins.right;
+ 			mPageRectRight.top += mViewRect.height() * mMargins.top;
+ 			mPageRectRight.bottom -= mViewRect.height() * mMargins.bottom;
+ 
+ 			mPageRectLeft.set(mPageRectRight);
+ 			mPageRectLeft.offset(-mPageRectRight.width(), 0);
+ 
+ 			int bitmapW = (int) ((mPageRectRight.width() * mViewportWidth) / mViewRect
+ 					.width());
+ 			int bitmapH = (int) ((mPageRectRight.height() * mViewportHeight) / mViewRect
+ 					.height());
+ 			mObserver.onBitmapSizeChanged(bitmapW, bitmapH);
+ 		} else if (mViewMode == SHOW_TWO_PAGES) {
+ 			mPageRectRight.set(mViewRect);
+ 			mPageRectRight.left += mViewRect.width() * mMargins.left;
+ 			mPageRectRight.right -= mViewRect.width() * mMargins.right;
+ 			mPageRectRight.top += mViewRect.height() * mMargins.top;
+ 			mPageRectRight.bottom -= mViewRect.height() * mMargins.bottom;
+
+ 			mPageRectLeft.set(mPageRectRight);
+ 			mPageRectLeft.right = (mPageRectLeft.right + mPageRectLeft.left) / 2;
+ 			mPageRectRight.left = mPageRectLeft.right;
+
+ 			int bitmapW = (int) ((mPageRectRight.width() * mViewportWidth) / mViewRect
+ 					.width());
+ 			int bitmapH = (int) ((mPageRectRight.height() * mViewportHeight) / mViewRect
+ 					.height());
+ 			mObserver.onBitmapSizeChanged(bitmapW, bitmapH);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Observer for waiting render engine/state updates.
+ 	 */
+ 	public interface Observer {
+ 		/**
+ 		 * Called once page size is changed. Width and height tell the page size
+ 		 * in pixels making it possible to update textures accordingly.
+ 		 */
+ 		public void onBitmapSizeChanged(int width, int height);
+ 
+ 		/**
+ 		 * Call back method from onDrawFrame called after rendering frame is
+ 		 * done. This is intended to be used for animation purposes.
+ 		 */
+ 		public void onRenderDone();
+ 	}
+ }

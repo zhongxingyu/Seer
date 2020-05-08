@@ -1,0 +1,667 @@
+ /*
+  * JBoss, Home of Professional Open Source
+  * Copyright 2008, Red Hat Middleware LLC, and individual contributors
+  * by the @authors tag. See the copyright.txt in the distribution for a
+  * full listing of individual contributors.
+  *
+  * This is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation; either version 2.1 of
+  * the License, or (at your option) any later version.
+  *
+  * This software is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this software; if not, write to the Free
+  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  */
+ package org.infinispan;
+ 
+ import org.infinispan.atomic.AtomicMap;
+ import org.infinispan.atomic.AtomicMapCache;
+ import org.infinispan.atomic.atomichashmap.AtomicHashMap;
+ import org.infinispan.batch.BatchContainer;
+ import org.infinispan.commands.CommandsFactory;
+ import org.infinispan.commands.LockControlCommand;
+ import org.infinispan.commands.read.GetKeyValueCommand;
+ import org.infinispan.commands.read.SizeCommand;
+ import org.infinispan.commands.write.ClearCommand;
+ import org.infinispan.commands.write.EvictCommand;
+ import org.infinispan.commands.write.PutKeyValueCommand;
+ import org.infinispan.commands.write.PutMapCommand;
+ import org.infinispan.commands.write.RemoveCommand;
+ import org.infinispan.commands.write.ReplaceCommand;
+ import org.infinispan.config.Configuration;
+ import org.infinispan.config.ConfigurationException;
+ import org.infinispan.container.DataContainer;
+ import org.infinispan.container.entries.InternalCacheEntry;
+ import org.infinispan.context.Flag;
+ import org.infinispan.context.InvocationContext;
+ import org.infinispan.context.container.InvocationContextContainer;
+ import org.infinispan.eviction.EvictionManager;
+ import org.infinispan.factories.ComponentRegistry;
+ import org.infinispan.factories.annotations.Inject;
+ import org.infinispan.factories.annotations.NonVolatile;
+ import org.infinispan.interceptors.InterceptorChain;
+ import org.infinispan.interceptors.base.CommandInterceptor;
+ import org.infinispan.lifecycle.ComponentStatus;
+ import org.infinispan.manager.CacheManager;
+ import org.infinispan.marshall.MarshalledValue;
+ import org.infinispan.marshall.Marshaller;
+ import org.infinispan.notifications.cachelistener.CacheNotifier;
+ import org.infinispan.remoting.responses.ResponseGenerator;
+ import org.infinispan.remoting.rpc.RpcManager;
+ import org.infinispan.statetransfer.StateTransferManager;
+ import org.infinispan.util.logging.Log;
+ import org.infinispan.util.logging.LogFactory;
+ 
+ import javax.transaction.Transaction;
+ import javax.transaction.TransactionManager;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.concurrent.Future;
+ import java.util.concurrent.TimeUnit;
+ import static java.util.concurrent.TimeUnit.MILLISECONDS;
+ 
+ /**
+  * @author Mircea.Markus@jboss.com
+  * @since 4.0
+  */
+ @NonVolatile
+ public class CacheDelegate<K, V> implements AdvancedCache<K, V>, AtomicMapCache<K, V> {
+    protected InvocationContextContainer icc;
+    protected CommandsFactory commandsFactory;
+    protected InterceptorChain invoker;
+    protected Configuration config;
+    protected CacheNotifier notifier;
+    protected BatchContainer batchContainer;
+    protected ComponentRegistry componentRegistry;
+    protected TransactionManager transactionManager;
+    protected RpcManager rpcManager;
+    protected Marshaller marshaller;
+    private String name;
+    private EvictionManager evictionManager;
+    private DataContainer dataContainer;
+    private static final Log log = LogFactory.getLog(CacheDelegate.class);
+    private CacheManager cacheManager;
+    // this is never used here but should be injected - this is a hack to make sure the StateTransferManager is properly constructed if needed.
+    private StateTransferManager stateTransferManager;
+    // as above for ResponseGenerator
+    private ResponseGenerator responseGenerator;
+    private long defaultLifespan, defaultMaxIdleTime;
+ 
+    public CacheDelegate(String name) {
+       this.name = name;
+    }
+ 
+    @Inject
+    public void injectDependencies(EvictionManager evictionManager,
+                                   InvocationContextContainer icc,
+                                   CommandsFactory commandsFactory,
+                                   InterceptorChain interceptorChain,
+                                   Configuration configuration,
+                                   CacheNotifier notifier,
+                                   ComponentRegistry componentRegistry,
+                                   TransactionManager transactionManager,
+                                   BatchContainer batchContainer,
+                                   RpcManager rpcManager, DataContainer dataContainer,
+                                   Marshaller marshaller, ResponseGenerator responseGenerator,
+                                   CacheManager cacheManager, StateTransferManager stateTransferManager) {
+       this.commandsFactory = commandsFactory;
+       this.invoker = interceptorChain;
+       this.config = configuration;
+       this.notifier = notifier;
+       this.componentRegistry = componentRegistry;
+       this.transactionManager = transactionManager;
+       this.batchContainer = batchContainer;
+       this.rpcManager = rpcManager;
+       this.evictionManager = evictionManager;
+       this.dataContainer = dataContainer;
+       this.marshaller = marshaller;
+       this.cacheManager = cacheManager;
+       this.responseGenerator = responseGenerator;
+       this.stateTransferManager = stateTransferManager;
+       this.icc = icc;
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V putIfAbsent(K key, V value) {
+       return putIfAbsent(key, value, defaultLifespan, MILLISECONDS, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    public boolean remove(Object key, Object value) {
+       RemoveCommand command = commandsFactory.buildRemoveCommand(key, value);
+       return (Boolean) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public boolean replace(K key, V oldValue, V newValue) {
+       return replace(key, oldValue, newValue, defaultLifespan, MILLISECONDS, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V replace(K key, V value) {
+       return replace(key, value, defaultLifespan, MILLISECONDS, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    public int size() {
+       SizeCommand command = commandsFactory.buildSizeCommand();
+       return (Integer) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public boolean isEmpty() {
+       SizeCommand command = commandsFactory.buildSizeCommand();
+       int size = (Integer) invoker.invoke(getInvocationContext(), command);
+       return size == 0;
+    }
+ 
+    public boolean containsKey(Object key) {
+       GetKeyValueCommand command = commandsFactory.buildGetKeyValueCommand(key);
+       Object response = invoker.invoke(getInvocationContext(), command);
+       return response != null;
+    }
+ 
+    public boolean containsValue(Object value) {
+       throw new UnsupportedOperationException("Go away");
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V get(Object key) {
+       GetKeyValueCommand command = commandsFactory.buildGetKeyValueCommand(key);
+       return (V) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V put(K key, V value) {
+       return put(key, value, defaultLifespan, MILLISECONDS, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V remove(Object key) {
+       RemoveCommand command = commandsFactory.buildRemoveCommand(key, null);
+       return (V) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public void putAll(Map<? extends K, ? extends V> map) {
+       putAll(map, defaultLifespan, MILLISECONDS, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    public void clear() {
+       ClearCommand command = commandsFactory.buildClearCommand();
+       invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public Set<K> keySet() {
+       throw new UnsupportedOperationException("TODO implement me"); // TODO implement me
+    }
+ 
+    public Collection<V> values() {
+       throw new UnsupportedOperationException("TODO implement me"); // TODO implement me
+    }
+ 
+    public Set<Map.Entry<K, V>> entrySet() {
+       throw new UnsupportedOperationException("TODO implement me"); // TODO implement me
+    }
+ 
+    public void putForExternalRead(K key, V value) {
+      putForExternalRead(key, value, (Flag[]) null);
+    }
+ 
+    public void evict(K key) {
+       EvictCommand command = commandsFactory.buildEvictCommand(key);
+       invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public Configuration getConfiguration() {
+       return config;
+    }
+ 
+    public void addListener(Object listener) {
+       notifier.addListener(listener);
+    }
+ 
+    public void removeListener(Object listener) {
+       notifier.removeListener(listener);
+    }
+ 
+    public Set<Object> getListeners() {
+       return notifier.getListeners();
+    }
+ 
+    private InvocationContext getInvocationContext() {
+       return icc.getLocalInvocationContext(true);
+    }
+ 
+    public void lock(K key, boolean eager) {
+       if (key == null)
+          throw new IllegalArgumentException("Cannot lock null key");
+       List<K> keys = new ArrayList<K>(1);
+       keys.add(key);
+       lock(keys, eager);
+    }
+ 
+    public void lock(Collection<? extends K> keys, boolean eager) {
+       if (keys == null || keys.isEmpty())
+          throw new IllegalArgumentException("Cannot lock empty list of keys");
+       LockControlCommand command = commandsFactory.buildLockControlCommand(keys, true);
+       invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public void unlock(K key) {
+       if (key == null)
+          throw new IllegalArgumentException("Cannot unlock null key");
+       List<K> keys = new ArrayList<K>(1);
+       keys.add(key);
+       unlock(keys);
+    }
+ 
+    public void unlock(Collection<? extends K> keys) {
+       if (keys == null || keys.isEmpty())
+          throw new IllegalArgumentException("Cannot unlock empty list of keys");
+       LockControlCommand command = commandsFactory.buildLockControlCommand(keys, false);
+       invoker.invoke(getInvocationContext(), command);
+    }
+
+    public void start() {
+       componentRegistry.start();
+       defaultLifespan = config.getExpirationLifespan();
+       defaultMaxIdleTime = config.getExpirationMaxIdle();
+    }
+ 
+    public void stop() {
+       componentRegistry.stop();
+    }
+ 
+    public List<CommandInterceptor> getInterceptorChain() {
+       return invoker.asList();
+    }
+ 
+    public void addInterceptor(CommandInterceptor i, int position) {
+       invoker.addInterceptor(i, position);
+    }
+ 
+    public void addInterceptorAfter(CommandInterceptor i, Class<? extends CommandInterceptor> afterInterceptor) {
+       invoker.addInterceptorAfter(i, afterInterceptor);
+    }
+ 
+    public void addInterceptorBefore(CommandInterceptor i, Class<? extends CommandInterceptor> beforeInterceptor) {
+       invoker.addInterceptorBefore(i, beforeInterceptor);
+    }
+ 
+    public void removeInterceptor(int position) {
+       invoker.removeInterceptor(position);
+    }
+ 
+    public void removeInterceptor(Class<? extends CommandInterceptor> interceptorType) {
+       invoker.removeInterceptor(interceptorType);
+    }
+ 
+    public EvictionManager getEvictionManager() {
+       return evictionManager;
+    }
+ 
+    public ComponentRegistry getComponentRegistry() {
+       return componentRegistry;
+    }
+ 
+    public void putForExternalRead(K key, V value, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+      if (flags != null) invocationContext.setFlags(flags);
+       Transaction ongoingTransaction = null;
+       try {
+          if (transactionManager != null && (ongoingTransaction = transactionManager.getTransaction()) != null) {
+             transactionManager.suspend();
+          }
+          // if the entry exists then this should be a no-op.
+          putIfAbsent(key, value, Flag.FAIL_SILENTLY, Flag.FORCE_ASYNCHRONOUS, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT);
+       }
+       catch (Exception e) {
+          if (log.isDebugEnabled()) log.debug("Caught exception while doing putForExternalRead()", e);
+       }
+       finally {
+          try {
+             if (ongoingTransaction != null) transactionManager.resume(ongoingTransaction);
+          }
+          catch (Exception e) {
+             log.debug("Had problems trying to resume a transaction after putForExternalread()", e);
+          }
+       }
+    }
+ 
+    public V put(K key, V value, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       PutKeyValueCommand command = commandsFactory.buildPutKeyValueCommand(key, value, MILLISECONDS.toMillis(defaultLifespan), MILLISECONDS.toMillis(defaultMaxIdleTime));
+       return (V) invoker.invoke(invocationContext, command);
+    }
+ 
+    public V put(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       PutKeyValueCommand command = commandsFactory.buildPutKeyValueCommand(key, value, lifespanUnit.toMillis(lifespan), maxIdleTimeUnit.toMillis(maxIdleTime));
+       return (V) invoker.invoke(invocationContext, command);
+    }
+ 
+    public V putIfAbsent(K key, V value, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       PutKeyValueCommand command = commandsFactory.buildPutKeyValueCommand(key, value, MILLISECONDS.toMillis(defaultLifespan), MILLISECONDS.toMillis(defaultMaxIdleTime));
+       command.setPutIfAbsent(true);
+       return (V) invoker.invoke(invocationContext, command);
+    }
+ 
+    public V putIfAbsent(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit, Flag... flags) {
+       return putIfAbsent(key, value, lifespan, lifespanUnit, maxIdleTime, maxIdleTimeUnit, flags);
+    }
+ 
+    public void putAll(Map<? extends K, ? extends V> map, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       PutMapCommand command = commandsFactory.buildPutMapCommand(map, MILLISECONDS.toMillis(defaultLifespan), MILLISECONDS.toMillis(defaultMaxIdleTime));
+       invoker.invoke(invocationContext, command);
+    }
+ 
+    public void putAll(Map<? extends K, ? extends V> map, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       PutMapCommand command = commandsFactory.buildPutMapCommand(map, lifespanUnit.toMillis(lifespan), maxIdleTimeUnit.toMillis(maxIdleTime));
+       invoker.invoke(invocationContext, command);
+    }
+ 
+    public V remove(Object key, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       RemoveCommand command = commandsFactory.buildRemoveCommand(key, null);
+       return (V) invoker.invoke(invocationContext, command);
+    }
+ 
+    public boolean remove(Object key, Object oldValue, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       RemoveCommand command = commandsFactory.buildRemoveCommand(key, oldValue);
+       return (Boolean) invoker.invoke(invocationContext, command);
+    }
+ 
+    public void clear(Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       ClearCommand command = commandsFactory.buildClearCommand();
+       invoker.invoke(invocationContext, command);
+    }
+ 
+    public V replace(K k, V v, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public V replace(K k, V oV, V nV, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public boolean replace(K k, V v, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit, Flag... flags) {
+       return false;  // TODO: Customise this generated block
+    }
+ 
+    public boolean replace(K k, V oV, V nV, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit, Flag... flags) {
+       return false;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putAsync(K key, V value, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putAsync(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putIfAbsentAsync(K key, V value, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putIfAbsentAsync(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> putAllAsync(Map<? extends K, ? extends V> map, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> putAllAsync(Map<? extends K, ? extends V> map, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit maxIdleTimeUnit, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> removeAsync(Object key, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> clearAsync(Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> replaceAsync(K k, V v, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> replaceAsync(K k, V oV, V nV, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Boolean> replaceAsync(K k, V v, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Boolean> replaceAsync(K k, V oV, V nV, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit, Flag... flags) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public boolean containsKey(Object key, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       GetKeyValueCommand command = commandsFactory.buildGetKeyValueCommand(key);
+       Object response = invoker.invoke(invocationContext, command);
+       return response != null;
+    }
+ 
+    public V get(Object key, Flag... flags) {
+       InvocationContext invocationContext = getInvocationContext();
+       invocationContext.setFlags(flags);
+       GetKeyValueCommand command = commandsFactory.buildGetKeyValueCommand(key);
+       return (V) invoker.invoke(invocationContext, command);
+    }
+ 
+    public ComponentStatus getStatus() {
+       return componentRegistry.getStatus();
+    }
+ 
+    public boolean startBatch() {
+       if (!config.isInvocationBatchingEnabled())
+          throw new ConfigurationException("Invocation batching not enabled in current configuration!  Please use the <invocationBatching /> element.");
+       return batchContainer.startBatch();
+    }
+ 
+    public void endBatch(boolean successful) {
+       if (!config.isInvocationBatchingEnabled())
+          throw new ConfigurationException("Invocation batching not enabled in current configuration!  Please use the <invocationBatching /> element.");
+       batchContainer.endBatch(successful);
+    }
+ 
+    public String getName() {
+       return name;
+    }
+ 
+    public String getVersion() {
+       return Version.version;
+    }
+ 
+    @Override
+    public String toString() {
+       return "Cache '" + name + "'@" + (config.getCacheMode().isClustered() ? getCacheManager().getAddress() : System.identityHashCode(this));
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public <AMK, AMV> AtomicMap<AMK, AMV> getAtomicMap(K key) throws ClassCastException {
+       Object value = get(key);
+       if (value == null) value = AtomicHashMap.newInstance(this, key);
+       return ((AtomicHashMap) value).getProxy(this, key, batchContainer, icc);
+    }
+ 
+    public BatchContainer getBatchContainer() {
+       return batchContainer;
+    }
+ 
+    public InvocationContextContainer getInvocationContextContainer() {
+       return icc;
+    }
+ 
+    public DataContainer getDataContainer() {
+       return dataContainer;
+    }
+ 
+    public CacheManager getCacheManager() {
+       return cacheManager;
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public final V put(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit idleTimeUnit) {
+       PutKeyValueCommand command = commandsFactory.buildPutKeyValueCommand(key, value, lifespanUnit.toMillis(lifespan), idleTimeUnit.toMillis(maxIdleTime));
+       return (V) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public final V putIfAbsent(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit idleTimeUnit) {
+       PutKeyValueCommand command = commandsFactory.buildPutKeyValueCommand(key, value, lifespanUnit.toMillis(lifespan), idleTimeUnit.toMillis(maxIdleTime));
+       command.setPutIfAbsent(true);
+       return (V) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public final void putAll(Map<? extends K, ? extends V> map, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit idleTimeUnit) {
+       PutMapCommand command = commandsFactory.buildPutMapCommand(map, lifespanUnit.toMillis(lifespan), idleTimeUnit.toMillis(maxIdleTime));
+       invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public final V replace(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit idleTimeUnit) {
+       ReplaceCommand command = commandsFactory.buildReplaceCommand(key, null, value, lifespanUnit.toMillis(lifespan), idleTimeUnit.toMillis(maxIdleTime));
+       return (V) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public final boolean replace(K key, V oldValue, V value, long lifespan, TimeUnit lifespanUnit, long maxIdleTime, TimeUnit idleTimeUnit) {
+       ReplaceCommand command = commandsFactory.buildReplaceCommand(key, oldValue, value, lifespanUnit.toMillis(lifespan), idleTimeUnit.toMillis(maxIdleTime));
+       return (Boolean) invoker.invoke(getInvocationContext(), command);
+    }
+ 
+    public Future<V> putAsync(K key, V value) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putAsync(K key, V value, long lifespan, TimeUnit unit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putAsync(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> putAllAsync(Map<? extends K, ? extends V> data) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> putAllAsync(Map<? extends K, ? extends V> data, long lifespan, TimeUnit unit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> putAllAsync(Map<? extends K, ? extends V> data, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Void> clearAsync() {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putIfAbsentAsync(K key, V value) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putIfAbsentAsync(K key, V value, long lifespan, TimeUnit unit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> putIfAbsentAsync(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> removeAsync(Object key) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Boolean> removeAsync(Object key, Object value) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> replaceAsync(K key, V value) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> replaceAsync(K key, V value, long lifespan, TimeUnit unit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<V> replaceAsync(K key, V value, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Boolean> replaceAsync(K key, V oldValue, V newValue) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Boolean> replaceAsync(K key, V oldValue, V newValue, long lifespan, TimeUnit unit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    public Future<Boolean> replaceAsync(K key, V oldValue, V newValue, long lifespan, TimeUnit lifespanUnit, long maxIdle, TimeUnit maxIdleUnit) {
+       return null;  // TODO: Customise this generated block
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V put(K key, V value, long lifespan, TimeUnit unit) {
+       return put(key, value, lifespan, unit, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V putIfAbsent(K key, V value, long lifespan, TimeUnit unit) {
+       return putIfAbsent(key, value, lifespan, unit, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    public void putAll(Map<? extends K, ? extends V> map, long lifespan, TimeUnit unit) {
+       putAll(map, lifespan, unit, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    @SuppressWarnings("unchecked")
+    public V replace(K key, V value, long lifespan, TimeUnit unit) {
+       return replace(key, value, lifespan, unit, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    public boolean replace(K key, V oldValue, V value, long lifespan, TimeUnit unit) {
+       return replace(key, oldValue, value, lifespan, unit, defaultMaxIdleTime, MILLISECONDS);
+    }
+ 
+    public AdvancedCache<K, V> getAdvancedCache() {
+       return this;
+    }
+ 
+    public void compact() {
+       for (InternalCacheEntry e : dataContainer) {
+          if (e.getKey() instanceof MarshalledValue) ((MarshalledValue) e.getKey()).compact(true, true);
+          if (e.getValue() instanceof MarshalledValue) ((MarshalledValue) e.getValue()).compact(true, true);
+       }
+    }
+ 
+    public RpcManager getRpcManager() {
+       return rpcManager;
+    }
+ }

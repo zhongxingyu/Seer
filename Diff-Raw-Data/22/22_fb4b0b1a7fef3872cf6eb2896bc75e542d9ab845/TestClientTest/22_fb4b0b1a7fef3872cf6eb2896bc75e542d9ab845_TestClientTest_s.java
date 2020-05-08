@@ -1,0 +1,396 @@
+ /**
+ 
+    Copyright 2010 OpenEngSB Division, Vienna University of Technology
+ 
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+ 
+        http://www.apache.org/licenses/LICENSE-2.0
+ 
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+ 
+  */
+ package org.openengsb.ui.web;
+ 
+ import java.lang.reflect.Method;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Iterator;
+ import java.util.List;
+ 
+ import junit.framework.Assert;
+ 
+ import org.apache.wicket.Component;
+ import org.apache.wicket.ajax.markup.html.AjaxLink;
+ import org.apache.wicket.feedback.FeedbackMessage;
+ import org.apache.wicket.markup.html.basic.Label;
+ import org.apache.wicket.markup.html.form.Button;
+ import org.apache.wicket.markup.html.form.DropDownChoice;
+ import org.apache.wicket.markup.html.form.Form;
+ import org.apache.wicket.markup.html.panel.FeedbackPanel;
+ import org.apache.wicket.markup.html.tree.LinkTree;
+ import org.apache.wicket.markup.repeater.RepeatingView;
+ import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
+ import org.apache.wicket.spring.test.ApplicationContextMock;
+ import org.apache.wicket.util.tester.FormTester;
+ import org.apache.wicket.util.tester.WicketTester;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.mockito.invocation.InvocationOnMock;
+ import org.mockito.stubbing.Answer;
+ import org.openengsb.core.common.context.ContextCurrentService;
+ import org.openengsb.core.config.Domain;
+ import org.openengsb.core.config.DomainProvider;
+ import org.openengsb.ui.web.editor.BeanArgumentPanel;
+ import org.openengsb.ui.web.editor.SimpleArgumentPanel;
+ import org.openengsb.ui.web.model.MethodCall;
+ import org.openengsb.ui.web.model.MethodId;
+ import org.openengsb.ui.web.model.ServiceId;
+ import org.openengsb.ui.web.service.DomainService;
+ import org.osgi.framework.ServiceReference;
+ 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+ public class TestClientTest {
+ 
+     public interface TestInterface extends Domain {
+         void update(String id, String name);
+ 
+         void update(TestBean test);
+     }
+ 
+     public class TestService implements TestInterface {
+         public boolean called = false;
+         public TestBean test;
+ 
+         @Override
+         public void update(String id, String name) {
+             if ("fail".equals(id)) {
+                 throw new IllegalArgumentException();
+             }
+             called = true;
+         }
+ 
+         @Override
+         public void update(TestBean test) {
+             this.test = test;
+         }
+ 
+         public String getName(String id) {
+             return "";
+         }
+     }
+ 
+     private WicketTester tester;
+     private ApplicationContextMock context;
+     private TestService testService;
+     private FormTester formTester;
+     private boolean serviceListExpanded;
+ 
+     @Before
+     public void setup() {
+         tester = new WicketTester();
+         context = new ApplicationContextMock();
+         context.putBean(mock(ContextCurrentService.class));
+     }
+ 
+     @Test
+     public void testLinkAppearsWithCaptionTestClient() throws Exception {
+         setupIndexPage();
+ 
+         tester.startPage(Index.class);
+ 
+         tester.assertContains("Test Client");
+     }
+ 
+     @Test
+     public void testParameterFormIsCreated() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         tester.assertComponent("methodCallForm", Form.class);
+     }
+ 
+     @Test
+     public void testServiceTreeIsCreated() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         tester.assertComponent("methodCallForm:serviceList", LinkTree.class);
+     }
+ 
+     @Test
+     public void testShowServiceInstancesInDropdown() throws Exception {
+         List<ServiceReference> expected = setupAndStartTestClientPage();
+ 
+         expandServiceListTree();
+         for (int index = 2; index < expected.size() + 2; index++) {
+             tester.assertComponent("methodCallForm:serviceList:i:" + index + ":nodeComponent:contentLink",
+                     AjaxLink.class);
+         }
+     }
+ 
+     @Test
+     public void testCreateMethodListDropDown() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         tester.assertComponent("methodCallForm:methodList", DropDownChoice.class);
+     }
+ 
+     @Test
+     public void testServiceListSelect() throws Exception {
+         setupAndStartTestClientPage();
+         setServiceInDropDown(0);
+ 
+         @SuppressWarnings("unchecked")
+         Form<MethodCall> form = (Form<MethodCall>) tester.getComponentFromLastRenderedPage("methodCallForm");
+         MethodCall modelObject = form.getModelObject();
+         ServiceId reference = new ServiceId(TestService.class.getName(), "test");
+ 
+         Assert.assertEquals(reference.toString(), modelObject.getService().toString());
+     }
+ 
+     private void expandServiceListTree() {
+         tester.clickLink("methodCallForm:serviceList:i:0:junctionLink", true);
+         tester.clickLink("methodCallForm:serviceList:i:1:junctionLink", true);
+         serviceListExpanded = true;
+     }
+ 
+     @Test
+     public void testShowMethodListInDropDown() throws Exception {
+         setupAndStartTestClientPage();
+         @SuppressWarnings("unchecked")
+         DropDownChoice<MethodId> methodList = (DropDownChoice<MethodId>) tester
+                 .getComponentFromLastRenderedPage("methodCallForm:methodList");
+ 
+         setServiceInDropDown(0);
+ 
+         List<? extends MethodId> choices = methodList.getChoices();
+         List<Method> choiceMethods = new ArrayList<Method>();
+         for (MethodId mid : choices) {
+             choiceMethods.add(TestInterface.class.getMethod(mid.getName(), mid.getArgumentTypesAsClasses()));
+         }
+         Assert.assertEquals(Arrays.asList(TestInterface.class.getMethods()), choiceMethods);
+     }
+ 
+     @Test
+     public void testCreateArgumentList() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         Component argList = tester
+                 .getComponentFromLastRenderedPage("methodCallForm:argumentListContainer:argumentList");
+ 
+         Assert.assertNotNull(argList);
+     }
+ 
+     @Test
+     public void testCreateTextFieldsFor2StringArguments() throws Exception {
+         setupAndStartTestClientPage();
+         RepeatingView argList = (RepeatingView) tester
+                 .getComponentFromLastRenderedPage("methodCallForm:argumentListContainer:argumentList");
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(0);
+ 
+         Assert.assertEquals(2, argList.size());
+         Iterator<? extends Component> iterator = argList.iterator();
+         while (iterator.hasNext()) {
+             Assert.assertEquals(SimpleArgumentPanel.class, iterator.next().getClass());
+         }
+     }
+ 
+     private void setMethodInDropDown(int index) {
+         formTester.select("methodList", index);
+         tester.executeAjaxEvent("methodCallForm:methodList", "onchange");
+     }
+ 
+     @Test
+     public void testCreateTextFieldsForBean() throws Exception {
+         setupAndStartTestClientPage();
+         RepeatingView argList = (RepeatingView) tester
+                 .getComponentFromLastRenderedPage("methodCallForm:argumentListContainer:argumentList");
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(1);
+ 
+         Assert.assertEquals(1, argList.size());
+         Assert.assertEquals(BeanArgumentPanel.class, argList.get("arg0").getClass());
+ 
+         RepeatingView panel = (RepeatingView) argList.get("arg0:fields");
+         Assert.assertEquals(2, panel.size());
+     }
+ 
+     @Test
+     public void testPerformMethodCall() throws Exception {
+         setupAndStartTestClientPage();
+         RepeatingView argList = (RepeatingView) tester
+                 .getComponentFromLastRenderedPage("methodCallForm:argumentListContainer:argumentList");
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(0);
+ 
+         for (int i = 0; i < argList.size(); i++) {
+             formTester.setValue("argumentListContainer:argumentList:arg" + i + ":value", "test");
+         }
+ 
+         tester.executeAjaxEvent("methodCallForm:submitButton", "onclick");
+ 
+         Assert.assertTrue(testService.called);
+     }
+ 
+     @Test
+     public void testPerformMethodCallWithBeanArgument() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(1);
+ 
+         formTester.setValue("argumentListContainer:argumentList:arg0:fields:id:row:field", "42");
+         formTester.setValue("argumentListContainer:argumentList:arg0:fields:name:row:field", "test");
+ 
+         tester.executeAjaxEvent("methodCallForm:submitButton", "onclick");
+ 
+         Assert.assertNotNull(testService.test);
+     }
+ 
+     private void setServiceInDropDown(int index) {
+         if (!serviceListExpanded) {
+             expandServiceListTree();
+         }
+         tester.clickLink("methodCallForm:serviceList:i:" + (index + 2) + ":nodeComponent:contentLink", true);
+        tester.executeAjaxEvent("methodCallForm:serviceList:i:" + (index + 2) + ":nodeComponent:contentLink", "onclick");
+     }
+ 
+     @Test
+     public void testSelectMethodTwice() throws Exception {
+         setupAndStartTestClientPage();
+         RepeatingView argList = (RepeatingView) tester
+                 .getComponentFromLastRenderedPage("methodCallForm:argumentListContainer:argumentList");
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(0);
+         tester.executeAjaxEvent("methodCallForm:methodList", "onchange");
+ 
+         Assert.assertEquals(2, argList.size());
+     }
+ 
+     @Test
+     public void testFormResetAfterCall() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(0);
+ 
+         formTester.setValue("argumentListContainer:argumentList:arg0:value", "test");
+         formTester.setValue("argumentListContainer:argumentList:arg1:value", "test");
+         tester.executeAjaxEvent("methodCallForm:submitButton", "onclick");
+ 
+         RepeatingView argList = (RepeatingView) tester
+                 .getComponentFromLastRenderedPage("methodCallForm:argumentListContainer:argumentList");
+         Assert.assertEquals(0, argList.size());
+     }
+ 
+     @Test
+     public void testFeedbackPanelIsPresent() throws Exception {
+         setupAndStartTestClientPage();
+         tester.assertComponent("feedback", FeedbackPanel.class);
+     }
+ 
+     @Test
+     public void testFeedbackPanelContainsText() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(0);
+         formTester.setValue("argumentListContainer:argumentList:arg0:value", "test");
+         formTester.setValue("argumentListContainer:argumentList:arg1:value", "test");
+         tester.executeAjaxEvent("methodCallForm:submitButton", "onclick");
+ 
+         FeedbackPanel feedbackPanel = (FeedbackPanel) tester.getComponentFromLastRenderedPage("feedback");
+         tester.assertInfoMessages(new String[] { "Methodcall called successfully", });
+         Label message = (Label) feedbackPanel.get("feedbackul:messages:0:message");
+         Assert.assertEquals("Methodcall called successfully", message.getDefaultModelObjectAsString());
+     }
+ 
+     @Test
+     public void testExceptionInFeedback() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         setServiceInDropDown(0);
+         setMethodInDropDown(0);
+         formTester.setValue("argumentListContainer:argumentList:arg0:value", "fail");
+         formTester.setValue("argumentListContainer:argumentList:arg1:value", "test");
+         tester.executeAjaxEvent("methodCallForm:submitButton", "onclick");
+         Exception resultException = (Exception) tester.getMessages(FeedbackMessage.ERROR).get(0);
+         Assert.assertEquals(IllegalArgumentException.class, resultException.getClass());
+     }
+ 
+     @Test
+     public void testSubmitButtonIslocalized() throws Exception {
+         setupAndStartTestClientPage();
+ 
+         Button button = (Button) tester.getComponentFromLastRenderedPage("methodCallForm:submitButton");
+        Assert.assertEquals("Call", button.getValue());
+     }
+ 
+     private List<ServiceReference> setupAndStartTestClientPage() {
+         final List<ServiceReference> expected = new ArrayList<ServiceReference>();
+         ServiceReference serviceReferenceMock = mock(ServiceReference.class);
+         when(serviceReferenceMock.getProperty("id")).thenReturn("test");
+         expected.add(serviceReferenceMock);
+         expected.add(serviceReferenceMock);
+         DomainService managedServicesMock = mock(DomainService.class);
+         when(managedServicesMock.getManagedServiceInstances()).thenAnswer(new Answer<List<ServiceReference>>() {
+             @Override
+             public List<ServiceReference> answer(InvocationOnMock invocation) throws Throwable {
+                 return expected;
+             }
+         });
+         DomainProvider domainProviderMock = mock(DomainProvider.class);
+         when(domainProviderMock.getName()).thenReturn("testDomain");
+         when(domainProviderMock.getDomainInterface()).thenAnswer(new Answer<Class<? extends Domain>>() {
+             @Override
+             public Class<? extends Domain> answer(InvocationOnMock invocation) throws Throwable {
+                 return TestInterface.class;
+             }
+         });
+         final List<DomainProvider> expectedProviders = new ArrayList<DomainProvider>();
+         expectedProviders.add(domainProviderMock);
+         when(managedServicesMock.domains()).thenAnswer(new Answer<List<DomainProvider>>() {
+             @Override
+             public List<DomainProvider> answer(InvocationOnMock invocation) throws Throwable {
+                 return expectedProviders;
+             }
+         });
+ 
+         when(managedServicesMock.serviceReferencesForConnector(TestInterface.class)).thenReturn(expected);
+ 
+         testService = new TestService();
+         when(managedServicesMock.getService(any(ServiceReference.class))).thenReturn(testService);
+         when(managedServicesMock.getService(anyString(), anyString())).thenReturn(testService);
+         context.putBean(managedServicesMock);
+         setupTesterWithSpringMockContext();
+ 
+         tester.startPage(TestClient.class);
+         formTester = tester.newFormTester("methodCallForm");
+         return expected;
+     }
+ 
+     private void setupIndexPage() {
+         DomainService domainServiceMock = mock(DomainService.class);
+         context.putBean(domainServiceMock);
+         setupTesterWithSpringMockContext();
+     }
+ 
+     private void setupTesterWithSpringMockContext() {
+         tester.getApplication().addComponentInstantiationListener(
+                 new SpringComponentInjector(tester.getApplication(), context, true));
+     }
+ }

@@ -1,0 +1,90 @@
+ /**
+  * This file is part of the Harmony package.
+  *
+  * (c) Mickael Gaillard <mickael.gaillard@tactfactory.com>
+  *
+  * For the full copyright and license information, please view the LICENSE
+  * file that was distributed with this source code.
+  */
+ package com.tactfactory.mda.orm;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.HashMap;
+import java.util.LinkedHashMap;
+ import java.util.Map;
+ 
+ import com.tactfactory.mda.plateforme.BaseAdapter;
+ import com.tactfactory.mda.template.TagConstant;
+ 
+ /** Entity class metadata */
+ public class ClassMetadata {
+ 	/** Used for join tables (ManyToMany relations)*/
+ 	public boolean isAssociationClass = false;
+ 	
+ 	/** Namespace of entity class */
+ 	public String space = "";
+ 	
+ 	/** Name of entity class */
+ 	public String name = "";
+ 	
+ 	/** List of fields of entity class*/
+	public LinkedHashMap<String, FieldMetadata> fields = new LinkedHashMap<String, FieldMetadata>();
+ 
+ 	/** List of ids of entity class*/
+	public LinkedHashMap<String, FieldMetadata> ids = new LinkedHashMap<String, FieldMetadata>();
+ 	
+ 	/** List of relations of entity class*/
+	public LinkedHashMap<String, FieldMetadata> relations = new LinkedHashMap<String, FieldMetadata>();
+ 		
+ 	/** Class inherited by the entity class or null if none*/
+ 	public String exts = null;
+ 	
+ 	/** Implemented class list of the entity class */
+ 	public ArrayList<String> impls = new ArrayList<String>();
+ 	
+ 	/** Implemented class list of the entity class */
+ 	public ArrayList<MethodMetadata> methods = new ArrayList<MethodMetadata>();
+ 
+ 	/** Imports of the class */
+ 	public ArrayList<String> imports = new ArrayList<String>();
+ 	
+ 	
+ 	/**
+ 	 * Transform the class to a map of strings and maps (for each field) given an adapter
+ 	 * @param adapter The adapter used to customize the fields
+ 	 * @return the map
+ 	 */
+ 	public Map<String, Object> toMap(BaseAdapter adapter){
+ 		HashMap<String, Object> model = new HashMap<String, Object>();
+ 		
+ 		model.put(TagConstant.SPACE,	this.space);
+ 		model.put(TagConstant.NAME,		this.name);
+ 		model.put(TagConstant.LOCAL_NAMESPACE, adapter.getNameSpaceEntity(this, adapter.getController()));
+ 		//model.put(TagConstant.ALIAS, SqliteAdapter.generateColumnName(this));
+ 		model.put(TagConstant.FIELDS,	this.toFieldArray(this.fields.values(), adapter));
+ 		model.put(TagConstant.IDS,		this.toFieldArray(this.ids.values(), adapter));
+ 		model.put(TagConstant.RELATIONS,this.toFieldArray(this.relations.values(), adapter));
+		model.put("isAssociationClass","false");
+		if(isAssociationClass)
+			model.put("isAssociationClass","true");
+ 		
+ 		return model;
+ 	}
+ 	
+ 	private ArrayList<Map<String,Object>> toFieldArray(Collection<FieldMetadata> c, BaseAdapter adapter){
+ 		ArrayList<Map<String,Object>> result = new ArrayList<Map<String,Object>>();
+ 		Map<String, Object> subField = null;
+ 		
+ 		for (FieldMetadata field : c) {
+ 			field.customize(adapter);
+ 			
+ 			subField = new HashMap<String, Object>();
+ 			subField = field.toMap();
+ 			
+ 			result.add(subField);
+ 		}
+ 		
+ 		return result;
+ 	}
+ }

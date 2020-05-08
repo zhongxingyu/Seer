@@ -1,0 +1,367 @@
+ /*
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  *
+  * Copyright (c) 2010-2011 Oracle and/or its affiliates. All rights reserved.
+  *
+  * The contents of this file are subject to the terms of either the GNU
+  * General Public License Version 2 only ("GPL") or the Common Development
+  * and Distribution License("CDDL") (collectively, the "License").  You
+  * may not use this file except in compliance with the License.  You can
+  * obtain a copy of the License at
+  * http://glassfish.java.net/public/CDDL+GPL_1_1.html
+  * or packager/legal/LICENSE.txt.  See the License for the specific
+  * language governing permissions and limitations under the License.
+  *
+  * When distributing the software, include this License Header Notice in each
+  * file and include the License file at packager/legal/LICENSE.txt.
+  *
+  * GPL Classpath Exception:
+  * Oracle designates this particular file as subject to the "Classpath"
+  * exception as provided by Oracle in the GPL Version 2 section of the License
+  * file that accompanied this code.
+  *
+  * Modifications:
+  * If applicable, add the following below the License Header, with the fields
+  * enclosed by brackets [] replaced by your own identifying information:
+  * "Portions Copyright [year] [name of copyright owner]"
+  *
+  * Contributor(s):
+  * If you wish your version of this file to be governed by only the CDDL or
+  * only the GPL Version 2, indicate your decision by adding "[Contributor]
+  * elects to include this software in this distribution under the [CDDL or GPL
+  * Version 2] license."  If you don't indicate a single choice of license, a
+  * recipient has the option to distribute your version of this file under
+  * either the CDDL, the GPL Version 2 or to extend the choice of license to
+  * its licensees as provided above.  However, if you add GPL Version 2 code
+  * and therefore, elected the GPL Version 2 license, then the option applies
+  * only if the new code is made subject to such option by the copyright
+  * holder.
+  */
+ 
+ package com.sun.jersey.oauth.client;
+ 
+ import javax.ws.rs.ext.Providers;
+ import com.sun.jersey.api.client.Client;
+ import com.sun.jersey.api.client.ClientHandlerException;
+ import com.sun.jersey.api.client.ClientRequest;
+ import com.sun.jersey.api.client.ClientResponse;
+ import com.sun.jersey.api.client.UniformInterfaceException;
+ import com.sun.jersey.api.client.filter.ClientFilter;
+ import com.sun.jersey.api.representation.Form;
+ import com.sun.jersey.oauth.signature.OAuthParameters;
+ import com.sun.jersey.oauth.signature.OAuthSecrets;
+ import com.sun.jersey.oauth.signature.OAuthSignature;
+ import com.sun.jersey.oauth.signature.OAuthSignatureException;
+ import java.net.URI;
+ import javax.ws.rs.HttpMethod;
+ import javax.ws.rs.core.UriBuilder;
+ 
+ /**
+  * Client filter adding OAuth authorization header to the HTTP request, if no
+  * authorization header is already present.
+  *
+  * If the URI's for requesting request and access tokens and authorization are
+  * provided, as well as the AuthHandler implementation,
+  * the filter also takes care of handling the OAuth authorization
+  * flow.
+  * <p>
+  * Note: This filter signs the request based on its request parameters.
+  * For this reason, you should invoke this filter after any others that
+  * modify any request parameters.
+  * <p>
+  * Example 1:
+  *
+  * <pre>
+  * // baseline OAuth parameters for access to resource
+  * OAuthParameters params = new OAuthParameters().signatureMethod("HMAC-SHA1").
+  *  consumerKey("key").setToken("accesskey");
+  *
+  * // OAuth secrets to access resource
+  * OAuthSecrets secrets = new OAuthSecrets().consumerSecret("secret").setTokenSecret("accesssecret");
+  *
+  * // if parameters and secrets remain static, filter can be added to each web resource
+  * OAuthClientFilter filter = new OAuthClientFilter(client.getProviders(), params, secrets);
+  *
+  * // OAuth test server
+  * WebResource resource = client.resource("http://term.ie/oauth/example/request_token.php");
+  *
+  * resource.addFilter(filter);
+  *
+  * String response = resource.get(String.class);
+  * </pre>
+ *
+  * <p>
+  * Example 2 (handling authorization flow):
+ *
+  * <pre>
+  * OAuthClientFilter filter = new OAuthClientFilter(
+  *     client.getProviders(),
+  *     new OAuthParameters().consumerKey("key"),
+  *     new OAuthSecrets().consumerSecret("secret"),
+  *     "http://request.token.uri",
+  *     "http://access.token.uri",
+  *     "http://authorization.uri",
+  *     new OAuthClientFilter.AuthHandler() {
+  *         @Override
+  *         public void authorized(String token, String tokenSecret) {
+  *             // store the access token for future use
+  *             storeAccessToken(token, tokenSecret);
+  *         }
+  *
+  *         @Override
+  *         public String authorize(URI authorizationUri) {
+  *             try {
+  *                 // ask user to authorize the app and enter the verification code
+  *                 // generated by the server
+  *                 String verificationCode = askUserToGoToAuthUriAuthorizeAndEnterVerifier(authorizationUri);
+  *                 return verificationCode;
+  *             } catch (IOException ex) {
+  *                 throw new RuntimeException(ex);
+  *             }
+  *         }
+  *     }
+  * );
+  *
+  * // add the filter to the client
+  * client.addFilter(filter);
+  *
+  * // make calls to the protected resources (authorization is handled
+  * // by the filter (and the passed AuthHandler) as needed, transparently
+  * WebResource resource = client.resource("http://my.service.uri/items");
+  * String response = resource.get(String.class);
+  * </pre>
+  *
+  * @author Paul C. Bryan <pbryan@sun.com>
+  * @author Martin Matula <martin.matula@oracle.com>
+  */
+ public final class OAuthClientFilter extends ClientFilter {
+ 
+     /** The registered providers, which contains entity message body readers and writers. */
+     private final Providers providers;
+ 
+     /** The OAuth parameters to be used in generating signature. */
+     private final OAuthParameters parameters;
+ 
+     /** The OAuth secrets to be used in generating signature. */
+     private final OAuthSecrets secrets;
+ 
+     private final URI requestTokenUri;
+     private final URI accessTokenUri;
+     private final URI authorizationUri;
+ 
+     private final AuthHandler handler;
+ 
+     private enum State {
+         UNMANAGED, MANAGED, REQUEST_TOKEN;
+     }
+ 
+     private State state;
+ 
+     /**
+      * Constructs a new OAuth client filter with the specified providers.
+      *
+      * @param providers the registered providers from {@link Client#getProviders()} method.
+      * @param parameters the OAuth parameters to be used in signing requests.
+      * @param secrets the OAuth secrets to be used in signing requests.
+      */
+     public OAuthClientFilter(final Providers providers,
+     final OAuthParameters parameters, final OAuthSecrets secrets) {
+         this(providers, parameters, secrets, null, null, null, null);
+     }
+ 
+     /** Constructs a new OAuth client filter providing URI's for requesting
+      * request and access tokens and authorization. Passing these URI's will
+      * cause the filter will automatically attempt to obtain the tokens based
+      * if it receives 401 Unauthorized http status code.
+      *
+      * @param providers the registered providers from {@link Client#getProviders()} method.
+      * @param parameters the OAuthParameters to be used in signing requests.
+      * @param secrets the OAuth secrets to be used in signing requests.
+      * @param requestTokenUri URI for requesting new request tokens.
+      * @param accessTokenUri URI for requesting access tokens.
+      * @param authorizationUri URI for requesting authorization of request tokens.
+      * @param handler Implementation of AuthHandler this filter calls to obtain user authorization
+      *          and notify the application of a new access token obtained. If null is passed,
+      *          instead of invoking the handler for user authorization when needed,
+      *          {@link UnauthorizedRequestException} is thrown by the filter.
+      */
+     public OAuthClientFilter(Providers providers, OAuthParameters parameters,
+             OAuthSecrets secrets, String requestTokenUri, String accessTokenUri,
+             String authorizationUri, AuthHandler handler) {
+         if (providers == null || parameters == null || secrets == null) {
+             throw new NullPointerException();
+         }
+         if ((requestTokenUri != null || accessTokenUri != null || authorizationUri != null) &&
+                 (requestTokenUri == null || accessTokenUri == null || authorizationUri == null)) {
+             throw new NullPointerException();
+         }
+         this.providers = providers;
+         this.parameters = parameters;
+         this.secrets = secrets;
+ 
+         this.handler = handler == null ? new AuthHandler() {
+             @Override
+             public void authorized(String token, String tokenSecret) {
+             }
+ 
+             @Override
+             public String authorize(URI authorizationUri) {
+                 return null;
+             }
+         } : handler;
+
+         if (parameters.getSignatureMethod() == null) {
+             parameters.signatureMethod("HMAC-SHA1");
+         }
+ 
+         if (parameters.getVersion() == null) {
+             parameters.version();
+         }
+ 
+         if (requestTokenUri == null) {
+             this.requestTokenUri = this.accessTokenUri = this.authorizationUri = null;
+             state = State.UNMANAGED;
+         } else {
+             this.requestTokenUri = UriBuilder.fromUri(requestTokenUri).build();
+             this.accessTokenUri = UriBuilder.fromUri(accessTokenUri).build();
+             this.authorizationUri = UriBuilder.fromUri(authorizationUri).build();
+             state = State.MANAGED;
+         }
+     }
+ 
+     /**
+      * Note: This method automatically sets the nonce and timestamp.
+      */
+     @Override
+     public ClientResponse handle(final ClientRequest request) throws ClientHandlerException {
+         // secrets and parameters exist; no auth header already: sign request; add as authorization header
+         if (!request.getHeaders().containsKey("Authorization")) {
+             switch (state) {
+                 case MANAGED:
+                     // check if authorized
+                     if (parameters.getToken() == null) {
+                         // put together a request token request
+                         state = State.UNMANAGED;
+                         try {
+                             ClientResponse cr = handle(ClientRequest.create().build(requestTokenUri, HttpMethod.POST));
+                             Form response = cr.getEntity(Form.class);
+                             String token = response.getFirst(OAuthParameters.TOKEN);
+                             parameters.token(token);
+                             secrets.tokenSecret(response.getFirst(OAuthParameters.TOKEN_SECRET));
+                             state = State.REQUEST_TOKEN;
+                             parameters.verifier(handler.authorize(getAuthorizationUri()));
+                             return handle(request);
+                         } finally {
+                             if (state == State.UNMANAGED) {
+                                 parameters.setToken(null);
+                                 secrets.setTokenSecret(null);
+                             }
+                            if (state != State.REQUEST_TOKEN) {
+                                state = State.MANAGED;
+                            }
+                         }
+                     }
+                     break;
+                 case REQUEST_TOKEN:
+                     if (parameters.getVerifier() == null) {
+                         throw new UnauthorizedRequestException(parameters, getAuthorizationUri());
+                     }
+                     state = State.UNMANAGED;
+                     try {
+                         ClientResponse cr = handle(ClientRequest.create().build(accessTokenUri, HttpMethod.POST));
+                         Form response = cr.getEntity(Form.class);
+                         String token = response.getFirst(OAuthParameters.TOKEN);
+                         String secret = response.getFirst(OAuthParameters.TOKEN_SECRET);
+                         if (token == null) {
+                             throw new UnauthorizedRequestException(parameters, null);
+                         }
+                         parameters.token(token);
+                         secrets.tokenSecret(secret);
+                         handler.authorized(parameters.getToken(), secrets.getTokenSecret());
+                         state = State.MANAGED;
+                     } finally {
+                         parameters.remove(OAuthParameters.VERIFIER);
+                         if (state == State.UNMANAGED) {
+                             parameters.remove(OAuthParameters.TOKEN);
+                             secrets.tokenSecret(null);
+                             state = State.MANAGED;
+                         }
+                     }
+ 
+             }
+             final OAuthParameters p = (OAuthParameters)parameters.clone(); // make modifications to clone
+ 
+             if (p.getTimestamp() == null) {
+                 p.setTimestamp();
+             }
+ 
+             if (p.getNonce() == null) {
+                 p.setNonce();
+             }
+ 
+             try {
+                 OAuthSignature.sign(new RequestWrapper(request, providers), p, secrets);
+             }
+             catch (OAuthSignatureException se) {
+                 throw new ClientHandlerException(se);
+             }
+         }
+ 
+         // next filter in chain
+         ClientResponse response;
+         UniformInterfaceException uie = null;
+         try {
+             response = getNext().handle(request);
+         } catch (UniformInterfaceException e) {
+             response = e.getResponse();
+             uie = e;
+         }
+ 
+         if (state == State.MANAGED && response.getClientResponseStatus() == ClientResponse.Status.UNAUTHORIZED) {
+             request.getHeaders().remove("Authorization");
+             parameters.remove(OAuthParameters.TOKEN);
+             secrets.tokenSecret(null);
+             uie = null;
+             return handle(request);
+         }
+ 
+         if (uie != null) {
+             throw uie;
+         }
+
+         return response;
+     }
+ 
+     private URI getAuthorizationUri() {
+         return UriBuilder.fromUri(authorizationUri)
+                 .queryParam(OAuthParameters.TOKEN, parameters.getToken())
+                 .build();
+     }
+ 
+     /** Implementation of this interface should be passed to the filter constructor
+      * to handle user authorization requests and respond to obtaining a new access token
+      * (e.g. by storing it for future use).
+      */
+     public static interface AuthHandler {
+         /** Method called by the filter when an authorization of a request token is
+          * needed. Implementation should redirect user to the authorization URI passed
+          * as the parameter to this method and return the verification code (or null)
+          * generated by the server in a response to user authorization.
+         *
+          * @param authorizationUri Authorization URI the user should be redirected to.
+          * @return verifier code that was generated by the server, null if the user refused to authorize
+          * the client.
+          */
+         String authorize(URI authorizationUri);
+ 
+         /** Notifies the handler that the application was authorized by the user
+          * and a new access token was obtained. Application may want to store this
+          * for future use (to avoid the need for a new authorization next time it runs).
+          *
+          * @param token The new access token.
+          * @param tokenSecret Secret corresponding to the new access token.
+          */
+         void authorized(String token, String tokenSecret);
+     }
+ }
+ 

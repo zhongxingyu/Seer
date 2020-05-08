@@ -1,0 +1,215 @@
+ /*
+ 
+    Derby - Class org.apache.derbyBuild.splitmessages
+ 
+    Copyright 2000, 2006 The Apache Software Foundation or its licensors, as applicable.
+ 
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+ 
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+ 
+  */
+ 
+ package org.apache.derbyBuild;
+ 
+ import java.io.*;
+ import java.util.*;
+ 
+ import org.apache.derby.iapi.services.i18n.MessageService;
+ import org.apache.derby.shared.common.reference.SQLState;
+ 
+ public class splitmessages {
+ 	/**
+ 		arg[0] is the destination directory
+ 		arg[1] is the source file.
+ 	*/
+     
+     /** 
+      *  This is the list of message ids that are shared between
+      *  the network client and the engine.  This is used to generate
+      *  a set of 'shared' messages.  This avoids us having to maintain
+      *  two separate message files.
+      *
+      *  NOTE: We already assume all message ids starting with XJ are shared.
+      *  This covers 90% of the cases.  Only add ids here if you have a 
+      *  message id that is not in the XJ class.
+      */
+     private static TreeSet clientMessageIds = new TreeSet();
+     
+     /**
+      * Initialize the set of message ids that the network client will use.  
+      * <p>
+      * Note that all message ids that start with "XJ" are automatically added, 
+      * these are just for message ids that have a different prefix.
+      */
+     static void initClientMessageIds()
+     {
+         // Add message ids that don't start with XJ here
+         clientMessageIds.add(SQLState.NO_CURRENT_CONNECTION);
+         clientMessageIds.add(SQLState.NOT_IMPLEMENTED);
+         clientMessageIds.add(SQLState.CANNOT_CLOSE_ACTIVE_CONNECTION);
+         clientMessageIds.add(SQLState.XACT_SAVEPOINT_RELEASE_ROLLBACK_FAIL);
+         clientMessageIds.add(SQLState.UNSUPPORTED_ENCODING);
+         clientMessageIds.add(SQLState.LANG_FORMAT_EXCEPTION);
+         clientMessageIds.add(SQLState.LANG_DATA_TYPE_GET_MISMATCH);
+         clientMessageIds.add(SQLState.LANG_DATA_TYPE_SET_MISMATCH);
+         clientMessageIds.add(SQLState.LANG_DATE_SYNTAX_EXCEPTION);
+         clientMessageIds.add(SQLState.CHARACTER_CONVERTER_NOT_AVAILABLE);
+         clientMessageIds.add(SQLState.LANG_OUTSIDE_RANGE_FOR_DATATYPE);
+         clientMessageIds.add(SQLState.LANG_STATEMENT_CLOSED_NO_REASON);
+         clientMessageIds.add(SQLState.LANG_INVALID_COLUMN_POSITION);
+         clientMessageIds.add(SQLState.INVALID_COLUMN_NAME);
+         clientMessageIds.add("J104");
+         clientMessageIds.add(SQLState.HOLDABLE_RESULT_SET_NOT_AVAILABLE);
+         clientMessageIds.add(SQLState.LANG_RETURN_OUTPUT_PARAM_CANNOT_BE_SET);
+         clientMessageIds.add(SQLState.LANG_NULL_INTO_NON_NULL);
+         clientMessageIds.add(SQLState.JDBC_METHOD_NOT_IMPLEMENTED);
+         clientMessageIds.add(SQLState.JDBC_METHOD_NOT_SUPPORTED_BY_SERVER);
+         clientMessageIds.add(SQLState.DRDA_NO_AUTOCOMMIT_UNDER_XA);
+         clientMessageIds.add(SQLState.DRDA_INVALID_XA_STATE_ON_COMMIT_OR_ROLLBACK);
+         clientMessageIds.add(SQLState.HOLDABLE_RESULT_SET_NOT_AVAILABLE);
+         clientMessageIds.add(SQLState.INVALID_RESULTSET_TYPE);
+         clientMessageIds.add(SQLState.INVALID_RESULTSET_CONCURRENCY);
+         clientMessageIds.add(SQLState.SCROLL_SENSITIVE_NOT_SUPPORTED);
+         clientMessageIds.add(SQLState.INSENSITIVE_UPDATABLE_NOT_SUPPORTED);
+         clientMessageIds.add(SQLState.UNABLE_TO_OBTAIN_MESSAGE_TEXT_FROM_SERVER );
+         clientMessageIds.add(SQLState.NUMBER_OF_ROWS_TOO_LARGE_FOR_INT);
+         clientMessageIds.add(SQLState.NOGETCONN_ON_CLOSED_POOLED_CONNECTION);
+         clientMessageIds.add(SQLState.LOB_METHOD_ON_CLOSED_CONNECTION);
+         clientMessageIds.add(SQLState.LANG_INVALID_PARAM_POSITION);
+         clientMessageIds.add(SQLState.LANG_MISSING_PARMS);
+         clientMessageIds.add(SQLState.LANG_NO_CURRENT_ROW);
+         clientMessageIds.add(SQLState.LANG_STREAM_RETRIEVED_ALREADY);
+     }
+ 
+ 	public static void main(String[] args) throws Exception {
+ 
+         initClientMessageIds();
+ 
+ 		Properties p = new Properties();
+ 
+ 		File dir = new File(args[0]);
+ 
+ 		File source = new File(args[1]);
+         File clientDir = new File(args[2]);
+         
+ 		String s = source.getName();
+ 		// loose the suffix
+ 		s = s.substring(0, s.lastIndexOf('.'));
+ 		// now get the locale
+ 		String locale = s.substring(s.indexOf('_'));
+ 
+ 		boolean addBase = "_en".equals(locale);
+ 
+ 
+ 		InputStream is = new BufferedInputStream(new FileInputStream(source), 64 * 1024);
+ 
+ 		p.load(is);
+ 		is.close();
+ 
+         
+ 		Properties[] c = new Properties[50];
+ 		for (int i = 0; i < 50; i++) {
+ 			c[i] = new Properties();
+ 		}
+         
+         Properties clientProps = new Properties();
+ 
+         String clientPropsFileName = "clientmessages" + locale + ".properties";
+ 
+ 		for (Enumeration e = p.keys(); e.hasMoreElements(); ) {
+ 			String key = (String) e.nextElement();
+ 
+ 			c[MessageService.hashString50(key)].put(key, p.getProperty(key));
+             
+             // If we have a match, add it to the list of client messages
+             if ( isClientMessage(key) )
+             {
+                 clientProps.put(key, p.getProperty(key));
+             }
+ 		}
+ 
+ 		for (int i = 0; i < 50; i++) {
+ 			if (c[i].size() == 0)
+ 				continue;
+ 			OutputStream fos = new BufferedOutputStream(
+ 				new FileOutputStream(new File(dir, "m"+i+locale+".properties")), 16 * 1024);
+ 
+             
+ 			c[i].save(fos, (String) null);
+ 			fos.flush();
+ 			fos.close();
+             
+ 			if (addBase) {
+ 				// add duplicate english file as the base
+ 				fos = new BufferedOutputStream(
+ 					new FileOutputStream(new File(dir, "m"+i+".properties")), 16 * 1024);
+ 				c[i].save(fos, (String) null);
+ 				fos.flush();
+ 				fos.close();
+ 			}
+ 
+ 
+ 		}
+         
+ 		System.out.println("split messages" + locale);
+ 
+         // Save the client messages (the combination of what was already
+         // there and what we added from the engine properties file) into
+         // the Derby locales directory
+         OutputStream clientOutStream = new BufferedOutputStream(
+             new FileOutputStream(new File(dir, clientPropsFileName)), 
+             16 * 1024);
+ 
+         clientProps.save(clientOutStream, (String)null);
+         clientOutStream.flush();
+         clientOutStream.close();
+         
+         if ( addBase )
+         {
+             // Save the English messages as the base
+             clientOutStream = new BufferedOutputStream(
+                 new FileOutputStream(new File(dir, "clientmessages.properties")), 
+                 16 * 1024);
+ 
+             clientProps.save(clientOutStream, (String)null);
+             clientOutStream.flush();
+             clientOutStream.close();            
+         }
+         System.out.println("Copied client messages for " + locale);
+ 	}
+     
+     /**
+      * Determine if this is a message that the client is using
+      *
+      * We assume all message ids starting with "XJ" are client messages
+      * (even though many of them may not be, it saves the coder the effort
+      * of explicitly adding each XJ shared message, and covers 90% of the
+      * shared messages
+      *
+      * All other shared message ids should be added to the static array
+      * clientMessageIds, defined at the top of this class
+      */
+     static boolean isClientMessage(String messageId)
+     {
+         if ( messageId.startsWith("XJ") )
+         {
+             return true;
+         }
+         
+         if ( clientMessageIds.contains(messageId))
+         {
+             return true;
+         }
+         
+         return false;
+     }
+ }

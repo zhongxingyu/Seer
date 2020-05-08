@@ -1,0 +1,407 @@
+ /*
+  * To change this template, choose Tools | Templates
+  * and open the template in the editor.
+  */
+ package view;
+ 
+ import com.uoy.sb.Common;
+ import com.uoy.sb.Global;
+ import controller.StoryController;
+ import java.awt.Color;
+ import java.awt.FlowLayout;
+ import java.awt.Font;
+ import java.awt.Image;
+ import java.io.File;
+ import java.io.IOException;
+ import java.lang.reflect.Field;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import javax.imageio.ImageIO;
+ import javax.sound.sampled.AudioInputStream;
+ import javax.sound.sampled.AudioSystem;
+ import javax.sound.sampled.Clip;
+ import javax.sound.sampled.LineUnavailableException;
+ import javax.sound.sampled.UnsupportedAudioFileException;
+ import javax.swing.BorderFactory;
+ import javax.swing.ImageIcon;
+ import javax.swing.JButton;
+ import javax.swing.JLabel;
+ import javax.swing.JOptionPane;
+ import javax.swing.JPanel;
+ import model.Page;
+ import model.Story;
+ import model.UserGroup;
+ 
+ /**
+  *
+  * @author Radical
+  */
+ public class ReadStory extends javax.swing.JPanel {
+ 
+     private int _storyID;
+     private StoryController sc = null;
+     private int _pageIndex = 0;
+     private LinkedList<Page> storyPages = null;
+     private Story story;
+     private JLabel lblImage;
+     private Image image = null;
+     private boolean _finish = false;
+ 
+     /**
+      * @return the _storyID
+      */
+     public int getStoryID() {
+         return _storyID;
+     }
+ 
+     /**
+      * @param storyID the _storyID to set
+      */
+     private void setStoryID(int storyID) {
+         this._storyID = storyID;
+     }
+ 
+     /**
+      * Creates new form ReadStory1
+      */
+     public ReadStory(int storyID) {
+         initComponents();
+ 
+         this.setStoryID(storyID);
+         sc = new StoryController();
+ 
+         story = sc.getStory(getStoryID());
+ 
+         storyPages = story.getPages();
+ 
+         //set the story name
+         storyName.setText(story.getTitle());
+ 
+         Color color = null;
+         try {
+             Field field = Class.forName("java.awt.Color").getField(story.getBackgroundColor());
+             color = (Color) field.get(null);
+         } catch (Exception ex) {
+             Logger.getLogger(ReadStory.class.getName()).log(Level.SEVERE, null, ex);
+         }
+ 
+         //set textback ground color
+         pageText.setBackground(color);
+ 
+         //set story font size and font color
+         pageText.setFont(new Font(story.getFont(), Font.PLAIN, story.getFontSize()));
+ 
+         try {
+             Field field = Class.forName("java.awt.Color").getField(story.getTextColor());
+             color = (Color) field.get(null);
+         } catch (Exception ex) {
+             Logger.getLogger(ReadStory.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         //set text color
+         pageText.setForeground(color);
+ 
+         if (storyPages != null && storyPages.size() > 0) {
+             pageIndexChanged();
+         }
+     }
+ 
+     private void pageIndexChanged() {
+         if (storyPages != null) {
+ 
+             if (_pageIndex == storyPages.size() - 1) {
+                 if (!_finish) {
+                     btnNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/storybuilder/resources/ok3.png"))); // NOI18N
+                     btnNext.setText("Finish");
+                     _finish = true;
+                 }
+             }
+ 
+             Page p = storyPages.get(_pageIndex);
+             pageText.setText(p.getText());
+             lblPageCount.setText("Page " + (_pageIndex + 1) + "/" + storyPages.size());
+ 
+             List<String> images = p.getImages();
+             imagePanel.removeAll();
+ 
+             if (images != null && !images.isEmpty()) {
+                 imagePanel.setBorder(BorderFactory.createTitledBorder("Images"));
+ 
+                 for (int i = 0; i < images.size(); i++) {
+                     try {
+                         image = ImageIO.read(new File(images.get(i)));
+                     } catch (IOException ex) {
+                         JOptionPane.showMessageDialog(null, "Cannot read input image");
+                     }
+ 
+                     JLabel lblimage = new JLabel(new ImageIcon(image.getScaledInstance(200, -1, Image.SCALE_DEFAULT)));
+ 
+                     imagePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+                     imagePanel.add(lblimage);
+                 }
+             } else {
+ //                System.out.println("no images");
+                 imagePanel.setBorder(null);
+             }
+ 
+ //            this.revalidate();
+ //            this.repaint();
+ 
+ 
+         }
+     }
+ 
+     /**
+      * This method is called from within the constructor to initialize the form.
+      * WARNING: Do NOT modify this code. The content of this method is always
+      * regenerated by the Form Editor.
+      */
+     @SuppressWarnings("unchecked")
+     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+     private void initComponents() {
+ 
+         buttonPanel = new javax.swing.JPanel();
+         btnNext = new javax.swing.JButton();
+         btnHome = new javax.swing.JButton();
+         btnPrev = new javax.swing.JButton();
+         storyPanel = new javax.swing.JPanel();
+         storyName = new javax.swing.JLabel();
+         pageTextScroll = new javax.swing.JScrollPane();
+         pageText = new javax.swing.JTextArea();
+         btnReplay = new javax.swing.JButton();
+         btnPrint = new javax.swing.JButton();
+         imagePanel = new javax.swing.JPanel();
+         lblPageCount = new javax.swing.JLabel();
+ 
+         btnNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/storybuilder/resources/Next.png"))); // NOI18N
+         btnNext.setText("Next page");
+         btnNext.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 btnNextActionPerformed(evt);
+             }
+         });
+ 
+         btnHome.setIcon(new javax.swing.ImageIcon(getClass().getResource("/storybuilder/resources/home.png"))); // NOI18N
+         btnHome.setText("Home");
+         btnHome.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 btnHomeActionPerformed(evt);
+             }
+         });
+ 
+         btnPrev.setIcon(new javax.swing.ImageIcon(getClass().getResource("/storybuilder/resources/Back.png"))); // NOI18N
+         btnPrev.setText("Previous Page");
+         btnPrev.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 btnPrevActionPerformed(evt);
+             }
+         });
+ 
+         javax.swing.GroupLayout buttonPanelLayout = new javax.swing.GroupLayout(buttonPanel);
+         buttonPanel.setLayout(buttonPanelLayout);
+         buttonPanelLayout.setHorizontalGroup(
+             buttonPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(buttonPanelLayout.createSequentialGroup()
+                 .addContainerGap()
+                 .addComponent(btnHome)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 463, Short.MAX_VALUE)
+                 .addComponent(btnPrev)
+                 .addGap(18, 18, 18)
+                 .addComponent(btnNext)
+                 .addContainerGap())
+         );
+         buttonPanelLayout.setVerticalGroup(
+             buttonPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, buttonPanelLayout.createSequentialGroup()
+                 .addContainerGap()
+                 .addGroup(buttonPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(btnNext)
+                     .addComponent(btnPrev))
+                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, buttonPanelLayout.createSequentialGroup()
+                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                 .addComponent(btnHome)
+                 .addContainerGap())
+         );
+ 
+         buttonPanelLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btnHome, btnNext, btnPrev});
+ 
+         storyName.setFont(new java.awt.Font("Lucida Grande", 1, 18)); // NOI18N
+         storyName.setText("Story name:");
+ 
+         pageText.setColumns(20);
+         pageText.setRows(5);
+         pageTextScroll.setViewportView(pageText);
+ 
+         btnReplay.setIcon(new javax.swing.ImageIcon(getClass().getResource("/storybuilder/resources/play.png"))); // NOI18N
+         btnReplay.setText("Play Sound");
+         btnReplay.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 btnReplayActionPerformed(evt);
+             }
+         });
+ 
+         btnPrint.setText("Print");
+ 
+         imagePanel.setPreferredSize(new java.awt.Dimension(0, 0));
+ 
+         javax.swing.GroupLayout imagePanelLayout = new javax.swing.GroupLayout(imagePanel);
+         imagePanel.setLayout(imagePanelLayout);
+         imagePanelLayout.setHorizontalGroup(
+             imagePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGap(0, 599, Short.MAX_VALUE)
+         );
+         imagePanelLayout.setVerticalGroup(
+             imagePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGap(0, 154, Short.MAX_VALUE)
+         );
+ 
+         lblPageCount.setText("jLabel1");
+ 
+         javax.swing.GroupLayout storyPanelLayout = new javax.swing.GroupLayout(storyPanel);
+         storyPanel.setLayout(storyPanelLayout);
+         storyPanelLayout.setHorizontalGroup(
+             storyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(storyPanelLayout.createSequentialGroup()
+                 .addContainerGap()
+                 .addGroup(storyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(pageTextScroll, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 828, Short.MAX_VALUE)
+                     .addGroup(storyPanelLayout.createSequentialGroup()
+                         .addComponent(storyName)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                         .addComponent(btnPrint))
+                     .addGroup(storyPanelLayout.createSequentialGroup()
+                         .addGap(6, 6, 6)
+                         .addComponent(lblPageCount)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                         .addComponent(imagePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 599, javax.swing.GroupLayout.PREFERRED_SIZE)
+                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                         .addComponent(btnReplay)))
+                 .addContainerGap())
+         );
+         storyPanelLayout.setVerticalGroup(
+             storyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, storyPanelLayout.createSequentialGroup()
+                 .addContainerGap()
+                 .addGroup(storyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                     .addComponent(storyName)
+                     .addComponent(btnPrint))
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addGroup(storyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addGroup(storyPanelLayout.createSequentialGroup()
+                         .addGap(0, 110, Short.MAX_VALUE)
+                         .addComponent(btnReplay))
+                     .addComponent(imagePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 154, Short.MAX_VALUE)
+                     .addGroup(storyPanelLayout.createSequentialGroup()
+                         .addComponent(lblPageCount)
+                         .addGap(0, 0, Short.MAX_VALUE)))
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                 .addComponent(pageTextScroll, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 .addContainerGap())
+         );
+ 
+         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+         this.setLayout(layout);
+         layout.setHorizontalGroup(
+             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(layout.createSequentialGroup()
+                 .addContainerGap()
+                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                     .addComponent(buttonPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(storyPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+         );
+         layout.setVerticalGroup(
+             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+             .addGroup(layout.createSequentialGroup()
+                 .addContainerGap()
+                 .addComponent(storyPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 .addComponent(buttonPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 .addContainerGap())
+         );
+     }// </editor-fold>//GEN-END:initComponents
+ 
+     private void btnHomeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHomeActionPerformed
+ 
+         if (Global.group == UserGroup.Adult) {
+             Global.container.setDisplay(new AdultHome());
+         } else {
+             Global.container.setDisplay(new ChildHome());
+         }
+     }//GEN-LAST:event_btnHomeActionPerformed
+ 
+     private void btnNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNextActionPerformed
+ 
+        if (Global.group.equals(UserGroup.Adult)) {
+             if (JOptionPane.showConfirmDialog(null, "Do you want to finish?", "Finish?", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                 Global.container.setDisplay(new AdultHome());
+             }
+         } else {
+             if (_finish) {
+                 if (JOptionPane.showConfirmDialog(null, "Do you want to finish?", "Finish?", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                     if (story.isFeedbackRequired()) {
+                         GiveFeedback fb = new GiveFeedback();
+                         fb.setStoryID(this.getStoryID());
+ 
+                         Global.container.showModalDialog(fb, "Feedback");
+                     } else {
+                         Global.container.setDisplay(new ChildHome());
+                     }
+                 }
+             }
+         }
+ 
+         _pageIndex = (_pageIndex < storyPages.size() - 1) ? _pageIndex + 1 : storyPages.size() - 1;
+         pageIndexChanged();
+     }//GEN-LAST:event_btnNextActionPerformed
+ 
+     private void btnPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrevActionPerformed
+         if (_pageIndex == storyPages.size() - 1) {
+             btnNext.setIcon(new javax.swing.ImageIcon(getClass().getResource("/storybuilder/resources/Next.png"))); // NOI18N
+             btnNext.setText("Next page");
+             _finish = false;
+         }
+         _pageIndex = (_pageIndex == 0) ? 0 : _pageIndex - 1;
+         pageIndexChanged();
+     }//GEN-LAST:event_btnPrevActionPerformed
+ 
+     private void btnReplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReplayActionPerformed
+         if (storyPages != null) {
+             Page p = storyPages.get(_pageIndex);
+             if (p != null && !p.getSound().equals("")) {
+                 AudioInputStream audio;
+                 try {
+                     audio = AudioSystem.getAudioInputStream(new File(p.getSound()));
+ 
+                     Clip clip = AudioSystem.getClip();
+                     clip.open(audio);
+                     clip.start();
+                 } catch (IOException ex) {
+                     JOptionPane.showMessageDialog(null, "Sound couldn't be played.");
+                 } catch (LineUnavailableException ex) {
+                     JOptionPane.showMessageDialog(null, "Sound couldn't be played");
+                 } catch (UnsupportedAudioFileException ex) {
+                     JOptionPane.showMessageDialog(null, "Sound couldn't be played");
+                 }
+             } else {
+                 JOptionPane.showMessageDialog(null, "No sound on this page");
+             }
+         }
+     }//GEN-LAST:event_btnReplayActionPerformed
+     // Variables declaration - do not modify//GEN-BEGIN:variables
+     private javax.swing.JButton btnHome;
+     private javax.swing.JButton btnNext;
+     private javax.swing.JButton btnPrev;
+     private javax.swing.JButton btnPrint;
+     private javax.swing.JButton btnReplay;
+     private javax.swing.JPanel buttonPanel;
+     private javax.swing.JPanel imagePanel;
+     private javax.swing.JLabel lblPageCount;
+     private javax.swing.JTextArea pageText;
+     private javax.swing.JScrollPane pageTextScroll;
+     private javax.swing.JLabel storyName;
+     private javax.swing.JPanel storyPanel;
+     // End of variables declaration//GEN-END:variables
+ }

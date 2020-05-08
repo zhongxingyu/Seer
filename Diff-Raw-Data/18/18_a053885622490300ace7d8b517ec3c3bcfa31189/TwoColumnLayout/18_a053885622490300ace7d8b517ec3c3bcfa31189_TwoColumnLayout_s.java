@@ -1,0 +1,59 @@
+ package com.bloatit.web.pages.master.sidebar;
+ 
+ import com.bloatit.framework.webprocessor.components.HtmlDiv;
+ import com.bloatit.framework.webprocessor.components.advanced.HtmlClearer;
+ import com.bloatit.framework.webprocessor.components.meta.HtmlElement;
+ import com.bloatit.framework.webprocessor.url.Url;
+ 
+public class TwoColumnLayout extends HtmlDiv {
+ 
+     private final HtmlDiv leftColumn;
+     private final HtmlDiv rightColumn;
+     private final PluginBox plugins;
+ 
+     public TwoColumnLayout(final Url url) {
+         this(false, url);
+     }
+ 
+     /**
+      * Creates a two column layout with, or without a box around it
+      * 
+      * @param box <i>true</i> if a box should surround the whole layout,
+      *            <i>false</i> otherwise
+      */
+     public TwoColumnLayout(final boolean box, final Url url) {
+        super("two_column");
+         final HtmlDiv leftColumnBlock = new HtmlDiv((box ? "left_column_block" : "left_column_block_without_box"));
+         final HtmlDiv rightColumnBlock = new HtmlDiv("right_column_block");
+         leftColumn = new HtmlDiv((box ? "left_column" : "left_column_without_box"));
+         rightColumn = new HtmlDiv("right_column");
+ 
+         plugins = new PluginBox(url);
+         rightColumn.add(plugins);
+ 
+         leftColumnBlock.add(leftColumn);
+         rightColumnBlock.add(rightColumn);
+        add(leftColumnBlock);
+        add(rightColumnBlock);
+        add(new HtmlClearer());
+     }
+ 
+     /**
+      * Adds an element to the core of the page
+      * 
+      * @param element the element to add
+      */
+     public void addLeft(final HtmlElement element) {
+         leftColumn.add(element);
+     }
+ 
+     /**
+      * Adds an element to the right bar of the page
+      * 
+      * @param element
+      */
+     public void addRight(final SideBarElementLayout element) {
+         // rightColumn.add(element);
+         plugins.addPageContent(element);
+     }
+ }

@@ -1,0 +1,243 @@
+ /*******************************************************************************
+  * This files was developed for CS4233: Object-Oriented Analysis & Design.
+  * The course was taken at Worcester Polytechnic Institute.
+  *
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *******************************************************************************/
+ package strategy.game.version.delta.move;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import strategy.common.PlayerColor;
+ import strategy.common.StrategyException;
+ import strategy.game.common.Coordinate;
+ import strategy.game.common.Location;
+ import strategy.game.common.Location2D;
+ import strategy.game.common.MoveResult;
+ import strategy.game.common.MoveResultStatus;
+ import strategy.game.common.Piece;
+ import strategy.game.common.PieceLocationDescriptor;
+ import strategy.game.common.PieceType;
+ import strategy.game.version.board.BoardRuleSet;
+ import strategy.game.version.combat.CombatResult;
+ import strategy.game.version.combat.CombatRuleSet;
+ import strategy.game.version.move.FinishedMove;
+ import strategy.game.version.move.Move;
+ import strategy.game.version.move.MoveHistory;
+ import strategy.game.version.move.MoveRuleSet;
+ 
+ /**
+  * Constructor for DeltaMoveRuleSet
+  * @author rjsmieja, jrspicola
+  * @version Sept 21, 2013
+  */
+ public class DeltaMoveRuleSet implements MoveRuleSet {
+ 
+ 	private static final int MAX_MOVE_DISTANCE = 1;
+ 
+ 	final private Collection<PieceType> unmovablePieces;
+ 	final private Collection<PieceType> validPieceTypes;
+ 
+ 	final private CombatRuleSet combatRules;
+ 	final private BoardRuleSet boardRules;
+ 	
+ 	final private MoveHistory history;
+ 
+ 	private PlayerColor turnPlayer;
+ 
+ 	/**
+ 	 * Constructor for DeltaMoveRuleSet
+ 	 * @param combatRules ComatRuleSet to follow
+ 	 * @param boardRules BoardRuleSet to follow
+ 	 */
+ 	public DeltaMoveRuleSet(CombatRuleSet combatRules, BoardRuleSet boardRules){
+ 		unmovablePieces = new ArrayList<PieceType>();
+ 		unmovablePieces.add(PieceType.FLAG);
+ 
+ 		validPieceTypes = new ArrayList<PieceType>();
+ 		validPieceTypes.add(PieceType.MARSHAL);
+ 		validPieceTypes.add(PieceType.COLONEL);
+ 		validPieceTypes.add(PieceType.CAPTAIN);
+ 		validPieceTypes.add(PieceType.LIEUTENANT);
+ 		validPieceTypes.add(PieceType.SERGEANT);
+ 		validPieceTypes.add(PieceType.FLAG);
+ 
+ 		this.combatRules = combatRules;
+ 		this.boardRules = boardRules;
+ 
+ 		history = new MoveHistory();
+ 		
+ 		turnPlayer = PlayerColor.RED;
+ 	}
+ 
+ 	@Override
+ 	public void reset(){
+ 		turnPlayer = PlayerColor.RED;
+ 	}
+ 
+ 	@Override
+ 	public FinishedMove doMove(PieceType movingType, PieceLocationDescriptor movingPiece, PieceLocationDescriptor targetPiece, Map<Location, Piece> board) throws StrategyException
+ 	{
+ 		MoveResult moveResult = null;
+ 
+ 		//Checks
+ 		if (!boardRules.validateLocation(movingPiece)){
+ 			throw new StrategyException("Error validating the location the piece is moving from");
+ 		}
+ 		if (!boardRules.validateLocation(targetPiece)){
+ 			throw new StrategyException("Error validating the location the piece is moving to");
+ 		}
+ 
+ 		if(movingPiece.getPiece() == null){
+ 			throw new StrategyException("No piece at location");
+ 		} 
+ 
+ 		if(unmovablePieces.contains(movingPiece.getPiece().getType())){
+ 			throw new StrategyException("Specified piece type of <" + movingPiece.getPiece().getType() + "> is not allowed to move");
+ 		}
+ 
+ 		if (movingPiece.getPiece().getType() != movingType){
+ 			throw new StrategyException("Piece type does not match!");
+ 		}
+ 
+ 		//Check Repetition
+ 		if (!history.checkAndLogMove(turnPlayer, new Move(movingType, movingPiece.getLocation(), targetPiece.getLocation()))){
+ 			throw new StrategyException("Move repetition rule violated!");
+ 		}
+ 
+ 		final Location from = movingPiece.getLocation();
+ 		final Location to = targetPiece.getLocation();
+ 		final int distanceToMove = to.distanceTo(from);
+ 		final PlayerColor pieceOwner = movingPiece.getPiece().getOwner();
+ 
+ 		if (pieceOwner != turnPlayer){
+ 			throw new StrategyException("Piece does not belong to the current player's turn!");
+ 		}
+ 
+ 		if (distanceToMove > MAX_MOVE_DISTANCE){
+ 			throw new StrategyException("Moving too many spaces");
+ 		}
+ 
+ 		if (distanceToMove == 0){
+ 			throw new StrategyException("Not moving");
+ 		}
+ 
+ 		//check 'to' spot. if no piece there, make move. else, check piece color.
+ 		if (targetPiece.getPiece() != null){
+ 			if (movingPiece.getPiece().getOwner() == targetPiece.getPiece().getOwner()){
+ 				throw new StrategyException("Attempting to do combat on friendly piece!");
+ 			}
+ 			//if color is friend, throw exception. if color is enemy, battle
+ 			if(movingPiece.getPiece().getType().equals(targetPiece.getPiece().getType())) {
+ 				//remove both pieces
+ 				board.remove(movingPiece.getLocation());
+ 				board.remove(targetPiece.getLocation());
+ 			} else {
+ 				final PieceLocationDescriptor movedPiece = new PieceLocationDescriptor(movingPiece.getPiece(), targetPiece.getLocation());
+ 				final PieceLocationDescriptor movedTargetPiece = new PieceLocationDescriptor(targetPiece.getPiece(), movingPiece.getLocation());
+ 				final CombatResult combatResult;
+ 
+ 				if (unmovablePieces.contains(targetPiece.getPiece().getType())){
+ 					combatResult = combatRules.doCombat(movedPiece, targetPiece);
+ 				} else {
+ 					combatResult = combatRules.doCombat(movedPiece, movedTargetPiece);
+ 				}
+ 
+ 				//remove both pieces
+ 				board.remove(movingPiece.getLocation());
+ 				board.remove(targetPiece.getLocation());
+ 
+ 				//Add the winner
+ 				board.put(combatResult.getWinningPiece().getLocation(), combatResult.getWinningPiece().getPiece());
+ 
+ 				//If we defeated a flag, we win the game
+ 				if (combatResult.getLosingPiece().getPiece().getType() == PieceType.FLAG){
+ 					moveResult = new MoveResult(MoveResultStatus.valueOf(combatResult.getWinningPiece().getPiece().getOwner() + "_WINS"), combatResult.getWinningPiece());
+ 					//If we didn't defeat a flag and we didn't go over the move limit a normal victory
+ 				} else {
+ 					moveResult = new MoveResult(MoveResultStatus.OK, combatResult.getWinningPiece());
+ 				}
+ 			}
+ 		} else {
+ 			board.remove(movingPiece.getLocation());
+			board.remove(targetPiece.getLocation());
+ 		}
+ 
+ 		if (moveResult == null){
+ 			moveResult = new MoveResult(MoveResultStatus.OK, null);
+ 		}
+ 
+ 		//if the next player can't make a move
+ 		//check if other can't make a move.
+ 		//if so, draw. otherwise, next player loses
+ 
+ 		//Next player's turn
+ 		if (turnPlayer == PlayerColor.RED){
+ 			turnPlayer = PlayerColor.BLUE;
+ 			if(!canMove(board, PlayerColor.BLUE)){
+ 				if(!canMove(board, PlayerColor.RED)){
+ 					moveResult = new MoveResult(MoveResultStatus.DRAW, moveResult.getBattleWinner());
+ 				}
+ 				else {
+ 					moveResult = new MoveResult(MoveResultStatus.RED_WINS, moveResult.getBattleWinner());
+ 				}
+ 			}
+ 
+ 		} else {
+ 			turnPlayer = PlayerColor.RED;
+ 			if(!canMove(board, PlayerColor.RED)){
+ 				if(!canMove(board, PlayerColor.BLUE)){
+ 					moveResult = new MoveResult(MoveResultStatus.DRAW, moveResult.getBattleWinner());
+ 				}
+ 				else {
+ 					moveResult = new MoveResult(MoveResultStatus.BLUE_WINS, moveResult.getBattleWinner());
+ 				}
+ 			}
+ 		}
+ 
+ 		return new FinishedMove(board, moveResult);
+ 	}
+ 
+ 	@Override
+ 	public boolean canMove(Map<Location, Piece> board, PlayerColor player){
+ 		final Map<Location, Piece> moveablePieces = new HashMap<Location, Piece>();
+ 
+ 		//Get all moveable edge Pieces, aka those that have a space next to them, and that belong to the current turn player
+ 		for (Location location : board.keySet()){
+ 			Piece piece = board.get(location);
+ 			
+ 			if ((hasAdjacentEmptySpace(board, location)) && (!unmovablePieces.contains(piece.getType())) && (piece.getOwner() == player)){
+ 				moveablePieces.put(location, piece);
+ 			}
+ 		}
+ 
+ 		//Empty means no pieces can move
+ 		return !moveablePieces.isEmpty();
+ 	}
+ 
+ 	/**
+ 	 * Helper to determine if a piece has an empty space next to it in +/- 1 in the X and Y directions
+ 	 * @param pieces HashMap of Location and Pieces to check
+ 	 * @param location Location to determine edge pieces for
+ 	 * @return true if an edge piece, false otherwise
+ 	 */
+ 	private boolean hasAdjacentEmptySpace(Map<Location, Piece> pieces, Location location){
+ 
+ 		final Location xUp = new Location2D(location.getCoordinate(Coordinate.X_COORDINATE) + 1, location.getCoordinate(Coordinate.Y_COORDINATE));
+ 		final Location xDown = new Location2D(location.getCoordinate(Coordinate.X_COORDINATE) - 1, location.getCoordinate(Coordinate.Y_COORDINATE));
+ 		final Location yUp = new Location2D(location.getCoordinate(Coordinate.X_COORDINATE), location.getCoordinate(Coordinate.Y_COORDINATE) + 1);
+ 		final Location yDown= new Location2D(location.getCoordinate(Coordinate.X_COORDINATE), location.getCoordinate(Coordinate.Y_COORDINATE) - 1);
+ 
+ 		if (pieces.containsKey(xUp) && pieces.containsKey(xDown) && pieces.containsKey(yUp) && pieces.containsKey(yDown)){
+ 			return false;
+ 		}
+ 
+ 		return true;
+ 	}
+ }

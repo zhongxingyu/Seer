@@ -1,0 +1,273 @@
+ /*
+  * Copyright 2013 gitblit.com.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ package com.gitblit.wicket.pages;
+ 
+ import java.io.Serializable;
+ import java.text.DateFormat;
+ import java.text.MessageFormat;
+ import java.text.SimpleDateFormat;
+ import java.util.ArrayList;
+ import java.util.Calendar;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.Date;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.TimeZone;
+ import java.util.TreeSet;
+ 
+ import org.apache.wicket.PageParameters;
+ import org.apache.wicket.behavior.HeaderContributor;
+ import org.apache.wicket.markup.html.basic.Label;
+ import org.apache.wicket.markup.html.panel.Fragment;
+ import org.eclipse.jgit.lib.Repository;
+ 
+ import com.gitblit.GitBlit;
+ import com.gitblit.Keys;
+ import com.gitblit.models.DailyLogEntry;
+ import com.gitblit.models.Metric;
+ import com.gitblit.models.RefLogEntry;
+ import com.gitblit.models.RepositoryCommit;
+ import com.gitblit.models.RepositoryModel;
+ import com.gitblit.models.UserModel;
+ import com.gitblit.utils.ArrayUtils;
+ import com.gitblit.utils.RefLogUtils;
+ import com.gitblit.utils.StringUtils;
+ import com.gitblit.wicket.GitBlitWebApp;
+ import com.gitblit.wicket.PageRegistration;
+ import com.gitblit.wicket.PageRegistration.DropDownMenuItem;
+ import com.gitblit.wicket.PageRegistration.DropDownMenuRegistration;
+ import com.gitblit.wicket.charting.GoogleChart;
+ import com.gitblit.wicket.charting.GoogleCharts;
+ import com.gitblit.wicket.charting.GooglePieChart;
+ import com.gitblit.wicket.ng.NgController;
+ import com.gitblit.wicket.panels.DigestsPanel;
+ import com.gitblit.wicket.panels.LinkPanel;
+ 
+ public abstract class DashboardPage extends RootPage {
+ 
+ 	public DashboardPage() {
+ 		super();
+ 	}
+ 
+ 	public DashboardPage(PageParameters params) {
+ 		super(params);
+ 	}
+ 
+ 	@Override
+ 	protected boolean reusePageParameters() {
+ 		return true;
+ 	}
+ 
+	protected void addActivity(UserModel user, Collection<RepositoryModel> repositories, boolean isStarred, int daysBack) {
+ 		Calendar c = Calendar.getInstance();
+ 		c.add(Calendar.DATE, -1*daysBack);
+ 		Date minimumDate = c.getTime();
+ 		TimeZone timezone = getTimeZone();
+ 		
+ 		// create daily commit digest feed
+ 		List<DailyLogEntry> digests = new ArrayList<DailyLogEntry>();
+ 		for (RepositoryModel model : repositories) {
+ 			Repository repository = GitBlit.self().getRepository(model.name);
+ 			List<DailyLogEntry> entries = RefLogUtils.getDailyLogByRef(model.name, repository, minimumDate, timezone);
+ 			digests.addAll(entries);
+ 			repository.close();
+ 		}
+ 		
+ 		Fragment activityFragment = new Fragment("activity", "activityFragment", this);
+ 		add(activityFragment);
+		activityFragment.add(new Label("feedTitle", getString( isStarred ?  "gb.starredAndOwned" : "gb.recentActivity")));
+ 		if (digests.size() == 0) {
+ 			// quiet or no starred repositories
+ 			if (repositories.size() == 0) {
+ 				if (UserModel.ANONYMOUS.equals(user)) {
+ 					activityFragment.add(new Label("digests", MessageFormat.format(getString("gb.noActivity"), daysBack)));	
+ 				} else {
+ 					activityFragment.add(new LinkPanel("digests", null, getString("gb.findSomeRepositories"), RepositoriesPage.class));
+ 				}
+ 			} else {
+ 				activityFragment.add(new Label("digests", MessageFormat.format(getString("gb.noActivity"), daysBack)));
+ 			}
+ 		} else {
+ 			// show daily commit digest feed
+ 			Collections.sort(digests);
+ 			DigestsPanel digestsPanel = new DigestsPanel("digests", digests);
+ 			activityFragment.add(digestsPanel);
+ 		}
+ 		
+ 		// add the nifty charts
+ 		if (!ArrayUtils.isEmpty(digests)) {
+ 			// aggregate author exclusions
+ 			Set<String> authorExclusions = new TreeSet<String>();
+ 			for (String author : GitBlit.getStrings(Keys.web.metricAuthorExclusions)) {
+ 				authorExclusions.add(author.toLowerCase());
+ 			}
+ 			for (RepositoryModel model : repositories) {
+ 				if (!ArrayUtils.isEmpty(model.metricAuthorExclusions)) {
+ 					for (String author : model.metricAuthorExclusions) {
+ 						authorExclusions.add(author.toLowerCase());
+ 					}
+ 				}
+ 			}
+ 
+ 			addCharts(activityFragment, digests, authorExclusions, daysBack);
+ 		} else {
+ 			activityFragment.add(new Label("charts").setVisible(false));
+ 			activityFragment.add(new Label("feedheader").setVisible(false));
+ 		}
+ 	}
+ 	
+ 	protected Fragment createNgList(String wicketId, String fragmentId, String ngController, List<RepositoryModel> repositories) {
+ 		String format = GitBlit.getString(Keys.web.datestampShortFormat, "MM/dd/yy");
+ 		final DateFormat df = new SimpleDateFormat(format);
+ 		df.setTimeZone(getTimeZone());
+ 
+ 		Fragment fragment = new Fragment(wicketId, fragmentId, this);
+ 		
+ 		List<RepoListItem> list = new ArrayList<RepoListItem>();
+ 		for (RepositoryModel repo : repositories) {
+ 			String name = StringUtils.stripDotGit(repo.name); 
+ 			String path = "";
+ 			if (name.indexOf('/') > -1) {
+ 				path = name.substring(0, name.lastIndexOf('/') + 1);
+ 				name = name.substring(name.lastIndexOf('/') + 1);
+ 			}
+ 			
+ 			RepoListItem item = new RepoListItem();
+ 			item.n = name;
+ 			item.p = path;
+ 			item.r = repo.name;
+ 			item.i = repo.description;
+ 			item.s = GitBlit.self().getStarCount(repo);
+ 			item.t = getTimeUtils().timeAgo(repo.lastChange);
+ 			item.d = df.format(repo.lastChange);
+ 			item.c = StringUtils.getColor(StringUtils.stripDotGit(repo.name));
+ 			item.wc = repo.isBare ? 0 : 1;
+ 			list.add(item);
+ 		}
+ 		
+ 		// inject an AngularJS controller with static data
+ 		NgController ctrl = new NgController(ngController);
+ 		ctrl.addVariable(wicketId, list);
+ 		add(new HeaderContributor(ctrl));
+ 		
+ 		return fragment;
+ 	}
+ 
+ 	@Override
+ 	protected void addDropDownMenus(List<PageRegistration> pages) {
+ 		PageParameters params = getPageParameters();
+ 
+ 		DropDownMenuRegistration menu = new DropDownMenuRegistration("gb.filters",
+ 				GitBlitWebApp.HOME_PAGE_CLASS);
+ 		// preserve time filter option on repository choices
+ 		menu.menuItems.addAll(getRepositoryFilterItems(params));
+ 
+ 		// preserve repository filter option on time choices
+ 		menu.menuItems.addAll(getTimeFilterItems(params));
+ 
+ 		if (menu.menuItems.size() > 0) {
+ 			// Reset Filter
+ 			menu.menuItems.add(new DropDownMenuItem(getString("gb.reset"), null, null));
+ 		}
+ 
+ 		pages.add(menu);
+ 	}
+ 
+ 
+ 	/**
+ 	 * Creates the daily activity line chart, the active repositories pie chart,
+ 	 * and the active authors pie chart
+ 	 * 
+ 	 * @param recentChanges
+ 	 * @param authorExclusions
+ 	 * @param daysBack
+ 	 */
+ 	protected void addCharts(Fragment frag, List<DailyLogEntry> recentChanges, Set<String> authorExclusions, int daysBack) {
+ 		// activity metrics
+ 		Map<String, Metric> repositoryMetrics = new HashMap<String, Metric>();
+ 		Map<String, Metric> authorMetrics = new HashMap<String, Metric>();
+ 
+ 		// aggregate repository and author metrics
+ 		int totalCommits = 0;
+ 		for (RefLogEntry change : recentChanges) {
+ 
+ 			// aggregate repository metrics
+ 			String repository = StringUtils.stripDotGit(change.repository);
+ 			if (!repositoryMetrics.containsKey(repository)) {
+ 				repositoryMetrics.put(repository, new Metric(repository));
+ 			}
+ 			repositoryMetrics.get(repository).count += 1;
+ 			
+ 			for (RepositoryCommit commit : change.getCommits()) {
+ 				totalCommits++;
+ 				String author = StringUtils.removeNewlines(commit.getAuthorIdent().getName());
+ 				String authorName = author.toLowerCase();
+ 				String authorEmail = StringUtils.removeNewlines(commit.getAuthorIdent().getEmailAddress()).toLowerCase();
+ 				if (!authorExclusions.contains(authorName) && !authorExclusions.contains(authorEmail)) {
+ 					if (!authorMetrics.containsKey(author)) {
+ 						authorMetrics.put(author, new Metric(author));
+ 					}
+ 					authorMetrics.get(author).count += 1;
+ 				}
+ 			}
+ 		}
+ 		
+ 		frag.add(new Label("feedheader", MessageFormat.format(getString("gb.recentActivityStats"),
+ 				daysBack, totalCommits, authorMetrics.size())));
+ 
+ 		// build google charts
+ 		GoogleCharts charts = new GoogleCharts();
+ 
+ 		// active repositories pie chart
+ 		GoogleChart chart = new GooglePieChart("chartRepositories", getString("gb.activeRepositories"),
+ 				getString("gb.repository"), getString("gb.commits"));
+ 		for (Metric metric : repositoryMetrics.values()) {
+ 			chart.addValue(metric.name, metric.count);
+ 		}
+ 		chart.setShowLegend(false);
+ 		charts.addChart(chart);
+ 
+ 		// active authors pie chart
+ 		chart = new GooglePieChart("chartAuthors", getString("gb.activeAuthors"),
+ 				getString("gb.author"), getString("gb.commits"));
+ 		for (Metric metric : authorMetrics.values()) {
+ 			chart.addValue(metric.name, metric.count);
+ 		}
+ 		chart.setShowLegend(false);
+ 		charts.addChart(chart);
+ 
+ 		add(new HeaderContributor(charts));		
+ 		frag.add(new Fragment("charts", "chartsFragment", this));
+ 	}
+ 	
+ 	protected class RepoListItem implements Serializable {
+ 
+ 		private static final long serialVersionUID = 1L;
+ 		
+ 		String r; // repository
+ 		String n; // name
+ 		String p; // project/path
+ 		String t; // time ago
+ 		String d; // last updated
+ 		String i; // information/description
+ 		long s; // stars
+ 		String c; // html color
+ 		int wc; // working copy, 1 = true
+ 	}
+ }

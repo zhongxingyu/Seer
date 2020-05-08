@@ -1,0 +1,194 @@
+ /*******************************************************************************
+  * Copyright (c) 2011 IBM Corporation and others.
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  * 
+  * Contributors:
+  *     IBM Corporation - initial API and implementation
+  *******************************************************************************/
+ package org.eclipse.orion.server.git.servlets;
+ 
+ import java.io.File;
+ import java.io.IOException;
+ import java.net.URI;
+ import java.net.URISyntaxException;
+ import javax.servlet.ServletException;
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ import org.eclipse.core.runtime.*;
+ import org.eclipse.jgit.errors.ConfigInvalidException;
+ import org.eclipse.jgit.lib.Repository;
+ import org.eclipse.jgit.storage.file.FileRepository;
+ import org.eclipse.orion.internal.server.servlets.ProtocolConstants;
+ import org.eclipse.orion.internal.server.servlets.ServletResourceHandler;
+ import org.eclipse.orion.server.core.ServerStatus;
+ import org.eclipse.orion.server.git.BaseToCloneConverter;
+ import org.eclipse.orion.server.git.GitConstants;
+ import org.eclipse.orion.server.git.objects.Clone;
+ import org.eclipse.orion.server.git.objects.ConfigOption;
+ import org.eclipse.orion.server.servlets.OrionServlet;
+ import org.eclipse.osgi.util.NLS;
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ 
+ /**
+  * A handler for Git Clone operation.
+  */
+ public class GitConfigHandlerV1 extends ServletResourceHandler<String> {
+ 
+ 	private ServletResourceHandler<IStatus> statusHandler;
+ 
+ 	GitConfigHandlerV1(ServletResourceHandler<IStatus> statusHandler) {
+ 		this.statusHandler = statusHandler;
+ 	}
+ 
+ 	@Override
+ 	public boolean handleRequest(HttpServletRequest request, HttpServletResponse response, String path) throws ServletException {
+ 		try {
+ 			switch (getMethod(request)) {
+ 				case GET :
+ 					return handleGet(request, response, path);
+ 				case POST :
+ 					return handlePost(request, response, path);
+ 				case PUT :
+ 					return handlePut(request, response, path);
+ 				case DELETE :
+ 					return handleDelete(request, response, path);
+ 			}
+ 		} catch (Exception e) {
+ 			String msg = NLS.bind("Failed to process an operation on commits for {0}", path); //$NON-NLS-1$
+ 			return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, msg, e));
+ 		}
+ 		return false;
+ 	}
+ 
+ 	private boolean handleGet(HttpServletRequest request, HttpServletResponse response, String path) throws IOException, JSONException, ServletException, URISyntaxException, CoreException, ConfigInvalidException {
+ 		Path p = new Path(path);
+ 		URI baseLocation = getURI(request);
+ 		if (p.segment(0).equals(Clone.RESOURCE) && p.segment(1).equals("file")) { //$NON-NLS-1$
+ 			// expected path /gitapi/config/clone/file/{path}
+ 			File gitDir = GitUtils.getGitDir(p.removeFirstSegments(1));
+ 			Repository db = new FileRepository(gitDir);
+ 			URI cloneLocation = BaseToCloneConverter.getCloneLocation(baseLocation, BaseToCloneConverter.CONFIG);
+ 			ConfigOption configOption = new ConfigOption(cloneLocation, db);
+ 			OrionServlet.writeJSONResponse(request, response, configOption.toJSON(/* all */));
+ 			return true;
+ 		} else if (p.segment(1).equals(Clone.RESOURCE) && p.segment(2).equals("file")) { //$NON-NLS-1$
+ 			// expected path /gitapi/config/{key}/clone/file/{path}
+ 			File gitDir = GitUtils.getGitDir(p.removeFirstSegments(2));
+ 			Repository db = new FileRepository(gitDir);
+ 			URI cloneLocation = BaseToCloneConverter.getCloneLocation(baseLocation, BaseToCloneConverter.CONFIG_OPTION);
+ 			try {
+ 				ConfigOption configOption = new ConfigOption(cloneLocation, db, p.segment(0));
+ 				if (!configOption.exists())
+ 					return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_NOT_FOUND, "There is no config entry with key provided", null));
+ 				OrionServlet.writeJSONResponse(request, response, configOption.toJSON());
+ 				return true;
+ 			} catch (IllegalArgumentException e) {
+ 				return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, e.getMessage(), e));
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	private boolean handlePost(HttpServletRequest request, HttpServletResponse response, String path) throws CoreException, IOException, JSONException, ServletException, URISyntaxException, ConfigInvalidException {
+ 		Path p = new Path(path);
+ 		if (p.segment(0).equals(Clone.RESOURCE) && p.segment(1).equals("file")) { //$NON-NLS-1$
+ 			// expected path /gitapi/config/clone/file/{path}
+ 			File gitDir = GitUtils.getGitDir(p.removeFirstSegments(1));
+ 			Repository db = new FileRepository(gitDir);
+ 			URI cloneLocation = BaseToCloneConverter.getCloneLocation(getURI(request), BaseToCloneConverter.CONFIG);
+ 			JSONObject toPost = OrionServlet.readJSONRequest(request);
+ 			String key = toPost.optString(GitConstants.KEY_CONFIG_ENTRY_KEY, null);
+ 			if (key == null || key.isEmpty())
+				return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, "Confign entry key must be provided", null));
+ 			String value = toPost.optString(GitConstants.KEY_CONFIG_ENTRY_VALUE, null);
+ 			if (value == null || value.isEmpty())
+				return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, "Confign entry value must be provided", null));
+ 			try {
+ 				ConfigOption configOption = new ConfigOption(cloneLocation, db, key);
+ 				boolean present = configOption.exists();
+				if (!present)
+					save(configOption, value);
+ 
+ 				JSONObject result = configOption.toJSON();
+ 				OrionServlet.writeJSONResponse(request, response, result);
+ 				response.setHeader(ProtocolConstants.HEADER_LOCATION, result.getString(ProtocolConstants.KEY_LOCATION));
+				response.setStatus(present ? HttpServletResponse.SC_CONFLICT : HttpServletResponse.SC_CREATED);
+ 				return true;
+ 			} catch (IllegalArgumentException e) {
+ 				return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, e.getMessage(), e));
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	private boolean handlePut(HttpServletRequest request, HttpServletResponse response, String path) throws CoreException, IOException, JSONException, ServletException, URISyntaxException, ConfigInvalidException {
+ 		Path p = new Path(path);
+ 		if (p.segment(1).equals(Clone.RESOURCE) && p.segment(2).equals("file")) { //$NON-NLS-1$
+ 			// expected path /gitapi/config/{key}/clone/file/{path}
+ 			File gitDir = GitUtils.getGitDir(p.removeFirstSegments(2));
+ 			Repository db = new FileRepository(gitDir);
+ 			URI cloneLocation = BaseToCloneConverter.getCloneLocation(getURI(request), BaseToCloneConverter.CONFIG_OPTION);
+ 			try {
+ 				ConfigOption configOption = new ConfigOption(cloneLocation, db, p.segment(0));
+ 
+ 				JSONObject toPut = OrionServlet.readJSONRequest(request);
+ 				String value = toPut.optString(GitConstants.KEY_CONFIG_ENTRY_VALUE, null);
+ 				if (value == null || value.isEmpty())
+					return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, "Confign entry value must be provided", null));
+ 
+ 				// PUT allows only to modify existing config entries
+ 				if (!configOption.exists()) {
+ 					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+ 					return true;
+ 				}
+ 
+ 				save(configOption, value);
+ 
+ 				JSONObject result = configOption.toJSON();
+ 				OrionServlet.writeJSONResponse(request, response, result);
+ 				response.setHeader(ProtocolConstants.HEADER_LOCATION, result.getString(ProtocolConstants.KEY_LOCATION));
+ 				return true;
+ 			} catch (IllegalArgumentException e) {
+ 				return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, e.getMessage(), e));
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	private boolean handleDelete(HttpServletRequest request, HttpServletResponse response, String path) throws CoreException, IOException, ServletException, ConfigInvalidException, URISyntaxException {
+ 		Path p = new Path(path);
+ 		if (p.segment(1).equals(Clone.RESOURCE) && p.segment(2).equals("file")) { //$NON-NLS-1$
+ 			// expected path /gitapi/config/{key}/clone/file/{path}
+ 			File gitDir = GitUtils.getGitDir(p.removeFirstSegments(2));
+ 			Repository db = new FileRepository(gitDir);
+ 			URI cloneLocation = BaseToCloneConverter.getCloneLocation(getURI(request), BaseToCloneConverter.CONFIG_OPTION);
+ 			try {
+ 				ConfigOption configOption = new ConfigOption(cloneLocation, db, p.segment(0));
+ 				if (configOption.exists()) {
+ 					delete(configOption);
+ 					response.setStatus(HttpServletResponse.SC_OK);
+ 				} else {
+ 					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+ 				}
+ 				return true;
+ 			} catch (IllegalArgumentException e) {
+ 				return statusHandler.handleRequest(request, response, new ServerStatus(IStatus.ERROR, HttpServletResponse.SC_BAD_REQUEST, e.getMessage(), e));
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 
+ 	private static void save(ConfigOption co, String value) throws IOException {
+ 		co.getConfig().setString(co.getSection(), co.getSubsection(), co.getName(), value);
+ 		co.getConfig().save();
+ 	}
+ 
+ 	private static void delete(ConfigOption co) throws IOException {
+ 		co.getConfig().unset(co.getSection(), co.getSubsection(), co.getName());
+ 		co.getConfig().save();
+ 	}
+ }

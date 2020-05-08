@@ -1,0 +1,532 @@
+ /*
+  * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the
+  * NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF
+  * licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file
+  * except in compliance with the License. You may obtain a copy of the License at
+  * 
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License is
+  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and limitations under the License.
+  */
+ package edu.umn.cs.spatialHadoop.operations;
+ 
+ import java.awt.Color;
+ import java.awt.Graphics;
+ import java.awt.Graphics2D;
+ import java.awt.image.BufferedImage;
+ import java.io.IOException;
+ import java.io.OutputStream;
+ import java.util.Iterator;
+ 
+ import javax.imageio.ImageIO;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.apache.hadoop.conf.Configuration;
+ import org.apache.hadoop.fs.FSDataInputStream;
+ import org.apache.hadoop.fs.FileStatus;
+ import org.apache.hadoop.fs.FileSystem;
+ import org.apache.hadoop.fs.Path;
+ import org.apache.hadoop.fs.PathFilter;
+ import org.apache.hadoop.mapred.ClusterStatus;
+ import org.apache.hadoop.mapred.FileOutputCommitter;
+ import org.apache.hadoop.mapred.FileSplit;
+ import org.apache.hadoop.mapred.JobClient;
+ import org.apache.hadoop.mapred.JobConf;
+ import org.apache.hadoop.mapred.JobContext;
+ import org.apache.hadoop.mapred.MapReduceBase;
+ import org.apache.hadoop.mapred.Mapper;
+ import org.apache.hadoop.mapred.OutputCollector;
+ import org.apache.hadoop.mapred.Reducer;
+ import org.apache.hadoop.mapred.Reporter;
+ import org.apache.hadoop.mapred.RunningJob;
+ 
+ import edu.umn.cs.spatialHadoop.CommandLineArguments;
+ import edu.umn.cs.spatialHadoop.ImageOutputFormat;
+ import edu.umn.cs.spatialHadoop.ImageWritable;
+ import edu.umn.cs.spatialHadoop.SimpleGraphics;
+ import edu.umn.cs.spatialHadoop.core.CellInfo;
+ import edu.umn.cs.spatialHadoop.core.GlobalIndex;
+ import edu.umn.cs.spatialHadoop.core.GridInfo;
+ import edu.umn.cs.spatialHadoop.core.Partition;
+ import edu.umn.cs.spatialHadoop.core.Rectangle;
+ import edu.umn.cs.spatialHadoop.core.Shape;
+ import edu.umn.cs.spatialHadoop.core.SpatialSite;
+ import edu.umn.cs.spatialHadoop.mapred.ShapeInputFormat;
+ import edu.umn.cs.spatialHadoop.mapred.ShapeRecordReader;
+ import edu.umn.cs.spatialHadoop.mapred.TextOutputFormat;
+ 
+ public class Plot {
+   /**Logger*/
+   private static final Log LOG = LogFactory.getLog(Plot.class);
+   
+   /**Whether or not to show partition borders (boundaries) in generated image*/
+   private static final String ShowBorders = "plot.show_borders";
+   private static final String ShowBlockCount = "plot.show_block_count";
+   private static final String ShowRecordCount = "plot.show_record_count";
+   private static final String StrokeColor = "plot.stroke_color";
+   /**Flip the image vertically to correct +ve Y-axis direction*/
+   private static final String VFlip = "plot.vflip";
+ 
+   /**
+    * If the processed block is already partitioned (via global index), then
+    * the output is the same as input (Identity map function). If the input
+    * partition is not partitioned (a heap file), then the given shape is output
+    * to all overlapping partitions.
+    * @author Ahmed Eldawy
+    *
+    */
+   public static class PlotMap extends MapReduceBase 
+     implements Mapper<Rectangle, Shape, Rectangle, Shape> {
+     
+     private Rectangle[] cellInfos;
+     private boolean vflip;
+     
+     @Override
+     public void configure(JobConf job) {
+       try {
+         super.configure(job);
+         CellInfo[] fileCells = SpatialSite.getCells(job);
+         if (fileCells == null) {
+           cellInfos = null;
+         } else {
+           // Fill cellInfos with Rectangles to be able to use them as map
+           // output
+           this.cellInfos = new Rectangle[fileCells.length];
+           for (int i = 0; i < this.cellInfos.length; i++) {
+             this.cellInfos[i] = new Rectangle(fileCells[i]);
+           }
+         }
+         vflip = job.getBoolean(VFlip, false);
+       } catch (IOException e) {
+         e.printStackTrace();
+       }
+     }
+     
+     public void map(Rectangle cell, Shape shape,
+         OutputCollector<Rectangle, Shape> output, Reporter reporter)
+         throws IOException {
+       Rectangle shapeMbr = shape.getMBR();
+       if (shapeMbr == null)
+         return;
+       if (vflip) {
+         // We have to create a new rectangle to not modify input shape
+         // if the input shape is a rectangle
+         shapeMbr = new Rectangle(shapeMbr.x1, -shapeMbr.y2, shapeMbr.x2, -shapeMbr.y1);
+       }
+       if (!cell.isValid()) {
+         // Output shape to all overlapping cells
+         for (Rectangle matchedCell : cellInfos)
+           if (matchedCell.isIntersected(shape))
+             output.collect(matchedCell, shape);
+       } else {
+         // Input is already partitioned
+         // Output shape to containing cell only
+         output.collect(cell, shape);
+       }
+     }
+   }
+   
+   /**
+    * The reducer class draws an image for contents (shapes) in each cell info
+    * @author Ahmed Eldawy
+    *
+    */
+   public static class PlotReduce extends MapReduceBase
+       implements Reducer<Rectangle, Shape, Rectangle, ImageWritable> {
+     
+     private Rectangle fileMbr;
+     private int imageWidth, imageHeight;
+     private ImageWritable sharedValue = new ImageWritable();
+     private double scale2;
+     private Color strokeColor;
+     private boolean vflip;
+ 
+     @Override
+     public void configure(JobConf job) {
+       System.setProperty("java.awt.headless", "true");
+       super.configure(job);
+       fileMbr = ImageOutputFormat.getFileMBR(job);
+       imageWidth = ImageOutputFormat.getImageWidth(job);
+       imageHeight = ImageOutputFormat.getImageHeight(job);
+       this.strokeColor = new Color(job.getInt(StrokeColor, 0));
+       this.vflip = job.getBoolean(VFlip, false);
+       
+       this.scale2 = (double)imageWidth * imageHeight /
+           ((double)(fileMbr.x2 - fileMbr.x1) * (fileMbr.y2 - fileMbr.y1));
+     }
+ 
+     @Override
+     public void reduce(Rectangle cellInfo, Iterator<Shape> values,
+         OutputCollector<Rectangle, ImageWritable> output, Reporter reporter)
+         throws IOException {
+       try {
+         // Initialize the image
+         int image_x1 = (int) ((cellInfo.x1 - fileMbr.x1) * imageWidth / fileMbr.getWidth());
+         int image_y1 = (int) ((cellInfo.y1 - fileMbr.y1) * imageHeight / fileMbr.getHeight());
+         int image_x2 = (int) ((cellInfo.x2 - fileMbr.x1) * imageWidth / fileMbr.getWidth());
+         int image_y2 = (int) ((cellInfo.y2 - fileMbr.y1) * imageHeight / fileMbr.getHeight());
+         int tile_width = image_x2 - image_x1;
+         int tile_height = image_y2 - image_y1;
+         if (tile_width == 0 || tile_height == 0)
+           return;
+         BufferedImage image = new BufferedImage(tile_width, tile_height,
+             BufferedImage.TYPE_INT_ARGB);
+         Color bg_color = new Color(0,0,0,0);
+ 
+         Graphics2D graphics;
+         try {
+           graphics = image.createGraphics();
+         } catch (Throwable e) {
+           graphics = new SimpleGraphics(image);
+         }
+         graphics.setBackground(bg_color);
+         graphics.clearRect(0, 0, tile_width, tile_height);
+         graphics.setColor(strokeColor);
+         graphics.translate(-image_x1, -image_y1);
+ 
+         while (values.hasNext()) {
+           Shape s = values.next();
+           s.draw(graphics, fileMbr, imageWidth, imageHeight, vflip, scale2);
+         }
+         
+         graphics.dispose();
+         
+         sharedValue.setImage(image);
+         output.collect(cellInfo, sharedValue);
+       } catch (RuntimeException e) {
+         e.printStackTrace();
+         throw e;
+       }
+     }
+   }
+   
+   public static class PlotOutputCommitter extends FileOutputCommitter {
+     @Override
+     public void commitJob(JobContext context) throws IOException {
+       super.commitJob(context);
+       
+       JobConf job = context.getJobConf();
+       Path outFile = ImageOutputFormat.getOutputPath(job);
+       int width = ImageOutputFormat.getImageWidth(job);
+       int height = ImageOutputFormat.getImageHeight(job);
+       
+       // Combine all images in one file
+       // Rename output file
+       // Combine all output files into one file as we do with grid files
+       FileSystem outFs = outFile.getFileSystem(job);
+       Path temp = new Path(outFile.toUri().getPath()+"_temp");
+       outFs.rename(outFile, temp);
+       FileStatus[] resultFiles = outFs.listStatus(temp, new PathFilter() {
+         @Override
+         public boolean accept(Path path) {
+           return path.toUri().getPath().contains("part-");
+         }
+       });
+       
+       if (resultFiles.length == 1) {
+         // Only one output file
+         outFs.rename(resultFiles[0].getPath(), outFile);
+       } else {
+         // Merge all images into one image (overlay)
+         BufferedImage finalImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+         for (FileStatus resultFile : resultFiles) {
+           FSDataInputStream imageFile = outFs.open(resultFile.getPath());
+           BufferedImage tileImage = ImageIO.read(imageFile);
+           imageFile.close();
+ 
+           Graphics2D graphics;
+           try {
+             graphics = finalImage.createGraphics();
+           } catch (Throwable e) {
+             graphics = new SimpleGraphics(finalImage);
+           }
+           graphics.drawImage(tileImage, 0, 0, null);
+           graphics.dispose();
+         }
+         
+         // Finally, write the resulting image to the given output path
+         LOG.info("Writing final image");
+         OutputStream outputImage = outFs.create(outFile);
+         ImageIO.write(finalImage, "png", outputImage);
+         outputImage.close();
+       }
+       
+       outFs.delete(temp, true);
+     }
+   }
+   
+   
+   /**Last submitted Plot job*/
+   public static RunningJob lastSubmittedJob;
+   
+   static int min_value = Integer.MAX_VALUE;
+   static int max_value = Integer.MIN_VALUE;
+   
+   public static <S extends Shape> void plotMapReduce(Path inFile, Path outFile,
+       Shape shape, int width, int height, boolean vflip, Color color, boolean showBorders,
+       boolean showBlockCount, boolean showRecordCount, boolean background)  throws IOException {
+     JobConf job = new JobConf(Plot.class);
+     job.setJobName("Plot");
+     
+     job.setMapperClass(PlotMap.class);
+     ClusterStatus clusterStatus = new JobClient(job).getClusterStatus();
+     job.setNumMapTasks(clusterStatus.getMaxMapTasks() * 5);
+     job.setReducerClass(PlotReduce.class);
+     job.setNumReduceTasks(Math.max(1, clusterStatus.getMaxReduceTasks()));
+     job.setMapOutputKeyClass(Rectangle.class);
+     SpatialSite.setShapeClass(job, shape.getClass());
+     job.setMapOutputValueClass(shape.getClass());
+     
+     FileSystem inFs = inFile.getFileSystem(job);
+     Rectangle fileMbr = FileMBR.fileMBRMapReduce(inFs, inFile, shape, false);
+     if (vflip) {
+       double temp = fileMbr.y1;
+       fileMbr.y1 = -fileMbr.y2;
+       fileMbr.y2 = -temp;
+     }
+     FileStatus inFileStatus = inFs.getFileStatus(inFile);
+     
+     CellInfo[] cellInfos;
+     GlobalIndex<Partition> gindex = SpatialSite.getGlobalIndex(inFs, inFile);
+     if (gindex == null) {
+       // A heap file. The map function should partition the file
+       GridInfo gridInfo = new GridInfo(fileMbr.x1, fileMbr.y1, fileMbr.x2,
+           fileMbr.y2);
+       gridInfo.calculateCellDimensions(inFileStatus.getLen(),
+           inFileStatus.getBlockSize());
+       cellInfos = gridInfo.getAllCells();
+       // Doesn't make sense to show any partition information in a heap file
+       showBorders = showBlockCount = showRecordCount = false;
+     } else {
+       cellInfos = SpatialSite.cellsOf(inFs, inFile);
+     }
+     
+     // Set cell information in the job configuration to be used by the mapper
+     SpatialSite.setCells(job, cellInfos);
+     
+     // Adjust width and height to maintain aspect ratio
+     if ((fileMbr.x2 - fileMbr.x1) / (fileMbr.y2 - fileMbr.y1) > (double) width / height) {
+       // Fix width and change height
+       height = (int) ((fileMbr.y2 - fileMbr.y1) * width / (fileMbr.x2 - fileMbr.x1));
+     } else {
+       width = (int) ((fileMbr.x2 - fileMbr.x1) * height / (fileMbr.y2 - fileMbr.y1));
+     }
+     LOG.info("Creating an image of size "+width+"x"+height);
+     ImageOutputFormat.setFileMBR(job, fileMbr);
+     ImageOutputFormat.setImageWidth(job, width);
+     ImageOutputFormat.setImageHeight(job, height);
+     job.setBoolean(ShowBorders, showBorders);
+     job.setBoolean(ShowBlockCount, showBlockCount);
+     job.setBoolean(ShowRecordCount, showRecordCount);
+     job.setInt(StrokeColor, color.getRGB());
+     job.setBoolean(VFlip, vflip);
+     
+     // Set input and output
+     job.setInputFormat(ShapeInputFormat.class);
+     ShapeInputFormat.addInputPath(job, inFile);
+     // Set output committer which will stitch images together after all reducers
+     // finish
+     job.setOutputCommitter(PlotOutputCommitter.class);
+     
+     job.setOutputFormat(ImageOutputFormat.class);
+     TextOutputFormat.setOutputPath(job, outFile);
+     
+     if (background) {
+       JobClient jc = new JobClient(job);
+       lastSubmittedJob = jc.submitJob(job);
+     } else {
+       lastSubmittedJob = JobClient.runJob(job);
+     }
+   }
+   
+   public static <S extends Shape> void plotLocal(Path inFile, Path outFile,
+       S shape, int width, int height, boolean vflip, Color color,
+       boolean showBorders, boolean showBlockCount, boolean showRecordCount)
+       throws IOException {
+     FileSystem inFs = inFile.getFileSystem(new Configuration());
+     Rectangle fileMbr = FileMBR.fileMBRLocal(inFs, inFile, shape);
+     LOG.info("FileMBR: "+fileMbr);
+     if (vflip) {
+       double temp = fileMbr.y1;
+       fileMbr.y1 = -fileMbr.y2;
+       fileMbr.y2 = -temp;
+     }
+     
+     // Adjust width and height to maintain aspect ratio
+     if (fileMbr.getWidth() / fileMbr.getHeight() > (double) width / height) {
+       // Fix width and change height
+       height = (int) (fileMbr.getHeight() * width / fileMbr.getWidth());
+     } else {
+       width = (int) (fileMbr.getWidth() * height / fileMbr.getHeight());
+     }
+     
+     double scale2 = (double) width * height
+         / (fileMbr.getWidth() * fileMbr.getHeight());
+ 
+     // Create an image
+     BufferedImage image = new BufferedImage(width, height,
+         BufferedImage.TYPE_INT_ARGB);
+     Graphics2D graphics = image.createGraphics();
+     Color bg_color = new Color(0,0,0,0);
+     graphics.setBackground(bg_color);
+     graphics.clearRect(0, 0, width, height);
+     graphics.setColor(color);
+ 
+     long fileLength = inFs.getFileStatus(inFile).getLen();
+     ShapeRecordReader<S> reader = new ShapeRecordReader<S>(new Configuration(),
+         new FileSplit(inFile, 0, fileLength, new String[0]));
+     
+     Rectangle cell = reader.createKey();
+     while (reader.next(cell, shape)) {
+      shape.draw(graphics, fileMbr, width, height, vflip, scale2);
+     }
+     
+     reader.close();
+     graphics.dispose();
+     FileSystem outFs = outFile.getFileSystem(new Configuration());
+     OutputStream out = outFs.create(outFile, true);
+     ImageIO.write(image, "png", out);
+     out.close();
+   }
+   
+   public static <S extends Shape> void plot(Path inFile, Path outFile, S shape,
+       int width, int height, boolean vflip, Color color, boolean showBorders,
+       boolean showBlockCount, boolean showRecordCount) throws IOException {
+     FileSystem inFs = inFile.getFileSystem(new Configuration());
+     FileStatus inFStatus = inFs.getFileStatus(inFile);
+     if (inFStatus.isDir() || inFStatus.getLen() > 100 * inFStatus.getBlockSize()) {
+       plotMapReduce(inFile, outFile, shape, width, height, vflip, color, showBorders, showBlockCount, showRecordCount, false);
+     } else {
+       plotLocal(inFile, outFile, shape, width, height, vflip, color, showBorders, showBlockCount, showRecordCount);
+     }
+   }
+ 
+   /**
+    * Combines images of different datasets into one image that is displayed
+    * to users.
+    * @param fs The file system that contains the datasets and images
+    * @param files Paths to directories which contains the datasets
+    * @param includeBoundaries Also plot the indexing boundaries of datasets
+    * @return An image that is the combination of all datasets images
+    * @throws IOException
+    */
+   public static BufferedImage combineImages(Configuration conf, Path[] files,
+       boolean includeBoundaries, int width, int height) throws IOException {
+     BufferedImage result = null;
+     // Retrieve the MBRs of all datasets
+     Rectangle allMbr = new Rectangle(Double.MAX_VALUE, Double.MAX_VALUE,
+         -Double.MAX_VALUE, -Double.MAX_VALUE);
+     for (Path file : files) {
+       FileSystem fs = file.getFileSystem(conf);
+       Rectangle mbr = FileMBR.fileMBR(fs, file, null);
+       allMbr.expand(mbr);
+     }
+ 
+     // Adjust width and height to maintain aspect ratio
+     if ((allMbr.x2 - allMbr.x1) / (allMbr.y2 - allMbr.y1) > (double) width / height) {
+       // Fix width and change height
+       height = (int) ((allMbr.y2 - allMbr.y1) * width / (allMbr.x2 - allMbr.x1));
+     } else {
+       width = (int) ((allMbr.x2 - allMbr.x1) * height / (allMbr.y2 - allMbr.y1));
+     }
+     result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+ 
+       
+     for (Path file : files) {
+       FileSystem fs = file.getFileSystem(conf);
+       if (fs.getFileStatus(file).isDir()) {
+         // Retrieve the MBR of this dataset
+         Rectangle mbr = FileMBR.fileMBR(fs, file, null);
+         // Compute the coordinates of this image in the whole picture
+         mbr.x1 = (mbr.x1 - allMbr.x1) * width / allMbr.getWidth();
+         mbr.x2 = (mbr.x2 - allMbr.x1) * width / allMbr.getWidth();
+         mbr.y1 = (mbr.y1 - allMbr.y1) * height / allMbr.getHeight();
+         mbr.y2 = (mbr.y2 - allMbr.y1) * height / allMbr.getHeight();
+         // Retrieve the image of this dataset
+         Path imagePath = new Path(file, "_data.png");
+         if (!fs.exists(imagePath))
+           throw new RuntimeException("Image "+imagePath+" not ready");
+         FSDataInputStream imageFile = fs.open(imagePath);
+         BufferedImage image = ImageIO.read(imageFile);
+         imageFile.close();
+         // Draw the image
+         Graphics graphics = result.getGraphics();
+         graphics.drawImage(image, (int) mbr.x1, (int) mbr.y1,
+             (int) mbr.getWidth(), (int) mbr.getHeight(), null);
+         graphics.dispose();
+         
+         if (includeBoundaries) {
+           // Plot also the image of the boundaries
+           // Retrieve the image of the dataset boundaries
+           imagePath = new Path(file, "_partitions.png");
+           if (fs.exists(imagePath)) {
+             imageFile = fs.open(imagePath);
+             image = ImageIO.read(imageFile);
+             imageFile.close();
+             // Draw the image
+             graphics = result.getGraphics();
+             graphics.drawImage(image, (int) mbr.x1, (int) mbr.y1,
+                 (int) mbr.getWidth(), (int) mbr.getHeight(), null);
+             graphics.dispose();
+           }
+         }
+       }
+     }
+     
+     return result;
+   }
+   
+   
+   private static void printUsage() {
+     System.out.println("Plots all shapes to an image");
+     System.out.println("Parameters: (* marks required parameters)");
+     System.out.println("<input file> - (*) Path to input file");
+     System.out.println("<output file> - (*) Path to output file");
+     System.out.println("shape:<point|rectangle|polygon|ogc> - (*) Type of shapes stored in input file");
+     System.out.println("width:<w> - Maximum width of the image (1000)");
+     System.out.println("height:<h> - Maximum height of the image (1000)");
+     System.out.println("color:<c> - Main color used to draw the picture (black)");
+     System.out.println("-borders: For globally indexed files, draws the borders of partitions");
+     System.out.println("-showblockcount: For globally indexed files, draws the borders of partitions");
+     System.out.println("-showrecordcount: Show number of records in each partition");
+     System.out.println("-overwrite: Override output file without notice");
+     System.out.println("-vflip: Vertically flip generated image to correct +ve Y-axis direction");
+   }
+   
+   /**
+    * @param args
+    * @throws IOException 
+    */
+   public static void main(String[] args) throws IOException {
+     System.setProperty("java.awt.headless", "true");
+     CommandLineArguments cla = new CommandLineArguments(args);
+     JobConf conf = new JobConf(Plot.class);
+     if (!cla.checkInputOutput(conf)) {
+       printUsage();
+       return;
+     }
+     
+     Path[] files = cla.getPaths();
+     Path inFile = files[0];
+     Path outFile = files[1];
+ 
+     boolean showBorders = cla.is("borders");
+     boolean showBlockCount = cla.is("showblockcount");
+     boolean showRecordCount = cla.is("showrecordcount");
+     Shape shape = cla.getShape(true);
+     
+     int width = cla.getWidth(1000);
+     int height = cla.getHeight(1000);
+     
+     // Flip image vertically to correct Y axis +ve direction
+     boolean vflip = cla.is("vflip");
+     
+     Color color = cla.getColor();
+ 
+     plot(inFile, outFile, shape, width, height, vflip, color, showBorders, showBlockCount, showRecordCount);
+   }
+ 
+ }

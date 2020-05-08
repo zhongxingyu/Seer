@@ -1,0 +1,120 @@
+ /*
+  * Licensed to the Apache Software Foundation (ASF) under one
+  * or more contributor license agreements.  See the NOTICE file
+  * distributed with this work for additional information
+  * regarding copyright ownership.  The ASF licenses this file
+  * to you under the Apache License, Version 2.0 (the
+  * "License"); you may not use this file except in compliance
+  * with the License.  You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package org.apache.hoya.yarn.service;
+ 
+ import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
+ import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
+ import org.apache.hadoop.yarn.api.records.Container;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
+ import java.util.List;
+ 
+ public class HoyaServiceUtils {
+ 
+   private static final Logger log = LoggerFactory.getLogger(HoyaServiceUtils.class);
+   public static final String REGISTER_AM_RESPONSE =
+     "RegisterApplicationMasterResponse.getContainersFromPreviousAttempt()";
+ 
+   public static Exception convertToException(Throwable failureCause) {
+     return (failureCause instanceof Exception) ?
+                       (Exception)failureCause
+                       : new Exception(failureCause);
+   }
+ 
+   /**
+    * Request that containers are kept across submissions.
+    * @param submissionContext context to query
+    * @return true if the method was applied.
+    */
+   
+   public static boolean keepContainersAcrossSubmissions(
+     ApplicationSubmissionContext submissionContext) {
+     Method m = null;
+     String methName =
+       "ApplicationSubmissionContext.setKeepContainersAcrossApplicationAttempts()";
+     Class<? extends ApplicationSubmissionContext> cls =
+       submissionContext.getClass();
+     try {
+       m = cls.getDeclaredMethod("setKeepContainersAcrossApplicationAttempts",
+                                 boolean.class);
+       m.setAccessible(true);
+     } catch (NoSuchMethodException e) {
+       log.debug(methName + " not found");
+     } catch (SecurityException e) {
+       log.debug("No access to " + methName);
+     }
+     // AM-RESTART-SUPPORT: AM wants its old containers back on a restart
+     if (m != null) {
+       try {
+         m.invoke(submissionContext, true);
+         return true;
+       } catch (InvocationTargetException ite) {
+         log.error(methName + " got", ite);
+       } catch (IllegalAccessException iae) {
+         log.error(methName + " got", iae);
+       }
+     }
+     return false;
+   }
+ 
+   /**
+    * Get the containers from a previous attempt
+    * @param response AM registration response
+    * @return a list of containers (possibly empty) if the AM provided
+    * that field in its registration, and the hadoop JAR has the relevant
+    * method to access it.
+    */
+   public static List<Container> retrieveContainersFromPreviousAttempt(
+     RegisterApplicationMasterResponse response) {
+     List<Container> liveContainers = null;
+     Method m = extractRetrieveContainersMethod(response);
+     if (m != null) {
+       try {
+         Object obj = m.invoke(response);
+         if (obj instanceof List) {
+           liveContainers = (List<Container>) obj;
+           
+         }
+       } catch (InvocationTargetException ite) {
+         log.error(REGISTER_AM_RESPONSE + " got", ite);
+       } catch (IllegalAccessException iae) {
+         log.error(REGISTER_AM_RESPONSE + " got", iae);
+       }
+     }
+     return liveContainers;
+   }
+ 
+   public static Method extractRetrieveContainersMethod(
+     RegisterApplicationMasterResponse response) {
+     Method m = null;
+     Class<? extends RegisterApplicationMasterResponse> cls =
+       response.getClass();
+     try {
+       m = cls.getDeclaredMethod("getContainersFromPreviousAttempt");
+     } catch (NoSuchMethodException e) {
+       log.debug(REGISTER_AM_RESPONSE + " not found");
+     } catch (SecurityException e) {
+       log.debug("No access to " + REGISTER_AM_RESPONSE);
+     }
+     return m;
+   }
+ }

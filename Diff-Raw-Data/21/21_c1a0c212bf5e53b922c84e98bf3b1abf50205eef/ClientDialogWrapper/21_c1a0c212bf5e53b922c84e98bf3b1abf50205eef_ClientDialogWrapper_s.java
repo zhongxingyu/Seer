@@ -1,0 +1,522 @@
+ package org.mobicents.slee.resource.sip11.wrappers;
+ 
+ import gov.nist.javax.sip.DialogExt;
+ import gov.nist.javax.sip.address.SipUri;
+ import gov.nist.javax.sip.message.SIPRequest;
+ 
+ import java.io.IOException;
+ import java.io.ObjectInputStream;
+ import java.io.ObjectOutputStream;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.concurrent.atomic.AtomicBoolean;
+ import java.util.concurrent.atomic.AtomicLong;
+ 
+ import javax.sip.ClientTransaction;
+ import javax.sip.DialogDoesNotExistException;
+ import javax.sip.DialogState;
+ import javax.sip.InvalidArgumentException;
+ import javax.sip.ServerTransaction;
+ import javax.sip.SipException;
+ import javax.sip.Transaction;
+ import javax.sip.TransactionDoesNotExistException;
+ import javax.sip.TransactionUnavailableException;
+ import javax.sip.address.Address;
+ import javax.sip.address.URI;
+ import javax.sip.header.CSeqHeader;
+ import javax.sip.header.CallIdHeader;
+ import javax.sip.header.FromHeader;
+ import javax.sip.header.HeaderFactory;
+ import javax.sip.header.MaxForwardsHeader;
+ import javax.sip.header.ToHeader;
+ import javax.sip.message.Request;
+ import javax.sip.message.Response;
+ import javax.slee.facilities.Tracer;
+ 
+ import org.mobicents.slee.resource.sip11.DialogWithoutIdActivityHandle;
+ import org.mobicents.slee.resource.sip11.SipActivityHandle;
+ import org.mobicents.slee.resource.sip11.SipResourceAdaptor;
+ import org.mobicents.slee.resource.sip11.SleeSipProviderImpl;
+ import org.mobicents.slee.resource.sip11.Utils;
+ 
+ public class ClientDialogWrapper extends DialogWrapper {
+ 
+ 	/**
+ 	 * 
+ 	 */
+ 	private static final long serialVersionUID = 1L;
+ 
+ 	private static Tracer tracer;
+ 
+ 	private Address fromAddress, toAddress;
+ 	private CallIdHeader customCallId;
+ 	private AtomicLong localSequenceNumber = new AtomicLong(0L);
+ 	private AtomicBoolean forkingPossible = new AtomicBoolean(true);
+ 	private boolean confirmed = false; 
+ 	
+ 	/**
+ 	 * Constructs an instance of a UAC dialog.
+ 	 * 
+ 	 * @param from
+ 	 * @param localTag
+ 	 * @param to
+ 	 * @param callIdHeader
+ 	 * @param provider
+ 	 * @param ra
+ 	 */
+ 	public ClientDialogWrapper(Address from, String localTag, Address to,
+ 			CallIdHeader callIdHeader, SipResourceAdaptor ra) {
+ 		this(new DialogWithoutIdActivityHandle(callIdHeader.getCallId(),
+ 				localTag), localTag, ra);
+ 		toAddress = to;
+ 		fromAddress = from;
+ 		customCallId = callIdHeader;
+ 	}
+ 
+ 	/**
+ 	 * 
+ 	 * @param handle
+ 	 * @param wrappedDialog
+ 	 * @param ra
+ 	 */
+ 	public ClientDialogWrapper(SipActivityHandle handle, String localTag, SipResourceAdaptor ra) {
+ 		super(handle,localTag,ra);
+ 		if (tracer == null) {
+ 			tracer = ra.getTracer(ClientDialogWrapper.class.getSimpleName());
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * 
+ 	 * @return
+ 	 */
+ 	public boolean isForkingPossible() {
+ 		return forkingPossible.get();
+ 	}
+ 	
+ 	/**
+ 	 * 
+ 	 * @return
+ 	 */
+ 	public boolean stopForking() {
+ 		return forkingPossible.compareAndSet(true, false);		
+ 	}
+ 	
+ 	public void confirmed() {
+ 		this.confirmed = true;
+ 	}
+ 	
+ 	public boolean isConfirmed() {
+ 		return confirmed;
+ 	}
+ 	
+ 	@Override
+ 	public javax.slee.Address getEventFiringAddress() {
+ 		if (eventFiringAddress == null) {
+ 			if (wrappedDialog != null) {
+ 				eventFiringAddress = super.getEventFiringAddress();
+ 			} else {
+ 				// outgoing dialog where the wrapped dialog does not exists yet
+ 				eventFiringAddress = ClientTransactionWrapper.getEventFiringAddress(fromAddress);
+ 			}
+ 		}
+ 		return eventFiringAddress;
+ 	}
+ 	
+ 	@Override
+ 	public Request createAck(long arg0) throws InvalidArgumentException,
+ 			SipException {
+ 		verifyDialogExistency();
+ 		return super.createAck(arg0);
+ 	}
+ 
+ 	@Override
+ 	public Request createPrack(Response arg0)
+ 			throws DialogDoesNotExistException, SipException {
+ 		verifyDialogExistency();
+ 		return super.createPrack(arg0);
+ 	}
+ 
+ 	@Override
+ 	public Response createReliableProvisionalResponse(int arg0)
+ 			throws InvalidArgumentException, SipException {
+ 		verifyDialogExistency();
+ 		return super.createReliableProvisionalResponse(arg0);
+ 	}
+ 
+ 	@Override
+ 	public void delete() {
+ 		
+ 		if (wrappedDialog == null) {
+ 			if (tracer.isFineEnabled()) {
+ 				tracer.fine("Deleting "+getActivityHandle()+" dialog activity, there is no wrapped dialog.");
+ 			}
+ 			// no real dialog
+ 			ra.processDialogTerminated(this);
+ 		} else {
+ 			super.delete();			
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public CallIdHeader getCallId() {
+ 		if (this.wrappedDialog == null) {
+ 			return customCallId;
+ 		}
+ 		return super.getCallId();
+ 	}
+ 
+ 	@Override
+ 	public String getDialogId() {
+ 		if (this.wrappedDialog == null) {
+ 			return null;
+ 		}
+ 		return super.getDialogId();
+ 	}
+ 
+ 	@SuppressWarnings("deprecation")
+ 	@Override
+ 	public Transaction getFirstTransaction() {
+ 		verifyDialogExistency();
+ 		return super.getFirstTransaction();
+ 	}
+ 
+ 	@Override
+ 	public Address getLocalParty() {
+ 		if (wrappedDialog == null) {
+ 			return fromAddress;
+ 		}
+ 		else {
+ 			return super.getLocalParty();
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public Address getRemoteParty() {
+ 		if (wrappedDialog == null) {
+ 			return toAddress;
+ 		}
+ 		else {
+ 			return super.getRemoteParty();
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public Address getRemoteTarget() {
+ 		if (wrappedDialog == null) {
+ 			return toAddress;
+ 		}
+ 		else {
+ 			return super.getRemoteTarget();
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public long getLocalSeqNumber() {
+ 		if (wrappedDialog == null) {
+ 			return localSequenceNumber.get();
+ 		}
+ 		else {
+ 			return super.getLocalSeqNumber();
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public int getLocalSequenceNumber() {
+ 		return (int) getLocalSeqNumber();
+ 	}
+ 
+ 	@Override
+ 	public long getRemoteSeqNumber() {
+ 		if (wrappedDialog != null)
+ 			return super.getRemoteSeqNumber();
+ 		else
+ 			return 1L;
+ 	}
+ 
+ 	@Override
+ 	public int getRemoteSequenceNumber() {
+ 		return (int) getRemoteSeqNumber();
+ 	}
+ 
+ 	@Override
+ 	public String getRemoteTag() {
+ 		if (wrappedDialog != null) {
+ 			return super.getRemoteTag();
+ 		} else {
+ 			return null;
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public DialogState getState() {
+ 		if (wrappedDialog == null) {
+ 			return null;
+ 		}
+ 		else {
+ 			return super.getState();
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void incrementLocalSequenceNumber() {
+ 		if (wrappedDialog != null) {
+ 			super.incrementLocalSequenceNumber();
+ 		}
+ 		else {
+ 			localSequenceNumber.incrementAndGet();
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public boolean isSecure() {
+ 		if (wrappedDialog == null)
+ 			return false;
+ 		else
+ 			return super.isSecure();
+ 	}
+ 
+ 	@Override
+ 	public boolean isServer() {
+ 		return false;
+ 	}
+ 
+ 	@Override
+ 	public void sendAck(Request arg0) throws SipException {
+ 		verifyDialogExistency();
+ 		super.sendAck(arg0);
+ 	}
+ 
+ 	@Override
+ 	public void sendReliableProvisionalResponse(Response arg0)
+ 			throws SipException {
+ 		verifyDialogExistency();
+ 		super.sendReliableProvisionalResponse(arg0);
+ 	}
+ 
+ 	@Override
+ 	public void terminateOnBye(boolean arg0) throws SipException {
+ 		verifyDialogExistency();
+ 		super.terminateOnBye(arg0);
+ 	}
+ 
+ 	// =========================== XXX: Helper methods =====================
+ 
+ 	@Override
+ 	public String toString() {
+ 		return new StringBuilder("ClientDialogWrapper[ handle = ").append(getActivityHandle())
+ 			.append(", state = ").append(getState())
+ 			.append(", clientTXs = ").append(ongoingClientTransactions == null ? "" :  ongoingClientTransactions.keySet())
+ 			.append(", serverTXs = ").append(ongoingServerTransactions == null ? "" :  ongoingServerTransactions.keySet())
+ 			.append(" ]").toString();
+ 	}
+ 
+ 	// ###########################################
+ 	// # Strictly DialogActivity defined methods #
+ 	// ###########################################
+ 
+ 	@Override
+ 	public ClientTransaction sendCancel() throws SipException {
+ 		verifyDialogExistency();
+ 		return super.sendCancel();
+ 	}
+ 
+ 	@Override
+ 	public void associateServerTransaction(ClientTransaction ct,
+ 			ServerTransaction st) {
+ 		// ct MUST be in ongoing transaction, its local, st - comes from another
+ 		// dialog
+ 		verifyDialogExistency();
+ 		super.associateServerTransaction(ct, st);
+ 	}
+ 	
+ 	/* (non-Javadoc)
+ 	 * @see org.mobicents.slee.resource.sip11.wrappers.DialogWrapper#createRequest(javax.sip.message.Request)
+ 	 */
+ 	@Override
+ 	public Request createRequest(Request origRequest) throws SipException {
+ 		Request request = super.createRequest(origRequest);
+ 		if (wrappedDialog == null) {
+ 			// hack uri and address headers
+ 			final SIPRequest sipRequest = (SIPRequest) request;
+ 			final SleeSipProviderImpl provider = ra.getProviderWrapper();
+ 			final HeaderFactory headerFactory = provider.getHeaderFactory();
+ 			try {
+ 				// hack request with local addresses
+ 				final URI requestURI = (URI) toAddress.getURI().clone();
+ 				if(requestURI.isSipURI()) {
+ 					((SipUri)requestURI).clearUriParms();					
+ 				}
+ 				sipRequest.setRequestURI(requestURI);
+ 				final FromHeader fromHeader = headerFactory.createFromHeader(
+ 						fromAddress, getLocalTag());
+ 				sipRequest.setFrom(fromHeader);
+ 				final ToHeader toHeader = headerFactory.createToHeader(
+ 						toAddress, null);
+ 				sipRequest.setTo(toHeader);
+ 			} catch (Exception e) {
+ 				throw new SipException(e.getMessage(), e);
+ 			}
+ 		}
+ 		return request;
+ 	}
+ 	
+ 	@Override
+ 	public Request createRequest(String methodName) throws SipException {
+ 		
+ 		if (methodName.equals(Request.ACK) || methodName.equals(Request.PRACK)) {
+             throw new SipException("Invalid method specified for createRequest:" + methodName);
+         }
+ 		
+ 		final SleeSipProviderImpl provider = ra.getProviderWrapper();
+ 		final HeaderFactory headerFactory = provider.getHeaderFactory();
+ 		Request request = null;
+ 		if (this.wrappedDialog == null) {
+ 			// the real dialog doesn't exist yet so we act like we will build
+ 			// such a dialog when sending this request
+ 			
+ 			try {
+ 				// create headers
+ 				URI requestURI = (URI) toAddress.getURI().clone();
+ 				if(requestURI.isSipURI()) {
+ 					((SipUri)requestURI).clearUriParms();
+ 				}
+ 				final FromHeader fromHeader = headerFactory.createFromHeader(
+ 						fromAddress, getLocalTag());
+ 				final ToHeader toHeader = headerFactory.createToHeader(
+ 						toAddress, null);
+ 				final List<Object> viaHeadersList = new ArrayList<Object>(1);
+ 				viaHeadersList.add(provider.getLocalVia());
+ 				final MaxForwardsHeader maxForwardsHeader = headerFactory
+ 				.createMaxForwardsHeader(70);
+ 				final CSeqHeader cSeqHeader = headerFactory.createCSeqHeader(
+ 						localSequenceNumber.get() + 1, methodName);
+ 				request = provider.getMessageFactory()
+ 				.createRequest(requestURI, methodName, customCallId,
+ 						cSeqHeader, fromHeader, toHeader,
+ 						viaHeadersList, maxForwardsHeader);								
+ 			} catch (Exception e) {
+ 				throw new SipException(e.getMessage(), e);
+ 			}
+ 		} 
+ 		else {
+ 			request = super.createRequest(methodName);
+ 		}
+ 		if (getState() == null) {
+ 			// adds load balancer to route if exists
+ 			ra.getProviderWrapper().addLoadBalancerToRoute(request);
+ 		}
+ 		return request;
+ 	}
+ 	
+ 	@Override
+ 	public ClientTransaction sendRequest(Request request) throws SipException,
+ 			TransactionUnavailableException {
+ 
+ 		if (wrappedDialog == null
+ 				&& !Utils.getDialogCreatingMethods().contains(
+ 						request.getMethod())) {
+ 			throw new IllegalStateException(
+ 					"Dialog activity present, but no dialog creating reqeust has been sent yet! This method: "
+ 							+ request.getMethod()
+ 							+ " is not dialog creating one");
+ 		}
+ 
+ 		ensureCorrectDialogLocalTag(request);
+ 
+ 		final SleeSipProviderImpl provider = ra.getProviderWrapper();
+ 		final ClientTransactionWrapper ctw = provider
+ 				.getNewDialogActivityClientTransaction(this, request);
+ 
+ 		final String method = request.getMethod();
+ 		if (method.equals(Request.INVITE))
+ 			lastCancelableTransactionId = ctw.activityHandle;
+ 
+ 		if (tracer.isInfoEnabled()) {
+ 			tracer.info(String.valueOf(ctw) + " sending request:\n"
+ 					+ request);
+ 		}
+ 		
+ 		final boolean createDialog = wrappedDialog == null;
+ 		if (createDialog) {
+ 			this.wrappedDialog = provider.getRealProvider().getNewDialog(
+ 					ctw.getWrappedTransaction());
+ 			if(ra.disableSequenceNumberValidation())
+ 			{
+ 				((DialogExt)this.wrappedDialog).disableSequenceNumberValidation();
+ 			}
+ 			this.wrappedDialog.setApplicationData(this);
+ 			// dialog in null state does not allows to send request
+ 			ctw.getWrappedClientTransaction().sendRequest();
+ 		} else {
+ 			this.wrappedDialog.sendRequest(ctw
+ 					.getWrappedClientTransaction());			
+ 		}
+ 		
+ 		return ctw;
+ 	}
+ 
+ 	@Override
+ 	public void sendRequest(ClientTransaction ct)
+ 			throws TransactionDoesNotExistException, SipException {
+ 
+ 		final SleeSipProviderImpl provider = ra.getProviderWrapper();
+ 		final Request request = ct.getRequest();
+ 		final ClientTransactionWrapper ctw = (ClientTransactionWrapper) ct;
+ 
+ 		ensureCorrectDialogLocalTag(request);
+ 
+ 		if (tracer.isInfoEnabled()) {
+ 			tracer.info(String.valueOf(ctw) + " sending request:\n"
+ 					+ request);
+ 		}
+ 		
+ 		final boolean createDialog = wrappedDialog == null;
+ 
+ 		if (createDialog) {
+ 			if (!Utils.getDialogCreatingMethods().contains(request.getMethod())) {
+ 				throw new IllegalStateException(
+ 						"Dialog activity present, but no dialog creating reqeust has been sent yet! This method: "
+ 								+ request.getMethod()
+ 								+ " is not dialog creating one");
+ 			}
+ 			if (request.getMethod().equals(Request.INVITE))
+ 				lastCancelableTransactionId = ctw.getActivityHandle();
+ 			this.wrappedDialog = provider.getRealProvider().getNewDialog(
+ 					ctw.getWrappedTransaction());
+ 			this.wrappedDialog.setApplicationData(this);
+ 			this.addOngoingTransaction(ctw);
+ 			// dialog in null state does not allows to send request
+ 			ctw.getWrappedClientTransaction().sendRequest();			
+ 		} else {
+			if (ctw.isActivity()) {
+				// the ctw was created out of the dialog, can't use dialog to send or cseq will be incremented
+				ctw.getWrappedClientTransaction().sendRequest();
+ 			}
+ 			else {
+ 				wrappedDialog.sendRequest(ctw.getWrappedClientTransaction());
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * 
+ 	 */
+ 	private void verifyDialogExistency() {
+ 		if (wrappedDialog == null) {
+ 			throw new IllegalStateException(
+ 					"Dialog activity present, but no dialog creating request has been sent yet!");
+ 		}
+ 	}
+ 	
+ 	// serialization
+ 	
+ 	private void writeObject(ObjectOutputStream stream) throws IOException {
+ 		throw new IOException("serialization forbidden");
+ 	}
+ 
+ 	private void readObject(ObjectInputStream stream) throws IOException,
+ 			ClassNotFoundException {
+ 		throw new IOException("serialization forbidden");
+ 	}
+ }

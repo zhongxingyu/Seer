@@ -1,0 +1,127 @@
+ import java.util.PriorityQueue;
+ import java.util.Comparator;
+ import java.util.ArrayList;
+ 
+ public class LPAStar extends AStar { 
+ 
+ 	final static int lineOfSight = 2;
+ 	final static Comparator<Pair> pairComparator = new LPAPairComparator();
+ 	final static Comparator<Node> kNodeComparator = new KNodeComparator();
+ 	private static PriorityQueue<Node> open_set = null;
+ 
+ 	public static ArrayList<Integer> calculateKey(Node s, Node goal) 
+ 	{
+ 		ArrayList<Integer> key = new ArrayList<Integer>();
+ 		key.add(Math.min(s.getGScore(), s.getRhsScore() + hScore(s,goal)));
+ 		key.add(Math.min(s.getGScore(), s.getRhsScore()));
+ 		return key;
+ 	}
+ 
+ 	public static void initialize(Grid g, Node goal)
+ 
+ 	{
+ 		open_set = new PriorityQueue<Node>(11, kNodeComparator); 
+ 		
+ 		for (Node s : g.getVision(goal, lineOfSight)) 
+ 		{
+ 			s.setGScore(1000); 
+ 			s.setRhsScore(1000);
+ 		}
+ 		goal.setRhsScore(0);
+ 		goal.setKScore(null);
+ 		open_set.add(goal);
+ 	}
+ 
+ 	public static void updateVertex(Node u, Grid g, PriorityQueue<Pair> open_set, Node start, Node goal)
+ 	{
+ 		if(!u.equals(start))
+ 		{
+ 			u.setRhsScore(findRhs(u, start, g));
+ 		}
+ 
+ 		if (open_set.contains(u))
+ 			open_set.remove(u);
+ 		
+ 		if (u.getGScore() != u.getRhsScore())
+ 			open_set.add(new Pair(u,calculateKey(u, goal)));
+ 	}
+ 
+	public static boolean keyCompare(ArrayList<Integer> one, ArrayList<Integer> two)
+ 	{
+		if (one.get(0) < two.get(0))
+			return true;
+		else if (one.get(0) > two.get(0))
+			return true;
+		else
+			if (one.get(1) < two.get(1))
+				return true;
+			else if (one.get(1) > two.get(1))
+				return false;
+ 		return false;
+ 	}
+ 	
+ 	public static void computeShortestPath(PriorityQueue<Pair> open_set, Node goal, Grid g, Node start)
+ 	{
+ 		
+		while(keyCompare(calculateKey(open_set.peek().getNode(), goal), calculateKey(goal, goal)) || 
+ 				goal.getRhsScore() != goal.getGScore())
+ 		{
+ 			Node u = open_set.poll().getNode();
+ 			if (u.getGScore() > u.getRhsScore())
+ 			{
+ 				u.setGScore(u.getRhsScore());
+ 				for (Node s : u.getConnections())
+ 					updateVertex(s, g, open_set, start, goal);
+ 			}
+ 			else
+ 			{
+ 				u.setGScore(1000);
+ 				for (Node s : g.getAdjacent(u)) 
+ 					updateVertex(s, g, open_set, start, goal);
+ 				updateVertex(u, g, open_set, start, goal);
+ 			}
+ 		}	
+ 	}
+ 
+ 	 public void algorithm(Grid g, Node goal, Node start)
+ 	{
+ 		initialize(g, start);
+ 		computeShortestPath(open_set, goal, g);
+ 	}
+ 
+ 	public static Node[] reconstructPath(Node goal, Node start, Grid g)
+ 	{
+ 		ArrayList<Node> path = new ArrayList<Node> ();
+ 
+ 		if(goal.equals(start))
+ 		{
+ 			Node[] result = path.toArray(new Node[path.size()]);
+ 			return result;
+ 		}
+ 		else
+ 		{
+ 			PriorityQueue<Pair> values = new PriorityQueue<Pair>(11, pairComparator);
+ 			for (Node s : goal.getConnections())
+ 			{
+ 				values.add(new Pair(s, s.getGScore() + g.getEdgeLength(s, goal));
+ 			}
+ 			Node closestNode = values.peek().getNode();
+ 			path.add(closestNode);
+ 			reconstructPath(goal, closestNode, g);
+ 		}
+ 	}
+ 
+ 	public static int findRhs(Node u, Node start, Grid g)
+ 	{		
+ 		if(!u.equals(start))
+ 		{
+ 			PriorityQueue<Integer> values = new PriorityQueue<Integer>(11);
+ 			for (Node s : u.getConnections())
+ 			{
+ 				values.add(s.getGScore() + g.getEdgeLength(s,u));
+ 			}
+ 			return values.peek();			
+ 		}
+ 		return 0;
+ 	}
+ }

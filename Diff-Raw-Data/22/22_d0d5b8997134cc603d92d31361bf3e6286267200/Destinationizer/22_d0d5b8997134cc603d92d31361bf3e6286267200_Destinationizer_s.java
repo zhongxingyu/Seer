@@ -1,0 +1,101 @@
+ /*
+  * Copyright 2008-2012 Red Hat, Inc, and individual contributors.
+  * 
+  * This is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation; either version 2.1 of
+  * the License, or (at your option) any later version.
+  * 
+  * This software is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  * 
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this software; if not, write to the Free
+  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  */
+ 
+ package org.immutant.messaging;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import org.immutant.core.SimpleServiceStateListener;
+ import org.immutant.runtime.ClojureRuntime;
+ import org.jboss.as.server.deployment.DeploymentUnit;
+ import org.jboss.msc.inject.Injector;
+ import org.jboss.msc.service.ServiceController;
+ import org.jboss.msc.service.ServiceController.Mode;
+ import org.jboss.msc.service.ServiceName;
+ import org.jboss.msc.value.InjectedValue;
+ import org.projectodd.polyglot.core_extensions.AtRuntimeInstaller;
+ import org.projectodd.polyglot.messaging.destinations.Destroyable;
+ import org.projectodd.polyglot.messaging.destinations.processors.QueueInstaller;
+ import org.projectodd.polyglot.messaging.destinations.processors.TopicInstaller;
+ 
+ 
+ public class Destinationizer extends AtRuntimeInstaller<Destinationizer> {
+ 
+     public Destinationizer(DeploymentUnit unit) {
+         super( unit );
+     }
+ 
+    public void createQueue(String queueName, boolean durable, String selector, Object callback) {
+         QueueService service = new QueueService( queueName, selector, durable, 
+                                                  this.clojureRuntimeInjector.getValue(),
+                                                  callback );
+                
+         this.destinations.put( queueName, 
+                                QueueInstaller.deploy( getTarget(), service, queueName ) );
+     }
+     
+    public void createTopic(String topicName, Object callback) {
+         TopicService service = new TopicService( topicName, 
+                                                  this.clojureRuntimeInjector.getValue(),
+                                                  callback );
+         
+         this.destinations.put( topicName, 
+                                TopicInstaller.deploy( getTarget(), service, topicName ) );
+     }
+     
+     @SuppressWarnings({ "rawtypes", "unchecked" })
+     public boolean destroyDestination(String name, Object callback) {
+         boolean success = false;
+         
+         this.messageProcessorGroupizerInjector.getValue().removeGroupsFor( name );
+         
+         ServiceName serviceName = this.destinations.get( name );
+         if (serviceName != null) {
+             ServiceController dest = getUnit().getServiceRegistry().getService( serviceName );
+             if (dest != null) {
+                 Object service = dest.getService();
+                 //force it to destroy, even if it's durable
+                 if (service instanceof Destroyable) {
+                     ((Destroyable)service).setShouldDestroy( true );
+                 }
+                 dest.addListener( new SimpleServiceStateListener( this.clojureRuntimeInjector.getValue(),
+                                                                   callback ) );
+                 dest.setMode( Mode.REMOVE );
+                 success = true;
+             } 
+                     
+             this.destinations.remove( name );
+         }
+         
+         return success;
+     }
+     
+     public Injector<ClojureRuntime> getClojureRuntimeInjector() {
+         return this.clojureRuntimeInjector;
+     }
+     
+     public Injector<MessageProcessorGroupizer> getMessageProcessorGroupizerInjector() {
+         return this.messageProcessorGroupizerInjector;
+     }
+     
+     private final InjectedValue<ClojureRuntime> clojureRuntimeInjector = new InjectedValue<ClojureRuntime>();
+     private final InjectedValue<MessageProcessorGroupizer> messageProcessorGroupizerInjector = new InjectedValue<MessageProcessorGroupizer>();
+     private Map<String, ServiceName> destinations = new HashMap<String, ServiceName>();
+ }

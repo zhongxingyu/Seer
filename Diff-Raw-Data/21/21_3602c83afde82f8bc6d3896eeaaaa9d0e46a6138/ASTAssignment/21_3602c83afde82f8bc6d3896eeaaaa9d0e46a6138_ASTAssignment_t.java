@@ -1,0 +1,62 @@
+ package Interpreter;
+ 
+ public class ASTAssignment extends SimpleNode implements VizParserTreeConstants{
+   private String name;
+  private int lineNumber;
+   public ASTAssignment(int id) {
+     super(id);
+   }
+ 
+   public ASTAssignment(VizParser p, int id) {
+     super(p, id);
+   }
+   
+  public int getLineNumber()
+  {
+  	return lineNumber;
+  }
+  
+   public String getCode()
+   {
+   	String code = jjtGetChild(0).getCode() + " = ";
+   	code += jjtGetChild(1).getCode() + ";";
+  	this.lineNumber = Global.lineNumber - 1;
+   	return code;
+   }
+ 
+   public void setName(String name)
+   {
+   	this.name = name;
+   }
+   
+   public String getName()
+   {
+   	return this.name;
+   }
+ 
+   /** Accept the visitor. **/
+   public Object jjtAccept(VizParserVisitor visitor, Object data) {
+     return visitor.visit(this, data);
+   }
+   
+   /*************EVERYTHING BELOW HERE IS USED BY RANDOMIZINGVISITOR************/
+   /**
+    * rhs can be Op, Num, or Var node
+    */
+   public static ASTAssignment createAssignment(ASTVar lhs, Node rhs)
+   {
+ 	  ASTAssignment assign = new ASTAssignment(JJTASSIGNMENT);
+ 	  
+ 	  assign.addChild(lhs, 0);
+ 	  
+ 	  if (lhs.getName() == null)
+ 		  throw new AssumptionFailedException();
+ 	  
+ 	  assign.setName(lhs.getName());
+ 	  
+ 	  
+ 	  assign.addChild(ASTExpression.createExpWithChild(rhs), 1);
+ 	  
+ 	  return assign;
+   }
+}

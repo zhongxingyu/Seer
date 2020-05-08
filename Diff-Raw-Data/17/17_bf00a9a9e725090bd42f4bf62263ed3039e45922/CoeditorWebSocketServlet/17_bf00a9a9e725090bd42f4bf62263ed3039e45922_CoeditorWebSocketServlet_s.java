@@ -1,0 +1,297 @@
+ package coeditor;
+ 
+ import java.io.IOException;
+ import java.nio.ByteBuffer;
+ import java.nio.CharBuffer;
+ import java.text.SimpleDateFormat;
+ import java.util.Date;
+ import java.util.Hashtable;
+ import java.util.Set;
+ import java.util.Map;
+ import java.util.concurrent.CopyOnWriteArraySet;
+ import java.util.concurrent.atomic.AtomicInteger;
+ 
+ import javax.servlet.http.HttpServletRequest;
+ 
+ import org.apache.catalina.websocket.MessageInbound;
+ import org.apache.catalina.websocket.StreamInbound;
+ import org.apache.catalina.websocket.WebSocketServlet;
+ import org.apache.catalina.websocket.WsOutbound;
+ 
+ import com.google.gson.Gson;
+ 
+ import db.Config;
+ import storage.KeyValueStore;
+ 
+ public class CoeditorWebSocketServlet extends WebSocketServlet {
+ 
+   private final Gson gson = new Gson();
+ 
+   private final KeyValueStore s3 = new KeyValueStore(Config.bucketName);
+ 
+   private static final long serialVersionUID = 1L;
+   
+   private final AtomicInteger connectionIds = new AtomicInteger(0);
+ 
+   private final Map<Integer, CoeditorMessageInbound> connections = new Hashtable<Integer, CoeditorMessageInbound>();
+ 
+   private final Map<String, Document> documents = new Hashtable<String, Document>();
+   
+   @Override
+   protected StreamInbound createWebSocketInbound(String subProtocol, HttpServletRequest request) {
+       return new CoeditorMessageInbound(connectionIds.incrementAndGet());
+   }
+ 
+   private final class CoeditorMessageInbound extends MessageInbound {
+ 
+       private final int connectionId;
+       private Document document;
+     
+       private CoeditorMessageInbound(int id) {
+         this.connectionId = id;
+       }
+ 
+       @Override
+       protected void onOpen(WsOutbound outbound) {
+ 
+      	System.out.println("new connection: " + connectionId);
+       	
+         connections.put(connectionId, this);
+ 
+       }
+ 
+       @Override
+       protected void onClose(int status) {
+        
+      	System.out.println("close connection: status: " + status);
+      	
+         closeDocument();
+         
+         connections.remove(this);
+       }
+ 
+       @Override
+       protected void onBinaryMessage(ByteBuffer message) throws IOException {
+           throw new UnsupportedOperationException("Binary message not supported.");
+       }
+ 
+       @Override
+       protected void onTextMessage(CharBuffer message) throws IOException {
+         Message msg = gson.fromJson(message.toString(), Message.class);
+ 
+         String clientId = msg.clientId;
+         String action = msg.action;
+         
+         if (action != null && action.equals("create")) {
+           // step 1: open document for client
+           String docId = msg.content;
+           if (createDocument(docId, clientId)) {
+           // step 2: send back HEADTEXT
+             String headText = documents.get(docId).headText;
+             
+             ChangeSet testChangeSet = new ChangeSet(headText);
+ 
+             Message response = new Message("server", "response", gson.toJson(testChangeSet));
+             sendMessage(gson.toJson(response));
+ 
+           } else {
+ 
+             System.out.println("[open] error: file cannot be created.");
+ 
+             sendErrorMessage("[open] error: file cannot be created.");
+           }
+         }
+         else if (action != null && action.equals("open")) {
+           // step 1: open document for client
+           String docId = msg.content;
+           
+         	log(clientId, action, "docId: " + docId);
+           
+           if (openDocument(docId, clientId)) {
+           // step 2: send back HEADTEXT
+             String headText = documents.get(docId).headText;
+             ChangeSet testChangeSet = new ChangeSet(headText);
+ 
+             Message response = new Message("server", "open", gson.toJson(testChangeSet), document.headRevision);
+             sendMessage(gson.toJson(response));
+ 
+           } else {
+ 
+             System.out.println("[open] error: file cannot be opened.");
+ 
+             sendErrorMessage("[open] error: file cannot be opened.");
+           }
+         } else if (action != null && action.equals("close")) {
+           String docId = msg.content;
+ 
+         	log(clientId, action, "docId: " + docId);
+         	
+         	if (document == null || !document.isOpen)
+           	log(clientId, "error", "docId: " + docId + " is not open");
+           else if (!docId.equals(document.docId))
+           	log(clientId, "error", "docId: " + docId + " is not same as the existing " + document.docId);
+           else {
+           	closeDocument();
+           }
+         	
+           //Message response = new Message("server", "close", "closed");
+           //sendMessage(gson.toJson(response));
+         } else if (action != null && action.equals("save")) {
+           
+           String docId = msg.content;
+           
+         	log(clientId, action, "docId: " + docId);
+           
+           if (document == null || !document.isOpen)
+           	log(clientId, "error", "docId: " + docId + " is not open");
+           else if (!docId.equals(document.docId))
+           	log(clientId, "error", "docId: " + docId + " is not same as the existing " + document.docId);
+           else {
+           	saveDocument();
+           	
+           	SimpleDateFormat ft = new SimpleDateFormat ("hh:mm:ss a");
+ 	          Message response = new Message("server", "save", ft.format(new Date()));
+ 	          sendMessage(gson.toJson(response));
+           }
+         
+         } else if (action != null && action.equals("delete")) {
+           String docId = msg.content;
+ 
+           log(clientId, action, "docId: " + docId);
+           
+         	deleteDocument(docId);
+         	
+         	Message response = new Message("server", "delete", docId);
+         	broadcast(gson.toJson(response));
+         	
+         } else if (action != null && action.equals("newChange")) {
+          
+           ChangeSet newChange = gson.fromJson(msg.content, ChangeSet.class);
+ 
+           Client client = document.activeUsers.get(connectionId);
+           
+           System.out.println("[" + client.clientId + "] newChange: " + newChange);
+           System.out.println("[" + client.clientId + "] latestVersion: " + msg.revisionNumber);
+       		System.out.println("[" + document.docId + "] headRevision: " + document.headRevision);
+           ChangeSet newChangePrime = this.document.applyChangeSet(newChange, msg.revisionNumber);
+           
+           System.out.println("[" + client.clientId + "] C': " + newChangePrime);
+ 
+           document.addRevisionRecord(clientId, newChangePrime);
+           
+           Message syncMsg = new Message("server", "sync", gson.toJson(newChangePrime), document.headRevision);
+           broadcast(gson.toJson(syncMsg));
+           
+           Message ackMsg = new Message("server", "ACK", "ACK", document.headRevision);
+           sendMessage(gson.toJson(ackMsg));
+           
+           
+           //document.updateClientVersion();
+         } else if (action != null && action.equals("getActiveUsers")) {
+         	String docId = msg.content;
+        	System.out.println(getActiveUsers(docId));
+         	Message response = new Message("server", "activeUsers", getActiveUsers(docId));
+         	sendMessage(gson.toJson(response));
+         }
+       	else {
+           System.out.println("[new message] error: no action");
+           sendErrorMessage(action + " is not supported");
+         }
+       }
+ 
+       private String getActiveUsers(String docId) {
+       	if (document.docId.equals(docId)) {
+ 	      	boolean first = true;
+ 	      	String result = "[";
+ 	      	for (Client c : document.activeUsers.values()) {
+ 	      		if (first)
+ 	      			first = false;
+ 	      		else
+ 	      			result += ",";
+ 	      		result = result + "\"" + c.clientId + "\"";
+ 	      	}
+ 	      	result += "]";
+ 	      	
+ 	      	return result;
+       	}
+       	else return "[]";
+       }
+       
+       private boolean openDocument(String docId, String clientId) {
+ 
+         if (!documents.containsKey(docId)) {
+           document = new Document(docId, s3);
+           documents.put(docId, this.document);
+         }
+         else {
+           document = documents.get(docId);
+         }
+ 
+         document.open(connectionId, clientId);
+         
+         return true;
+       }
+       
+       private boolean closeDocument() {
+         
+         if (document != null && document.isOpen) {
+           this.document.close(connectionId);
+           return true;
+         }
+         else
+           return false;
+       }
+       
+       private boolean saveDocument() {
+       	if (this.document.committedRevision < this.document.headRevision)
+         	this.document.save();
+         return true;
+       }
+       
+       private boolean deleteDocument(String docId) {
+       	
+       	if (document != null && document.docId.equals(docId))
+       		closeDocument();
+       	
+       	s3.deleteKey(docId);
+       	
+       	return true;
+       }
+ 
+       private boolean createDocument(String docId, String clientId) {
+         this.document = new Document(docId, s3);
+         documents.put(docId, this.document);
+         
+         this.document.create(connectionId, clientId);
+         
+         return true;
+       }
+ 
+       private void sendMessage(String message) {
+         CharBuffer buffer = CharBuffer.wrap(message);
+         try {
+           this.getWsOutbound().writeTextMessage(buffer);
+         } catch (IOException e) {
+           // TODO Auto-generated catch block
+           e.printStackTrace();
+         }
+       }
+ 
+       private void sendErrorMessage(String message) {
+         Message errorMsg = new Message("server", "error", message);
+         sendMessage(gson.toJson(errorMsg));
+       }
+       
+       private void broadcast(String message) {
+         Set<Integer> targets = this.document.getActiveUser();
+         for (int t : targets) {
+         	if (t != connectionId)
+         		connections.get(t).sendMessage(message);
+         }
+       }
+       
+       private void log(String client, String action, String message) {
+       	System.out.println("[" + client + "] " + action + ": " + message);
+       }
+   }
+ }

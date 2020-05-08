@@ -1,0 +1,68 @@
+ /*
+  *  Copyright WebGate Consulting AG, 2013
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); 
+  * you may not use this file except in compliance with the License. 
+  * You may obtain a copy of the License at:
+  * 
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software 
+  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or 
+  * implied. See the License for the specific language governing 
+  * permissions and limitations under the License.
+  */
+ package biz.webgate.dominoext.poi.util;
+ 
+ import java.security.AccessController;
+ import java.security.PrivilegedActionException;
+ import java.security.PrivilegedExceptionAction;
+ import java.util.HashMap;
+ import java.util.logging.Logger;
+ 
+ import biz.webgate.dominoext.poi.library.Activator;
+ import biz.webgate.dominoext.poi.utils.logging.LoggerFactory;
+ 
+ public abstract class AbstractPOIPowerAction<T> {
+ 
+ 	public T run(final T poiObj, final HashMap<String, String> hsProperties) {
+ 		final Logger logCurrent = LoggerFactory.getLogger(this.getClass().getCanonicalName());
+ 		try {
+ 			final T wb = AccessController.doPrivileged(new PrivilegedExceptionAction<T>() {
+ 				public T run() throws Exception {
+ 					logCurrent.info("Start execution (inkl change of classLoader");
+ 					T wb = setClassLoader(poiObj, hsProperties);
+ 					logCurrent.info("Finished execution. Result object is: " + wb);
+ 					return wb;
+ 				}
+ 			});
+ 			return wb;
+ 		} catch (PrivilegedActionException e) {
+ 			e.printStackTrace();
+ 		}
+ 		return null;
+ 	}
+ 
+ 	private T setClassLoader(T objPoi, HashMap<String, String> hsCurrent) {
+ 		Logger logCurrent = LoggerFactory.getLogger(this.getClass().getCanonicalName());
+ 
+ 		Thread currentThread = Thread.currentThread();
+ 		ClassLoader currentCl = currentThread.getContextClassLoader();
+ 		logCurrent.info("Save classloader -> " + currentCl);
+ 		T objRC = null;
+ 		try {
+ 			currentThread.setContextClassLoader(Activator.class.getClassLoader());
+ 			logCurrent.info("Execute innerCode -> doItPriv");
+ 			objRC = doItPriv(objPoi, hsCurrent);
+ 			logCurrent.info("Exeute done!");
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
+ 		} finally {
+ 			currentThread.setContextClassLoader(currentCl);
+ 		}
+ 		return objRC;
+ 	}
+ 
+ 	protected abstract T doItPriv(T objPoi, HashMap<String, String> hsCurrent);
+ }

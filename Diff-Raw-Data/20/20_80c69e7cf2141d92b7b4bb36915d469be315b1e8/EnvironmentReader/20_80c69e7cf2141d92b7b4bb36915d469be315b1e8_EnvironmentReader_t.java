@@ -1,0 +1,90 @@
+ package org.eclipse.cdt.utils.spawner;
+ 
+ /*
+  * (c) Copyright QNX Software Systems Ltd. 2002.
+  * All Rights Reserved.
+  */
+ 
+ import java.io.BufferedReader;
+ import java.io.IOException;
+ import java.io.InputStreamReader;
+ import java.io.InputStream;
+ import java.util.Properties;
+ import java.util.Vector;
+ 
+ public class EnvironmentReader {
+ 	private static Properties envVars = null;
+ 	private static Vector rawVars = null;
+ 
+ 	public static Properties getEnvVars() {
+ 
+ 		if (null != envVars)
+ 			return (Properties)envVars.clone();
+ 
+ 		String OS = System.getProperty("os.name").toLowerCase();
+ 		Process p = null;
+ 		envVars = new Properties();
+ 		rawVars = new Vector(32);
+ 		String command = "env";
+ 		InputStream in = null;
+ 		boolean check_ready = false;
+ 		boolean isWin32 = false;
+		if (OS.startsWith("windows 9") || OS.startsWith("windows me")) { // 95, 98, me
+			command = "command.com /c set";
+			//The buffered stream doesn't always like windows 98
+			check_ready = true;
+			isWin32 = true;
+		} else 
+		if (OS.startsWith("windows ")) {
+			command = "cmd.exe /c set";
+			isWin32 = true;
+		}
+ 		try {
+ 			p = ProcessFactory.getFactory().exec(command);
+ 			in = p.getInputStream();
+ 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+ 			String line;
+ 			while ((line = br.readLine()) != null) {
+ 				rawVars.add(line);
+ 				int idx = line.indexOf('=');
+ 				if (idx != -1) {
+ 					String key = line.substring(0, idx);
+ 					if (isWin32) //Since windows env ignores case let normalize to Upper here.
+ 						key = key.toUpperCase();
+ 					String value = line.substring(idx + 1);
+ 					envVars.setProperty(key, value);
+ 				} else {
+ 					envVars.setProperty(line, "");
+ 				}
+ 				if (check_ready && br.ready() == false) {
+ 					break;
+ 				}
+ 			}
+ 		} catch (IOException e) {
+ 		} finally {
+ 			try {
+ 				if (in != null) {
+ 					in.close();
+ 				}
+ 			} catch (IOException e) {
+ 			}
+ 			try {
+ 				if (p != null)
+ 					p.waitFor();
+ 			} catch (InterruptedException e) {
+ 			}
+ 		}
+ 		rawVars.trimToSize();
+ 		return (Properties)envVars.clone();
+ 	}
+ 
+ 	public static String getEnvVar(String key) {
+ 		Properties p = getEnvVars();
+ 		return p.getProperty(key);
+ 	}
+ 
+ 	public static String[] getRawEnvVars() {
+ 		getEnvVars();
+ 		return (String[]) rawVars.toArray(new String[0]);
+ 	}
+ }

@@ -1,0 +1,417 @@
+ /*
+  * Copyright 2011, 2012 Delving BV
+  *
+  *  Licensed under the EUPL, Version 1.0 or? as soon they
+  *  will be approved by the European Commission - subsequent
+  *  versions of the EUPL (the "Licence");
+  *  you may not use this work except in compliance with the
+  *  Licence.
+  *  You may obtain a copy of the Licence at:
+  *
+  *  http://ec.europa.eu/idabc/eupl
+  *
+  *  Unless required by applicable law or agreed to in
+  *  writing, software distributed under the Licence is
+  *  distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+  *  express or implied.
+  *  See the Licence for the specific language governing
+  *  permissions and limitations under the Licence.
+  */
+ 
+ package eu.delving.metadata;
+ 
+ import com.thoughtworks.xstream.XStream;
+ import com.thoughtworks.xstream.annotations.*;
+ import com.thoughtworks.xstream.converters.reflection.PureJavaReflectionProvider;
+ import eu.delving.schema.SchemaVersion;
+ 
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.io.Reader;
+ import java.io.UnsupportedEncodingException;
+ import java.util.*;
+ 
+ /**
+  * This class defines the structure of a record definition, and it involves a lot of recursion.
+  * <p/>
+  * There is a system of references built in which parses comma-delimited lists of identifiers which
+  * are sought in the lists of common elements and attributes attrs and elems.  Any of these can
+  * be referred by a subsequent one and this makes it easy to have patterns repeated throughout
+  * the record definition, as is often the case.
+  * <p/>
+  * The main part is stored in the Elem called "root", which is a composite tree of Elem and
+  * Attr instances.
+  * <p/>
+  * Information about which values are allowed can be stored in a list of options for that element
+  * by adding entries to the option lists and identifying the path.  These option lists are placed
+  * into the appropriate places when the RecDef is resolved.
+  * <p/>
+  * The same is true for the Doc instances, which hold human-facing documentation about the meaning
+  * of the element.
+  * <p/>
+  * Bookmarks are a mechanism which provides for more easy navigation of elaborate record definitions
+  * which are hard to work with due to their size.  Each bookmark can also include its own documentation,
+  * which can instruct the mapper how to use the element to which it refers.
+  *
+  * @author Gerald de Jong <gerald@delving.eu>
+  */
+ 
+ @XStreamAlias("record-definition")
+ public class RecDef {
+ 
+     private static final String DELIM = "[ ,]+";
+ 
+     public static RecDef read(InputStream in) {
+         try {
+             Reader inReader = new InputStreamReader(in, "UTF-8");
+             RecDef recDef = (RecDef) stream().fromXML(inReader);
+             recDef.resolve();
+             return recDef;
+         }
+         catch (UnsupportedEncodingException e) {
+             throw new RuntimeException(e);
+         }
+     }
+ 
+     private RecDef() {
+     }
+ 
+     @XStreamAsAttribute
+     public String prefix;
+ 
+     @XStreamAsAttribute
+     public String version;
+ 
+     @XStreamAsAttribute
+     public boolean flat;
+ 
+     public List<Namespace> namespaces;
+ 
+     public List<MappingFunction> functions;
+ 
+     public List<Attr> attrs;
+ 
+     public List<Elem> elems;
+ 
+     public Elem root;
+ 
+     public List<Dict> dicts;
+ 
+     public List<OptList> opts;
+ 
+     @XStreamAlias("field-markers")
+     public List<FieldMarker> fieldMarkers;
+ 
+     public List<Doc> docs;
+ 
+     @XStreamOmitField
+     public Map<String, Map<String, OptList.Opt>> optLookup = new TreeMap<String, Map<String, OptList.Opt>>();
+ 
+     public SchemaVersion getSchemaVersion() {
+         if (prefix == null || version == null) throw new IllegalArgumentException("Mapping lacks prefix or version");
+         return new SchemaVersion(prefix, version);
+     }
+ 
+     public Map<String, String> getNamespacesMap() {
+         Map<String, String> ns = new HashMap<String, String>();
+         if (namespaces != null) for (Namespace namespace : namespaces) ns.put(namespace.prefix, namespace.uri);
+         return ns;
+     }
+ 
+     public Attr attr(Tag tag) {
+         for (Attr def : attrs) {
+             def.tag = def.tag.defaultPrefix(prefix);
+             if (def.tag.equals(tag)) return def;
+         }
+         throw new RuntimeException(String.format("No attr [%s]", tag));
+     }
+ 
+     public Elem elem(Tag tag) {
+         for (Elem def : elems) {
+             def.tag = def.tag.defaultPrefix(prefix);
+             if (def.tag.equals(tag)) return def;
+         }
+         throw new RuntimeException(String.format("No elem [%s]", tag));
+     }
+ 
+     public String getFieldType(Path path) {
+         path = path.withDefaultPrefix(prefix);
+         return root.getFieldType(path);
+     }
+ 
+     public String toString() {
+         List<Path> paths = new ArrayList<Path>();
+         Path path = Path.create();
+         collectPaths(root, path, paths);
+         StringBuilder out = new StringBuilder();
+         for (Path p : paths) out.append(p.toString()).append('\n');
+         return out.toString();
+     }
+ 
+     private void resolve() {
+         if (prefix == null || version == null) throw new RuntimeException("Prefix and/or version missing");
+         root.resolve(Path.create(), this);
+         if (docs != null) for (Doc doc : docs) doc.resolve(this);
+         if (opts != null) for (OptList optList : opts) optList.resolve(this);
+     }
+ 
+     private void collectPaths(Elem elem, Path path, List<Path> paths) {
+         path = path.child(elem.tag);
+         paths.add(path);
+         for (Attr sub : elem.attrList) collectPaths(sub, path, paths);
+         for (Elem sub : elem.elemList) collectPaths(sub, path, paths);
+     }
+ 
+     private void collectPaths(Attr attr, Path path, List<Path> paths) {
+         path = path.child(attr.tag);
+         paths.add(path);
+     }
+ 
+     private Attr findAttr(Path path) {
+         Attr found = root.findAttr(path, 0);
+         if (found == null) throw new RuntimeException("No attribute found for path " + path);
+         return found;
+     }
+ 
+     Elem findElem(Path path) {
+         Elem found = root.findElem(path, 0);
+         if (found == null) throw new RuntimeException("No element found for path " + path);
+         return found;
+     }
+ 
+     @XStreamAlias("field-marker")
+     public static class FieldMarker {
+ 
+         @XStreamAsAttribute
+         public String name;
+ 
+         @XStreamAsAttribute
+         public String type;
+ 
+         @XStreamAsAttribute
+         public Path path;
+ 
+         public void resolve(RecDefTree recDefTree) {
+             path = path.withDefaultPrefix(recDefTree.getRecDef().prefix);
+             RecDefNode node = recDefTree.getRecDefNode(path);
+             if (node == null) throw new RuntimeException("Cannot find path " + path);
+             node.addFieldMarker(this);
+         }
+     }
+ 
+     @XStreamAlias("doc")
+     public static class Doc {
+ 
+         @XStreamAsAttribute
+         public Tag tag;
+ 
+         @XStreamAsAttribute
+         public Path path;
+ 
+         @XStreamImplicit
+         public List<String> lines;
+ 
+         public void resolve(RecDef recDef) {
+             if (recDef.prefix == null) throw new RuntimeException("No prefix found");
+             Elem elem;
+             Attr attr;
+             if (path != null) {
+                 if (lines == null) throw new RuntimeException("Lines is null for " + path);
+                 path = path.withDefaultPrefix(recDef.prefix);
+                 elem = recDef.root.findElem(path, 0);
+                 attr = recDef.root.findAttr(path, 0);
+                 if (elem == null && attr == null) throw new RuntimeException("Cannot find path " + path);
+             }
+             else if (tag != null) {
+                 if (lines == null) throw new RuntimeException("Lines is null for " + tag);
+                 tag = tag.defaultPrefix(recDef.prefix);
+                 elem = recDef.root.findElem(tag);
+                 attr = recDef.root.findAttr(tag);
+                 if (elem == null && attr == null) throw new RuntimeException("Cannot find tag " + tag);
+             }
+             else {
+                 throw new RuntimeException("Neither path nor tag available: " + lines);
+             }
+             if (elem != null) elem.doc = this;
+             if (attr != null) attr.doc = this;
+         }
+     }
+ 
+     @XStreamAlias("namespace")
+     public static class Namespace {
+ 
+         @XStreamAsAttribute
+         public String prefix;
+ 
+         @XStreamAsAttribute
+         public String uri;
+     }
+ 
+     @XStreamAlias("role")
+     public static class Role {
+         @XStreamAsAttribute
+         public String name;
+ 
+         @XStreamAsAttribute
+         public String i18n;
+     }
+ 
+     @XStreamAlias("attr")
+     public static class Attr {
+ 
+         @XStreamAsAttribute
+         @XStreamConverter(Tag.AttributeConverter.class)
+         public Tag tag;
+ 
+         @XStreamAsAttribute
+         public boolean hidden;
+ 
+         @XStreamAsAttribute
+         public String fieldType;
+ 
+         @XStreamOmitField
+         public Doc doc;
+ 
+         public String toString() {
+             return tag.toString();
+         }
+     }
+ 
+     @XStreamAlias("elem")
+     public static class Elem {
+ 
+         @XStreamAsAttribute
+         public Tag tag;
+ 
+         @XStreamAsAttribute
+         public String attrs;
+ 
+         @XStreamAsAttribute
+         public String elems;
+ 
+         @XStreamAsAttribute
+         public boolean required;
+ 
+         @XStreamAsAttribute
+         public boolean singular;
+ 
+         @XStreamAsAttribute
+         public boolean hidden;
+ 
+         @XStreamAsAttribute
+         public boolean unmappable;
+ 
+         @XStreamAsAttribute
+         public String fieldType;
+ 
+         @XStreamAsAttribute
+         public String function;
+ 
+         @XStreamAsAttribute
+         public Operator operator;
+ 
+         @XStreamImplicit
+         public List<Elem> elemList = new ArrayList<Elem>();
+ 
+         @XStreamAlias("node-mapping")
+         public NodeMapping nodeMapping;
+ 
+         @XStreamOmitField
+         public Doc doc;
+ 
+         @XStreamOmitField
+         public OptList optList;
+ 
+         @XStreamOmitField
+         public List<Attr> attrList = new ArrayList<Attr>();
+ 
+         @Override
+         public String toString() {
+             return tag.toString();
+         }
+ 
+         public Elem findElem(Tag tag) {
+             if (this.tag.equals(tag)) return this;
+             for (Elem sub : elemList) {
+                 Elem found = sub.findElem(tag);
+                 if (found != null) return found;
+             }
+             return null;
+         }
+ 
+         public Attr findAttr(Tag tag) {
+             for (Attr attr : attrList) if (attr.tag.equals(tag)) return attr;
+             for (Elem sub : elemList) {
+                 Attr found = sub.findAttr(tag);
+                 if (found != null) return found;
+             }
+             return null;
+         }
+ 
+         public Elem findElem(Path path, int level) {
+             Tag levelTag = path.getTag(level);
+             if (levelTag == null || !levelTag.equals(tag)) return null;
+             if (level == path.size() - 1) return this;
+             for (Elem sub : elemList) {
+                 Elem found = sub.findElem(path, level + 1);
+                 if (found != null) return found;
+             }
+             return null;
+         }
+ 
+         public Attr findAttr(Path path, int level) {
+             if (!path.getTag(level).equals(tag)) return null;
+             Tag nextTag = path.getTag(level + 1);
+             for (Attr attr : attrList) if (attr.tag.equals(nextTag)) return attr;
+             for (Elem sub : elemList) {
+                 Attr found = sub.findAttr(path, level + 1);
+                 if (found != null) return found;
+             }
+             return null;
+         }
+ 
+         public void resolve(Path path, RecDef recDef) {
+             if (tag == null) throw new RuntimeException("Null tag at: " + path);
+             path = path.child(tag);
+             tag = tag.defaultPrefix(recDef.prefix);
+             if (attrs != null) {
+                 for (String localName : attrs.split(DELIM)) {
+                     attrList.add(recDef.attr(Tag.attribute(recDef.prefix, localName)));
+                 }
+                 attrs = null;
+             }
+             if (elems != null) {
+                 for (String localName : elems.split(DELIM)) {
+                     elemList.add(recDef.elem(Tag.element(recDef.prefix, localName, null)));
+                 }
+                 elems = null;
+             }
+             for (Elem elem : elemList) elem.resolve(path, recDef);
+         }
+ 
+         String getFieldType() {
+            return fieldType != null ? fieldType : "text";
+         }
+ 
+         private String getFieldType(Path path) {
+             if (path.getTag(0).equals(tag)) {
+                 if (path.parent() == Path.ROOT) return getFieldType();
+                 Path subPath = path.withRootRemoved();
+                 for (Elem sub : elemList) {
+                     String fieldType = sub.getFieldType(subPath);
+                     if (fieldType != null) return fieldType;
+                 }
+             }
+             return null;
+         }
+     }
+ 
+     private static XStream stream() {
+         XStream stream = new XStream(new PureJavaReflectionProvider());
+         stream.registerConverter(new Tag.Converter());
+         stream.registerConverter(new Path.Converter());
+         stream.processAnnotations(RecDef.class);
+         return stream;
+     }
+ }

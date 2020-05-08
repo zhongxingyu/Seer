@@ -1,0 +1,157 @@
+ /*
+  * HA-JDBC: High-Availability JDBC
+  * Copyright (C) 2004 Paul Ferraro
+  * 
+  * This library is free software; you can redistribute it and/or modify it 
+  * under the terms of the GNU Lesser General Public License as published by the 
+  * Free Software Foundation; either version 2.1 of the License, or (at your 
+  * option) any later version.
+  * 
+  * This library is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License 
+  * for more details.
+  * 
+  * You should have received a copy of the GNU Lesser General Public License
+  * along with this library; if not, write to the Free Software Foundation, 
+  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+  * 
+  * Contact: ferraro@users.sourceforge.net
+  */
+ package net.sf.hajdbc.sync;
+ 
+ import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+ import java.sql.Statement;
+ import java.text.MessageFormat;
+ import java.util.Collection;
+ import java.util.Iterator;
+ import java.util.LinkedList;
+ import java.util.List;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ 
+ /**
+  * @author  Paul Ferraro
+  * @version $Revision$
+  * @since   1.0
+  */
+ public class ForeignKey
+ {
+ 	/** SQL-92 compatible create foreign key statement pattern */
+ 	public static final String DEFAULT_CREATE_SQL = "ALTER TABLE {1} ADD CONSTRAINT {0} FOREIGN KEY ({2}) REFERENCES {3} ({4})";
+ 
+ 	/** SQL-92 compatible drop foreign key statement pattern */
+ 	public static final String DEFAULT_DROP_SQL = "ALTER TABLE {1} DROP CONSTRAINT {0}";
+ 	
+ 	private static Log log = LogFactory.getLog(ForeignKey.class);
+ 	
+	private String quote;
+ 	private String name;
+ 	private String table;
+ 	private String column;
+ 	private String foreignTable;
+ 	private String foreignColumn;
+ 	
+ 	private String formatSQL(String pattern)
+ 	{
+		return MessageFormat.format(pattern, new Object[] { this.quote(this.name), this.table, this.column, this.quote(this.foreignTable), this.foreignColumn });
+	}
+
+	private String quote(String identifier)
+	{
+		return this.quote + identifier + this.quote;
+ 	}
+ 	
+ 	/**
+ 	 * @see java.lang.Object#equals(java.lang.Object)
+ 	 */
+ 	public boolean equals(Object object)
+ 	{
+ 		ForeignKey foreignKey = (ForeignKey) object;
+ 		
+ 		return (foreignKey != null) && (foreignKey.name != null) && foreignKey.name.equals(this.name);
+ 	}
+ 	
+ 	/**
+ 	 * @see java.lang.Object#hashCode()
+ 	 */
+ 	public int hashCode()
+ 	{
+ 		return this.name.hashCode();
+ 	}
+ 	
+ 	/**
+ 	 * Collects all foreign keys from the specified tables using the specified connection. 
+ 	 * @param connection a database connection
+ 	 * @param tableList a list of table names
+ 	 * @return a Collection<ForeignKey>.
+ 	 * @throws SQLException if a database error occurs
+ 	 */
+ 	public static Collection collect(Connection connection, List tableList) throws SQLException
+ 	{
+ 		List foreignKeyList = new LinkedList();
+		DatabaseMetaData metaData = connection.getMetaData();
+		String quote = metaData.getIdentifierQuoteString();
+ 		
+ 		Iterator tables = tableList.iterator();
+ 		
+ 		while (tables.hasNext())
+ 		{
+ 			String table = (String) tables.next();
+ 			
+			ResultSet resultSet = metaData.getImportedKeys(null, null, table);
+ 			
+ 			while (resultSet.next())
+ 			{
+ 				ForeignKey foreignKey = new ForeignKey();
+ 				
+ 				foreignKey.table = table;
+				foreignKey.quote = quote;
+ 				foreignKey.name = resultSet.getString("FK_NAME");
+ 				foreignKey.column = resultSet.getString("FKCOLUMN_NAME");
+ 				foreignKey.foreignTable = resultSet.getString("PKTABLE_NAME");
+ 				foreignKey.foreignColumn = resultSet.getString("PKCOLUMN_NAME");
+ 	
+ 				foreignKeyList.add(foreignKey);
+ 			}
+ 			
+ 			resultSet.close();
+ 		}
+ 		
+ 		return foreignKeyList;
+ 	}
+ 
+ 	/**
+ 	 * For each foreign key in the specified collection, generates and executes sql statements using the specified pattern and the specified connection.
+ 	 * @param connection a database connection
+ 	 * @param foreignKeyCollection a Collection<ForeignKey>
+ 	 * @param sqlPattern a sql pattern
+ 	 * @throws SQLException if a database error occurs
+ 	 */
+ 	public static void executeSQL(Connection connection, Collection foreignKeyCollection, String sqlPattern) throws SQLException
+ 	{
+ 		Statement statement = connection.createStatement();
+ 		
+ 		Iterator foreignKeys = foreignKeyCollection.iterator();
+ 		
+ 		while (foreignKeys.hasNext())
+ 		{
+ 			ForeignKey foreignKey = (ForeignKey) foreignKeys.next();
+ 			
+ 			String sql = foreignKey.formatSQL(sqlPattern);
+ 			
+ 			if (log.isDebugEnabled())
+ 			{
+ 				log.debug(sql);
+ 			}
+ 			
+ 			statement.execute(sql);
+ 		}
+ 
+ 		statement.close();
+ 	}
+ }

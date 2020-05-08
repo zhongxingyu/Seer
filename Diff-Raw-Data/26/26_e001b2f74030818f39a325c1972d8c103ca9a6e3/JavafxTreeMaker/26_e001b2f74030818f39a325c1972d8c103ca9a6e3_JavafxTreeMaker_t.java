@@ -1,0 +1,535 @@
+ /*
+  * Copyright 1999-2007 Sun Microsystems, Inc.  All Rights Reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License version 2 only, as
+  * published by the Free Software Foundation.  Sun designates this
+  * particular file as subject to the "Classpath" exception as provided
+  * by Sun in the LICENSE file that accompanied this code.
+  *
+  * This code is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+  * version 2 for more details (a copy is included in the LICENSE file that
+  * accompanied this code).
+  *
+  * You should have received a copy of the GNU General Public License version
+  * 2 along with this work; if not, write to the Free Software Foundation,
+  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+  * CA 95054 USA or visit www.sun.com if you need additional information or
+  * have any questions.
+  */
+ 
+ package com.sun.tools.javafx.tree;
+ 
+ import com.sun.javafx.api.JavafxBindStatus;
+ import com.sun.javafx.api.tree.TimeLiteralTree.Duration;
+ import com.sun.javafx.api.tree.TypeTree.Cardinality;
+ import com.sun.tools.javac.code.*;
+ import com.sun.tools.javac.code.Symbol.PackageSymbol;
+ import com.sun.tools.javac.tree.JCTree;
+ import com.sun.tools.javac.tree.JCTree.*;
+ import com.sun.tools.javac.tree.TreeMaker;
+ import com.sun.tools.javac.util.*;
+ import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
+ import java.io.IOException;
+ import java.io.StringWriter;
+ import javax.tools.JavaFileObject;
+ 
+ /* JavaFX version of tree maker
+  */
+ public class JavafxTreeMaker extends TreeMaker implements JavafxTreeFactory {
+      /** Get the JavafxTreeMaker instance.
+      */
+     public static JavafxTreeMaker instance(Context context) {
+         JavafxTreeMaker instance = (JavafxTreeMaker) context.get(treeMakerKey);
+         if (instance == null)
+             instance = new JavafxTreeMaker(context);
+         return instance;
+     }
+     
+     public static void preRegister(final Context context) {
+         context.put(treeMakerKey, new Context.Factory<TreeMaker>() {
+             @Override
+             public TreeMaker make() {
+                 return new JavafxTreeMaker(context);
+             }
+         });
+     }
+     
+     /** Create a tree maker with null toplevel and NOPOS as initial position.
+      */
+     protected JavafxTreeMaker(Context context) {
+         this(null,
+                 Name.Table.instance(context),
+                 Types.instance(context),
+                 Symtab.instance(context)
+                 );
+         context.put(treeMakerKey, this);
+         this.pos = Position.NOPOS;
+     }
+     
+     /** Create a tree maker with a given toplevel and FIRSTPOS as initial position.
+      */
+     JavafxTreeMaker(JCCompilationUnit toplevel, Name.Table names, Types types, Symtab syms) {
+         super(toplevel, names, types, syms);
+     }
+     
+     /** Create a new tree maker for a given toplevel.
+      */
+     @Override
+     public JavafxTreeMaker forToplevel(JCCompilationUnit toplevel) {
+         return new JavafxTreeMaker(toplevel, names, types, syms);
+     }
+ 
+     /** Reassign current position.
+      */
+     @Override
+     public JavafxTreeMaker at(int pos) {
+         this.pos = pos;
+         return this;
+     }
+     
+     /** Reassign current position.
+      */
+     @Override
+     public JavafxTreeMaker at(DiagnosticPosition pos) {
+         this.pos = (pos == null ? Position.NOPOS : pos.getStartPosition());
+         return this;
+     }
+     
+     public JFXClassDeclaration ClassDeclaration(JCModifiers mods,
+             Name name,
+             List<JCExpression> supertypes,
+             List<JCTree> declarations) {
+         JFXClassDeclaration tree = new JFXClassDeclaration(mods,
+                 name,
+                 supertypes,
+                 declarations,
+                 null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXBindExpression BindExpression(JCExpression expr, JavafxBindStatus bindStatus) {
+         if (bindStatus == null)
+             bindStatus = JavafxBindStatus.UNBOUND;
+         JFXBindExpression tree = new JFXBindExpression(expr, bindStatus);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JCExpression MaybeBindExpression(JCExpression expr, JavafxBindStatus bindStatus) {
+         if (bindStatus == null || ! bindStatus.isBound())
+             return expr;
+         JFXBindExpression tree = new JFXBindExpression(expr, bindStatus);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXBlockExpression BlockExpression(long flags, List<JCStatement> stats, JCExpression value) {
+         JFXBlockExpression tree = new JFXBlockExpression(flags, stats, value);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXFunctionDefinition FunctionDefinition(
+             JCModifiers modifiers,
+             Name name,
+             JFXType restype,
+             List<JFXVar> params, 
+             JFXBlockExpression bodyExpression) {
+         JFXFunctionDefinition tree = new JFXFunctionDefinition(
+                 modifiers,
+                 name,
+                 restype,
+                 params,
+                 bodyExpression);
+         tree.operation.definition = tree;
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXFunctionValue FunctionValue(
+             JFXType restype,
+              List<JFXVar> params, 
+             JFXBlockExpression bodyExpression) {
+         JFXFunctionValue tree = new JFXFunctionValue(
+                 restype,
+                 params,
+                 bodyExpression);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXInitDefinition InitDefinition(
+             JCBlock body) {
+         JFXInitDefinition tree = new JFXInitDefinition(
+                 body);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXPostInitDefinition PostInitDefinition(JCBlock body) {
+         JFXPostInitDefinition tree = new JFXPostInitDefinition(body);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceEmpty EmptySequence() {
+         JFXSequenceEmpty tree = new JFXSequenceEmpty();
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceRange RangeSequence(JCExpression lower, JCExpression upper, JCExpression stepOrNull, boolean exclusive) {
+         JFXSequenceRange tree = new JFXSequenceRange(lower, upper,  stepOrNull,  exclusive);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceExplicit ExplicitSequence(List<JCExpression> items) {
+         JFXSequenceExplicit tree = new JFXSequenceExplicit(items);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXSequenceIndexed SequenceIndexed(JCExpression sequence, JCExpression index) {
+         JFXSequenceIndexed tree = new JFXSequenceIndexed(sequence, index);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceSlice SequenceSlice(JCExpression sequence, JCExpression firstIndex, JCExpression lastIndex, int endKind) {
+         JFXSequenceSlice tree = new JFXSequenceSlice(sequence, firstIndex,
+                 lastIndex, endKind);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceInsert SequenceInsert(JCExpression sequence, JCExpression element, JCExpression position, boolean after) {
+         JFXSequenceInsert tree = new JFXSequenceInsert(sequence, element, position, after);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceDelete SequenceDelete(JCExpression sequence) {
+         JFXSequenceDelete tree = new JFXSequenceDelete(sequence, null);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXSequenceDelete SequenceDelete(JCExpression sequence, JCExpression element) {
+         JFXSequenceDelete tree = new JFXSequenceDelete(sequence, element);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXStringExpression StringExpression(List<JCExpression> parts,
+                                         String translationKey) {
+         JFXStringExpression tree = new JFXStringExpression(parts, translationKey);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXInstanciate Instanciate(JCExpression ident,
+             List<JCExpression> args,
+             List<JCTree> defs) {
+         ListBuffer<JFXObjectLiteralPart> partsBuffer = ListBuffer.lb();
+         ListBuffer<JCTree> defsBuffer = ListBuffer.lb();
+         ListBuffer<JFXVar> varsBuffer = ListBuffer.lb();
+         if (defs != null) {
+             for (JCTree def : defs) {
+                 if (def instanceof JFXObjectLiteralPart) {
+                     partsBuffer.append((JFXObjectLiteralPart) def);
+                 } else if (def instanceof JFXVar && ((JFXVar)def).isLocal()) {
+                     varsBuffer.append((JFXVar) def);
+                 } else {
+                     defsBuffer.append(def);
+                 }
+             }
+         }
+         JFXClassDeclaration klass = null;
+         if (defsBuffer.size() > 0) {
+             JCExpression id = ident;
+             while (id instanceof JCFieldAccess) id = ((JCFieldAccess)id).getExpression();
+             Name cname = syntheticClassName(((JCIdent)id).getName());
+             long innerClassFlags = Flags.SYNTHETIC | Flags.FINAL; // to enable, change to Flags.FINAL
+             klass = this.ClassDeclaration(this.Modifiers(innerClassFlags), cname, List.<JCExpression>of(ident), defsBuffer.toList());
+         }
+         
+         JFXInstanciate tree = new JFXInstanciate(ident, 
+                 klass, 
+                 args==null? List.<JCExpression>nil() : args, 
+                 partsBuffer.toList(), 
+                 varsBuffer.toList(), 
+                 null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXSetAttributeToObjectBeingInitialized SetAttributeToObjectBeingInitialized(Name name) {
+         JFXSetAttributeToObjectBeingInitialized tree = new JFXSetAttributeToObjectBeingInitialized(name, null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXObjectLiteralPart ObjectLiteralPart(
+             Name attrName,
+             JCExpression expr,
+             JavafxBindStatus bindStatus) {
+         return ObjectLiteralPart(attrName, MaybeBindExpression(expr, bindStatus));
+     }
+ 
+     public JFXObjectLiteralPart ObjectLiteralPart(
+             Name attrName,
+             JCExpression expr) {
+         JFXObjectLiteralPart tree =
+                 new JFXObjectLiteralPart(attrName, expr, null);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+     public JFXType  TypeAny(Cardinality cardinality) {
+         JFXType tree = new JFXTypeAny(cardinality);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXType  TypeUnknown() {
+         JFXType tree = new JFXTypeUnknown();
+        tree.pos = Position.NOPOS;
+         return tree;
+     }
+     
+     public JFXType  TypeClass(JCExpression className,Cardinality cardinality) {
+         JFXType tree = new JFXTypeClass(className, cardinality, null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXType TypeFunctional(List<JFXType> params,
+             JFXType restype,
+             Cardinality cardinality) {
+         JFXType tree = new JFXTypeFunctional(params,
+                 restype,
+                 cardinality);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     
+     public JFXOverrideAttribute TriggerWrapper(JCIdent expr, JFXOnReplace onr) {
+         JFXOverrideAttribute tree = new JFXOverrideAttribute(expr, null, null, onr, null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXOnReplace OnReplace(JFXVar oldValue, JCBlock body) {
+         JFXOnReplace tree = new JFXOnReplace(oldValue, body);
+         tree.pos = pos;
+         return tree;
+     }
+     
+      public JFXOnReplace OnReplace(JFXVar oldValue, JFXVar firstIndex,
+              JFXVar lastIndex, JFXVar newElements, JCBlock body) {
+          return OnReplace(oldValue, firstIndex, lastIndex,
+                  JFXSequenceSlice.END_INCLUSIVE, newElements, body);
+     }
+ 
+      public JFXOnReplace OnReplace(JFXVar oldValue, JFXVar firstIndex,
+              JFXVar lastIndex, int endKind, JFXVar newElements, JCBlock body) {
+          JFXOnReplace tree = new JFXOnReplace(oldValue, firstIndex, lastIndex,
+                  endKind, newElements, body);
+         tree.pos = pos;
+         return tree;
+     }
+    
+    
+     public JFXVar Var(Name name,
+             JFXType type,
+             JCModifiers mods,
+             boolean isLocal,
+             JCExpression initializer,
+             JavafxBindStatus bindStatus,
+             JFXOnReplace onReplace) {
+             JFXVar tree = new JFXVar(name, type, 
+                mods, isLocal, initializer, bindStatus, onReplace, null);
+         tree.pos = pos;
+         return tree;
+     }   
+     public JFXOverrideAttribute OverrideAttribute(JCIdent expr, 
+             JCExpression initializer,
+             JavafxBindStatus bindStatus,
+             JFXOnReplace onr) {
+         JFXOverrideAttribute tree = new JFXOverrideAttribute(expr, initializer, 
+                 bindStatus, onr, null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXVar Param(Name name,
+             JFXType type) {
+         JFXVar tree = new JFXVar(name, type, 
+                 Modifiers(Flags.PARAMETER), true, null, JavafxBindStatus.UNBOUND, null, null);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXForExpression ForExpression(
+             List<JFXForExpressionInClause> inClauses,
+             JCExpression bodyExpr) {
+         JFXForExpression tree = new JFXForExpression(inClauses, bodyExpr);       
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXForExpressionInClause InClause(
+             JFXVar var, 
+             JCExpression seqExpr,
+             JCExpression whereExpr) {
+         JFXForExpressionInClause tree = new JFXForExpressionInClause(var, seqExpr, whereExpr);       
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JCExpression Identifier(Name name) {
+         String str = name.toString();
+         if (str.indexOf('.') < 0 && str.indexOf('<') < 0) {
+             return Ident(name);
+         }
+         return Identifier(str);
+     }
+     
+     public JCExpression Identifier(String str) {
+         assert str.indexOf('<') < 0 : "attempt to parse a type with 'Identifier'.  Use TypeTree";
+         JCExpression tree = null;
+         int inx;
+         int lastInx = 0;
+         do {
+             inx = str.indexOf('.', lastInx);
+             int endInx;
+             if (inx < 0) {
+                 endInx = str.length();
+             } else {
+                 endInx = inx;
+             }
+             String part = str.substring(lastInx, endInx);
+             Name partName = Name.fromString(names, part);
+             tree = tree == null? 
+                 Ident(partName) : 
+                 Select(tree, partName);
+             lastInx = endInx + 1;
+         } while (inx >= 0);
+         return tree;
+     }
+     
+     public JFXInterpolate Interpolate(JCExpression var, List<JFXInterpolateValue> values) {
+         JFXInterpolate tree = new JFXInterpolate(var, values);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXInterpolateValue InterpolateValue(JCExpression attr, JCExpression v, JCExpression interp) {
+         JFXInterpolateValue tree = new JFXInterpolateValue(attr, v, interp);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXIndexof Indexof (Name name) {
+         JFXIndexof tree = new JFXIndexof(name);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXTimeLiteral TimeLiteral(String str) {
+         int i = 0;
+         char[] buf = str.toCharArray();
+         while (i < buf.length && (Character.isDigit(buf[i]) || buf[i] == '.'))
+             i++;
+         assert i > 0 && buf.length - i > 0; // lexer should only pass valid time strings
+         String dur = str.substring(i);
+         Duration duration = 
+                 dur.equals("ms") ? Duration.MILLIS :
+                 dur.equals("s") ? Duration.SECONDS :
+                 dur.equals("m") ? Duration.MINUTES :
+                 dur.equals("h") ? Duration.HOURS : null;
+         assert duration != null;
+         Object value;
+         try {
+             String s = str.substring(0, i);
+             if (s.indexOf('.') >= 0)
+                 value = Double.valueOf(s) * duration.getMultiplier();
+             else 
+                 value = Integer.valueOf(s) * duration.getMultiplier();
+         } catch (NumberFormatException ex) {
+             // error already reported in scanner
+             value = Double.NaN;
+         }
+         JCLiteral literal = Literal(value);
+         JFXTimeLiteral tree = new JFXTimeLiteral(literal, duration);
+         tree.pos = pos;
+         return tree;
+     }
+     
+     public JFXKeyFrameLiteral KeyFrameLiteral(JFXTimeLiteral start, List<JFXInterpolate> exprs, JFXBlockExpression trigger) {
+         JFXKeyFrameLiteral tree = new JFXKeyFrameLiteral(start, exprs, trigger);
+         tree.pos = pos;
+         return tree;
+     }
+ 
+    
+     private int syntheticClassNumber = 0;
+     
+     Name syntheticClassName(Name superclass) {
+         return Name.fromString(names, superclass.toString() + "$anon" + ++syntheticClassNumber);
+     }
+     
+     /**
+      * Clone of javac's TreeMaker.TopLevel, minus the assertion check of defs types.
+      */
+     @Override
+     public JCCompilationUnit TopLevel(List<JCAnnotation> packageAnnotations,
+                                       JCExpression pid,
+                                       List<JCTree> defs) {
+         assert packageAnnotations != null;
+         JCCompilationUnit tree = new JFXCompilationUnit(packageAnnotations, pid, defs,
+                                      null, null, null, null);
+         tree.pos = pos;
+         return tree;
+     }
+     private static class JFXCompilationUnit extends JCCompilationUnit {
+         protected JFXCompilationUnit(List<JCAnnotation> packageAnnotations,
+                         JCExpression pid,
+                         List<JCTree> defs,
+                         JavaFileObject sourcefile,
+                         PackageSymbol packge,
+                         Scope namedImportScope,
+                         Scope starImportScope) {
+             super(packageAnnotations, pid, defs, sourcefile, packge, namedImportScope, starImportScope);
+         }
+         
+         @Override
+         public String toString() {
+             StringWriter s = new StringWriter();
+             try {
+                 new JavafxPretty(s, false).printExpr(this);
+             }
+             catch (IOException e) {
+                 // should never happen, because StringWriter is defined
+                 // never to throw any IOExceptions
+                 throw new AssertionError(e);
+             }
+             return s.toString();
+         }
+     }
+     
+     public JCExpression QualIdent(Symbol sym) {
+         if (sym.kind ==Kinds.PCK && sym.owner == syms.rootPackage)
+             return Ident(sym);
+         return super.QualIdent(sym);
+     }
+ }

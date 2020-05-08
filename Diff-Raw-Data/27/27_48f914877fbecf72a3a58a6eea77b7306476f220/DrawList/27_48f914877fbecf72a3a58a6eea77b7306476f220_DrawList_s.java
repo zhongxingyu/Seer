@@ -1,0 +1,157 @@
+ /* 
+ GeoGebra - Dynamic Geometry and Algebra
+ Copyright Markus Hohenwarter, http://www.geogebra.at
+ 
+ This file is part of GeoGebra.
+ 
+ This program is free software; you can redistribute it and/or modify it 
+ under the terms of the GNU General Public License as published by 
+ the Free Software Foundation; either version 2 of the License, or 
+ (at your option) any later version.
+ */
+ 
+ /*
+  * DrawPoint.java
+  *
+  * Created on 11. Oktober 2001, 23:59
+  */
+ 
+ package geogebra.euclidian;
+ 
+ import geogebra.kernel.GeoElement;
+ import geogebra.kernel.GeoList;
+ 
+ import java.awt.Graphics2D;
+ import java.awt.Rectangle;
+ import java.util.ArrayList;
+ 
+ 
+ /**
+  * Draw a list of objects
+  * @author  Markus Hohenwarter
+  * @version 
+  */
+ public final class DrawList extends Drawable {
+ 	 	
+ 	private GeoList geoList;	
+ 	private ArrayList drawables = new ArrayList();
+ 	private boolean isVisible;
+ 	
+ 	
+     public DrawList(EuclidianView view, GeoList geoList) {      
+     	this.view = view;          
+         this.geoList = geoList;
+         geo = geoList;         
+ 
+         update();
+     }
+     
+     final public void update() {    
+     	isVisible = geoList.isEuclidianVisible();
+     	if (!isVisible) return;    	
+     	
+     	// go through list elements and create and/or update drawables
+     	int size = geoList.size();
+     	drawables.ensureCapacity(size);
+     	int oldDrawableSize = drawables.size();
+     	
+     	int drawablePos = 0;
+     	for (int i=0; i < size; i++) {    		
+     		GeoElement listElement = geoList.get(i);
+     		if (!listElement.isDrawable()) 
+     			continue;
+ 
+     		Drawable d = null;
+     		boolean inOldDrawableRange = drawablePos < oldDrawableSize;
+     		if (inOldDrawableRange) {
+     			// try to reuse old drawable
+ 	    		Drawable oldDrawable = (Drawable) drawables.get(drawablePos);
+ 	    		if (oldDrawable.geo == listElement) {	
+ 	    			d = oldDrawable;
+ 	    		} else {
+ 	    			d = getDrawable(listElement);  			
+ 	    		}	    		    		    	
+     		} else {
+     			d = getDrawable(listElement); 
+     		}
+     		
+     		if (d != null) {
+     			d.update();
+     			if (inOldDrawableRange) {    				
+     				drawables.set(drawablePos, d);
+     			} else {
+     				drawables.add(drawablePos, d);
+     			}
+     			++drawablePos;
+     		}
+     	}    
+     	
+     	// remove end of list
+     	for (int i=drawables.size()-1; i >= drawablePos; i--) {      		 
+     		drawables.remove(i);
+     	}
+     }
+     
+     private Drawable getDrawable(GeoElement listElement) {
+     	Drawable d = view.getDrawable(listElement);
+ 		if (d == null) {    			
+ 			// create a new drawable for geo
+ 			d = view.createDrawable(listElement);   
+ 			d.createdByDrawList = true;
+ 		} 
+ 		return d;
+     }
+ 
+     final public void draw(Graphics2D g2) {   
+     	if (isVisible) {
+     		boolean doHighlight = geoList.doHighlighting();
+     		
+     		int size = drawables.size();
+     		for (int i=0; i < size; i++) {     			     			
+     			Drawable d = (Drawable) drawables.get(i);
+     			// draw only those drawables that have been created by this list;
+     			// if d belongs to another object, we don't want to mess with it here
+     			if (createdByDrawList || !d.geo.isLabelSet()) {
+     				d.geo.setHighlighted(doHighlight);
+     				d.draw(g2);
+     			}
+     		}
+     	}
+     }
+     
+     /**
+      * Returns whether any one of the list items is at the given screen position.
+      */
+     final public boolean hit(int x, int y) {
+    		int size = drawables.size();
+ 		for (int i=0; i < size; i++) {    		
+ 			Drawable d = (Drawable) drawables.get(i);
+     		if (d.hit(x, y))
+     			return true;    			
+     	}       
+     	return false;
+     }
+     
+     final public boolean isInside(Rectangle rect) {
+    		int size = drawables.size();
+ 		for (int i=0; i < size; i++) {    		
+ 			Drawable d = (Drawable) drawables.get(i);
+ 			if (!d.isInside(rect))
+     			return false;   			
+     	}        		
+    	return true;
+     }
+     
+     
+     
+     final public GeoElement getGeoElement() {
+         return geo;
+     }    
+     
+     final public void setGeoElement(GeoElement geo) {
+         this.geo = geo;
+     } 
+ 
+ }
+ 
+ 

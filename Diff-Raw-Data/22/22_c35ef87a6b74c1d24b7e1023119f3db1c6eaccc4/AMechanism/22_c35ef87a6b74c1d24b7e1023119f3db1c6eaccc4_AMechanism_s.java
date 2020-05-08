@@ -1,0 +1,112 @@
+ /***********************************************************************
+  * Copyright (c) 1999-2006 The Apache Software Foundation.             *
+  * All rights reserved.                                                *
+  * ------------------------------------------------------------------- *
+  * Licensed under the Apache License, Version 2.0 (the "License"); you *
+  * may not use this file except in compliance with the License. You    *
+  * may obtain a copy of the License at:                                *
+  *                                                                     *
+  *     http://www.apache.org/licenses/LICENSE-2.0                      *
+  *                                                                     *
+  * Unless required by applicable law or agreed to in writing, software *
+  * distributed under the License is distributed on an "AS IS" BASIS,   *
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or     *
+  * implied.  See the License for the specific language governing       *
+  * permissions and limitations under the License.                      *
+  ***********************************************************************/
+ 
+ package org.apache.spf.mechanismn;
+ 
+ import org.apache.spf.PermErrorException;
+ import org.apache.spf.SPF1Data;
+ import org.apache.spf.SPF1Parser;
+ import org.apache.spf.util.IPAddr;
+ import org.apache.spf.util.IPUtil;
+ 
+ import java.util.ArrayList;
+ import java.util.regex.MatchResult;
+ 
+ /**
+  * This class represent the a mechanism
+  * 
+  * @author Norman Maurer <nm@byteaction.de>
+  *
+  */
+ public class AMechanism extends GenericMechanism {
+ 
+     /**
+      * ABNF: "a"
+      */
+     public static final String A_NAME_REGEX = "[aA]";
+ 
+     /**
+      * ABNF: A = "a" [ ":" domain-spec ] [ dual-cidr-length ]
+      */
+     public static final String A_VALUE_REGEX = "(?:\\:" + SPF1Parser.DOMAIN_SPEC_REGEX + ")?" + "(?:"
+             + DUAL_CIDR_LENGTH_REGEX + ")?";
+ 
+     /**
+      * ABNF: A = "a" [ ":" domain-spec ] [ dual-cidr-length ]
+      */
+     public static final String A_REGEX = A_NAME_REGEX + A_VALUE_REGEX;
+ 
+ 
+     protected int ip4cidr;
+ 
+     protected int ip6cidr;
+     
+     public AMechanism() {
+         this(A_NAME_REGEX,A_VALUE_REGEX);
+     }
+     
+     protected AMechanism(String patternName, String patternValue) {
+         super(patternName,patternValue);
+     }
+ 
+     /**
+      * 
+      * @see org.apache.spf.mechanismn.GenericMechanism#run(org.apache.spf.SPF1Data)
+      */
+     public boolean run(SPF1Data spfData) throws PermErrorException {
+         ArrayList addressList = new ArrayList();
+ 
+         // Get the right host.
+         String host = expandHost(spfData);
+ 
+         // get the ipAddress
+         try {
+             IPAddr checkAddress = IPAddr.getAddress(spfData.getIpAddress(),
+                     ip4cidr);
+             try {
+                 addressList.addAll(spfData.getDnsProbe().getARecords(host,
+                         ip4cidr));
+                 if (IPUtil.checkAddressList(checkAddress, addressList)) {
+                     return true;
+                 }
+             } catch (Exception e) {
+                 // no a records just return null
+                 return false;
+             }
+         } catch (Exception e) {
+             throw new PermErrorException("No valid ipAddress: "
+                     + spfData.getIpAddress());
+         }
+         // No match found
+         return false;
+     }
+ 
+     public void config(MatchResult params) throws PermErrorException {
+         super.config(params);
+         if (params.groupCount() >= 2 && params.group(2) != null) {
+             ip4cidr = Integer.parseInt(params.group(2).toString());
+         } else {
+             ip4cidr = 32;
+         }
+         if (params.groupCount() >= 3 && params.group(3) != null) {
+             ip6cidr = Integer.parseInt(params.group(3).toString());
+         } else {
+             ip6cidr = 128;
+         }
+     }
+ 
+ }

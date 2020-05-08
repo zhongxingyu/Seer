@@ -1,0 +1,27 @@
+ /*
+  * Copyright (c) 2013 University of Tartu
+  */
+ package org.dmg.pmml;
+ 
+ import org.junit.*;
+ 
+ import static org.junit.Assert.*;
+ 
+ public class FieldNameTest {
+ 
+ 	@Test
+ 	public void create(){
+		assertSame(FieldName.create("x"), FieldName.create("x"));
+	}
+ 
+	@Test
+	public void unmarshal(){
+		assertNotNull(FieldName.unmarshal("x"));
+	}
+
+	@Test
+	public void marshal(){
+		assertEquals("x", FieldName.marshal(FieldName.create("x")));
+		assertEquals(null, FieldName.marshal(null));
+ 	}
+ }

@@ -1,0 +1,6746 @@
+ package descent.internal.compiler.parser;
+ 
+ import static descent.internal.compiler.parser.LINK.LINKc;
+ import static descent.internal.compiler.parser.LINK.LINKcpp;
+ import static descent.internal.compiler.parser.LINK.LINKd;
+ import static descent.internal.compiler.parser.LINK.LINKdefault;
+ import static descent.internal.compiler.parser.LINK.LINKpascal;
+ import static descent.internal.compiler.parser.LINK.LINKsystem;
+ import static descent.internal.compiler.parser.LINK.LINKwindows;
+ import static descent.internal.compiler.parser.STC.STCconst;
+ import static descent.internal.compiler.parser.STC.STCextern;
+ import static descent.internal.compiler.parser.STC.STCfinal;
+ import static descent.internal.compiler.parser.STC.STCin;
+ import static descent.internal.compiler.parser.STC.STCinvariant;
+ import static descent.internal.compiler.parser.STC.STClazy;
+ import static descent.internal.compiler.parser.STC.STCout;
+ import static descent.internal.compiler.parser.STC.STCref;
+ import static descent.internal.compiler.parser.STC.STCscope;
+ import static descent.internal.compiler.parser.STC.STCstatic;
+ import static descent.internal.compiler.parser.STC.STCundefined;
+ import static descent.internal.compiler.parser.TOK.TOKPRAGMA;
+ import static descent.internal.compiler.parser.TOK.TOKalias;
+ import static descent.internal.compiler.parser.TOK.TOKand;
+ import static descent.internal.compiler.parser.TOK.TOKandand;
+ import static descent.internal.compiler.parser.TOK.TOKassert;
+ import static descent.internal.compiler.parser.TOK.TOKassign;
+ import static descent.internal.compiler.parser.TOK.TOKauto;
+ import static descent.internal.compiler.parser.TOK.TOKblockcomment;
+ import static descent.internal.compiler.parser.TOK.TOKcase;
+ import static descent.internal.compiler.parser.TOK.TOKcatch;
+ import static descent.internal.compiler.parser.TOK.TOKclass;
+ import static descent.internal.compiler.parser.TOK.TOKcolon;
+ import static descent.internal.compiler.parser.TOK.TOKcomma;
+ import static descent.internal.compiler.parser.TOK.TOKconst;
+ import static descent.internal.compiler.parser.TOK.TOKdefault;
+ import static descent.internal.compiler.parser.TOK.TOKdelegate;
+ import static descent.internal.compiler.parser.TOK.TOKdocblockcomment;
+ import static descent.internal.compiler.parser.TOK.TOKdoclinecomment;
+ import static descent.internal.compiler.parser.TOK.TOKdocpluscomment;
+ import static descent.internal.compiler.parser.TOK.TOKdot;
+ import static descent.internal.compiler.parser.TOK.TOKdotdotdot;
+ import static descent.internal.compiler.parser.TOK.TOKelse;
+ import static descent.internal.compiler.parser.TOK.TOKenum;
+ import static descent.internal.compiler.parser.TOK.TOKeof;
+ import static descent.internal.compiler.parser.TOK.TOKequal;
+ import static descent.internal.compiler.parser.TOK.TOKfinally;
+ import static descent.internal.compiler.parser.TOK.TOKfunction;
+ import static descent.internal.compiler.parser.TOK.TOKidentifier;
+ import static descent.internal.compiler.parser.TOK.TOKidentity;
+ import static descent.internal.compiler.parser.TOK.TOKif;
+ import static descent.internal.compiler.parser.TOK.TOKimport;
+ import static descent.internal.compiler.parser.TOK.TOKinout;
+ import static descent.internal.compiler.parser.TOK.TOKint32v;
+ import static descent.internal.compiler.parser.TOK.TOKinterface;
+ import static descent.internal.compiler.parser.TOK.TOKinvariant;
+ import static descent.internal.compiler.parser.TOK.TOKis;
+ import static descent.internal.compiler.parser.TOK.TOKlbracket;
+ import static descent.internal.compiler.parser.TOK.TOKlcurly;
+ import static descent.internal.compiler.parser.TOK.TOKlinecomment;
+ import static descent.internal.compiler.parser.TOK.TOKlparen;
+ import static descent.internal.compiler.parser.TOK.TOKmodule;
+ import static descent.internal.compiler.parser.TOK.TOKnew;
+ import static descent.internal.compiler.parser.TOK.TOKnot;
+ import static descent.internal.compiler.parser.TOK.TOKnotidentity;
+ import static descent.internal.compiler.parser.TOK.TOKnotis;
+ import static descent.internal.compiler.parser.TOK.TOKon_scope_exit;
+ import static descent.internal.compiler.parser.TOK.TOKon_scope_failure;
+ import static descent.internal.compiler.parser.TOK.TOKon_scope_success;
+ import static descent.internal.compiler.parser.TOK.TOKor;
+ import static descent.internal.compiler.parser.TOK.TOKoror;
+ import static descent.internal.compiler.parser.TOK.TOKpluscomment;
+ import static descent.internal.compiler.parser.TOK.TOKplusplus;
+ import static descent.internal.compiler.parser.TOK.TOKquestion;
+ import static descent.internal.compiler.parser.TOK.TOKrbracket;
+ import static descent.internal.compiler.parser.TOK.TOKrcurly;
+ import static descent.internal.compiler.parser.TOK.TOKref;
+ import static descent.internal.compiler.parser.TOK.TOKreserved;
+ import static descent.internal.compiler.parser.TOK.TOKreturn;
+ import static descent.internal.compiler.parser.TOK.TOKrparen;
+ import static descent.internal.compiler.parser.TOK.TOKsemicolon;
+ import static descent.internal.compiler.parser.TOK.TOKslice;
+ import static descent.internal.compiler.parser.TOK.TOKstring;
+ import static descent.internal.compiler.parser.TOK.TOKstruct;
+ import static descent.internal.compiler.parser.TOK.TOKsuper;
+ import static descent.internal.compiler.parser.TOK.TOKthis;
+ import static descent.internal.compiler.parser.TOK.TOKtilde;
+ import static descent.internal.compiler.parser.TOK.TOKtypedef;
+ import static descent.internal.compiler.parser.TOK.TOKtypeof;
+ import static descent.internal.compiler.parser.TOK.TOKunion;
+ import static descent.internal.compiler.parser.TOK.TOKwhile;
+ import static descent.internal.compiler.parser.TOK.TOKxor;
+ import static descent.internal.compiler.parser.TY.Taarray;
+ import static descent.internal.compiler.parser.TY.Tfunction;
+ import static descent.internal.compiler.parser.TY.Tsarray;
+ 
+ import java.util.ArrayList;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.StringTokenizer;
+ 
+ import descent.core.compiler.CharOperation;
+ import descent.core.compiler.IProblem;
+ 
+ // DMD 1.020 and DMD 2.003
+ public class Parser extends Lexer {
+ 	
+ 	private final static boolean LTORARRAYDECL = true;
+ 	
+ 	private final static int PSsemi = 1;		// empty ';' statements are allowed
+ 	private final static int PSscope = 2;	// start a new scope
+ 	private final static int PScurly = 4;	// { } statement is required
+ 	private final static int PScurlyscope = 8;	// { } starts a new scope
+ 
+ 	private Module module;
+ 	private ModuleDeclaration md;
+ 	private int inBrackets;	
+ 	
+ 	int apiLevel;
+ 	List<Comment> comments;
+ 	List<Pragma> pragmas;
+ 	private int lastDocCommentRead = 0;
+ 	private boolean appendLeadingComments = true;
+ 	
+ 	private LINK linkage = LINKd;
+ 
+ 	public Parser(int apiLevel, String source) {
+ 		this(apiLevel, source, 0, source.length());
+ 	}
+ 	
+ 	public Parser(int apiLevel, char[] source) {
+ 		this(apiLevel, source, 0, source.length);
+ 	}
+ 	
+ 	public Parser(int apiLevel, String source, int offset, int length) {
+ 		this(apiLevel, source.toCharArray(), offset, length);
+ 	}
+ 	
+ 	public Parser(int apiLevel, char[] source, int offset, 
+ 			int length) {
+ 		this(apiLevel, source, offset, length, null, null, false);
+ 	}
+ 	
+ 	public Parser(int apiLevel, char[] source, int offset, 
+ 			int length, char[][] taskTags, char[][] taskPriorities, boolean isTaskCaseSensitive) {
+ 		super(source, offset, length, 
+ 				true /* tokenize comments */, 
+ 				true /* tokenize pragmas */,
+ 				false /* don't tokenize whitespace */, 
+ 				true /* record line separators */,
+ 				apiLevel);
+ 		this.apiLevel = apiLevel;
+ 		comments = new ArrayList<Comment>();
+ 		pragmas = new ArrayList<Pragma>();
+ 		this.taskTags = taskTags;
+ 		this.taskPriorities = taskPriorities;
+ 		this.isTaskCaseSensitive = isTaskCaseSensitive;
+ 		nextToken();
+ 	}
+ 	
+ 	public Module parseModuleObj() {
+ 		module = new Module(loc);
+ 		module.members = parseModule();
+ 		module.sourceMembers = new Dsymbols(module.members);
+ 		module.md = md;
+ 		module.comments = comments.toArray(new Comment[comments.size()]);
+ 		module.pragmas = pragmas.toArray(new Pragma[pragmas.size()]);
+ 		module.lineEnds = getLineEnds();
+ 		
+ 		if (taskTags != null) {
+ 			addTaskTagsToProblems();
+ 		}
+ 		
+ 		module.apiLevel = apiLevel;
+ 		module.problems = problems;
+ 		module.start = 0;
+ 		module.length = this.end;
+ 		return module;
+ 	}
+ 	
+ 	private void addTaskTagsToProblems() {
+ 		for(int i = 0; i < foundTaskCount; i++) {
+ 			IProblem problem = Problem.newTask(
+ 					new String(CharOperation.concat(foundTaskTags[i], foundTaskMessages[i], ' ')), 
+ 					getLineNumber(foundTaskPositions[i][0]), 
+ 					foundTaskPositions[i][0], 
+ 					foundTaskPositions[i][1] - foundTaskPositions[i][0]);
+ 			reportProblem(problem);
+ 		}
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	protected Dsymbols parseModule() {
+ 	    Dsymbols decldefs = new Dsymbols();
+ 	    
+ 	    // Special treatment if the file starts with Ddoc
+ 	    if (token.value == TOKidentifier && CharOperation.equals(token.sourceString, Id.Ddoc)) {
+ 	    	return decldefs;
+ 	    }
+ 
+ 		// ModuleDeclation leads off
+ 		if (token.value == TOKmodule) {
+ 			int start = token.ptr;
+ 			
+ 			List<Comment> moduleDocComments = getLastDocComments();
+ 			
+ 			nextToken();
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorDeleteToken(prevToken);
+ 				
+ 				decldefs = parseDeclDefs(false);
+ 				if (token.value != TOKeof) {
+ 					parsingErrorDeleteToken(token);
+ 				}
+ 				return decldefs;
+ 			} else {
+ 				Identifiers a = null;
+ 				IdentifierExp id = null;
+ 				id = newIdentifierExp();
+ 				while (nextToken() == TOKdot) {
+ 					if (a == null) {
+ 						a = new Identifiers();
+ 					}
+ 					a.add(id);
+ 					nextToken();
+ 					if (token.value != TOKidentifier) {
+ 						parsingErrorInsertTokenAfter(prevToken, ";");
+ 						
+ 						decldefs = parseDeclDefs(false);
+ 						if (token.value != TOKeof) {
+ 							parsingErrorDeleteToken(token);
+ 						}
+ 						return decldefs;
+ 					}
+ 					id = newIdentifierExp();
+ 				}
+ 
+ 				md = new ModuleDeclaration(a, id);
+ 				md.setSourceRange(start, token.ptr + token.len - start);
+ 				md.preDdocs = moduleDocComments;
+ 
+ 				if (token.value != TOKsemicolon) {
+ 					setMalformed(md);
+ 					parsingErrorInsertTokenAfter(prevToken, ";");
+ 				} else {
+ 					nextToken();
+ 				}
+ 				
+ 				attachLeadingComments(md);
+ 				adjustPossitionAccordingToComments(md, md.preDdocs, md.postDdoc);
+ 			}
+ 		}
+ 
+ 		decldefs = parseDeclDefs(false);
+ 		if (token.value != TOKeof) {
+ 			parsingErrorDeleteToken(token);
+ 			// goto Lerr;
+ 			return parseModule_LErr(decldefs);
+ 		}
+ 		return decldefs;
+ 	}
+ 	
+ 	private Dsymbols parseModule_LErr(Dsymbols decldefs) {
+ 		while (token.value != TOKsemicolon && token.value != TOKeof)
+ 	    	nextToken();
+ 	    nextToken();
+ 	    return decldefs;
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+ 	public Dsymbols parseDeclDefs(boolean once) {
+ 		Dsymbol s = null;
+ 		Dsymbols decldefs;
+ 		Dsymbols a = new Dsymbols();
+ 		Dsymbols aelse;
+ 		PROT prot;
+ 		int stc;
+ 		boolean[] isSingle = new boolean[1];
+ 		boolean attachLeadingComments = true;
+ 		
+ 		decldefs = new Dsymbols();
+ 		do {
+ 			List<Comment> lastComments = getLastDocComments();
+ 			isSingle[0] = false;
+ 			attachLeadingComments = true;
+ 			
+ 			int start = token.ptr;
+ 			switch (token.value) {
+ 			case TOKenum:
+ 				s = parseEnum();
+ 				break;
+ 
+ 			case TOKstruct:
+ 			case TOKunion:
+ 			case TOKclass:
+ 			case TOKinterface:
+ 				s = parseAggregate();
+ 				break;
+ 
+ 			case TOKimport:
+ 				s = parseImport(false);
+ 				break;
+ 
+ 			case TOKtemplate:
+ 				s = parseTemplateDeclaration();
+ 				break;
+ 
+ 			case TOKmixin:
+ 				if (peek(token).value == TOKlparen)
+ 				{   // mixin(string)
+ 				    nextToken();
+ 				    check(TOKlparen);
+ 				    Expression e = parseAssignExp();
+ 				    check(TOKrparen);
+ 				    check(TOKsemicolon);
+ 				    s = new CompileDeclaration(loc, e);
+ 				    break;
+ 				}
+ 
+ 				s = parseMixin();
+ 				break;
+ 
+ 			// begin CASE_BASIC_TYPES
+ 			case TOKwchar:
+ 			case TOKdchar:
+ 			case TOKbit:
+ 			case TOKbool:
+ 			case TOKchar:
+ 			case TOKint8:
+ 			case TOKuns8:
+ 			case TOKint16:
+ 			case TOKuns16:
+ 			case TOKint32:
+ 			case TOKuns32:
+ 			case TOKint64:
+ 			case TOKuns64:
+ 			case TOKfloat32:
+ 			case TOKfloat64:
+ 			case TOKfloat80:
+ 			case TOKimaginary32:
+ 			case TOKimaginary64:
+ 			case TOKimaginary80:
+ 			case TOKcomplex32:
+ 			case TOKcomplex64:
+ 			case TOKcomplex80:
+ 			case TOKvoid:
+ 				// end CASE_BASIC_TYPES
+ 			case TOKalias:
+ 			case TOKtypedef:
+ 			case TOKidentifier:
+ 			case TOKtypeof:
+ 			case TOKdot:
+ 				// Ldeclaration:
+ 				a = parseDeclarations(lastComments);
+ 				decldefs.addAll(a);
+ 				continue;
+ 
+ 			case TOKthis:
+ 				s = parseCtor();
+ 				break;
+ 
+ 			case TOKtilde:
+ 				s = parseDtor();
+ 				break;
+ 
+ 			case TOKinvariant:
+ 				if (apiLevel == D2) {
+ 				    Token t;
+ 					t = peek(token);
+ 					if (t.value == TOKlparen) {
+ 						if (peek(t).value == TOKrparen) {
+ 							// invariant() forms start of class invariant
+ 							s = parseInvariant();
+ 						} else {
+ 							// invariant(type)
+ 							// goto Ldeclaration;
+ 							a = parseDeclarations(lastComments);
+ 							decldefs.addAll(a);
+ 							continue;
+ 						}
+ 					} else {
+ 						stc = STCinvariant;
+ 						
+ 						Modifier modifier = new Modifier(token);
+ 						modifier.setSourceRange(token.ptr, token.len);
+ 						
+ 						// goto Lstc;
+ 						nextToken();
+ 						
+ 						s= parseDeclDefs_Lstc2(isSingle, modifier, stc, decldefs);
+ 					}
+ 				} else {
+ 					s = parseInvariant();
+ 				}
+ 				break;
+ 
+ 			case TOKunittest:
+ 				s = parseUnitTest();
+ 				break;
+ 
+ 			case TOKnew:
+ 				s = parseNew();
+ 				break;
+ 
+ 			case TOKdelete:
+ 				s = parseDelete();
+ 				break;
+ 
+ 			case TOKeof:
+ 			case TOKrcurly:
+ 				return decldefs;
+ 
+ 			case TOKstatic:
+ 				int staticTokenStart = token.ptr;
+ 				int staticTokenLength = token.len;
+ 				nextToken();
+ 				if (token.value == TOKthis) {
+ 					s = parseStaticCtor();
+ 				}
+ 				else if (token.value == TOKtilde) {
+ 					s = parseStaticDtor();
+ 				}
+ 				else if (token.value == TOKassert) {
+ 					s = parseStaticAssert();
+ 				} else if (token.value == TOKif) {
+ 					StaticIfCondition condition = parseStaticIfCondition();
+ 					a = parseBlock();
+ 					aelse = null;
+ 					if (token.value == TOKelse) {
+ 						nextToken();
+ 						aelse = parseBlock();
+ 					}					
+ 					s = new StaticIfDeclaration(loc, condition, a, aelse);
+ 					attachLeadingComments = prevToken.value == TOKrcurly;
+ 					break;
+ 				} else if (token.value == TOKimport) {
+ 					s = parseImport(true);
+ 				} else {
+ 					stc = STCstatic;
+ 					
+ 					// goto Lstc2;
+ 					
+ 					Modifier modifier = new Modifier(prevToken);
+ 					modifier.setSourceRange(staticTokenStart, staticTokenLength);
+ 					
+ 					s = parseDeclDefs_Lstc2(isSingle, modifier, stc, decldefs);
+ 				}
+ 				break;
+ 
+ 			case TOKconst:
+ 				if (apiLevel == D2 && peek(token).value == TOKlparen) {
+ 					// goto Ldeclaration
+ 					a = parseDeclarations(lastComments);
+ 					decldefs.addAll(a);
+ 					continue;
+ 				} else {
+ 					stc = STCconst;
+ 					
+ 					Modifier modifier = new Modifier(token);
+ 					modifier.setSourceRange(token.ptr, token.len);
+ 					
+ 					// goto Lstc;
+ 					nextToken();
+ 					
+ 					s= parseDeclDefs_Lstc2(isSingle, modifier, stc, decldefs);
+ 					break;
+ 				}
+ 			case TOKfinal:
+ 			case TOKauto:
+ 			case TOKscope:
+ 			case TOKoverride:
+ 			case TOKabstract:
+ 			case TOKsynchronized:
+ 			case TOKdeprecated:
+ 				stc = STC.fromTOK(token.value);
+ 				
+ 				Modifier modifier = new Modifier(token);
+ 				modifier.setSourceRange(token.ptr, token.len);
+ 				
+ 				// goto Lstc;
+ 				nextToken();
+ 				
+ 				s= parseDeclDefs_Lstc2(isSingle, modifier, stc, decldefs);
+ 				break;
+ 
+ 			case TOKextern:
+ 				if (peek(token).value != TOKlparen) {
+ 					stc = STCextern;
+ 					
+ 					modifier = new Modifier(token);
+ 					modifier.setSourceRange(token.ptr, token.len);
+ 					
+ 					// goto Lstc;
+ 					nextToken();
+ 					
+ 					s = parseDeclDefs_Lstc2(isSingle, modifier, stc, decldefs);
+ 					break;
+ 				}
+ 				{
+ 					LINK linksave = linkage;
+ 					LINK linkage = parseLinkage();
+ 					a = parseBlock();
+ 					s = new LinkDeclaration(loc, linkage, a);
+ 					attachLeadingComments = prevToken.value == TOKrcurly;
+ 					linkage = linksave;
+ 					break;
+ 				}
+ 			case TOKprivate:
+ 			case TOKpackage:
+ 			case TOKprotected:
+ 			case TOKpublic:
+ 			case TOKexport:
+ 				
+ 				prot = PROT.fromTOK(token.value);
+ 				
+ 				modifier = new Modifier(token);
+ 				modifier.setSourceRange(token.ptr, token.len);
+ 				
+ 				// goto Lprot;
+ 				nextToken();
+ 				
+ 				boolean isColon = token.value == TOKcolon;
+ 				a = parseBlock(isSingle);
+ 				s = new ProtDeclaration(loc, prot, a, modifier, isSingle[0], isColon);
+ 				attachLeadingComments = prevToken.value == TOKrcurly;
+ 				break;
+ 				
+ 			case TOKalign: {
+ 				long n;
+ 
+ 				s = null;
+ 				nextToken();
+ 				if (token.value == TOKlparen) {
+ 					nextToken();
+ 					if (token.value == TOKint32v)
+ 						n = token.intValue.longValue();
+ 					else {
+ 						parsingErrorInsertTokenAfter(prevToken, "Integer");
+ 						n = 1;
+ 					}
+ 					nextToken();
+ 					check(TOKrparen);
+ 				} else {
+ 					n = new Global().structalign; // default
+ 				}
+ 				a = parseBlock();
+ 				s = new AlignDeclaration(loc, (int) n, a);
+ 				attachLeadingComments = prevToken.value == TOKrcurly;
+ 				break;
+ 			}
+ 
+ 			case TOKpragma: {
+ 				IdentifierExp ident;
+ 				Expressions args = null;
+ 
+ 				nextToken();
+ 				check(TOKlparen);
+ 				if (token.value != TOKidentifier) {
+ 					parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 					// goto Lerror;
+ 					s = parseDeclDefs_Lerror();
+ 					continue;
+ 				}
+ 				ident = newIdentifierExp();
+ 				nextToken();
+ 				if (token.value == TOKcomma) {
+ 					args = parseArguments(); // pragma(identifier, args...)
+ 				} else {
+ 					check(TOKrparen); // pragma(identifier)
+ 				}
+ 
+ 				if (token.value == TOKsemicolon) {
+ 					a = null;
+ 				} else {
+ 					a = parseBlock();
+ 				}
+ 				
+ 				s = new PragmaDeclaration(loc, ident, args, a);
+ 				attachLeadingComments = prevToken.value == TOKrcurly;
+ 				break;
+ 			}
+ 
+ 			case TOKdebug:
+ 				nextToken();
+ 				if (token.value == TOKassign) {
+ 					nextToken();
+ 					if (token.value == TOKidentifier || token.value == TOKint32v) {
+ 						s = newDebugAssignmentForCurrentToken();
+ 					} else {
+ 						parsingErrorInsertTokenAfter(prevToken, "Identifier or Integer");
+ 						s = null;
+ 					}
+ 					nextToken();
+ 					if (token.value != TOKsemicolon) {
+ 						parsingErrorInsertTokenAfter(prevToken, ";");
+ 					}
+ 					nextToken();
+ 					break;
+ 				}
+ 
+ 				DebugCondition debugCondition = parseDebugCondition();
+ 				
+ 				a = parseBlock();
+ 				aelse = null;
+ 				if (token.value == TOKelse) {
+ 					nextToken();
+ 					aelse = parseBlock();
+ 				}
+ 				
+ 				s = new ConditionalDeclaration(loc, debugCondition, a, aelse);
+ 				attachLeadingComments = prevToken.value == TOKrcurly;
+ 				break;
+ 
+ 			case TOKversion:
+ 				nextToken();
+ 				if (token.value == TOKassign) {
+ 					nextToken();
+ 					if (token.value == TOKidentifier || token.value == TOKint32v) {
+ 						s = newVersionAssignmentForCurrentToken();
+ 					} else {
+ 						parsingErrorInsertTokenAfter(prevToken, "Identifier or Integer");
+ 						s = null;
+ 					}
+ 					nextToken();
+ 					if (token.value != TOKsemicolon) {
+ 						parsingErrorInsertTokenAfter(prevToken, ";");
+ 					}
+ 					nextToken();
+ 					break;
+ 				}
+ 				
+ 				VersionCondition versionCondition = parseVersionCondition();
+ 				
+ 				a = parseBlock();
+ 				aelse = null;
+ 				if (token.value == TOKelse) {
+ 					nextToken();
+ 					aelse = parseBlock();
+ 				}
+ 				
+ 				s = new ConditionalDeclaration(loc, versionCondition, a, aelse);
+ 				attachLeadingComments = prevToken.value == TOKrcurly;
+ 				break;
+ 
+ 			case TOKiftype:		
+ 				IftypeCondition iftypeCondition = parseIftypeCondition();
+ 				
+ 				a = parseBlock();
+ 				aelse = null;
+ 				if (token.value == TOKelse) {
+ 					nextToken();
+ 					aelse = parseBlock();
+ 				}				
+ 
+ 				s = new ConditionalDeclaration(loc, iftypeCondition, a, aelse);
+ 				attachLeadingComments = prevToken.value == TOKrcurly;
+ 				break;
+ 
+ 			case TOKsemicolon: // empty declaration
+ 				nextToken();
+ 				continue;
+ 
+ 			default:
+ 				parsingErrorDeleteToken(token);
+ 				nextToken();
+ 				continue;
+ 			}
+ 			if (s != null) {
+ 				s.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				s.preDdocs = lastComments;
+ 				if (attachLeadingComments) {
+ 					attachLeadingComments(s);
+ 				}
+ 				adjustPossitionAccordingToComments(s, s.preDdocs, s.postDdoc);
+ 				decldefs.add(s);
+ 			}
+ 		} while (!once);
+ 		return decldefs;
+ 	}
+ 	
+ 	private Dsymbol parseDeclDefs_Lerror() {
+ 		while (token.value != TOKsemicolon && token.value != TOKeof)
+ 		    nextToken();
+ 		nextToken();
+ 		return null;
+ 	}
+ 	
+ 	private Dsymbol parseDeclDefs_Lstc2(boolean[] isSingle, Modifier modifier, int stc, Dsymbols decldefs) {
+ 		Token firstToken = new Token(prevToken);
+ 		int start = firstToken.ptr;
+ 		
+ 		List<Modifier> modifiers = new ArrayList<Modifier>();
+ 		modifiers.add(modifier);
+ 		
+ 		Dsymbol s = null;
+ 		
+ 		boolean repeat = true;
+ 		while(repeat) {
+ 			switch (token.value)
+ 			{
+ 			    case TOKconst:
+ 			    case TOKinvariant:
+ 			    	if (apiLevel == D2) {
+ 						// If followed by a (, it is not a storage class
+ 						if (peek(token).value == TOKlparen) {
+ 							repeat = false;
+ 						    break;
+ 						}
+ 						if (token.value == TOKconst) {
+ 						    stc |= STCconst;
+ 						} else {
+ 						    stc |= STCinvariant;
+ 						}
+ 						modifier = new Modifier(token);
+ 				    	modifier.setSourceRange(token.ptr, token.len);
+ 				    	modifiers.add(modifier);
+ 				    	nextToken();
+ 				    	break;
+ 			    	} else {
+ 			    		if (token.value == TOKinvariant) {
+ 			    			repeat = false;
+ 			    			break;
+ 			    		}
+ 			    		// fall to next case
+ 			    	}
+ 			    case TOKfinal:
+ 			    case TOKauto:
+ 			    case TOKscope:
+ 			    case TOKoverride:
+ 			    case TOKabstract:
+ 			    case TOKsynchronized:
+ 			    case TOKdeprecated:
+ 			    	stc |= STC.fromTOK(token.value);
+ 			    	
+ 			    	modifier = new Modifier(token);
+ 			    	modifier.setSourceRange(token.ptr, token.len);
+ 			    	modifiers.add(modifier);
+ 			    	nextToken();
+ 			    	break;
+ 			    default:
+ 			    	repeat = false;
+ 					break;
+ 			}
+ 		}
+ 		
+ 		VarDeclaration previous = null;
+ 
+ 		/* Look for auto initializers:
+ 		 *	storage_class identifier = initializer;
+ 		 */
+ 		if (token.value == TOKidentifier &&
+ 		    peek(token).value == TOKassign)
+ 		{
+ 			boolean first = true;
+ 			while(true) {
+ 			    IdentifierExp ident = newIdentifierExp();
+ 			    nextToken();
+ 			    nextToken();
+ 			    Initializer init = parseInitializer();
+ 			    VarDeclaration v = new VarDeclaration(loc, null, ident, init);
+ 			    v.first = first;
+ 			    first = false;
+ 			    
+ 			    v.storage_class = stc;
+ 			    v.addModifiers(modifiers);
+ 			    
+ 			    attachLeadingComments(v);
+ 			    adjustPossitionAccordingToComments(v, v.preDdocs, v.postDdoc);
+ 			    
+ 			    s = v;
+ 			    if (previous != null) {
+ 			    	previous.next = v;
+ 			    }
+ 			    previous = v;
+ 			    
+ 			    if (token.value == TOKsemicolon) {
+ 			    	v.setSourceRange(start, token.ptr + token.len - start);
+ 					nextToken();
+ 					v.last = true;
+ 				} else if (token.value == TOKcomma) {
+ 					v.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 					nextToken();
+ 					start = token.ptr;
+ 					if (token.value == TOKidentifier
+ 							&& peek(token).value == TOKassign) {
+ 						decldefs.add(s);
+ 						continue;
+ 					} else {
+ 						parsingErrorInsertTokenAfter(prevToken, "identifier");
+ 					}
+ 				} else {
+ 					parsingErrorInsertTokenAfter(prevToken, TOKsemicolon
+ 							.toString());
+ 					v.setSourceRange(firstToken.ptr, prevToken.ptr + prevToken.len - firstToken.ptr);
+ 					v.last = true;
+ 				}
+ 				break;
+ 			}
+ 		}
+ 		else
+ 		{  
+ 			boolean isColon = token.value == TOKcolon;
+ 			Dsymbols a = parseBlock(isSingle);
+ 			
+ 			if (isSingle[0] && a.size() == 0) {
+ 				parsingErrorDeleteToken(firstToken);
+ 				return null;
+ 			}
+ 			
+ 			s = new StorageClassDeclaration(loc, stc, a, modifier, isSingle[0], isColon);
+ 			modifiers.remove(modifier);
+ 			s.modifiers = modifiers;
+ 		}
+ 		
+ 		return s;
+ 	}
+ 	
+ 	private Dsymbols parseBlock() {
+ 		return parseBlock(null);
+ 	}
+ 	
+ 	private Dsymbols parseBlock(boolean[] isSingle) {
+ 		Dsymbols a = null;
+ 
+ 		switch (token.value) {
+ 		case TOKsemicolon:
+ 			parsingErrorInsertToComplete(prevToken, "Declaration", "Declaration");
+ 			nextToken();
+ 			break;
+ 
+ 		case TOKlcurly:
+ 			nextToken();
+ 			a = parseDeclDefs(false);
+ 			if (token.value != TOKrcurly) { /* { */
+ 				parsingErrorInsertTokenAfter(prevToken, "}");
+ 			} else
+ 				nextToken();
+ 			break;
+ 
+ 		case TOKcolon:
+ 			nextToken();
+ 			// #if 1
+ 			// a = null;
+ 			// #else
+ 			a = parseDeclDefs(false);   // grab declarations up to closing curly
+ 										// bracket
+ 			// #endif
+ 			break;
+ 
+ 		default:
+ 			a = parseDeclDefs(true);
+ 			if (isSingle != null) {
+ 				isSingle[0] = true;
+ 			}
+ 			break;
+ 		}
+ 		return a;
+ 	}
+ 	
+ 	private StaticAssert parseStaticAssert() {
+ 		Expression exp;
+ 		Expression msg = null;
+ 
+ 		nextToken();
+ 		check(TOKlparen);
+ 		exp = parseAssignExp();
+ 		if (token.value == TOKcomma) {
+ 			nextToken();
+ 			msg = parseAssignExp();
+ 		}
+ 		check(TOKrparen);
+ 		check(TOKsemicolon);
+ 
+ 		return new StaticAssert(loc, exp, msg);
+ 	}
+ 	
+ 	private LINK parseLinkage() {
+ 		LINK link = LINKdefault;
+ 		nextToken();
+ 		
+ 		if(token.value != TOKlparen) {
+ 			throw new IllegalStateException();
+ 		}
+ 		
+ 		nextToken();
+ 		if (token.value == TOKidentifier) {
+ 			char[] id = token.sourceString;
+ 			int start = token.ptr;
+ 			int length = token.len;
+ 			int lineNumber = token.lineNumber;
+ 
+ 			nextToken();
+ 			
+ 			// We can compare by equality because Lexer reuses the 
+ 			// char[] instances for this special tokens
+ 			
+ 			if (id == Id.Windows) {
+ 				link = LINKwindows;
+ 			} else if (id == Id.Pascal) {
+ 				link = LINKpascal;
+ 			} else if (id == Id.D) {
+ 				link = LINKd;
+ 			} else if (id == Id.C) {
+ 				link = LINKc;
+ 				if (token.value == TOKplusplus) {
+ 					link = LINKcpp;
+ 					nextToken();
+ 				}
+ 			} else if (id == Id.System) {
+ 				link = LINKsystem;
+ 			} else {
+ 				error(IProblem.InvalidLinkageIdentifier, lineNumber, start, length);
+ 				link = LINKd;
+ 			}
+ 		} else {
+ 			link = LINKdefault; // default
+ 		}
+ 		check(TOKrparen);
+ 		return link;
+ 	}
+ 	
+ 	private DebugCondition parseDebugCondition() {
+ 		DebugCondition c;
+ 		char[] id = null;
+ 		int idTokenStart = -1;
+ 		int idTokenLength = -1;
+ 		long level = 1;
+ 
+ 		if (token.value == TOKlparen) {
+ 			nextToken();
+ 			if (token.value == TOKidentifier) {
+ 				id = token.sourceString;
+ 				idTokenStart = token.ptr;
+ 				idTokenLength = token.len;
+ 			} else if (token.value == TOKint32v) {
+ 				id = token.sourceString;
+ 				level = token.intValue.longValue();
+ 				idTokenStart = token.ptr;
+ 				idTokenLength = token.len;
+ 			} else {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier or Integer");
+ 			}
+ 			nextToken();
+ 			check(TOKrparen);
+ 			c = new DebugCondition(module, loc, level, id);
+ 		} else {
+ 			c = new DebugCondition(module, loc, 1, null);
+ 		}
+ 		c.startPosition = idTokenStart;
+ 		c.length = idTokenLength;
+ 		return c;
+ 	}
+ 	
+ 	private VersionCondition parseVersionCondition() {
+ 		VersionCondition c;
+ 		long level = 1;
+ 		char[] id = null;
+ 
+ 		int idTokenStart = -1;
+ 		int idTokenLength = -1;
+ 
+ 		if (token.value == TOKlparen) {
+ 			nextToken();
+ 			if (token.value == TOKidentifier) {
+ 				id = token.sourceString;
+ 				idTokenStart = token.ptr;
+ 				idTokenLength = token.len;
+ 			} else if (token.value == TOKint32v) {
+ 				id = token.sourceString;
+ 				level = token.intValue.longValue();
+ 				idTokenStart = token.ptr;
+ 				idTokenLength = token.len;				
+ 			} else {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier or Integer");
+ 			}
+ 			nextToken();
+ 			check(TOKrparen);
+ 		} else {
+ 			parsingErrorInsertToComplete(prevToken, "(condition)", "VersionDeclaration");
+ 		}
+ 		c = new VersionCondition(module, loc, level, id);
+ 		c.startPosition = idTokenStart;
+ 		c.length = idTokenLength;
+ 		return c;
+ 	}
+ 	
+ 	private StaticIfCondition parseStaticIfCondition() {
+ 		Expression exp;
+ 		nextToken();
+ 		if (token.value == TOKlparen) {
+ 			nextToken();
+ 			exp = parseAssignExp();
+ 			check(TOKrparen);
+ 		} else {
+ 			parsingErrorInsertToComplete(prevToken, "(expression)", "StaticIfDeclaration");
+ 			exp = null;
+ 		}
+ 		return new StaticIfCondition(loc, exp);
+ 	}
+ 	
+ 	private IftypeCondition parseIftypeCondition() {
+ 		Type targ;
+ 		IdentifierExp[] ident = new IdentifierExp[1];
+ 		Type tspec = null;
+ 		TOK tok = TOKreserved;
+ 
+ 		int firstTokenStart = token.ptr;
+ 		int firstTokenLength = token.len;
+ 		int firstTokenLine = token.lineNumber;
+ 
+ 		nextToken();
+ 		if (token.value == TOKlparen) {
+ 			nextToken();
+ 			targ = parseBasicType();
+ 			targ = parseDeclarator(targ, ident);
+ 			if (token.value == TOKcolon || token.value == TOKequal) {
+ 				tok = token.value;
+ 				nextToken();
+ 				tspec = parseBasicType();
+ 				tspec = parseDeclarator(tspec, null);
+ 			}
+ 			check(TOKrparen);
+ 		} else {
+ 			parsingErrorInsertToComplete(prevToken, "(type identifier : specialization)", "IftypeDeclaration");
+ 			return new IftypeCondition(loc, null, null, null, null);
+ 		}
+ 
+ 		error(
+ 				IProblem.IftypeDeprecated, firstTokenLine,
+ 				firstTokenStart, firstTokenLength);
+ 
+ 		return new IftypeCondition(loc, targ, ident[0], tok, tspec);
+ 	}
+ 	
+ 	private CtorDeclaration parseCtor() {
+ 		int start = token.ptr;
+ 		
+ 		int[] varargs = new int[1];
+ 	    nextToken();
+ 	    Arguments arguments = parseParameters(varargs);
+ 	    CtorDeclaration f = new CtorDeclaration(loc, arguments, varargs[0]);
+ 	    f.thisStart = start;
+ 	    parseContracts(f);
+ 	    f.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 	    return f;
+ 	}
+ 	
+ 	private DtorDeclaration parseDtor() {
+ 		int start = token.ptr;
+ 		nextToken();
+ 		
+ 		check(TOKthis);
+ 	    check(TOKlparen);
+ 	    check(TOKrparen);
+ 		
+ 		DtorDeclaration f = new DtorDeclaration(loc);
+ 		f.notThisStart = start;
+ 	    parseContracts(f);
+ 	    f.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 	    return f;
+ 	}
+ 	
+ 	private StaticCtorDeclaration parseStaticCtor() {
+ 		int start = token.ptr;
+ 		
+ 		nextToken();
+ 	    check(TOKlparen);
+ 	    check(TOKrparen);
+ 
+ 	    StaticCtorDeclaration f = new StaticCtorDeclaration(loc);
+ 		f.setSourceRange(start, 0);
+ 	    parseContracts(f);
+ 	    return f;
+ 	}
+ 	
+ 	private StaticDtorDeclaration parseStaticDtor() {
+ 		int start = token.ptr;
+ 		nextToken();
+ 		
+ 		check(TOKthis);
+ 	    check(TOKlparen);
+ 	    check(TOKrparen);
+ 		
+ 		StaticDtorDeclaration f = new StaticDtorDeclaration(loc);
+ 		f.setSourceRange(start, 0);
+ 	    parseContracts(f);
+ 	    return f;
+ 	}
+ 	
+ 	private InvariantDeclaration parseInvariant() {
+ 		int start = token.ptr;
+ 	    nextToken();
+ 	    
+ 	    if (token.value == TOKlparen)	// optional ()
+ 	    {
+ 			nextToken();
+ 			check(TOKrparen);
+ 	    }
+ 
+ 	    InvariantDeclaration invariant = new InvariantDeclaration(loc);
+ 	    invariant.invariantStart = start;
+ 	    invariant.fbody = parseStatement(PScurly);
+ 	    invariant.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 	    return invariant;
+ 	}
+ 	
+ 	private UnitTestDeclaration parseUnitTest() {
+ 		int start = token.ptr;
+ 		nextToken();
+ 		
+ 		UnitTestDeclaration unitTest = new UnitTestDeclaration(loc);
+ 		unitTest.fbody = parseStatement(PScurly);
+ 	    unitTest.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 	    return unitTest;
+ 	}
+ 	
+ 	private NewDeclaration parseNew() {
+ 		int start = token.ptr;
+ 		
+ 		nextToken();
+ 		int[] varargs = new int[1];
+ 		Arguments arguments = parseParameters(varargs);
+ 		
+ 		NewDeclaration f = new NewDeclaration(loc, arguments, varargs[0]);
+ 		f.newStart = start;
+ 	    parseContracts(f);
+ 	    f.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 	    return f;
+ 	}
+ 	
+ 	private FuncDeclaration parseDelete() {
+ 		int start = token.ptr;
+ 		int startLine = token.lineNumber;
+ 		
+ 		IdentifierExp name = newIdentifierExp();
+ 		
+ 		nextToken();
+ 		int[] varargs = new int[1];
+ 		Arguments arguments = parseParameters(varargs);
+ 		
+ 		if (varargs[0] != 0) {
+ 	    	error(
+ 	    			IProblem.VariadicNotAllowedInDelete, 
+ 	    			startLine, name);
+ 	    }
+ 		
+ 		DeleteDeclaration f = new DeleteDeclaration(loc, arguments);
+ 		f.deleteStart = start;
+ 	    parseContracts(f);
+ 	    f.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 	    return f;
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private Arguments parseParameters(int[] pvarargs) {
+ 		if (apiLevel < D2) {
+ 			return parseParametersD1(pvarargs);
+ 		} else {
+ 			return parseParametersD2(pvarargs);
+ 		}
+ 	}
+ 	
+ 	private Arguments parseParametersD1(int[] pvarargs) {
+ 		Arguments arguments = new Arguments();
+ 		int varargs = 0;
+ 		boolean hasdefault = false;
+ 
+ 		check(TOKlparen);
+ 		while (true) {
+ 			Type tb;
+ 			IdentifierExp ai;
+ 			Type at;
+ 			Argument a;
+ 			int storageClass;
+ 			Expression ae;
+ 			List<Modifier> modifiers = new ArrayList<Modifier>(1);
+ 			
+ 			int firstTokenStart = token.ptr;
+ 			
+ 			ai = null;
+ 			storageClass = STCin;
+ 			
+ 			if (token.value == TOKrparen) {
+ 				break;
+ 			} else if (token.value == TOKdotdotdot) {
+ 				varargs = 1;
+ 				nextToken();
+ 				break;
+ 			} else {
+ 				int inoutTokenStart = token.ptr;
+ 				int inoutTokenLength = token.len;
+ 				int inoutTokenLine = token.lineNumber;
+ 				
+ 				switch(token.value) {
+ 					case TOKin:
+ 						storageClass = STCin;
+ 						modifiers.add(new Modifier(token));
+ 						nextToken();
+ 						break;
+ 					case TOKout:
+ 						storageClass = STCout;
+ 						modifiers.add(new Modifier(token));
+ 						nextToken();
+ 						break;
+ 					case TOKinout:
+ 						storageClass = STCref;
+ 						modifiers.add(new Modifier(token));
+ 						nextToken();
+ 						break;
+ 					case TOKref:
+ 						storageClass = STCref;
+ 						modifiers.add(new Modifier(token));
+ 						nextToken();
+ 						break;
+ 					case TOKlazy:
+ 						storageClass = STClazy;
+ 						modifiers.add(new Modifier(token));
+ 						nextToken();
+ 						break;
+ 				}
+ 				
+ 				tb = parseBasicType();
+ 
+ 				IdentifierExp[] pointer2_ai = { ai };
+ 				at = parseDeclarator(tb, pointer2_ai);
+ 				ai = pointer2_ai[0];
+ 
+ 				ae = null;
+ 				if (token.value == TOKassign) // = defaultArg
+ 				{
+ 					nextToken();
+ 					ae = parseAssignExp();
+ 					hasdefault = true;
+ 				} else {
+ 					if (hasdefault) {
+ 						parsingErrorInsertTokenAfter(prevToken, "default argument");
+ 					}
+ 				}
+ 				if (token.value == TOKdotdotdot) { 
+ 					/*
+ 					 * This is: at ai ...
+ 					 */
+ 					if ((storageClass & (STCout | STCref)) != 0) {
+ 						error(IProblem.VariadicArgumentCannotBeOutOrRef, inoutTokenLine, inoutTokenStart, inoutTokenLength);
+ 					}
+ 					varargs = 2;
+ 					
+ 					a = new Argument(storageClass, at, ai, ae);
+ 					a.modifiers = modifiers;
+ 					a.setSourceRange(firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 					arguments.add(a);
+ 					nextToken();
+ 					break;
+ 				}
+ 				
+ 				if (at != null || ai != null || ae != null) {
+ 					a = new Argument(storageClass, at, ai, ae);
+ 					a.modifiers = modifiers;
+ 					a.setSourceRange(firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 					arguments.add(a);
+ 				}
+ 				if (token.value == TOKcomma) {
+ 					nextToken();
+ 				} else {
+ 					break;
+ 				}
+ 			}
+ 		}
+ 		check(TOKrparen);
+ 		pvarargs[0] = varargs;
+ 		return arguments;
+ 	}
+ 	
+ 	private Arguments parseParametersD2(int[] pvarargs) {
+ 		Arguments arguments = new Arguments();
+ 		int varargs = 0;
+ 		boolean hasdefault = false;
+ 
+ 		check(TOKlparen);
+ 	loopWhile:
+ 		while (true) {
+ 			IdentifierExp ai;
+ 			Type at;
+ 			Argument a;
+ 			int storageClass;
+ 			int stc;
+ 			Expression ae;
+ 			
+ 			int firstTokenStart = token.ptr;
+ 			
+ 			ai = null;
+ 			storageClass = 0;
+ 			stc = 0;
+ 			
+ 			List<Modifier> modifiers = new ArrayList<Modifier>(2);
+ 			
+ 		loopFor:
+ 			for(; true; nextToken()) {
+ 				int inoutTokenStart = token.ptr;
+ 				int inoutTokenLength = token.len;
+ 				int inoutTokenLine = token.lineNumber;
+ 				
+ 				switch(token.value) {
+ 				case TOKrparen:
+ 					break loopWhile;
+ 				case TOKdotdotdot:
+ 					varargs = 1;
+ 					nextToken();
+ 					break loopWhile;
+ 				case TOKconst:
+ 				    if (peek(token).value == TOKlparen) {
+ 						// goto Ldefault;
+ 				    	break;
+ 				    } else {
+ 					    stc = STCconst;
+ 					    modifiers.add(new Modifier(token));
+ 					    // goto L2;
+ 					    storageClass = parseParametersD2_L2(storageClass, stc);
+ 					    continue loopFor;
+ 				    }
+ 				case TOKinvariant:
+ 				    if (peek(token).value == TOKlparen) {
+ 				    	// goto Ldefault;
+ 				    	break;
+ 				    } else {
+ 					    stc = STCinvariant;
+ 					    modifiers.add(new Modifier(token));
+ 					    // goto L2;
+ 					    storageClass = parseParametersD2_L2(storageClass, stc);
+ 					    continue loopFor;
+ 				    }
+ 				case TOKin:
+ 					stc = STCin;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKout:
+ 					stc = STCout;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKinout:
+ 					stc = STCref;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKref:
+ 					stc = STCref;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKlazy:
+ 					stc = STClazy;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKscope:
+ 					stc = STCscope;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKfinal:
+ 					stc = STCfinal;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 				case TOKstatic:
+ 					stc = STCstatic;
+ 					modifiers.add(new Modifier(token));
+ 					// goto L2;
+ 					storageClass = parseParametersD2_L2(storageClass, stc);
+ 					continue loopFor;
+ 					
+ 				default:
+ 					// Ldefault:
+ 					break;
+ 				}
+ 				
+ 				stc = storageClass
+ 						& (STCin | STCout | STCref | STClazy);
+ 				if ((stc & (stc - 1)) != 0) { // if stc is not a power of 2
+ 					error(IProblem.IncompatibleParameterStorageClass, token);
+ 				}
+ 				if ((storageClass & (STCfinal | STCout)) == (STCfinal | STCout)) {
+ 					error(IProblem.OutCannotBeFinal, token);
+ 				}
+ 				if ((storageClass & STCscope) != 0
+ 						&& (storageClass & (STCref | STCout)) != 0) {
+ 					error(IProblem.ScopeCannotBeRefOrOut, token);
+ 				}
+ 				
+ 				IdentifierExp[] pointer2_ai = { ai };
+ 				at = parseType(pointer2_ai);
+ 				ai = pointer2_ai[0];
+ 				
+ 				ae = null;
+ 				if (token.value == TOKassign) // = defaultArg
+ 				{
+ 					nextToken();
+ 					ae = parseAssignExp();
+ 					hasdefault = true;
+ 				} else {
+ 					if (hasdefault) {
+ 						parsingErrorInsertTokenAfter(prevToken, "default argument");
+ 					}
+ 				}
+ 				if (token.value == TOKdotdotdot) { 
+ 					/*
+ 					 * This is: at ai ...
+ 					 */
+ 					if ((storageClass & (STCout | STCref)) != 0) {
+ 						error(IProblem.VariadicArgumentCannotBeOutOrRef, inoutTokenLine, inoutTokenStart, inoutTokenLength);
+ 					}
+ 					varargs = 2;
+ 					
+ 					a = new Argument(storageClass, at, ai, ae);
+ 					a.modifiers = modifiers;
+ 					a.setSourceRange(firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 					arguments.add(a);
+ 					nextToken();
+ 					break;
+ 				}
+ 				
+ 				if (at != null || ai != null || ae != null) {
+ 					a = new Argument(storageClass, at, ai, ae);
+ 					a.modifiers = modifiers;
+ 					a.setSourceRange(firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 					arguments.add(a);
+ 				}
+ 				if (token.value == TOKcomma) {
+ 					nextToken();
+ 					// goto L1;
+ 					continue loopWhile;
+ 				}
+ 				break;
+ 			}
+ 			break;
+ 			
+ 			// L1: ;
+ 		}
+ 		check(TOKrparen);
+ 		pvarargs[0] = varargs;
+ 		return arguments;
+ 	}
+ 
+ 	private int parseParametersD2_L2(int storageClass, int stc) {
+ 		if ((storageClass & stc) != 0
+ 				|| ((storageClass & STCin) != 0 && (stc & (STCfinal
+ 						| STCconst | STCscope)) != 0)
+ 				|| ((stc & STCin) != 0 && (storageClass & (STCfinal
+ 						| STCconst | STCscope)) != 0)) {			
+ 			error(IProblem.RedundantStorageClass, token);
+ 		}
+ 		storageClass |= stc;
+ 		{
+ 			int u = storageClass & (STCconst | STCinvariant);
+ 			if ((u & (u - 1)) != 0) {
+ 				error(IProblem.ConflictingStorageClass, token);
+ 			}
+ 		}
+ 		return storageClass;
+ 	}
+ 
+ 	private EnumDeclaration parseEnum() {
+ 		int enumTokenStart = token.ptr;
+ 		int enumTokenLength = token.len;
+ 		int enumTokenLineNumber = token.lineNumber;
+ 
+ 		IdentifierExp id;
+ 		Type t;
+ 		
+ 		nextToken();
+ 		if (token.value == TOKidentifier) {
+ 			id = newIdentifierExp();
+ 			nextToken();
+ 		} else {
+ 			id = null;
+ 		}
+ 
+ 		if (token.value == TOKcolon) {
+ 			nextToken();
+ 			t = parseBasicType();
+ 		} else {
+ 			t = null;
+ 		}
+ 		
+ 		EnumDeclaration e = new EnumDeclaration(loc, id, t);
+ 		
+ 		if (token.value == TOKsemicolon && id != null) {
+ 			e.setSourceRange(enumTokenStart, token.ptr + token.len - enumTokenStart);
+ 			nextToken();			  
+ 		} else if (token.value == TOKlcurly) {
+ 			e.members = new Dsymbols();
+ 			nextToken();
+ 			while (token.value != TOKrcurly) {
+ 				if (token.value == TOKeof) {
+ 					error(IProblem.EnumDeclarationIsInvalid, enumTokenLineNumber, enumTokenStart, enumTokenLength);
+ 					break;
+ 				}
+ 				
+ 				if (token.value == TOKidentifier) {
+ 					Expression value;
+ 					IdentifierExp ident = newIdentifierExp();
+ 					value = null;
+ 					nextToken();
+ 					if (token.value == TOKassign) {
+ 						nextToken();
+ 						value = parseAssignExp();
+ 					}
+ 					
+ 					EnumMember em = new EnumMember(loc, ident, value);
+ 					e.addMember(em);
+ 					if (token.value == TOKrcurly) {
+ 						;
+ 					} else {
+ 						check(TOKcomma);
+ 					}
+ 				} else {
+ 					parsingErrorInsertToComplete(prevToken, "EnumMember", "EnumDeclaration");
+ 					nextToken();
+ 				}
+ 			}
+ 			e.setSourceRange(enumTokenStart, token.ptr + token.len - enumTokenStart);
+ 			
+ 			nextToken();
+ 		} else {
+ 			error(IProblem.EnumDeclarationIsInvalid, enumTokenLineNumber, enumTokenStart, enumTokenLength);
+ 			return null;
+ 		}
+ 		
+ 		return e;
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private Dsymbol parseAggregate() {
+ 		AggregateDeclaration a = null;
+ 		IdentifierExp id;
+ 		TemplateParameters tpl = null;
+ 		BaseClasses baseClasses = null;
+ 		int anon = 0;
+ 		boolean[] malformed = { false };
+ 		
+ 		Token firstToken = new Token(token);
+ 		
+ 		nextToken();
+ 		if (token.value != TOKidentifier) {
+ 			// Change from DMD
+ 			id = null;
+ 		} else {
+ 			id = newIdentifierExp();
+ 			nextToken();
+ 			if (token.value == TOKlparen) {				
+ 				// Gather template parameter list
+ 				tpl = parseTemplateParameterList(malformed);
+ 			}
+ 		}
+ 
+ 		switch (firstToken.value) {
+ 		case TOKclass:
+ 		case TOKinterface:
+ 			if (id == null) {
+ 				parsingErrorInsertTokenAfter(firstToken, "Identifier");
+ 			}
+ 
+ 			// Collect base class(es)
+ 			if (token.value == TOKcolon) {
+ 				nextToken();				
+ 				baseClasses = parseBaseClasses();
+ 				
+ 				if (token.value != TOKlcurly) {
+ 					parsingErrorInsertToComplete(prevToken, "AggregateBody", "AggregateDeclaration");
+ 				}
+ 			}
+ 			
+ 			if (firstToken.value == TOKclass) {
+ 				a = new ClassDeclaration(loc, id, baseClasses);
+ 			} else {
+ 				a = new InterfaceDeclaration(loc, id, baseClasses);
+ 			}
+ 			break;			
+ 		case TOKstruct:
+ 			if (id != null) {
+ 				a = new StructDeclaration(loc, id);
+ 			} else {
+ 				anon = 2;
+ 			}
+ 			break;
+ 		case TOKunion:
+ 			if (id != null) {
+ 				a = new UnionDeclaration(loc, id);
+ 			} else {
+ 				anon = 1;
+ 			}
+ 			break;
+ 
+ 		default:
+ 			throw new IllegalStateException("Can't happen");
+ 		}
+ 		
+ 		if (token.value == TOKsemicolon) {
+ 			nextToken();
+ 		} else if (token.value == TOKlcurly) {
+ 			nextToken();
+ 			Dsymbols decl = parseDeclDefs(false);
+ 			if (token.value != TOKrcurly) {
+ 				parsingErrorInsertTokenAfter(prevToken, "}");
+ 			}
+ 			if (anon != 0) {
+ 				nextToken();
+ 			    return new AnonDeclaration(loc, anon == 1, decl);
+ 			}
+ 			a.members = decl;
+ 			a.sourceMembers = new Dsymbols(decl);
+ 			
+ 			nextToken();			
+ 		} else {
+ 			if (id == null) {
+ 				// A single "class" makes no declaration
+ 				if (firstToken.value == TOKstruct || firstToken.value == TOKunion) {
+ 					String word = toWord(firstToken.value.toString());
+ 					parsingErrorInsertToComplete(firstToken,  word + "Body", word + "Declaration");
+ 				}
+ 				a = null;
+ 			} else {
+ 				// We've got at least "class Identifier", make a declaration out of it
+ 				String word = toWord(firstToken.value.toString());
+ 				parsingErrorInsertToComplete(prevToken,  word + "Body", word + "Declaration");
+ 				switch(firstToken.value) {
+ 				case TOKclass:
+ 					a = new ClassDeclaration(loc, id, baseClasses);
+ 					break;
+ 				case TOKinterface:
+ 					a = new InterfaceDeclaration(loc, id, baseClasses);
+ 					break;
+ 				case TOKstruct:
+ 					a = new StructDeclaration(loc, id);
+ 					break;
+ 				case TOKunion:
+ 					a = new UnionDeclaration(loc, id);
+ 					break;
+ 				}
+ 			}		
+ 		}
+ 		
+ 		if (malformed[0]) {
+ 			setMalformed(a);
+ 		}
+ 		
+ 		if (tpl != null)
+ 		{	
+ 			Dsymbols decldefs;
+ 			TemplateDeclaration tempdecl;
+ 	
+ 			// Wrap a template around the aggregate declaration
+ 			decldefs = new Dsymbols();
+ 			decldefs.add(a);
+ 			tempdecl = new TemplateDeclaration(loc, id, tpl, decldefs);
+ 			tempdecl.setSourceRange(a.start, a.length);
+ 			tempdecl.wrapper = true;
+ 			return tempdecl;
+ 	    }
+ 
+ 		return a;
+ 	}
+ 	
+ 	private BaseClasses parseBaseClasses() {
+ 		PROT protection = PROT.PROTpublic;
+ 		BaseClasses baseclasses = new BaseClasses();
+ 		Modifier modifier = null;
+ 
+ 		for (; true; nextToken()) {
+ 			switch (token.value) {
+ 			case TOKidentifier:
+ 				break;
+ 			case TOKprivate:
+ 			case TOKpackage:
+ 			case TOKprotected:
+ 			case TOKpublic:
+ 				protection = PROT.fromTOK(token.value);
+ 				
+ 				modifier = new Modifier(token);
+ 				modifier.setSourceRange(token.ptr, token.len);
+ 				continue;
+ 			default:
+ 				parsingErrorInsertTokenAfter(prevToken, "Type");
+ 				return null;
+ 			}
+ 			BaseClass b = new BaseClass(parseBasicType(), modifier, protection);
+ 			baseclasses.add(b);
+ 			if (token.value != TOKcomma) {
+ 				break;
+ 			}
+ 		}
+ 		return baseclasses;
+ 	}
+ 	
+ 	private TemplateDeclaration parseTemplateDeclaration() {
+ 		IdentifierExp id;
+ 		TemplateParameters tpl;
+ 		Dsymbols decldefs;
+ 		boolean[] malformed = { false };
+ 
+ 		int start = token.ptr;
+ 		nextToken();
+ 		if (token.value != TOKidentifier) {
+ 			parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 			return null;
+ 			// goto Lerr;
+ 		}
+ 		id = newIdentifierExp();
+ 		nextToken();
+ 		tpl = parseTemplateParameterList(malformed);
+ 		if (tpl == null)
+ 			// goto Lerr;
+ 			return null;
+ 
+ 		if (token.value != TOKlcurly) {
+ 			parsingErrorInsertToComplete(prevToken, "TemplateBodyDeclaration",
+ 					"TemplateDeclaration");
+ 			// goto Lerr;
+ 			return null;
+ 		} else {
+ 			nextToken();
+ 			decldefs = parseDeclDefs(false);
+ 			if (token.value != TOKrcurly) {
+ 				parsingErrorInsertToComplete(prevToken,
+ 						"TemplateBodyDeclaration", "TemplateDeclaration");
+ 				// goto Lerr;
+ 				return null;
+ 			}
+ 			nextToken();
+ 		}
+ 
+ 		TemplateDeclaration tempdecl = new TemplateDeclaration(loc, id, tpl, decldefs);
+ 		tempdecl.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 		
+ 		if (malformed[0]) {
+ 			setMalformed(tempdecl);
+ 		}
+ 		
+ 		return tempdecl;
+ 
+ 		// Lerr:
+ 		// return NULL;
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private TemplateParameters parseTemplateParameterList(boolean[] malformed) {
+ 		// Change from DMD: empty template parameter list is returned in case
+ 		// of a syntax error
+ 		
+ 		TemplateParameters tpl = new TemplateParameters();
+ 
+ 		if (token.value != TOKlparen) {
+ 			parsingErrorInsertToComplete(prevToken, "Parenthesized TemplateParameterList", "TemplateDeclaration");
+ 			
+ 			// goto Lerr;
+ 			malformed[0] = true;
+ 			return tpl;
+ 		}
+ 		
+ 		nextToken();
+ 
+ 		// Get array of TemplateParameters
+ 		if (token.value != TOKrparen) {
+ 			
+ 			boolean isvariadic = false;
+ 			TemplateParameter tp = null;
+ 			
+ 			while (true) {
+ 				IdentifierExp tp_ident = null;
+ 				Type tp_spectype = null;
+ 				Type tp_valtype = null;
+ 				Type tp_defaulttype = null;
+ 				Expression tp_specvalue = null;
+ 				Expression tp_defaultvalue = null;
+ 				Token t;
+ 
+ 				int firstTokenStart = token.ptr;
+ 
+ 				// Get TemplateParameter
+ 
+ 				// First, look ahead to see if it is a TypeParameter or a
+ 				// ValueParameter
+ 				t = peek(token);
+ 				if (token.value == TOKalias) { // AliasParameter
+ 					nextToken();
+ 					if (token.value != TOKidentifier) {
+ 						parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 						// goto Lerr;
+ 						malformed[0] = true;
+ 						return tpl;
+ 					}
+ 					tp_ident = newIdentifierExp();
+ 					nextToken();
+ 					if (token.value == TOKcolon) // : Type
+ 					{
+ 						nextToken();
+ 						if (apiLevel < D2) {
+ 							tp_spectype = parseBasicType();
+ 							tp_spectype = parseDeclarator(tp_spectype, null);	
+ 						} else {
+ 							tp_spectype = parseType();
+ 						}
+ 					}
+ 					if (token.value == TOKassign) // = Type
+ 					{
+ 						nextToken();
+ 						if (apiLevel < D2) {
+ 							tp_defaulttype = parseBasicType();
+ 							tp_defaulttype = parseDeclarator(tp_defaulttype, null);
+ 						} else {
+ 							tp_defaulttype = parseType();
+ 						}
+ 					}
+ 					
+ 					tp = new TemplateAliasParameter(loc, tp_ident, tp_spectype, tp_defaulttype);
+ 				} else if (t.value == TOKcolon || t.value == TOKassign
+ 						|| t.value == TOKcomma || t.value == TOKrparen) { // TypeParameter
+ 					if (token.value != TOKidentifier) {
+ 						parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 						// goto Lerr;
+ 						malformed[0] = true;
+ 						return tpl;
+ 					}
+ 					tp_ident = newIdentifierExp();
+ 					nextToken();
+ 					if (token.value == TOKcolon) // : Type
+ 					{
+ 						nextToken();
+ 						if (apiLevel < D2) {
+ 							tp_spectype = parseBasicType();
+ 							tp_spectype = parseDeclarator(tp_spectype, null);
+ 						} else {
+ 							tp_spectype = parseType();
+ 						}
+ 					}
+ 					if (token.value == TOKassign) // = Type
+ 					{
+ 						nextToken();
+ 						if (apiLevel < D2) {
+ 							tp_defaulttype = parseBasicType();
+ 							tp_defaulttype = parseDeclarator(tp_defaulttype, null);
+ 						} else {
+ 							tp_defaulttype = parseType();
+ 						}
+ 					}
+ 					
+ 					tp = new TemplateTypeParameter(loc, tp_ident, tp_spectype, tp_defaulttype);
+ 				}
+ 			    else if (token.value == TOKidentifier && t.value == TOKdotdotdot)
+ 			    {	// ident...
+ 			    	if (isvariadic) {
+ 			    		error(IProblem.VariadicTemplateParameterMustBeTheLastOne, 
+ 			    				t.lineNumber, token.ptr, 
+ 				    			t.ptr + t.len - token.ptr);
+ 			    	}
+ 					isvariadic = true;
+ 					tp_ident = newIdentifierExp();
+ 					nextToken();
+ 					nextToken();
+ 					
+ 					tp = new TemplateTupleParameter(loc, tp_ident);
+ 				} else { 
+ 					// ValueParameter
+ 					if (apiLevel < D2) {
+ 						tp_valtype = parseBasicType();
+ 						IdentifierExp[] pointer2_tp_ident = new IdentifierExp[] { tp_ident };
+ 						tp_valtype = parseDeclarator(tp_valtype, pointer2_tp_ident);
+ 						tp_ident = pointer2_tp_ident[0];
+ 					} else {
+ 						IdentifierExp[] pointer2_tp_ident = new IdentifierExp[] { tp_ident };
+ 						tp_valtype = parseType(pointer2_tp_ident);
+ 						tp_ident = pointer2_tp_ident[0];
+ 					}
+ 					
+ 					if (tp_ident == null) {
+ 						error(IProblem.NoIdentifierForTemplateValueParameter, t.lineNumber, t.ptr, t.len);
+ 						// goto Lerr;
+ 						malformed[0] = true;
+ 						return tpl;
+ 					}
+ 					if (token.value == TOKcolon) // : CondExpression
+ 					{
+ 						nextToken();
+ 						tp_specvalue = parseCondExp();
+ 					}
+ 					if (token.value == TOKassign) // = CondExpression
+ 					{
+ 						nextToken();
+ 						tp_defaultvalue = parseCondExp();
+ 					}
+ 					
+ 					tp = new TemplateValueParameter(loc, tp_ident, tp_valtype, tp_specvalue, tp_defaultvalue);
+ 				}
+ 				tp.setSourceRange(firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 				
+ 				tpl.add(tp);
+ 				if (token.value != TOKcomma)
+ 					break;
+ 				nextToken();
+ 			}
+ 		}
+ 		check(TOKrparen);
+ 		return tpl;
+ 
+ 	// Lerr:
+ 	// return NULL;
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private Dsymbol parseMixin() {
+ 		TemplateMixin tm;
+ 		IdentifierExp id = null;
+ 		Type tqual;
+ 		Objects tiargs;
+ 		Identifiers idents;
+ 
+ 		nextToken();
+ 		
+ 		int typeStart = token.ptr;
+ 
+ 		tqual = null;
+ 		if (token.value == TOKdot) {
+ 			id = new IdentifierExp(loc, Id.empty); // Id::empty
+ 		} else {
+ 			if (token.value == TOKtypeof) {
+ 				Expression exp;
+ 
+ 				nextToken();
+ 				check(TOKlparen);
+ 				exp = parseExpression();
+ 				check(TOKrparen);
+ 				tqual = new TypeTypeof(loc, exp);
+ 				tqual.setSourceRange(typeStart, prevToken.ptr + prevToken.len - typeStart);
+ 				
+ 				check(TOKdot);				
+ 			}
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorDeleteToken(prevToken);
+ 				// goto Lerr;
+ 				return null;
+ 			}
+ 			id = newIdentifierExp();
+ 			nextToken();
+ 		}
+ 		
+ 		idents = new Identifiers();
+ 		while (true) {
+ 			int thisStart = prevToken.ptr;
+ 			
+ 			tiargs = null;
+ 			if (token.value == TOKnot) {
+ 				nextToken();
+ 				tiargs = parseTemplateArgumentList();
+ 			}
+ 			
+ 			if (token.value != TOKdot)
+ 				break;
+ 			
+ 			if (tiargs != null) {
+ 				TemplateInstance tempinst = new TemplateInstance(loc, id);
+ 			    tempinst.tiargs = tiargs;
+ 			    tempinst.start = thisStart;
+ 			    tempinst.length = prevToken.ptr + prevToken.len - thisStart;
+ 			    id = new TemplateInstanceWrapper(loc, tempinst); // "(PIdentifier *)tempinst;" cant work in Java 
+ 			    tiargs = null;
+ 			}
+ 			idents.add(id);
+ 
+ 			nextToken();
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 				break;
+ 			}
+ 			id = newIdentifierExp();
+ 			nextToken();
+ 		}
+ 		idents.add(id);
+ 		
+ 		int typeLength = prevToken.ptr + prevToken.len - typeStart;
+ 
+ 		if (token.value == TOKidentifier) {
+ 			id = newIdentifierExp();
+ 			nextToken();
+ 		} else {
+ 			id = null;
+ 		}
+ 		
+ 		tm = new TemplateMixin(loc, id, tqual, idents, tiargs);
+ 		tm.setTypeSourceRange(typeStart, typeLength);
+ 
+ 		//tm = new MixinDeclaration(ast, id, tqual, idents, tiargs);
+ 		if (token.value != TOKsemicolon) {
+ 			parsingErrorInsertTokenAfter(prevToken, ";");
+ 		} else {
+ 			nextToken();
+ 		}
+ 
+ 		return tm;
+ 	    
+ 	    // Lerr:
+ 	    // return NULL;
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+ 	private Objects parseTemplateArgumentList() {
+ 	    if (token.value != TOKlparen)
+ 	    {   
+ 	    	parsingErrorInsertToComplete(prevToken, "!(TemplateArgumentList)", "TemplateType");
+ 	    	return new Objects();
+ 	    }
+ 	    return parseTemplateArgumentList2();
+ 	}
+ 	
+ 	private Objects parseTemplateArgumentList2() {
+ 		Objects tiargs = new Objects();
+ 		nextToken();
+ 
+ 		// Get TemplateArgumentList
+ 		if (token.value != TOKrparen) {
+ 			while (true) {
+ 				// See if it is an Expression or a Type
+ 				if (isDeclaration(token, 0, TOKreserved, null)) { // Type
+ 					Type ta;
+ 
+ 					// Get TemplateArgument
+ 					if (apiLevel < D2) {
+ 						ta = parseBasicType();
+ 						ta = parseDeclarator(ta, null);
+ 					} else {
+ 						ta = parseType();
+ 					}
+ 					tiargs.add(ta);
+ 				} else { // Expression
+ 					Expression ea;
+ 
+ 					ea = parseAssignExp();
+ 					tiargs.add(ea);
+ 				}
+ 				if (token.value != TOKcomma)
+ 					break;
+ 				nextToken();
+ 			}
+ 		}
+ 		check(TOKrparen);
+ 		return tiargs;
+ 	}
+ 	
+ 	private MultiImport parseImport(boolean isstatic) {
+ 		MultiImport multiImport = new MultiImport(loc);
+ 
+ 		Import s = null;
+ 		IdentifierExp id = null;
+ 		IdentifierExp aliasid = null;
+ 		Identifiers a = null;
+ 		int start = token.ptr;
+ 		int sStart = 0;
+ 		
+ 		boolean repeat = true;
+ 		while (repeat) {
+ 			repeat = false;
+ 		
+ 		// ---	
+ 		the_do:
+ 		// ---
+ 			do {
+ 				// L1:
+ 				nextToken();
+ 				
+ 				if (aliasid == null) {
+ 					sStart = token.ptr;
+ 				}
+ 
+ 				if (token.value != TOKidentifier) {
+ 					parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 					break;
+ 				}
+ 				
+ 				a = null;
+ 				id = newIdentifierExp();
+ 
+ 				nextToken();
+ 
+ 				if (aliasid == null && token.value == TOKassign) {
+ 					aliasid = id;
+ 					// goto L1;
+ 					repeat = true;
+ 					break the_do;
+ 				}
+ 
+ 				while (token.value == TOKdot) {
+ 					if (a == null) {
+ 						a = new Identifiers();
+ 					}
+ 					a.add(id);					
+ 					nextToken();
+ 					if (token.value != TOKidentifier) {
+ 						parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 						break;
+ 					}
+ 					id = newIdentifierExp();
+ 					nextToken();
+ 				}
+ 
+ 				s = new Import(loc, a, id, aliasid);
+ 				multiImport.addImport(s);
+ 
+ 				/*
+ 				 * Look for : alias=name, alias=name; syntax.
+ 				 */
+ 				if (token.value == TOKcolon) {
+ 					do {
+ 						IdentifierExp name = null;
+ 						IdentifierExp alias = null;
+ 						
+ 						nextToken();
+ 
+ 						if (token.value != TOKidentifier) {
+ 							parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 							break;
+ 						}
+ 						
+ 						alias = newIdentifierExp();
+ 						nextToken();						
+ 						if (token.value == TOKassign) {
+ 							nextToken();
+ 							if (token.value != TOKidentifier) {
+ 								parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 								break;
+ 							}
+ 							name = newIdentifierExp();
+ 							nextToken();
+ 						} else {
+ 							name = alias;
+ 							alias = null;
+ 						}
+ 						s.addAlias(name, alias);
+ 						s.setSourceRange(sStart, prevToken.ptr + prevToken.len - sStart);
+ 					} while (token.value == TOKcomma);
+ 					break; // no comma-separated imports of this form
+ 				} else {
+ 					s.setSourceRange(sStart, prevToken.ptr + prevToken.len - sStart);
+ 				}
+ 
+ 				aliasid = null;
+ 			} while (token.value == TOKcomma);
+ 		}
+ 		
+ 		multiImport.isstatic = isstatic;
+ 		multiImport.setSourceRange(start, token.ptr + token.len - start);
+ 
+ 		check(TOKsemicolon);
+ 
+ 		return multiImport;
+ 	}
+ 	
+ 	private Type parseType() {
+ 		return parseType(null, null);
+ 	}
+ 	
+ 	private Type parseType(IdentifierExp[] pident) {
+ 		return parseType(pident, null);
+ 	}
+ 	
+ 	private Type parseType(IdentifierExp[] pident, TemplateParameters[] tpl) {   
+ 		Type t;
+ 
+ 		if (token.value == TOKconst && peek(token).value != TOKlparen) {
+ 			int start = token.ptr;
+ 			nextToken();
+ 			/* const type
+ 			 */
+ 			t = parseType(pident, tpl);
+ 			t = t.makeConst(start, prevToken.ptr + prevToken.len - start);
+ 			return t;
+ 		} else if (token.value == TOKinvariant
+ 				&& peek(token).value != TOKlparen) {
+ 			int start = token.ptr;
+ 			nextToken();
+ 			/* invariant type
+ 			 */
+ 			t = parseType(pident, tpl);
+ 			t = t.makeInvariant(start, prevToken.ptr + prevToken.len - start);
+ 			return t;
+ 		} else {
+ 			t = parseBasicType();
+ 		}
+ 		t = parseDeclarator(t, pident, tpl, new int[1]);
+ 		return t;
+ 	}
+ 	
+ 	private Type parseBasicType() {
+ 		Type t = null;
+ 		IdentifierExp id = null;
+ 		TypeQualified tid = null;
+ 		TemplateInstance tempinst = null;
+ 		
+ 		switch (token.value) {
+ 		// CASE_BASIC_TYPES_X(t):
+ 		case TOKvoid: case TOKint8: case TOKuns8: case TOKint16:
+ 		case TOKuns16: case TOKint32: case TOKuns32: case TOKint64:
+ 		case TOKuns64: case TOKfloat32: case TOKfloat64: case TOKfloat80:
+ 		case TOKimaginary32: case TOKimaginary64: case TOKimaginary80:
+ 		case TOKcomplex32: case TOKcomplex64: case TOKcomplex80:
+ 		case TOKbit: case TOKbool: 
+ 		case TOKchar: case TOKwchar: case TOKdchar: 
+ 			t = newTypeBasicForCurrentToken(); 
+ 			t.setSourceRange(token.ptr, token.len); 
+ 			nextToken(); 
+ 			break;
+ 
+ 		case TOKidentifier:
+ 			id = newIdentifierExp();
+ 			nextToken();
+ 			if (token.value == TOKnot) {
+ 				nextToken();
+ 				tempinst = new TemplateInstance(loc, id);
+ 				tempinst.tiargs = parseTemplateArgumentList();
+ 				tempinst.setSourceRange(id.start, prevToken.ptr + prevToken.len - id.start);
+ 				tid = new TypeInstance(loc, tempinst);
+ 				tid.setSourceRange(id.start, prevToken.ptr + prevToken.len - id.start);
+ 				// goto Lident2;
+ 				{
+ 				Type[] p_t = { t };
+ 				IdentifierExp[] p_id = { id };
+ 				TypeQualified[] p_tid = { tid };
+ 				TemplateInstance[] p_tempinst = { tempinst };
+ 				
+ 				parseBasicType_Lident2(p_t, p_id, p_tid, p_tempinst, id.start);
+ 				t = p_t[0];
+ 				id = p_id[0];
+ 				tid = p_tid[0];
+ 				tempinst = p_tempinst[0];
+ 				}
+ 				break;
+ 
+ 			}
+ 			// Lident:
+ 			tid = new TypeIdentifier(loc, id);
+ 			// Lident2:
+ 			{
+ 			Type[] p_t = { t };
+ 			IdentifierExp[] p_id = { id };
+ 			TypeQualified[] p_tid = { tid };
+ 			TemplateInstance[] p_tempinst = { tempinst };
+ 			
+ 			parseBasicType_Lident2(p_t, p_id, p_tid, p_tempinst, id.start);
+ 			t = p_t[0];
+ 			id = p_id[0];
+ 			tid = p_tid[0];
+ 			tempinst = p_tempinst[0];
+ 			}
+ 			break;
+ 
+ 		case TOKdot:
+ 			id = new IdentifierExp(loc, Id.empty);
+ 			// goto Lident;
+ 			tid = new TypeIdentifier(loc, id);
+ 			{
+ 			Type[] p_t = { t };
+ 			IdentifierExp[] p_id = { id };
+ 			TypeQualified[] p_tid = { tid };
+ 			TemplateInstance[] p_tempinst = { tempinst };
+ 			
+ 			parseBasicType_Lident2(p_t, p_id, p_tid, p_tempinst, token.ptr);
+ 			t = p_t[0];
+ 			id = p_id[0];
+ 			tid = p_tid[0];
+ 			tempinst = p_tempinst[0];
+ 			}
+ 			break;
+ 
+ 		case TOKtypeof: {
+ 			int start = token.ptr;
+ 			Expression exp;
+ 
+ 			nextToken();
+ 			check(TOKlparen);
+ 			exp = parseExpression();
+ 			check(TOKrparen);
+ 			
+ 			tid = new TypeTypeof(loc, exp);
+ 			tid.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			((TypeTypeof) tid).setTypeofSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			
+ 			// goto Lident2;
+ 			{
+ 			Type[] p_t = { t };
+ 			IdentifierExp[] p_id = { id };
+ 			TypeQualified[] p_tid = { tid };
+ 			TemplateInstance[] p_tempinst = { tempinst };
+ 			
+ 			parseBasicType_Lident2(p_t, p_id, p_tid, p_tempinst, start);
+ 			t = p_t[0];
+ 			id = p_id[0];
+ 			tid = p_tid[0];
+ 			tempinst = p_tempinst[0];
+ 			}
+ 			break;
+ 		}
+ 			
+ 		case TOKconst: {
+ 		    // const(type)
+ 			int start = token.ptr;
+ 		    nextToken();
+ 		    check(TOKlparen);
+ 		    t = parseType();
+ 		    check(TOKrparen);
+ 		    t = t.makeConst(start, prevToken.ptr + prevToken.len - start);
+ 		    break;
+ 		}
+ 
+ 		case TOKinvariant: {
+ 		    // invariant(type)
+ 			int start = token.ptr;
+ 		    nextToken();
+ 		    check(TOKlparen);
+ 		    t = parseType();
+ 		    check(TOKrparen);
+ 		    t = t.makeInvariant(start, prevToken.ptr + prevToken.len - start);
+ 		    break;
+ 		}
+ 
+ 		default:
+ 			parsingErrorInsertTokenAfter(prevToken, "Type");
+ 			break;
+ 		}
+ 		return t;
+ 	}
+ 
+ 	private void parseBasicType_Lident2(Type[] t, IdentifierExp[] id, TypeQualified[] tid, TemplateInstance[] tempinst, int start) {
+ 		while (token.value == TOKdot) {
+ 			nextToken();
+ 			int tempinstStart = token.ptr;
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 				break;
+ 			}
+ 			id[0] = newIdentifierExp();
+ 			nextToken();
+ 			if (token.value == TOKnot) {
+ 				nextToken();
+ 				tempinst[0] = new TemplateInstance(loc, id[0]);
+ 				tempinst[0].tiargs = parseTemplateArgumentList();
+ 				tempinst[0].setSourceRange(tempinstStart, prevToken.ptr + prevToken.len - tempinstStart);
+ 				tid[0].addIdent(new TemplateInstanceWrapper(loc, tempinst[0]));
+ 			} else {
+ 				tid[0].addIdent(id[0]);
+ 			}
+ 		}
+ 		tid[0].setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 		t[0] = tid[0];
+ 	}
+ 
+ 	private Type parseBasicType2(Type t) {
+ 		Type ts;
+ 		Type ta;
+ 		Type subType;
+ 
+ 		while (true) {
+ 			switch (token.value) {
+ 			case TOKmul:
+ 				subType = t;
+ 				
+ 				t = new TypePointer(subType);
+ 				t.setSourceRange(subType.start, token.ptr + token.len - subType.start);
+ 				
+ 				nextToken();
+ 				continue;
+ 
+ 			case TOKlbracket:
+ 				if (LTORARRAYDECL) {
+ 					// Handle []. Make sure things like
+ 					// int[3][1] a;
+ 					// is (array[1] of array[3] of int)
+ 					nextToken();
+ 					if (token.value == TOKrbracket) {
+ 						subType = t;
+ 						
+ 						t = new TypeDArray(subType);
+ 						t.setSourceRange(subType.start, token.ptr + token.len - subType.start);
+ 						
+ 						nextToken();
+ 					} else if (isDeclaration(token, 0, TOKrbracket, null)) { // It's
+ 																				// an
+ 																				// associative
+ 																				// array
+ 																				// declaration
+ 						subType = t;
+ 						Type index;
+ 
+ 						if (apiLevel < D2) {
+ 							index = parseBasicType();
+ 							index = parseDeclarator(index, null); // [ type ]
+ 						} else {
+ 							index = parseType();                  // [ type ]
+ 						}
+ 						
+ 						t = newTypeAArray(t, index);
+ 						check(TOKrbracket);
+ 					} else {
+ 						subType = t;
+ 
+ 						inBrackets++;
+ 						Expression e = parseExpression(); // [ expression ]
+ 					    if (token.value == TOKslice) {
+ 							Expression e2;
+ 
+ 							nextToken();
+ 							e2 = parseExpression(); // [ exp .. exp ]
+ 							
+ 							t = new TypeSlice(t, e, e2);
+ 						} else {
+ 							t = new TypeSArray(t, e);
+ 						}
+ 					    t.setSourceRange(subType.start, token.ptr + token.len - subType.start);
+ 						
+ 						inBrackets--;
+ 						
+ 						check(TOKrbracket);
+ 					}
+ 					continue;
+ 				} else {
+ 					// Handle []. Make sure things like
+ 					// int[3][1] a;
+ 					// is (array[3] of array[1] of int)
+ 					ts = t;
+ 					while (token.value == TOKlbracket) {
+ 						nextToken();
+ 						if (token.value == TOKrbracket) {// []
+ 							ta = new TypeDArray(t);
+ 							nextToken();
+ 						} else if (isDeclaration(token, 0, TOKrbracket, null)) { // It's
+ 																					// an
+ 																					// associative
+ 																					// array
+ 																					// declaration
+ 							Type index;
+ 
+ 							index = parseBasicType();
+ 							index = parseDeclarator(index, null); // [ type ]
+ 							
+ 							ta = newTypeAArray(t, index);
+ 							
+ 							check(TOKrbracket);
+ 						} else {
+ 							Expression e = parseExpression(); // [ expression
+ 																// ]
+ 							ta = new TypeSArray(t, e);
+ 							check(TOKrbracket);
+ 						}
+ 
+ 						if (ts != t) {
+ 							Type pt = ts;
+ 							while(pt.next != t) {
+ 								pt = pt.next;
+ 							}
+ 							pt.next = ta;
+ 							pt.sourceNext = ta;
+ 						} else {
+ 							ts = ta;
+ 						}
+ 					}
+ 					t = ts;
+ 					continue;
+ 				}
+ 
+ 			case TOKdelegate:
+ 			case TOKfunction: { // Handle delegate declaration:
+ 				// t delegate(parameter list)
+ 				// t function(parameter list)
+ 				Arguments arguments;
+ 				int varargs = 0;
+ 				TOK save = token.value;
+ 
+ 				nextToken();
+ 
+ 				int[] pointer2_varargs = { varargs };
+ 				arguments = parseParameters(pointer2_varargs);
+ 				varargs = pointer2_varargs[0];
+ 
+ 				int saveStart = t.start;
+ 
+ 				t = new TypeFunction(arguments, t, varargs, linkage);
+ 				if (save == TOKdelegate) {
+ 					t = new TypeDelegate(t);
+ 				} else {
+ 					t = new TypePointer(t);
+ 				}
+ 				t.setSourceRange(saveStart, prevToken.ptr + prevToken.len - saveStart);
+ 				continue;
+ 			}
+ 
+ 			default:
+ 				ts = t;
+ 				break;
+ 			}
+ 			break;
+ 		}
+ 		return ts;
+ 	}
+ 	
+ 	private Type parseDeclarator(Type targ, IdentifierExp[] ident) {
+ 		return parseDeclarator(targ, ident, null, null);
+ 	}
+ 
+ 	private Type parseDeclarator(Type t, IdentifierExp[] pident, TemplateParameters[] tpl, int[] identStart) {
+ 		// This may happen if a basic type was not find
+ 		if (t == null) {
+ 			return null;
+ 		}
+ 		
+ 		Type ts;
+ 	    Type ta;
+ 
+ 	    t = parseBasicType2(t);
+ 
+ 	    switch (token.value)
+ 	    {
+ 
+ 		case TOKidentifier:
+ 		    if (pident != null) {
+ 		    	pident[0] = newIdentifierExp();
+ 		    	if (identStart != null) identStart[0] = token.ptr;
+ 		    } else {
+ 		    	error(IProblem.UnexpectedIdentifierInDeclarator, token.lineNumber, token.ptr, token.len);
+ 		    }
+ 		    ts = t;
+ 		    nextToken();
+ 		    break;
+ 
+ 		case TOKlparen:
+ 			int oldStart = t.start;
+ 		    nextToken();
+ 		    ts = parseDeclarator(t, pident, null, identStart);
+ 		    ts.setSourceRange(oldStart, token.ptr + token.len - oldStart);
+ 		    check(TOKrparen);
+ 		    break;
+ 
+ 		default:
+ 		    ts = t;
+ 		    break;
+ 	    }
+ 
+ 	    while (true)
+ 	    {
+ 		switch (token.value)
+ 		{
+ 	//#if CARRAYDECL
+ 		    case TOKlbracket:
+ 		    {	// This is the old C-style post [] syntax.
+ 			nextToken();
+ 			if (token.value == TOKrbracket) // []
+ 			{
+ 			    ta = new TypeDArray(t);
+ 			    ta.setSourceRange(t.start, token.ptr + token.len - t.start);
+ 			    
+ 			    nextToken();
+ 			}
+ 			else if (isDeclaration(token, 0, TOKrbracket, null))
+ 			{   // It's an associative array declaration
+ 			    Type index;
+ 
+ 			    if (apiLevel < D2) {
+ 				    index = parseBasicType();
+ 				    index = parseDeclarator(index, null, null, identStart);	// [ type ]
+ 			    } else {
+ 			    	index = parseType();									// [ type ]
+ 			    }
+ 			    
+ 			    ta = newTypeAArray(t, index);
+ 			    
+ 			    check(TOKrbracket);
+ 			}
+ 			else
+ 			{
+ 			    Expression e = parseExpression();		// [ expression ]
+ 			    
+ 			    ta = new TypeSArray(t, e);
+ 			    ta.setSourceRange(t.start, token.ptr + token.len - ta.start);
+ 			    check(TOKrbracket);
+ 			}
+ 			
+ 			if (ts != t) {
+ 				Type pt = ts;
+ 				while(pt.next != t) {
+ 					pt = pt.next;
+ 				}
+ 				pt.next = ta;
+ 				pt.sourceNext = ta;
+ 			} else {
+ 				ts = ta;
+ 			}
+ 			t = ts;
+ 			continue;
+ 		    }
+ 	//#endif
+ 		    case TOKlparen:
+ 		    {	Arguments arguments;
+ 			int varargs = 0;
+ 
+ 			if (tpl != null)
+ 			{
+ 			    /* Look ahead to see if this is (...)(...),
+ 			     * i.e. a function template declaration
+ 			     */
+ 			    if (peekPastParen(token).value == TOKlparen)
+ 			    {   // It's a function template declaration
+ 
+ 			    	// Gather template parameter list
+ 			    	boolean[] malformed = { false };
+ 			    	tpl[0] = parseTemplateParameterList(malformed);
+ 			    }
+ 			}
+ 
+ 			int[] pointer2_varargs = { varargs };
+ 			arguments = parseParameters(pointer2_varargs);
+ 			varargs = pointer2_varargs[0];
+ 			
+ 			ta = new TypeFunction(arguments, t, varargs, linkage);
+ 			ta.setSourceRange(t.start, t.length);
+ 			
+ 			if (ts != t) {
+ 				Type pt = ts;
+ 				while(pt.next != t) {
+ 					pt = pt.next;
+ 				}
+ 				pt.next = ta;
+ 				pt.sourceNext = ta;
+ 			} else {
+ 				ts = ta;
+ 			}
+ 			t = ts;
+ 			break;
+ 		    }
+ 		}
+ 		break;
+ 	    }
+ 
+ 	    return ts;
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private Dsymbols parseDeclarations(List<Comment> lastComments) {
+ 		int storage_class;
+ 		int stc;
+ 		Type ts;
+ 		Type t;
+ 		Type tfirst;
+ 		IdentifierExp ident;
+ 		int lineNumber = 0;
+ 		Dsymbols a;
+ 		TOK tok;
+ 		LINK link = linkage;
+ 		
+ 		List<Modifier> modifiers = new ArrayList<Modifier>();
+ 		
+ 		int start = token.ptr;
+ 
+ 		switch (token.value) {
+ 		case TOKtypedef:
+ 		case TOKalias:
+ 			tok = token.value;
+ 			nextToken();
+ 			break;
+ 
+ 		default:
+ 			tok = TOKreserved;
+ 			break;
+ 		}
+ 
+ 		storage_class = STCundefined;
+ 		while (true) {
+ 			switch (token.value) {
+ 			case TOKconst:
+ 			case TOKinvariant:
+ 				if (apiLevel == D2 && peek(token).value == TOKlparen) {
+ 					break;
+ 				}
+ 				// fall
+ 			case TOKstatic:
+ 			case TOKfinal:
+ 			case TOKauto:
+ 			case TOKscope:
+ 			case TOKoverride:
+ 			case TOKabstract:
+ 			case TOKsynchronized:
+ 			case TOKdeprecated:
+ 				stc = STC.fromTOK(token.value);
+ 				
+ 				Modifier currentModifier = new Modifier(token);
+ 				currentModifier.setSourceRange(token.ptr, token.len);
+ 				if ((storage_class & stc) != 0) {
+ 					error(IProblem.RedundantStorageClass, token.lineNumber, currentModifier);
+ 				}
+ 				storage_class = storage_class | stc;
+ 				modifiers.add(currentModifier);
+ 				nextToken();
+ 				continue;
+ 
+ 			case TOKextern:
+ 				if (peek(token).value != TOKlparen) {
+ 					stc = STC.fromTOK(token.value);
+ 					
+ 					currentModifier = new Modifier(token);
+ 					currentModifier.setSourceRange(token.ptr, token.len);
+ 					if ((storage_class & stc) != 0) {
+ 						error(IProblem.RedundantStorageClass, token.lineNumber, currentModifier);
+ 					}
+ 					storage_class = storage_class | stc;
+ 					modifiers.add(currentModifier);
+ 					nextToken();
+ 					continue;
+ 				}
+ 
+ 				link = parseLinkage();
+ 				continue;
+ 
+ 			default:
+ 				break;
+ 			}
+ 			break;
+ 		}
+ 
+ 		a = new Dsymbols();
+ 		
+ 		boolean first = true;
+ 		VarDeclaration previousVar = null;
+ 
+ 		/*
+ 		 * Look for auto initializers: storage_class identifier = initializer;
+ 		 */
+ 		while (storage_class != 0 && token.value == TOKidentifier
+ 				&& peek(token).value == TOKassign) {
+ 			ident = newIdentifierExp();
+ 			lineNumber = token.lineNumber;
+ 			
+ 			nextToken();
+ 			nextToken();
+ 			Initializer init = parseInitializer();
+ 
+ 			VarDeclaration v = new VarDeclaration(loc, null, ident, init);
+ 			v.first = first;
+ 			first = false;
+ 			
+ 			v.storage_class = storage_class;
+ 			v.addModifiers(modifiers);
+ 			a.add(v);
+ 			
+ 			if (previousVar != null) {
+ 				previousVar.next = v;
+ 			}
+ 			previousVar = v;
+ 			
+ 			if (token.value == TOKsemicolon) {
+ 				v.setSourceRange(start, token.ptr + token.len - start);
+ 				nextToken();
+ 				v.preDdocs = lastComments;
+ 				v.last = true;
+ 				attachLeadingComments(v);
+ 				adjustPossitionAccordingToComments(v, v.preDdocs, v.postDdoc);
+ 			} else if (token.value == TOKcomma) {
+ 				v.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				nextToken();
+ 				if (!(token.value == TOKidentifier && peek(token).value == TOKassign)) {
+ 					parsingErrorInsertTokenAfter(prevToken, "identifier");
+ 				} else {
+ 					start = token.ptr;
+ 					continue;
+ 				}
+ 			}
+ 			
+ 			return a;
+ 		}
+ 
+ 		if (token.value == TOKclass) {
+ 			AggregateDeclaration s;
+ 
+ 			s = (AggregateDeclaration) parseAggregate();
+ 			s.storage_class = storage_class;
+ 			s.addModifiers(modifiers);
+ 			a.add(s);
+ 			s.preDdocs = lastComments;
+ 			return a;
+ 		}
+ 		
+ 		int nextVarStart = token.ptr;
+ 		int nextTypdefOrAliasStart = start;
+ 
+ 		ts = parseBasicType();
+ 		if (ts == null) {
+ 			return a;
+ 		}
+ 		ts = parseBasicType2(ts);
+ 		tfirst = null;
+ 		
+ 		int[] identStart = new int[1];
+ 		
+ 		AliasDeclaration previousAlias = null;
+ 		TypedefDeclaration previousTypedef = null;
+ 		first = true;
+ 		while (true) {
+ 			TemplateParameters tpl = null;
+ 
+ 			ident = null;
+ 			IdentifierExp[] pointer2_ident = { ident };
+ 			TemplateParameters[] pointer2_tpl = { tpl };
+ 			t = parseDeclarator(ts, pointer2_ident, pointer2_tpl, identStart);
+ 			ident = pointer2_ident[0];
+ 			tpl = pointer2_tpl[0];
+ 			
+ 			if(t == null) {
+ 				throw new IllegalStateException();
+ 			}
+ 			if (tfirst == null)
+ 				tfirst = t;
+ 			else if (t != tfirst) {
+ 				// TODO check this, should be doing this
+ 				if (ident != null) {
+ 					error(IProblem.MultipleDeclarationsMustHaveTheSameType,
+ 							 lineNumber, ident.start, ident.length);
+ 				}
+ 			}
+ 			if (ident == null) {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 				return a;
+ 			}
+ 
+ 			if (tok == TOKtypedef || tok == TOKalias) {
+ 				Declaration v;
+ 				Initializer init;
+ 				
+ 				init = null;
+ 				
+ 				int assignTokenStart = token.ptr;
+ 				int assignTokenLine = token.lineNumber;
+ 				if (token.value == TOKassign) {
+ 					nextToken();
+ 					init = parseInitializer();
+ 				}
+ 				TypedefDeclaration td = null;
+ 				AliasDeclaration ad = null;
+ 				if (tok == TOKtypedef) {
+ 					td = new TypedefDeclaration(loc, ident, t, init);
+ 					td.first = first;
+ 					v = td;
+ 					if (previousTypedef != null) {
+ 						previousTypedef.next = td;
+ 					}
+ 					previousTypedef = td;
+ 				} else {
+ 					if (init != null) {
+ 						error(IProblem.AliasCannotHaveInitializer, assignTokenLine, assignTokenStart,  init.start + init.length - assignTokenStart);
+ 					}
+ 					
+ 					ad = new AliasDeclaration(loc, ident, t);
+ 					ad.first = first;
+ 					v = ad;
+ 					if (previousAlias != null) {
+ 						previousAlias.next = ad;
+ 					}
+ 					previousAlias = ad;
+ 				}
+ 				first = false;
+ 				
+ 				v.addModifiers(modifiers);
+ 				v.storage_class = storage_class;
+ 				
+ 			    if (link == linkage) {
+ 					a.add(v);
+ 			    } else {
+ 			    	// TODO: this is never reached by tests
+ 			    	Dsymbols ax = new Dsymbols();
+ 			    	ax.add(v);
+ 			    	Dsymbol s = new LinkDeclaration(null, link, ax);
+ 			    	a.add(s);
+ 			    }
+ 				
+ 				switch (token.value) {
+ 				case TOKsemicolon:
+ 					if (td != null) td.last = true;
+ 					if (ad != null) ad.last = true;					
+ 					v.setSourceRange(nextTypdefOrAliasStart, token.ptr + token.len - nextTypdefOrAliasStart);
+ 					nextToken();
+ 					v.preDdocs = lastComments;
+ 					attachLeadingComments(v);				
+ 					adjustPossitionAccordingToComments(v, v.preDdocs, v.postDdoc);
+ 					break;
+ 
+ 				case TOKcomma:
+ 					v.setSourceRange(nextTypdefOrAliasStart, prevToken.ptr + prevToken.len - nextTypdefOrAliasStart);
+ 					nextToken();
+ 					continue;
+ 
+ 				default:
+ 					if (td != null) td.last = true;
+ 					if (ad != null) ad.last = true;
+ 					v.setSourceRange(nextTypdefOrAliasStart, prevToken.ptr + prevToken.len - nextTypdefOrAliasStart);
+ 					parsingErrorInsertTokenAfter(prevToken, ";");
+ 					break;
+ 				}
+ 			} else if (t.ty == Tfunction) {
+ 				Dsymbol s;
+ 				
+ 				TypeFunction typeFunction = (TypeFunction) t;
+ 				
+ 				FuncDeclaration f = new FuncDeclaration(loc, ident, storage_class, typeFunction);
+ 				parseContracts(f);
+ 				f.setSourceRange(t.start, prevToken.ptr + prevToken.len - t.start);
+ 				
+ 				if (link == linkage) {
+ 					s = f;
+ 				} else {
+ 					Dsymbols ax = new Dsymbols();
+ 					ax.add(f);
+ 					s = new LinkDeclaration(loc, link, ax);
+ 				}
+ 					
+ 				if (tpl != null) { // it's a function template
+ 					Dsymbols decldefs;
+ 					TemplateDeclaration tempdecl;
+ 
+ 					// Wrap a template around the aggregate declaration
+ 					decldefs = new Dsymbols();
+ 					decldefs.add(s);
+ 					tempdecl = new TemplateDeclaration(loc, s.ident, tpl, decldefs);
+ 					tempdecl.setSourceRange(s.start, s.length);
+ 					tempdecl.wrapper = true;
+ 					s = tempdecl;
+ 				}
+ 				s.modifiers = modifiers;
+ 				s.preDdocs = lastComments;
+ 				attachLeadingComments(s);
+ 				adjustPossitionAccordingToComments(s, s.preDdocs, s.postDdoc);
+ 				a.add(s);
+ 			} else {
+ 				VarDeclaration v;
+ 				Initializer init;
+ 
+ 				init = null;
+ 				if (token.value == TOKassign) {
+ 					nextToken();
+ 					init = parseInitializer();
+ 				}
+ 				
+ 				v = new VarDeclaration(loc, t, ident, init);
+ 				v.first = first;
+ 				first = false;
+ 				
+ 				v.storage_class = storage_class;
+ 				v.modifiers = modifiers;
+ 				a.add(v);
+ 				
+ 				if (previousVar != null) {
+ 					previousVar.next = v;
+ 				}
+ 				previousVar = v;
+ 				
+ 				switch (token.value) {
+ 				case TOKsemicolon:
+ 					v.last = true;
+ 					v.setSourceRange(nextVarStart, token.ptr + token.len - nextVarStart);
+ 					nextToken();
+ 					v.preDdocs = lastComments;
+ 					attachLeadingComments(v);
+ 					adjustPossitionAccordingToComments(v, v.preDdocs, v.postDdoc);
+ 					break;
+ 
+ 				case TOKcomma:
+ 					v.setSourceRange(nextVarStart, prevToken.ptr + prevToken.len - nextVarStart);
+ 					nextToken();
+ 					continue;
+ 
+ 				default:
+ 					v.last = true;
+ 					v.setSourceRange(nextVarStart, prevToken.ptr + prevToken.len - nextVarStart);
+ 					parsingErrorInsertTokenAfter(prevToken, ";");
+ 					break;
+ 				}
+ 			}
+ 			break;
+ 		}
+ 		
+ 		return a;
+ 	}
+ 	
+ 	private void parseContracts(FuncDeclaration f) {
+ 	    LINK linksave = linkage;
+ 
+ 	    // The following is irrelevant, as it is overridden by sc->linkage in
+ 	    // TypeFunction::semantic
+ 	    linkage = LINKd;		// nested functions have D linkage
+ 		
+ 		boolean repeat = true;
+ 		while (repeat) {
+ 			repeat = false;
+ 			// L1:
+ 			switch (token.value) {
+ 			case TOKlcurly:
+ 				if (f.frequire != null || f.fensure != null) {
+ 					parsingErrorInsertToComplete(prevToken, "body { ... }", "FunctionDeclaration");
+ 				}
+ 				f.setFbody(parseStatement(PSsemi));
+ 				break;
+ 
+ 			case TOKbody:
+ 				nextToken();
+ 				f.setFbody(parseStatement(PScurly));
+ 				break;
+ 
+ 			case TOKsemicolon:
+ 				if (f.frequire != null || f.fensure != null) {
+ 					parsingErrorInsertToComplete(prevToken, "body { ... }", "FunctionDeclaration");
+ 				}
+ 				//f.length = token.ptr + token.len - f.startPosition;
+ 				nextToken();
+ 				break;
+ 
+ 			/*
+ 			 * #if 0 // Do we want this for function declarations, so we can do: //
+ 			 * int x, y, foo(), z; case TOKcomma: nextToken(); continue; #endif
+ 			 */
+ 
+ 			/*
+ 			 * #if 0 // Dumped feature case TOKthrow: if (!f->fthrows)
+ 			 * f->fthrows = new Array(); nextToken(); check(TOKlparen); while
+ 			 * (1) { tb = parseBasicType(); f->fthrows->push(tb); if
+ 			 * (token.value == TOKcomma) { nextToken(); continue; } break; }
+ 			 * check(TOKrparen); goto L1; #endif
+ 			 */
+ 
+ 			case TOKin:
+ 				if (f.frequire != null) {
+ 					error(IProblem.RedundantInStatement,
+ 							token);
+ 				}
+ 				nextToken();
+ 				
+ 				f.setFrequire(parseStatement(PScurly | PSscope));
+ 				repeat = true;
+ 				break;
+ 
+ 			case TOKout:
+ 				// parse: out (identifier) { statement }
+ 				
+ 				if (f.fensure != null) {
+ 					error(IProblem.RedundantOutStatement,
+ 							token.lineNumber, token.ptr, token.len);
+ 				}
+ 				
+ 				nextToken();
+ 				if (token.value != TOKlcurly) {
+ 					check(TOKlparen);
+ 					if (token.value != TOKidentifier) {
+ 						parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 					} else {
+ 						f.outId = newIdentifierExp();
+ 						nextToken();
+ 					}
+ 					
+ 					check(TOKrparen);
+ 				}
+ 				
+ 				f.setFensure(parseStatement(PScurly | PSscope));
+ 				repeat = true;
+ 				break;
+ 
+ 			default:
+ 				parsingErrorInsertTokenAfter(prevToken, ";");
+ 				break;
+ 			}
+ 		}
+ 		
+ 		linkage = linksave;
+ 	}
+ 	
+ 	public Initializer parseInitializer() {
+ 		StructInitializer is;
+ 		ArrayInitializer ia;
+ 		ExpInitializer ie;
+ 		Expression e;
+ 		IdentifierExp id;
+ 		Initializer value;
+ 		int comma;
+ 		Token t;
+ 		int braces = 0;
+ 		
+ 		int start = token.ptr;
+ 
+ 		switch (token.value) {
+ 		case TOKlcurly:
+ 		    /* Scan ahead to see if it is a struct initializer or
+ 		     * a function literal.
+ 		     * If it contains a ';', it is a function literal.
+ 		     * Treat { } as a struct initializer.
+ 		     */
+ 		    braces = 1;
+ 			for (t = peek(token); true; t = peek(t)) {
+ 				switch (t.value) {
+ 				case TOKsemicolon:
+ 				case TOKreturn:
+ 					// goto Lexpression;
+ 					e = parseAssignExp();
+ 					ie = new ExpInitializer(loc, e);
+ 					return ie;
+ 
+ 				case TOKlcurly:
+ 					braces++;
+ 					continue;
+ 
+ 				case TOKrcurly:
+ 					if (--braces == 0) {
+ 						break;
+ 					}
+ 					continue;
+ 
+ 				default:
+ 					continue;
+ 				}
+ 				break;
+ 			}
+ 			
+ 			is = new StructInitializer(loc);
+ 			nextToken();
+ 			comma = 0;
+ 			while (true) {
+ 				switch (token.value) {
+ 				case TOKidentifier:
+ 					if (comma == 1) {
+ 						parsingErrorInsertTokenAfter(prevToken, ",");
+ 					}
+ 					t = peek(token);
+ 					if (t.value == TOKcolon) {
+ 						id = newIdentifierExp();
+ 						nextToken();
+ 						nextToken(); // skip over ':'
+ 					} else {
+ 						id = null;
+ 					}
+ 					value = parseInitializer();
+ 					
+ 					is.addInit(id, value);
+ 					
+ 					comma = 1;
+ 					continue;
+ 
+ 				case TOKcomma:
+ 					nextToken();
+ 					comma = 2;
+ 					continue;
+ 
+ 				case TOKrcurly: // allow trailing comma's
+ 					is.setSourceRange(start, token.ptr + token.len - start);
+ 					nextToken();
+ 					break;
+ 
+ 				default:
+ 					value = parseInitializer();
+ 				
+ 					is.addInit(null, value);
+ 					
+ 					comma = 1;
+ 					continue;
+ 				}
+ 				break;
+ 			}
+ 			
+ 			return is;
+ 
+ 		case TOKlbracket:
+ 			ia = new ArrayInitializer(loc);
+ 			nextToken();
+ 			comma = 0;
+ 			while (true) {
+ 				switch (token.value) {
+ 				default:
+ 					if (comma == 1) {
+ 						parsingErrorInsertTokenAfter(prevToken, ",");
+ 						nextToken();
+ 						ia.setSourceRange(start, token.ptr + token.len - start);
+ 						break;
+ 					}
+ 					e = parseAssignExp();
+ 					if (e == null)
+ 						break;
+ 					if (token.value == TOKcolon) {
+ 						nextToken();
+ 						value = parseInitializer();
+ 					} else {
+ 						value = new ExpInitializer(loc, e);
+ 						e = null;
+ 					}
+ 					ia.addInit(e, value);
+ 					comma = 1;
+ 					continue;
+ 
+ 				case TOKlcurly:
+ 				case TOKlbracket:
+ 					if (comma == 1) {
+ 						parsingErrorInsertTokenAfter(prevToken, ",");
+ 					}
+ 					
+ 					value = parseInitializer();
+ 					
+ 					ia.addInit(null, value);
+ 					comma = 1;
+ 					continue;
+ 
+ 				case TOKcomma:
+ 					nextToken();
+ 					comma = 2;
+ 					continue;
+ 
+ 				case TOKrbracket: // allow trailing comma's
+ 					ia.setSourceRange(start, token.ptr + token.len - start);
+ 					nextToken();					
+ 					break;
+ 
+ 				case TOKeof:
+ 					parsingErrorInsertTokenAfter(prevToken, "ArryaInitializer");
+ 					break;
+ 				}
+ 				break;
+ 			}
+ 			return ia;
+ 
+ 		case TOKvoid:
+ 			t = peek(token);
+ 			if (t.value == TOKsemicolon || t.value == TOKcomma) {
+ 				nextToken();
+ 				return newVoidInitializerForToken(prevToken);
+ 			}
+ 			// goto Lexpression;
+ 
+ 		default:
+ 			// Lexpression:
+ 			e = parseAssignExp();
+ 			e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			ie = new ExpInitializer(loc, e);
+ 			return ie;
+ 		}
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked") 
+ 	public Statement parseStatement(int flags) {
+ 		Statement s = null;
+ 		Token t;
+ 		Statement ifbody;
+ 	    Statement elsebody;
+ 
+ 		if ((flags & PScurly) != 0 && token.value != TOKlcurly) {
+ 			error(
+ 					IProblem.StatementExpectedToBeCurlies, token);
+ 		}
+ 		
+ 		int start = token.ptr;
+ 
+ 		switch (token.value) {
+ 		case TOKidentifier:
+ 			// Need to look ahead to see if it is a declaration, label, or
+ 			// expression
+ 			t = peek(token);
+ 			if (t.value == TOKcolon) { // It's a label
+ 				IdentifierExp ident = newIdentifierExp();
+ 				nextToken();
+ 				nextToken();
+ 				Statement body = parseStatement(PSsemi);
+ 				
+ 				s = new LabelStatement(loc, ident, body);
+ 				break;
+ 			}
+ 			// fallthrough to TOKdot
+ 		case TOKdot:
+ 		case TOKtypeof:
+ 			if (isDeclaration(token, 2, TOKreserved, null)) {
+ 				// goto Ldeclaration;
+ 				Statement[] ps = { s };
+ 				parseStatement_Ldeclaration(ps, flags);
+ 				s = ps[0];
+ 				break;
+ 			} else {
+ 				// goto Lexp;
+ 				Expression exp = parseExpression();
+ 				check(TOKsemicolon);
+ 				s = new ExpStatement(loc, exp);
+ 				break;
+ 			}
+ 			// break;
+ 
+ 		case TOKassert:
+ 		case TOKthis:
+ 		case TOKsuper:
+ 		case TOKint32v:
+ 		case TOKuns32v:
+ 		case TOKint64v:
+ 		case TOKuns64v:
+ 		case TOKfloat32v:
+ 		case TOKfloat64v:
+ 		case TOKfloat80v:
+ 		case TOKimaginary32v:
+ 		case TOKimaginary64v:
+ 		case TOKimaginary80v:
+ 		case TOKcharv:
+ 		case TOKwcharv:
+ 		case TOKdcharv:
+ 		case TOKnull:
+ 		case TOKtrue:
+ 		case TOKfalse:
+ 		case TOKstring:
+ 		case TOKlparen:
+ 		case TOKcast:
+ 		case TOKmul:
+ 		case TOKmin:
+ 		case TOKadd:
+ 		case TOKplusplus:
+ 		case TOKminusminus:
+ 		case TOKnew:
+ 		case TOKdelete:
+ 		case TOKdelegate:
+ 		case TOKfunction:
+ 		case TOKtypeid:
+ 		case TOKis:
+ 		case TOKlbracket:
+ 		case TOKtraits: // it's ok not to restrict according to version D2, since
+ 			            // the traits token is only present in D2
+ 			// Lexp:
+ 		{
+ 			Expression exp = parseExpression();
+ 			check(TOKsemicolon);
+ 			s = new ExpStatement(loc, exp);
+ 			s.setSourceRange(exp.start, prevToken.ptr + prevToken.len - exp.start);
+ 			break;
+ 		}
+ 
+ 		case TOKstatic: { // Look ahead to see if it's static assert() or
+ 							// static if()
+ 			Token t2;
+ 			
+ 			t2 = peek(token);
+ 			if (t2.value == TOKassert) {
+ 				nextToken();
+ 				
+ 				s = new StaticAssertStatement(parseStaticAssert());
+ 				break;
+ 			}
+ 			if (t2.value == TOKif) {
+ 				nextToken();
+ 				
+ 				StaticIfCondition staticIfCondition = parseStaticIfCondition();
+ 				
+ 				// goto Lcondition
+ 				ifbody = parseStatement(0 /*PSsemi*/);
+ 				elsebody = null;			
+ 				if (token.value == TOKelse) {
+ 					nextToken();
+ 					elsebody = parseStatement(0 /*PSsemi*/);
+ 				}
+ 				
+ 				s = new ConditionalStatement(loc, staticIfCondition, ifbody, elsebody);
+ 				break;
+ 			}
+ 			// goto Ldeclaration;
+ 			Statement[] ps = { s };
+ 			parseStatement_Ldeclaration(ps, flags);
+ 			s = ps[0];
+ 			break;
+ 		}
+ 
+ 			// CASE_BASIC_TYPES:
+ 		case TOKwchar:
+ 		case TOKdchar:
+ 		case TOKbit:
+ 		case TOKbool:
+ 		case TOKchar:
+ 		case TOKint8:
+ 		case TOKuns8:
+ 		case TOKint16:
+ 		case TOKuns16:
+ 		case TOKint32:
+ 		case TOKuns32:
+ 		case TOKint64:
+ 		case TOKuns64:
+ 		case TOKfloat32:
+ 		case TOKfloat64:
+ 		case TOKfloat80:
+ 		case TOKimaginary32:
+ 		case TOKimaginary64:
+ 		case TOKimaginary80:
+ 		case TOKcomplex32:
+ 		case TOKcomplex64:
+ 		case TOKcomplex80:
+ 		case TOKvoid:
+ 		case TOKtypedef:
+ 		case TOKalias:
+ 		case TOKconst:
+ 		case TOKauto:
+ 		case TOKextern:
+ 		case TOKfinal:
+ 		case TOKinvariant:
+ 			
+ 		// case TOKtypeof:
+ 			// Ldeclaration:
+ 		{
+ 			Statement[] ps = { s };
+ 			parseStatement_Ldeclaration(ps, flags);
+ 			s = ps[0];
+ 			break;
+ 		}
+ 
+ 		case TOKstruct:
+ 		case TOKunion:
+ 		case TOKclass:
+ 		case TOKinterface: {
+ 			Dsymbol d;
+ 
+ 			d = parseAggregate();
+ 			if (d != null) {
+ 				d.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				s = new DeclarationStatement(loc, d);
+ 			}
+ 			break;
+ 		}
+ 
+ 		case TOKenum: {
+ 			Dsymbol d;
+ 
+ 			d = parseEnum();
+ 			if (d != null) {
+ 				d.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				s = new DeclarationStatement(loc, d);
+ 			}
+ 			break;
+ 		}
+ 
+ 		case TOKmixin: {
+ 			Dsymbol d;
+ 			t = peek(token);
+ 		    if (t.value == TOKlparen)
+ 		    {	// mixin(string)
+ 				nextToken();
+ 				check(TOKlparen);
+ 				Expression e = parseAssignExp();
+ 				check(TOKrparen);
+ 				check(TOKsemicolon);
+ 				s = new CompileStatement(loc, e);
+ 				break;
+ 		    } else {			
+ 		    	d = parseMixin();
+ 		    	s = new DeclarationStatement(loc, d);
+ 		    	break;
+ 		    }
+ 		}
+ 
+ 		case TOKlcurly: {
+ 			Statements statements;
+ 
+ 			nextToken();
+ 			statements = new Statements();
+ 			
+ 			while (token.value != TOKrcurly) {
+ 				if (token.value == TOKeof) {
+ 					parsingErrorInsertTokenAfter(prevToken, "}");
+ 					break;
+ 				}
+ 				
+ 				Statement subStatement = parseStatement(PSsemi | PScurlyscope);
+ 				if (subStatement != null) {
+ 					statements.add(subStatement);
+ 				}
+ 			}
+ 			
+ 			s = newBlock(statements);
+ 			/*
+ 			if ((flags & (PSscope | PScurlyscope)) != 0) {
+ 				s = new ScopeStatement(s);
+ 			}
+ 			*/
+ 			nextToken();
+ 			break;
+ 		}
+ 
+ 		case TOKwhile: {
+ 			Expression condition2;
+ 			Statement body;
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 			condition2 = parseExpression();
+ 			check(TOKrparen);
+ 			
+ 			body = parseStatement(PSscope);
+ 			
+ 			s = new WhileStatement(loc, condition2, body);
+ 			break;
+ 		}
+ 
+ 		case TOKsemicolon:
+ 			if ((flags & PSsemi) == 0) {
+ 				error(IProblem.UseBracesForAnEmptyStatement, token);
+ 			}
+ 			nextToken();
+ 			
+ 			s = new ExpStatement(loc, null);
+ 			break;
+ 
+ 		case TOKdo: {
+ 			Statement body;
+ 			Expression condition2;
+ 			
+ 			nextToken();
+ 			
+ 			body = parseStatement(PSscope);
+ 			
+ 			check(TOKwhile);
+ 			check(TOKlparen);
+ 			condition2 = parseExpression();
+ 			check(TOKrparen);
+ 			s = new DoStatement(loc, body, condition2);
+ 			break;
+ 		}
+ 
+ 		case TOKfor: {
+ 			Statement init;
+ 			Expression condition2;
+ 			Expression increment;
+ 			Statement body;
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 			if (token.value == TOKsemicolon) {
+ 				init = null;
+ 				nextToken();
+ 			} else {
+ 				init = parseStatement(0);
+ 			}
+ 			if (token.value == TOKsemicolon) {
+ 				condition2 = null;
+ 				nextToken();
+ 			} else {
+ 				condition2 = parseExpression();
+ 				check(TOKsemicolon);
+ 			}
+ 			if (token.value == TOKrparen) {
+ 				increment = null;
+ 				nextToken();
+ 			} else {
+ 				increment = parseExpression();
+ 				check(TOKrparen);
+ 			}
+ 			body = parseStatement(PSscope);
+ 			s = new ForStatement(loc, init, condition2, increment, body);
+ 			/*
+ 			if (init != null) {
+ 				s = new ScopeStatement(s);
+ 				s.startPosition = saveToken.ptr;
+ 				s.length = prevToken.ptr + prevToken.len - s.startPosition;
+ 			}
+ 			*/
+ 			break;
+ 		}
+ 
+ 		case TOKforeach:
+ 		case TOKforeach_reverse:
+ 		{
+ 			TOK op = token.value;
+ 			Arguments arguments;
+ 
+ 			// Statement d; // <-- not used
+ 			Statement body;
+ 			Expression aggr;
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 
+ 			arguments = new Arguments();
+ 
+ 			while (true) {
+ 				Type tb;
+ 				IdentifierExp ai = null;
+ 				Type at;
+ 				@SuppressWarnings("unused")
+ 				int storageClass;
+ 				Argument a;
+ 				List<Modifier> modifiers = new ArrayList<Modifier>(1);
+ 				
+ 				int argumentStart = token.ptr;
+ 
+ 				storageClass = STCin;
+ 				if (token.value == TOKinout || token.value == TOKref) {
+ 					storageClass = STCref;
+ 					modifiers.add(new Modifier(token));
+ 					nextToken();
+ 				}
+ 				if (token.value == TOKidentifier) {
+ 					Token t2 = peek(token);
+ 					if (t2.value == TOKcomma || t2.value == TOKsemicolon) {
+ 						ai = newIdentifierExp();
+ 						at = null; // infer argument type
+ 						nextToken();
+ 						// goto Larg;
+ 						a = new Argument(storageClass, at, ai, null);
+ 						a.modifiers = modifiers;
+ 						a.setSourceRange(argumentStart, prevToken.ptr + prevToken.len - argumentStart);
+ 						arguments.add(a);
+ 						if (token.value == TOKcomma) {
+ 							nextToken();
+ 							continue;
+ 						}
+ 						break;
+ 					}
+ 				}
+ 				
+ 				int lineNumber = token.lineNumber;
+ 				
+ 				IdentifierExp[] pointer2_ai = { ai };
+ 				if (apiLevel < D2) {
+ 					tb = parseBasicType();
+ 					at = parseDeclarator(tb, pointer2_ai);
+ 				} else {
+ 					at = parseType(pointer2_ai);
+ 				}
+ 				ai = pointer2_ai[0];
+ 				
+ 				if (ai == null) {
+ 					if (at == null) {
+ 						error(IProblem.NoIdentifierForDeclarator, lineNumber, prevToken.ptr, prevToken.len);
+ 					} else {
+ 						error(IProblem.NoIdentifierForDeclarator, lineNumber, at);
+ 					}
+ 				}
+ 				// Larg:
+ 				if (at != null && ai != null) {
+ 					a = new Argument(storageClass, at, ai, null);
+ 					a.setSourceRange(argumentStart, prevToken.ptr + prevToken.len - argumentStart);
+ 					arguments.add(a);
+ 				}
+ 				if (token.value == TOKcomma) {
+ 					nextToken();
+ 					continue;
+ 				}
+ 				break;
+ 			}
+ 			check(TOKsemicolon);
+ 
+ 			aggr = parseExpression();
+ 			
+ 			if (apiLevel < D2) {
+ 				check(TOKrparen);
+ 				body = parseStatement(0);
+ 				
+ 				s = new ForeachStatement(loc, op, arguments, aggr, body);
+ 			} else {
+ 			    if (token.value == TOKslice && arguments.size() == 1) {
+ 					Argument a = (Argument) arguments.get(0);
+ 					nextToken();
+ 					Expression upr = parseExpression();
+ 					check(TOKrparen);
+ 					body = parseStatement(0);
+ 					s = new ForeachRangeStatement(loc, op, a, aggr, upr, body);
+ 				} else {
+ 					check(TOKrparen);
+ 					body = parseStatement(0);
+ 					s = new ForeachStatement(loc, op, arguments, aggr, body);
+ 				}
+ 			}
+ 			break;
+ 		}
+ 
+ 		case TOKif: {
+ 			Argument arg = null;
+ 			Expression condition2;
+ 			Statement ifbody2;
+ 			Statement elsebody2;
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 
+ 			if (token.value == TOKauto) {
+ 				int autoTokenStart = token.ptr;
+ 				List<Modifier> modifiers = new ArrayList<Modifier>(1);
+ 				modifiers.add(new Modifier(token));
+ 				
+ 				nextToken();
+ 				if (token.value == TOKidentifier) {
+ 					Token t2 = peek(token);
+ 					if (t2.value == TOKassign) {
+ 						arg = new Argument(STCin, null, newIdentifierExp(), null);
+ 						arg.modifiers = modifiers;
+ 						arg.setSourceRange(autoTokenStart, token.ptr + token.len - autoTokenStart);
+ 						
+ 						nextToken();
+ 						nextToken();
+ 					} else {
+ 						parsingErrorInsertTokenAfter(prevToken, "=");
+ 						// goto Lerror;
+ 						while (token.value != TOKrcurly
+ 								&& token.value != TOKsemicolon
+ 								&& token.value != TOKeof)
+ 							nextToken();
+ 						if (token.value == TOKsemicolon)
+ 							nextToken();
+ 						s = null;
+ 						break;
+ 					}
+ 				} else {
+ 					parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 					// goto Lerror;
+ 					while (token.value != TOKrcurly
+ 							&& token.value != TOKsemicolon
+ 							&& token.value != TOKeof)
+ 						nextToken();
+ 					if (token.value == TOKsemicolon)
+ 						nextToken();
+ 					s = null;
+ 					break;
+ 				}
+ 			} else {
+ 				int argTokenStart = token.ptr;
+ 				int argTokenLine = token.lineNumber;
+ 				if (isDeclaration(token, 2, TOKassign, null)) {
+ 					Type tb;
+ 					Type at;
+ 					IdentifierExp ai = null;
+ 
+ 					
+ 					IdentifierExp[] pointer2_ai = { ai };
+ 					if (apiLevel < D2) {
+ 						tb = parseBasicType();
+ 						at = parseDeclarator(tb, pointer2_ai);
+ 					} else {
+ 						at = parseType(pointer2_ai);
+ 					}
+ 					ai = pointer2_ai[0];
+ 
+ 					arg = new Argument(STCin, at, ai, null);
+ 					arg.setSourceRange(argTokenStart, prevToken.ptr + prevToken.len - argTokenStart);
+ 					
+ 					check(TOKassign);					
+ 				}
+ 
+ 				// Check for " ident;"
+ 				else if (token.value == TOKidentifier) {
+ 					Token t2 = peek(token);
+ 					if (t2.value == TOKcomma || t2.value == TOKsemicolon) {
+ 						arg = new Argument(STCin, null, newIdentifierExp(), null);
+ 						arg.setSourceRange(argTokenStart, token.ptr + token.len - argTokenStart);
+ 						
+ 						nextToken();
+ 						nextToken();
+ 						
+ 						// if (!global.params.useDeprecated)
+ 						error(IProblem.IfAutoDeprecated, argTokenLine, argTokenStart, token.ptr + token.len - argTokenStart);
+ 					}
+ 				}
+ 			}
+ 
+ 			condition2 = parseExpression();
+ 			check(TOKrparen);
+ 			ifbody2 = parseStatement(PSscope);
+ 			if (token.value == TOKelse) {
+ 				nextToken();
+ 				elsebody2 = parseStatement(PSscope);
+ 			} else
+ 				elsebody2 = null;
+ 			s = new IfStatement(loc, arg, condition2, ifbody2, elsebody2);
+ 			break;
+ 		}
+ 
+ 		case TOKscope:
+ 		    if (peek(token).value != TOKlparen) {
+ 		    	// goto Ldeclaration
+ 		    	// scope used as storage class
+ 				Statement[] ps = { s };
+ 				parseStatement_Ldeclaration(ps, flags);
+ 				s = ps[0];
+ 				break;
+ 		    }
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 				// goto Lerror;
+ 				while (token.value != TOKrcurly && token.value != TOKsemicolon
+ 						&& token.value != TOKeof)
+ 					nextToken();
+ 				if (token.value == TOKsemicolon)
+ 					nextToken();
+ 				s = null;
+ 				break;
+ 			} else {
+ 				TOK t2 = TOKon_scope_exit;
+ 
+ 				// This char[] instances are reused by the Lexer
+ 				char[] id = token.sourceString;			
+ 				if (id == Id.exit)
+ 					t2 = TOKon_scope_exit;
+ 				else if (id == Id.failure)
+ 					t2 = TOKon_scope_failure;
+ 				else if (id == Id.success)
+ 					t2 = TOKon_scope_success;
+ 				else {
+ 					error(IProblem.InvalidScopeIdentifier, token);
+ 				}
+ 				nextToken();
+ 				check(TOKrparen);
+ 				Statement st = parseStatement(PScurlyscope);
+ 				
+ 				s = new OnScopeStatement(loc, t2, st);
+ 				break;
+ 			}
+ 
+ 		case TOKon_scope_exit:
+ 		case TOKon_scope_failure:
+ 		case TOKon_scope_success: {
+ 			
+ 			TOK t2 = token.value;
+ 			
+ 			// if (!global.params.useDeprecated)
+ 			error(IProblem.OnScopeDeprecated, token, new String[] { token.toString() });
+ 			nextToken();
+ 			Statement st = parseStatement(PScurlyscope);
+ 			
+ 			s = new OnScopeStatement(loc, t2, st);
+ 			break;
+ 		}
+ 
+ 		case TOKdebug:
+ 			nextToken();
+ 			
+ 			DebugCondition condition = parseDebugCondition();
+ 			
+ 			// goto Lcondition
+ 			ifbody = parseStatement(0 /*PSsemi*/);
+ 			elsebody = null;			
+ 			if (token.value == TOKelse) {
+ 				nextToken();
+ 				elsebody = parseStatement(0 /*PSsemi*/);
+ 			}
+ 			
+ 			s = new ConditionalStatement(loc, condition, ifbody, elsebody);
+ 			break;
+ 
+ 		case TOKversion:
+ 			nextToken();
+ 			
+ 			VersionCondition versionCondition = parseVersionCondition();
+ 			
+ 			// goto Lcondition
+ 			ifbody = parseStatement(0 /*PSsemi*/);
+ 			elsebody = null;			
+ 			if (token.value == TOKelse) {
+ 				nextToken();
+ 				elsebody = parseStatement(0 /*PSsemi*/);
+ 			}
+ 			
+ 			s = new ConditionalStatement(loc, versionCondition, ifbody, elsebody);
+ 			break;
+ 
+ 		case TOKiftype:
+ 			IftypeCondition iftypeCondition = parseIftypeCondition();
+ 			
+ 			// goto Lcondition
+ 			ifbody = parseStatement(0 /*PSsemi*/);
+ 			elsebody = null;			
+ 			if (token.value == TOKelse) {
+ 				nextToken();
+ 				elsebody = parseStatement(0 /*PSsemi*/);
+ 			}
+ 			
+ 			s = new ConditionalStatement(loc, iftypeCondition, ifbody, elsebody);
+ 			break;
+ 
+ 		case TOKpragma: {
+ 			IdentifierExp ident;
+ 			Expressions args = null;
+ 			Statement body;
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 				// goto Lerror;
+ 				while (token.value != TOKrcurly && token.value != TOKsemicolon
+ 						&& token.value != TOKeof)
+ 					nextToken();
+ 				if (token.value == TOKsemicolon)
+ 					nextToken();
+ 				s = null;
+ 				break;
+ 			}
+ 			ident = newIdentifierExp();
+ 			nextToken();
+ 			if (token.value == TOKcomma)
+ 				args = parseArguments(); // pragma(identifier, args...);
+ 			else
+ 				check(TOKrparen); // pragma(identifier);
+ 			if (token.value == TOKsemicolon) {
+ 				nextToken();
+ 				body = null;
+ 			} else {
+ 				body = parseStatement(PSsemi);
+ 			}
+ 			
+ 			s = new PragmaStatement(loc, ident, args, body);
+ 			break;
+ 		}
+ 
+ 		case TOKswitch: {
+ 			Expression condition2;
+ 			Statement body;
+ 
+ 			nextToken();
+ 			check(TOKlparen);
+ 			condition2 = parseExpression();
+ 			check(TOKrparen);
+ 			body = parseStatement(PSscope);
+ 			
+ 			s = new SwitchStatement(loc, condition2, body);
+ 			break;
+ 		}
+ 
+ 		case TOKcase: {
+ 			Expression exp;
+ 			Statements statements;
+ 			List cases = new ArrayList(); // array of Expression's
+ 
+ 			while (true) {
+ 				nextToken();
+ 				exp = parseAssignExp();
+ 				cases.add(exp);
+ 				if (token.value != TOKcomma)
+ 					break;
+ 			}
+ 			check(TOKcolon);
+ 
+ 			statements = new Statements();
+ 			while (token.value != TOKcase && token.value != TOKdefault
+ 					&& token.value != TOKrcurly) {
+ 				statements.add(parseStatement(PSsemi | PScurlyscope));
+ 			}
+ 			
+ 			s = newBlock(statements);
+ 			
+ 			/*
+ 			s = new ScopeStatement(s);
+ 			*/
+ 
+ 			// Keep cases in order by building the case statements backwards
+ 			for (int i = cases.size(); i != 0; i--) {
+ 				exp = (Expression) cases.get(i - 1);
+ 				s = new CaseStatement(loc, exp, s);
+ 			}
+ 			break;
+ 		}
+ 
+ 		case TOKdefault: {
+ 			Statements statements;
+ 			
+ 			nextToken();
+ 			check(TOKcolon);
+ 
+ 			statements = new Statements();
+ 			while (token.value != TOKcase && token.value != TOKdefault
+ 					&& token.value != TOKrcurly) {
+ 				statements.add(parseStatement(PSsemi | PScurlyscope));
+ 			}
+ 			
+ 			s = newBlock(statements);
+ 			s.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			
+ 			/*
+ 			s = new ScopeStatement(s);
+ 			s.startPosition = saveToken.ptr;
+ 			s.length = prevToken.ptr + prevToken.len - s.startPosition;
+ 			*/
+ 			
+ 			s = new DefaultStatement(loc, s);
+ 			break;
+ 		}
+ 
+ 		case TOKreturn: {
+ 			Expression exp;
+ 
+ 			nextToken();
+ 			if (token.value == TOKsemicolon) {
+ 				exp = null;
+ 			} else {
+ 				exp = parseExpression();
+ 			}
+ 			check(TOKsemicolon);
+ 			
+ 			s = new ReturnStatement(loc, exp);
+ 			break;
+ 		}
+ 
+ 		case TOKbreak: {
+ 			IdentifierExp ident;
+ 
+ 			nextToken();
+ 			if (token.value == TOKidentifier) {
+ 				ident = newIdentifierExp();
+ 				nextToken();
+ 			} else
+ 				ident = null;
+ 			check(TOKsemicolon);
+ 			
+ 			s = new BreakStatement(loc, ident);
+ 			break;
+ 		}
+ 
+ 		case TOKcontinue: {
+ 			IdentifierExp ident;
+ 
+ 			nextToken();
+ 			if (token.value == TOKidentifier) {
+ 				ident = newIdentifierExp();
+ 				nextToken();
+ 			} else {
+ 				ident = null;
+ 			}
+ 			
+ 			check(TOKsemicolon);
+ 			
+ 			s = new ContinueStatement(loc, ident);
+ 			break;
+ 		}
+ 
+ 		case TOKgoto: {
+ 			IdentifierExp ident;
+ 			
+ 			nextToken();
+ 			if (token.value == TOKdefault) {
+ 				nextToken();
+ 				s = new GotoDefaultStatement(loc);
+ 			} else if (token.value == TOKcase) {
+ 				Expression exp = null;
+ 
+ 				nextToken();
+ 				if (token.value != TOKsemicolon) {
+ 					exp = parseExpression();
+ 				}
+ 				
+ 				s = new GotoCaseStatement(loc, exp);
+ 			} else {
+ 				if (token.value != TOKidentifier) {
+ 					parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 					ident = null;
+ 				} else {
+ 					ident = newIdentifierExp();
+ 					nextToken();
+ 				}
+ 				
+ 				s = new GotoStatement(loc, ident);
+ 			}
+ 			check(TOKsemicolon);
+ 			break;
+ 		}
+ 
+ 		case TOKsynchronized: {
+ 			Expression exp;
+ 			Statement body;
+ 			
+ 			nextToken();
+ 			if (token.value == TOKlparen) {
+ 				nextToken();
+ 				exp = parseExpression();
+ 				check(TOKrparen);
+ 			} else
+ 				exp = null;
+ 			body = parseStatement(PSscope);
+ 			
+ 			s = new SynchronizedStatement(loc, exp, body);
+ 			break;
+ 		}
+ 
+ 		case TOKwith: {
+ 			Expression exp;
+ 			Statement body;
+ 			
+ 			nextToken();
+ 			check(TOKlparen);
+ 			exp = parseExpression();
+ 			check(TOKrparen);
+ 			
+ 			body = parseStatement(PSscope);
+ 			
+ 			s = new WithStatement(loc, exp, body);
+ 			break;
+ 		}
+ 
+ 		case TOKtry: {
+ 			Statement body;
+ 			List catches = null;
+ 			Statement finalbody = null;
+ 			
+ 			nextToken();
+ 			body = parseStatement(PSscope);
+ 			while (token.value == TOKcatch) {
+ 				Statement handler;
+ 				Catch c;
+ 				Type t2;
+ 				IdentifierExp id;
+ 				
+ 				int firstTokenStart = token.ptr;
+ 
+ 				nextToken();
+ 				if (token.value == TOKlcurly) {
+ 					t2 = null;
+ 					id = null;
+ 				} else {
+ 					check(TOKlparen);
+ 					id = null;
+ 					IdentifierExp[] pointer2_id = { id };
+ 					if (apiLevel < D2) {
+ 						t2 = parseBasicType();
+ 						t2 = parseDeclarator(t2, pointer2_id);
+ 					} else {
+ 						t2 = parseType(pointer2_id);
+ 					}
+ 					id = pointer2_id[0];
+ 					check(TOKrparen);
+ 				}
+ 				handler = parseStatement(0);
+ 				
+ 				c = new Catch(loc, t2, id, handler);
+ 				c.setSourceRange(firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 				
+ 				if (catches == null) {
+ 					catches = new ArrayList();
+ 				}
+ 				
+ 				catches.add(c);
+ 			}
+ 
+ 			if (token.value == TOKfinally) {
+ 				nextToken();
+ 				finalbody = parseStatement(0);
+ 			}
+ 
+ 			s = body;
+ 			if (catches == null && finalbody == null) {
+ 				parsingErrorInsertToComplete(prevToken, "Catch or finally", "TryStatement");
+ 			} else {
+ 				if (catches != null) {
+ 					s = new TryCatchStatement(loc, body, catches);
+ 				}
+ 				if (finalbody != null) {
+ 					if (catches != null) {
+ 						s.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 					}
+ 					s = new TryFinallyStatement(loc, s, finalbody, catches != null);
+ 				}
+ 			}
+ 			break;
+ 		}
+ 
+ 		case TOKthrow: {
+ 			Expression exp;
+ 			
+ 			nextToken();
+ 			exp = parseExpression();
+ 			check(TOKsemicolon);
+ 			
+ 			s = new ThrowStatement(loc, exp);
+ 			break;
+ 		}
+ 
+ 		case TOKvolatile:
+ 			nextToken();
+ 			s = parseStatement(PSsemi | PScurlyscope);
+ 			s = new VolatileStatement(loc, s);
+ 			break;
+ 
+ 		case TOKasm: {
+ 			Statements statements;
+ 			IdentifierExp label;
+ 			List<Token> toklist = new ArrayList<Token>(6);
+ 			
+ 			// Parse the asm block into a sequence of AsmStatements,
+ 			// each AsmStatement is one instruction.
+ 			// Separate out labels.
+ 			// Defer parsing of AsmStatements until semantic processing.
+ 
+ 			nextToken();
+ 			check(TOKlcurly);
+ 			label = null;
+ 			statements = new Statements();
+ 			while (true) {
+ 				switch (token.value) {
+ 				case TOKidentifier:
+ 					if (toklist.isEmpty()) {
+ 						// Look ahead to see if it is a label
+ 						t = peek(token);
+ 						if (t.value == TOKcolon) { // It's a label
+ 							label = newIdentifierExp();
+ 							nextToken();
+ 							nextToken();
+ 							continue;
+ 						}
+ 					}
+ 					// goto Ldefault;
+ 					toklist.add(new Token(token));
+ 					nextToken();
+ 					continue;
+ 
+ 				case TOKrcurly:
+ 					if (!toklist.isEmpty() || label != null) {
+ 						parsingErrorInsertTokenAfter(prevToken, ";");
+ 					}
+ 					break;
+ 
+ 				case TOKsemicolon:
+ 					// Create AsmStatement from list of tokens we've saved
+ 					s = new AsmStatement(loc, toklist);
+ 					if (toklist.isEmpty()) {
+ 						s.setSourceRange(token.ptr, token.len);
+ 					} else {
+ 						s.setSourceRange(toklist.get(0).ptr, token.ptr + token.len - toklist.get(0).ptr);
+ 					}
+ 					
+ 					toklist = new ArrayList<Token>(6);
+ 					
+ 					if (label != null) {
+ 						s = new LabelStatement(loc, label, s);
+ 						label = null;
+ 					}
+ 					statements.add(s);
+ 					nextToken();
+ 					continue;
+ 
+ 				case TOKeof:
+ 					/* { */
+ 					parsingErrorInsertTokenAfter(prevToken, "}");
+ 					break;
+ 
+ 				default:
+ 					toklist.add(new Token(token));
+ 					nextToken();
+ 					continue;
+ 				}
+ 				break;
+ 			}
+ 			
+ 			s = new AsmBlock(loc, statements);;
+ 			
+ 			nextToken();
+ 			break;
+ 		}
+ 
+ 		default:
+ 			parsingErrorInsertTokenAfter(prevToken, "Statement");
+ 			// goto Lerror;
+ 
+ 			// Lerror:
+ 			while (token.value != TOKrcurly && token.value != TOKsemicolon
+ 					&& token.value != TOKeof)
+ 				nextToken();
+ 			if (token.value == TOKsemicolon)
+ 				nextToken();
+ 			s = null;
+ 			break;
+ 		}
+ 		
+ 		if (s != null) {
+ 			s.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 		}
+ 		
+ 		return s;
+ 	}
+ 
+ 	private void parseStatement_Ldeclaration(Statement[] s, int flags) {
+ 		List a;
+ 
+ 		a = parseDeclarations(new ArrayList<Comment>());
+ 		if (a.size() > 1) {
+ 			Statements as = new Statements(a.size());
+ 			for (int i = 0; i < a.size(); i++) {
+ 				Dsymbol d = (Dsymbol) a.get(i);
+ 				s[0] = new DeclarationStatement(loc, d);
+ 				as.add(s[0]);
+ 			}
+ 			
+ 			s[0] = newManyVarsBlock(as);
+ 		} else if (a.size() == 1) {
+ 			Dsymbol d = (Dsymbol) a.get(0);
+ 			s[0] = new DeclarationStatement(loc, d);
+ 		} else {
+ 			parsingErrorDeleteToken(token);
+ 			nextToken();
+ 			s[0] = null;
+ 		}
+ 		/*
+ 		if ((flags & PSscope) != 0) {
+ 			s[0] = new ScopeStatement(s[0]);
+ 		}
+ 		*/
+ 	}
+ 	
+ 	private void check(TOK value) {
+ 		if (token.value != value) {
+ 			parsingErrorInsertTokenAfter(prevToken, value.toString());
+ 		} else {
+ 			nextToken();
+ 		}
+ 	}
+ 	
+ 	private boolean isDeclaration(Token t, int needId, TOK endtok, Token[] pt) {
+ 		int haveId = 0;
+ 		
+ 		if (apiLevel == D2) {
+ 		    if ((t.value == TOKconst || t.value == TOKinvariant)
+ 					&& peek(t).value != TOKlparen) {
+ 		    /* const type
+ 			 * invariant type
+ 			 */
+ 				t = peek(t);
+ 			}
+ 		}
+ 
+ 
+ 		Token[] pointer2_t = { t };
+ 
+ 		if (!isBasicType(pointer2_t)) {
+ 			return false;
+ 		}
+ 
+ 		t = pointer2_t[0];
+ 
+ 		int[] pointer2_haveId = { haveId };
+ 		if (!isDeclarator(pointer2_t, pointer2_haveId, endtok)) {
+ 			return false;
+ 		}
+ 
+ 		t = pointer2_t[0];
+ 		haveId = pointer2_haveId[0];
+ 
+ 		if (needId == 1 || (needId == 0 && haveId == 0)
+ 				|| (needId == 2 && haveId != 0)) {
+ 			if (pt != null) {
+ 				pt[0] = t;
+ 			}
+ 			return true;
+ 		} else {
+ 			return false;
+ 		}
+ 	}
+ 	
+ 	private boolean isBasicType(Token[] pt) {
+ 		// This code parallels parseBasicType()
+ 		Token t = pt[0];
+ 		// Token t2; // <-- not used
+ 		// int parens = 0; // <-- not used
+ 
+ 		switch (t.value) {
+ 		case TOKwchar: case TOKdchar: case TOKbit: case TOKbool:
+ 		case TOKchar: case TOKint8: case TOKuns8: case TOKint16:
+ 		case TOKuns16: case TOKint32: case TOKuns32: case TOKint64:
+ 		case TOKuns64: case TOKfloat32: case TOKfloat64: case TOKfloat80:
+ 		case TOKimaginary32: case TOKimaginary64: case TOKimaginary80:
+ 		case TOKcomplex32: case TOKcomplex64: case TOKcomplex80:
+ 		case TOKvoid:
+ 			t = peek(t);
+ 			break;
+ 
+ 		case TOKidentifier: {
+ 			t = peek(t);
+ 			if (t.value == TOKnot) {
+ 				// goto L4
+ 				Token[] pointer2_t2 = { t };
+ 				boolean semiResult = isBasicType_L4(pointer2_t2);
+ 				t = pointer2_t2[0];
+ 				if (semiResult) {
+ 					pt[0] = t;
+ 				}
+ 				return semiResult;
+ 			}
+ 			
+ 			// goto L3
+ 			Token[] pointer2_t2 = { t };
+ 			boolean semiResult = isBasicType_L3(pointer2_t2);
+ 			t = pointer2_t2[0];
+ 			if (semiResult) {
+ 				pt[0] = t;
+ 			}
+ 			return semiResult;
+ 		}
+ 
+ 		case TOKdot: {
+ 			// goto Ldot;
+ 			Token[] pointer2_t2 = new Token[] { t };
+ 			boolean semiResult = isBasicType_Ldot(pointer2_t2);
+ 			t = pointer2_t2[0];
+ 			if (semiResult) {
+ 				pt[0] = t;
+ 			}
+ 			return semiResult;
+ 		}
+ 
+ 		case TOKtypeof: {
+ 			/*
+ 			 * typeof(exp).identifier...
+ 			 */
+ 			t = peek(t);
+ 			if (t.value != TOKlparen) {
+ 				return false;
+ 			}
+ 
+ 			Token[] pointer2_t = { t };
+ 			if (!skipParens(t, pointer2_t)) {
+ 				return false;
+ 			}
+ 
+ 			t = pointer2_t[0];
+ 
+ 			// goto L2;
+ 			boolean semiResult = isBasicType_L2(pointer2_t);
+ 			t = pointer2_t[0];
+ 			if (semiResult) {
+ 				pt[0] = t;
+ 			}
+ 			return semiResult;
+ 		}
+ 			
+ 		case TOKconst:
+ 		case TOKinvariant: {
+ 			if (apiLevel < D2) {
+ 				return false;
+ 			}
+ 			
+ 		    // const(type)  or  invariant(type)
+ 		    t = peek(t);
+ 		    if (t.value != TOKlparen) {
+ 		    	return false;
+ 		    }
+ 		    t = peek(t);
+ 		    
+ 		    Token[] pointer2_t = { t };
+ 		    if (!isDeclaration(t, 0, TOKrparen, pointer2_t)) {
+ 		    	return false;
+ 		    }
+ 		    t = pointer2_t[0];
+ 		    
+ 		    t = peek(t);
+ 		    break;
+ 		}
+ 
+ 		default:
+ 			return false;
+ 		}
+ 		pt[0] = t;
+ 		return true;
+ 	}
+ 	
+ 	private boolean isBasicType_L2(Token[] pt) {
+ 		while (true) {
+ 			/* L2: */
+ 			pt[0] = peek(pt[0]);
+ 			/* L3: */
+ 			if (pt[0].value == TOKdot) {
+ 				/* Ldot: */
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKidentifier) {
+ 					return false;
+ 				}
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKnot) {
+ 					// goto L3
+ 					return isBasicType_L3(pt);
+ 				}
+ 				/* L4: */
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKlparen) {
+ 					return false;
+ 				}
+ 
+ 				if (!skipParens(pt[0], pt)) {
+ 					return false;
+ 				}
+ 			} else {
+ 				break;
+ 			}
+ 		}
+ 		
+ 		return true;
+ 	}
+ 	
+ 	private boolean isBasicType_L3(Token[] pt) {
+ 		
+ 		boolean firstTime = true;
+ 		while (true) {
+ 			/* L2: */
+ 			if (!firstTime) {
+ 				pt[0] = peek(pt[0]);
+ 			}
+ 			firstTime = false;
+ 			
+ 			/* L3: */
+ 			if (pt[0].value == TOKdot) {
+ 				/* Ldot: */
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKidentifier) {
+ 					return false;
+ 				}
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKnot) {
+ 					// goto L3;
+ 					return isBasicType_L3(pt);
+ 				}
+ 				/* L4: */
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKlparen) {
+ 					return false;
+ 				}
+ 
+ 				if (!skipParens(pt[0], pt)) {
+ 					return false;
+ 				}
+ 			} else {
+ 				break;
+ 			}
+ 		}
+ 		
+ 		return true;
+ 	}
+ 	
+ 	private boolean isBasicType_Ldot(Token[] pt) {
+ 		
+ 		boolean firstTime = true;
+ 		while (true) {
+ 			/* L2: */
+ 			if (!firstTime) {
+ 				pt[0] = peek(pt[0]);
+ 			}
+ 			/* L3: */
+ 			if (pt[0].value == TOKdot || firstTime) {
+ 				/* Ldot: */
+ 				firstTime = false;
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKidentifier) {
+ 					return false;
+ 				}
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKnot) {
+ 					// goto L3;
+ 					return isBasicType_L3(pt);
+ 				}
+ 				/* L4: */
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKlparen) {
+ 					return false;
+ 				}
+ 
+ 				if (!skipParens(pt[0], pt)) {
+ 					return false;
+ 				}
+ 			} else {
+ 				break;
+ 			}
+ 		}
+ 		
+ 		return true;
+ 	}
+ 	
+ 	private boolean isBasicType_L4(Token[] pt) {
+ 		
+ 		boolean firstTime = true;
+ 		while (true) {
+ 			/* L2: */
+ 			if (!firstTime) {
+ 				pt[0] = peek(pt[0]);
+ 			}
+ 			/* L3: */
+ 			if (pt[0].value == TOKdot || firstTime) {
+ 				/* Ldot: */
+ 				if (!firstTime) {
+ 					pt[0] = peek(pt[0]);
+ 					if (pt[0].value != TOKidentifier) {
+ 						return false;
+ 					}
+ 					pt[0] = peek(pt[0]);
+ 					if (pt[0].value != TOKnot) {
+ 						// goto L3;
+ 						return isBasicType_L3(pt);
+ 					}
+ 				}
+ 				/* L4: */
+ 				firstTime = false;
+ 				pt[0] = peek(pt[0]);
+ 				if (pt[0].value != TOKlparen) {
+ 					return false;
+ 				}
+ 
+ 				if (!skipParens(pt[0], pt)) {
+ 					return false;
+ 				}
+ 			} else {
+ 				break;
+ 			}
+ 		}
+ 		
+ 		return true;
+ 	}
+ 	
+ 	private boolean isDeclarator(Token[] pt, int[] haveId, TOK endtok) {
+ 		// This code parallels parseDeclarator()
+ 	    Token t = pt[0];
+ 	    int parens;
+ 
+ 	    if (t.value == TOKassign)
+ 		return false;
+ 
+ 	    while (true)
+ 	    {
+ 		parens = 0;
+ 		switch (t.value)
+ 		{
+ 		    case TOKmul:
+ 		    case TOKand:
+ 			t = peek(t);
+ 			continue;
+ 
+ 		    case TOKlbracket:
+ 			t = peek(t);
+ 			if (t.value == TOKrbracket)
+ 			{
+ 			    t = peek(t);
+ 			}
+ 			else { 
+ 				Token[] pointer2_t = { t };
+ 				if (isDeclaration(t, 0, TOKrbracket, pointer2_t))
+ 				{   // It's an associative array declaration
+ 					t = pointer2_t[0];
+ 				    t = peek(t);
+ 				}
+ 				else
+ 				{
+ 					t = pointer2_t[0];
+ 				    // [ expression ]
+ 				    // [ expression .. expression ]
+ 				    if (!isExpression(pointer2_t)) {
+ 				    	t = pointer2_t[0];
+ 				    	return false;
+ 				    }
+ 				    t = pointer2_t[0];
+ 				    
+ 				    if (t.value == TOKslice)
+ 				    {	
+ 				    	t = peek(t);
+ 				    	pointer2_t[0] = t;
+ 						if (!isExpression(pointer2_t)) {
+ 							t = pointer2_t[0];
+ 						    return false;
+ 					    }
+ 						t = pointer2_t[0];
+ 					}
+ 				    
+ 				    if (t.value != TOKrbracket) {
+ 				    	return false;
+ 				    }
+ 				    
+ 				    t = peek(t);
+ 				}
+ 				
+ 			}
+ 			continue;
+ 
+ 		    case TOKidentifier:
+ 			if (haveId[0] != 0)
+ 			    return false;
+ 			haveId[0] = 1;
+ 			t = peek(t);
+ 			break;
+ 
+ 		    case TOKlparen:
+ 			t = peek(t);
+ 
+ 			if (t.value == TOKrparen)
+ 			    return false;		// () is not a declarator
+ 
+ 			/* Regard ( identifier ) as not a declarator
+ 			 * BUG: what about ( *identifier ) in
+ 			 *	f(*p)(x);
+ 			 * where f is a class instance with overloaded () ?
+ 			 * Should we just disallow C-style function pointer declarations?
+ 			 */
+ 			if (t.value == TOKidentifier)
+ 			{   Token t2 = peek(t);
+ 			    if (t2.value == TOKrparen)
+ 				return false;
+ 			}
+ 
+ 
+ 			Token[] pointer2_t = { t };
+ 			if (!isDeclarator(pointer2_t, haveId, TOKrparen))
+ 			    return false;
+ 			
+ 			t = pointer2_t[0];
+ 			
+ 			t = peek(t);
+ 			parens = 1;
+ 			break;
+ 
+ 		    case TOKdelegate:
+ 		    case TOKfunction:
+ 			t = peek(t);
+ 			
+ 			pointer2_t = new Token[] { t };
+ 			
+ 			if (!isParameters(pointer2_t))
+ 			    return false;
+ 			
+ 			t = pointer2_t[0];
+ 			
+ 			continue;
+ 		}
+ 		break;
+ 	    }
+ 
+ 	    while (true)
+ 	    {
+ 		switch (t.value)
+ 		{
+ 	//#if CARRAYDECL
+ 		    case TOKlbracket:
+ 			parens = 0;
+ 			t = peek(t);
+ 			if (t.value == TOKrbracket)
+ 			{
+ 			    t = peek(t);
+ 			}
+ 			else {
+ 				Token[] pointer2_t = { t };
+ 				if (isDeclaration(t, 0, TOKrbracket, pointer2_t))
+ 				{   // It's an associative array declaration
+ 					t = pointer2_t[0];
+ 				    t = peek(t);
+ 				}
+ 				else
+ 				{
+ 					t = pointer2_t[0];
+ 					
+ 				    // [ expression ]
+ 				    if (!isExpression(pointer2_t))
+ 				    	return false;
+ 				    
+ 				    t = pointer2_t[0];
+ 				    
+ 				    
+ 				    if (t.value != TOKrbracket)
+ 					return false;
+ 				    t = peek(t);
+ 				}
+ 			}
+ 			continue;
+ 	//#endif
+ 
+ 		    case TOKlparen:
+ 			parens = 0;
+ 			
+ 			
+ 			Token[] pointer2_t = { t };
+ 			if (!isParameters(pointer2_t))
+ 			    return false;
+ 			
+ 			t = pointer2_t[0];
+ 			
+ 			continue;
+ 
+ 		    // Valid tokens that follow a declaration
+ 		    case TOKrparen:
+ 		    case TOKrbracket:
+ 		    case TOKassign:
+ 		    case TOKcomma:
+ 		    case TOKsemicolon:
+ 		    case TOKlcurly:
+ 		    case TOKin:
+ 			// The !parens is to disallow unnecessary parentheses
+ 			if (parens == 0 && (endtok == TOKreserved || endtok == t.value))
+ 			{   pt[0] = t;
+ 			    return true;
+ 			}
+ 			return false;
+ 
+ 		    default:
+ 			return false;
+ 		}
+ 	    }
+ 	}
+ 	
+ 	private boolean isParameters(Token[] pt) {
+ 		if (apiLevel < D2) {
+ 			return isParametersD1(pt);
+ 		} else {
+ 			return isParametersD2(pt);
+ 		}
+ 	}
+ 	
+ 	private boolean isParametersD1(Token[] pt) {
+ 		// This code parallels parseParameters()
+ 		Token t = pt[0];
+ 		int tmp;
+ 
+ 		if (t.value != TOKlparen)
+ 			return false;
+ 
+ 		t = peek(t);
+ 		while (true) {
+ 			switch (t.value) {
+ 			case TOKrparen:
+ 				break;
+ 
+ 			case TOKdotdotdot:
+ 				t = peek(t);
+ 				break;
+ 
+ 			case TOKin:
+ 			case TOKout:
+ 			case TOKinout:
+ 			case TOKref:
+ 			case TOKlazy:
+ 				t = peek(t);
+ 			default:
+ 
+ 				Token[] pointer2_t = { t };
+ 				if (!isBasicType(pointer2_t))
+ 					return false;
+ 
+ 				t = pointer2_t[0];
+ 
+ 				tmp = 0;
+ 
+ 				int[] pointer2_tmp = { tmp };
+ 
+ 				if (t.value != TOKdotdotdot
+ 						&& !isDeclarator(pointer2_t, pointer2_tmp, TOKreserved))
+ 					return false;
+ 
+ 				t = pointer2_t[0];
+ 				tmp = pointer2_tmp[0];
+ 
+ 				if (t.value == TOKassign) {
+ 					t = peek(t);
+ 					pointer2_t[0] = t;
+ 					if (!isExpression(pointer2_t))
+ 						return false;
+ 
+ 					t = pointer2_t[0];
+ 				}
+ 				if (t.value == TOKdotdotdot) {
+ 					t = peek(t);
+ 					break;
+ 				}
+ 				if (t.value == TOKcomma) {
+ 					t = peek(t);
+ 					continue;
+ 				}
+ 				break;
+ 			}
+ 			break;
+ 		}
+ 		if (t.value != TOKrparen)
+ 			return false;
+ 		t = peek(t);
+ 		pt[0] = t;
+ 		return true;
+ 	}
+ 	
+ 	private boolean isParametersD2(Token[] pt) {
+ 		// This code parallels parseParameters()
+ 		Token t = pt[0];
+ 		int tmp;
+ 
+ 		if (t.value != TOKlparen)
+ 			return false;
+ 
+ 		t = peek(t);
+ 		for(; true; t = peek(t)) {
+ 			switch (t.value) {
+ 			case TOKrparen:
+ 				break;
+ 
+ 			case TOKdotdotdot:
+ 				t = peek(t);
+ 				break;
+ 
+ 			case TOKin:
+ 			case TOKout:
+ 			case TOKinout:
+ 			case TOKref:
+ 			case TOKlazy:
+ 			case TOKconst:
+ 			case TOKinvariant:
+ 			case TOKfinal:
+ 			case TOKstatic:
+ 				continue;
+ 				
+ 			default:
+ 
+ 				Token[] pointer2_t = { t };
+ 				if (!isBasicType(pointer2_t))
+ 					return false;
+ 
+ 				t = pointer2_t[0];
+ 
+ 				tmp = 0;
+ 
+ 				int[] pointer2_tmp = { tmp };
+ 
+ 				if (t.value != TOKdotdotdot
+ 						&& !isDeclarator(pointer2_t, pointer2_tmp, TOKreserved))
+ 					return false;
+ 
+ 				t = pointer2_t[0];
+ 				tmp = pointer2_tmp[0];
+ 
+ 				if (t.value == TOKassign) {
+ 					t = peek(t);
+ 					pointer2_t[0] = t;
+ 					if (!isExpression(pointer2_t))
+ 						return false;
+ 
+ 					t = pointer2_t[0];
+ 				}
+ 				if (t.value == TOKdotdotdot) {
+ 					t = peek(t);
+ 					break;
+ 				}
+ 				if (t.value == TOKcomma) {
+ 					continue;
+ 				}
+ 				break;
+ 			}
+ 			break;
+ 		}
+ 		if (t.value != TOKrparen)
+ 			return false;
+ 		t = peek(t);
+ 		pt[0] = t;
+ 		return true;
+ 	}
+ 	
+ 	private boolean isExpression(Token[] pt)
+ 	{
+ 	    // This is supposed to determine if something is an expression.
+ 	    // What it actually does is scan until a closing right bracket
+ 	    // is found.
+ 
+ 	    Token t = pt[0];
+ 	    int brnest = 0;
+ 	    int panest = 0;
+ 	    int curlynest = 0;
+ 
+ 	    for (;; t = peek(t))
+ 	    {
+ 		switch (t.value)
+ 		{
+ 		    case TOKlbracket:
+ 			brnest++;
+ 			continue;
+ 
+ 		    case TOKrbracket:
+ 			if (--brnest >= 0)
+ 			    continue;
+ 			break;
+ 
+ 		    case TOKlparen:
+ 			panest++;
+ 			continue;
+ 
+ 		    case TOKcomma:
+ 			if (brnest != 0 || panest != 0)
+ 			    continue;
+ 			break;
+ 
+ 		    case TOKrparen:
+ 			if (--panest >= 0)
+ 			    continue;
+ 			break;
+ 			
+ 		    case TOKlcurly:
+ 			curlynest++;
+ 			continue;
+ 
+ 		    case TOKrcurly:
+ 			if (--curlynest >= 0)
+ 			    continue;
+ 			return false;
+ 
+ 
+ 		    case TOKslice:
+ 			if (brnest != 0)
+ 			    continue;
+ 			break;
+ 			
+ 		    case TOKsemicolon:
+ 				if (curlynest != 0)
+ 				    continue;
+ 				return false;
+ 
+ 
+ 		    case TOKeof:
+ 			return false;
+ 
+ 		    default:
+ 			continue;
+ 		}
+ 		break;
+ 	    }
+ 
+ 	    pt[0] = t;
+ 	    return true;
+ 	}
+ 	
+ 	/**********************************************
+ 	 * Skip over
+ 	 *	instance foo.bar(parameters...)
+ 	 * Output:
+ 	 *	if (pt), *pt is set to the token following the closing )
+ 	 * Returns:
+ 	 *	1	it's valid instance syntax
+ 	 *	0	invalid instance syntax
+ 	 */
+ 
+ 	/* <-- Not used
+ 	private boolean isTemplateInstance(Token t, Token[] pt)
+ 	{
+ 	    t = peek(t);
+ 	    if (t.value != TOKdot)
+ 	    {
+ 		if (t.value != TOKidentifier)
+ 		    //goto Lfalse;
+ 			return false;
+ 		
+ 		t = peek(t);
+ 	    }
+ 	    while (t.value == TOKdot)
+ 	    {
+ 		t = peek(t);
+ 		if (t.value != TOKidentifier)
+ 		    //goto Lfalse;
+ 			return false;
+ 		
+ 		t = peek(t);
+ 	    }
+ 	    if (t.value != TOKlparen)
+ 		//	goto Lfalse;
+ 	    	return false;
+ 
+ 	    // Skip over the template arguments
+ 	    while (true)
+ 	    {
+ 		while (true)
+ 		{
+ 		    t = peek(t);
+ 		    switch (t.value)
+ 		    {
+ 			case TOKlparen:
+ 				
+ 				Token[] pointer2_t = { t };
+ 				
+ 			    if (!skipParens(t, pointer2_t))
+ 			    	//goto Lfalse;
+ 			    	return false;
+ 			    
+ 			    t = pointer2_t[0];
+ 			    
+ 			    continue;
+ 			case TOKrparen:
+ 			    break;
+ 			case TOKcomma:
+ 			    break;
+ 			case TOKeof:
+ 			case TOKsemicolon:
+ 			    //goto Lfalse;
+ 				return false;
+ 			default:
+ 			    continue;
+ 		    }
+ 		    break;
+ 		}
+ 
+ 		if (t.value != TOKcomma)
+ 		    break;
+ 	    }
+ 	    if (t.value != TOKrparen)
+ 	    	//goto Lfalse;
+ 	    	return false;
+ 	    
+ 	    t = peek(t);
+ 	    if (pt != null)
+ 		pt[0] = t;
+ 	    return true;
+ 
+ 	//Lfalse:
+ 	//    return 0;
+ 	}
+ 	*/
+ 	
+ 	/*******************************************
+ 	 * Skip parens, brackets.
+ 	 * Input:
+ 	 *	t is on opening (
+ 	 * Output:
+ 	 *	*pt is set to closing token, which is ')' on success
+ 	 * Returns:
+ 	 *	!=0	successful
+ 	 *	0	some parsing error
+ 	 */
+ 
+ 	private boolean skipParens(Token t, Token[] pt)
+ 	{
+ 	    int parens = 0;
+ 
+ 	    while (true)
+ 	    {
+ 		switch (t.value)
+ 		{
+ 		    case TOKlparen:
+ 			parens++;
+ 			break;
+ 
+ 		    case TOKrparen:
+ 			parens--;
+ 			if (parens < 0)
+ 			    //goto Lfalse;
+ 				return false;
+ 			if (parens == 0) {
+ 			    //goto Ldone;
+ 				if (pt[0] != null)
+ 				pt[0] = t;
+ 				return true;
+ 			}
+ 			break;
+ 
+ 		    case TOKeof:
+ 		    case TOKsemicolon:
+ 		    	//goto Lfalse;
+ 		    	return false;
+ 
+ 		     default:
+ 			break;
+ 		}
+ 		t = peek(t);
+ 	    }
+ 
+ 	  //Ldone:
+ 	    //if (pt[0] != null)
+ 		//pt[0] = t;
+ 	    //return true;
+ 
+ 	  //Lfalse:
+ 	  //  return 0;
+ 	}
+ 	
+ 	/********************************* Expression Parser ***************************/
+ 	
+ 	private Expression parsePrimaryExp()
+ 	{   Expression e = null;
+ 	    Type t;
+ 	    IdentifierExp id;
+ 	    TOK save;
+ 
+ 	    switch (token.value)
+ 	    {
+ 		case TOKidentifier:
+ 		    id = newIdentifierExp();
+ 		    nextToken();
+ 		    if (token.value == TOKnot && peek(token).value == TOKlparen)
+ 		    {	// identifier!(template-argument-list)
+ 		    	TemplateInstance tempinst;
+ 		    	
+ 		    	tempinst = new TemplateInstance(loc, id);		    	
+ 		    	nextToken();
+ 		    	tempinst.tiargs = parseTemplateArgumentList();
+ 		    	tempinst.setSourceRange(id.start, prevToken.ptr + prevToken.len - id.start);
+ 				e = new ScopeExp(loc, tempinst);
+ 				e.setSourceRange(tempinst.start, tempinst.length);
+ 		    }
+ 		    else {
+ 		    	e = id;
+ 		    }
+ 		    break;
+ 
+ 		case TOKdollar:
+ 		    if (inBrackets == 0) {
+ 		    	error(IProblem.DollarInvalidOutsideBrackets, token);
+ 		    }
+ 		    e = new DollarExp(loc);
+ 		    e.setSourceRange(token.ptr, token.len);
+ 		    nextToken();
+ 		    break;
+ 
+ 		case TOKdot:
+ 		    // Signal global scope '.' operator with "" identifier
+ 			e = new IdentifierExp(loc, Id.empty);
+ 			e.start = token.ptr;
+ 			e.length = 0;
+ 		    break;
+ 
+ 		case TOKthis:
+ 		    e = new ThisExp(loc);
+ 		    e.setSourceRange(token.ptr, token.len);
+ 		    nextToken();
+ 		    break;
+ 
+ 		case TOKsuper:
+ 			e = new SuperExp(loc);
+ 		    e.setSourceRange(token.ptr, token.len);
+ 		    nextToken();
+ 		    break;
+ 
+ 		case TOKint32v: e = new IntegerExp(loc, token.sourceString, token.intValue, Type.tint32); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKuns32v: e = new IntegerExp(loc, token.sourceString, token.intValue, Type.tuns32); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKint64v: e = new IntegerExp(loc, token.sourceString, token.intValue, Type.tint64); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKuns64v: e = new IntegerExp(loc, token.sourceString, token.intValue, Type.tuns64); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKfloat32v: e = new RealExp(loc, token.sourceString, new real_t(token.floatValue), Type.tfloat32); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKfloat64v: e = new RealExp(loc, token.sourceString, new real_t(token.floatValue), Type.tfloat64); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKfloat80v: e = new RealExp(loc, token.sourceString, new real_t(token.floatValue), Type.tfloat80); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKimaginary32v: e = new RealExp(loc, token.sourceString, new real_t(token.floatValue), Type.timaginary32); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKimaginary64v: e = new RealExp(loc, token.sourceString, new real_t(token.floatValue), Type.timaginary64); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKimaginary80v: e = new RealExp(loc, token.sourceString, new real_t(token.floatValue), Type.timaginary80); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 
+ 		case TOKnull:
+ 		    e = new NullExp(loc);
+ 		    e.setSourceRange(token.ptr, token.len);
+ 		    nextToken();
+ 		    break;
+ 
+ 		case TOKtrue:
+ 			e = new IntegerExp(loc, token.sourceString, 1, Type.tbool);
+ 		    nextToken();
+ 		    break;
+ 		case TOKfalse:
+ 			e = new IntegerExp(loc, token.sourceString, 0, Type.tbool);
+ 		    nextToken();
+ 		    break;
+ 
+ 		case TOKcharv: e = new IntegerExp(loc, token.sourceString, token.intValue, Type.tchar); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKwcharv:  e = new IntegerExp(loc, token.sourceString, token.intValue, Type.twchar); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 		case TOKdcharv:  e = new IntegerExp(loc, token.sourceString, token.intValue, Type.tdchar); e.setSourceRange(token.ptr, token.len); nextToken(); break;
+ 
+ 		case TOKstring: {
+ 			int startLine = token.lineNumber;
+ 			
+ 			List<StringExp> nextStringExps = null;
+ 			StringExp stringExp = newStringExpForCurrentToken();
+ 			StringExp lastStringExp = stringExp;
+ 			
+ 			char[] s = token.sourceString;
+ 			int len = token.len;
+ 			int postfix;
+ 
+ 			// cat adjacent strings
+ 			postfix = token.postfix;
+ 			while (true) {
+ 				nextToken();
+ 				if (token.value == TOKstring) {
+ 					int len1;
+ 				    int len2;
+ 					
+ 					if (token.postfix != 0) {
+ 						if (token.postfix != postfix) {
+ 							error(
+ 									IProblem.MismatchedStringLiteralPostfixes,
+ 									startLine, lastStringExp.start, token.ptr + token.len - lastStringExp.start,
+ 									new String[] { String.valueOf((char) postfix) , String.valueOf((char) token.postfix) });
+ 						}							
+ 						postfix = token.postfix;
+ 					}
+ 
+ 				    len1 = len;
+ 				    len2 = token.len;
+ 				    len = len1 + len2;
+ 				    s = CharOperation.concat(s, token.sourceString);
+ 
+ 					if (token.sourceString != null) {
+ 						if (nextStringExps == null) {
+ 							nextStringExps = new ArrayList<StringExp>();
+ 							nextStringExps.add(newStringExpForPreviousToken());
+ 						}
+ 						lastStringExp = newStringExpForCurrentToken();
+ 						nextStringExps.add(lastStringExp);
+ 					}
+ 				} else
+ 					break;
+ 			}
+ 			
+ 			stringExp.allStringExps = nextStringExps;
+ 			stringExp.string = s;
+ 			e = stringExp;
+ 			break;
+ 		}
+ 		
+ 		// CASE_BASIC_TYPES_X(t):
+ 		case TOKvoid: case TOKint8: case TOKuns8: case TOKint16:
+ 		case TOKuns16: case TOKint32: case TOKuns32: case TOKint64:
+ 		case TOKuns64: case TOKfloat32: case TOKfloat64:
+ 		case TOKfloat80: case TOKimaginary32: case TOKimaginary64:
+ 		case TOKimaginary80: case TOKcomplex32: case TOKcomplex64:
+ 		case TOKcomplex80: case TOKbit: case TOKbool:
+ 		case TOKchar: case TOKwchar: case TOKdchar:
+ 			t = newTypeBasicForCurrentToken();
+ 			nextToken();
+ 			// L1:
+ 			    check(TOKdot);
+ 			    if (token.value != TOKidentifier)
+ 			    {
+ 			    	parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 			    	// goto Lerr;
+ 		    		// Anything for e, as long as it's not NULL
+ 			    	e = new IntegerExp(loc, Id.ZERO, 0, Type.tint32);
+ 			    	e.setSourceRange(token.ptr, token.len);
+ 		    		nextToken();
+ 		    		break;
+ 			    }
+ 			    e = new TypeDotIdExp(loc, t, newIdentifierExp());
+ 			    e.setSourceRange(t.start, token.ptr + token.len - t.start);
+ 			    nextToken();
+ 			    break;
+ 
+ 		case TOKtypeof:
+ 		{   
+ 			Expression exp;
+ 			int start = token.ptr;
+ 
+ 		    nextToken();
+ 		    check(TOKlparen);
+ 		    exp = parseExpression();
+ 		    check(TOKrparen);
+ 		    
+ 			t = new TypeTypeof(loc, exp);
+ 			t.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			((TypeTypeof) t).setTypeofSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			
+ 		    if (token.value == TOKdot) {
+ 		    	// goto L1;
+ 		    	check(TOKdot);
+ 			    if (token.value != TOKidentifier)
+ 			    {   
+ 			    	parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 					// goto Lerr;
+ 			    	// Anything for e, as long as it's not NULL
+ 			    	e = new IntegerExp(loc, Id.ZERO, 0, Type.tint32);
+ 			    	e.setSourceRange(token.ptr, token.len);
+ 			    	nextToken();
+ 			    	break;
+ 			    }
+ 			    e = new TypeDotIdExp(loc, t, newIdentifierExp());
+ 			    e.setSourceRange(t.start, token.ptr + token.len - t.start);
+ 			    nextToken();
+ 			    break;
+ 		    }
+ 		    	
+ 		    e = new TypeExp(loc, t);
+ 		    break;
+ 		}
+ 
+ 		case TOKtypeid:
+ 		{   Type t2;
+ 			int start = token.ptr;
+ 
+ 		    nextToken();
+ 		    check(TOKlparen);
+ 		    if (apiLevel < D2) {
+ 			    t2 = parseBasicType();
+ 			    t2 = parseDeclarator(t2, null);	// ( type )
+ 		    } else {
+ 		    	t2 = parseType();				// ( type 
+ 		    }
+ 		    check(TOKrparen);
+ 		    e = new TypeidExp(loc, t2);
+ 		    e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 		    break;
+ 		}
+ 		
+ 		case TOKtraits:
+ 		{   
+ 			/* __traits(identifier, args...)
+ 			 */
+ 			IdentifierExp ident;
+ 			Objects args = null;
+ 
+ 			nextToken();
+ 			check(TOKlparen);
+ 			if (token.value != TOKidentifier) {
+ 				parsingErrorInsertToComplete(prevToken, "__traits(identifier, args...) expected", "traits expression");
+ 				//goto Lerr;
+ 				// Anything for e, as long as it's not NULL
+ 				e = new IntegerExp(loc, Id.ZERO, 0, Type.tint32);
+ 		    	e.setSourceRange(token.ptr, token.len);
+ 				nextToken();
+ 				break;
+ 			}
+ 			ident = newIdentifierExp();
+ 			nextToken();
+ 			if (token.value == TOKcomma) {
+ 				args = parseTemplateArgumentList2(); // __traits(identifier, args...)
+ 			} else {
+ 				check(TOKrparen); // __traits(identifier)
+ 			}
+ 
+ 			e = new TraitsExp(loc, ident, args);
+ 			break;
+ 		}
+ 
+ 		case TOKis:
+ 		{
+ 			Type targ = null;
+ 			IdentifierExp ident = null;
+ 			Type tspec = null;
+ 			TOK tok = TOKreserved;
+ 			TOK tok2 = TOKreserved;
+ 
+ 			nextToken();
+ 			if (token.value == TOKlparen) {
+ 				nextToken();
+ 
+ 				IdentifierExp[] pointer2_ident = { ident };
+ 				if (apiLevel < D2) {
+ 					targ = parseBasicType();
+ 					targ = parseDeclarator(targ, pointer2_ident);
+ 				} else {
+ 					targ = parseType(pointer2_ident);
+ 				}
+ 				ident = pointer2_ident[0];
+ 
+ 				if (token.value == TOKcolon || token.value == TOKequal) {
+ 					tok = token.value;
+ 					nextToken();
+ 					if (tok == TOKequal
+ 							&& (token.value == TOKtypedef
+ 									|| token.value == TOKstruct
+ 									|| token.value == TOKunion
+ 									|| token.value == TOKclass
+ 									|| token.value == TOKsuper
+ 									|| token.value == TOKenum
+ 									|| token.value == TOKinterface
+ 									|| token.value == TOKfunction
+ 									|| token.value == TOKdelegate || token.value == TOKreturn)) {
+ 						tok2 = token.value;
+ 						nextToken();
+ 					} else {
+ 						if (apiLevel < D2) {
+ 							tspec = parseBasicType();
+ 							tspec = parseDeclarator(tspec, null);
+ 						} else {
+ 							tspec = parseType();
+ 						}
+ 					}
+ 				}
+ 				check(TOKrparen);
+ 			} else {
+ 				parsingErrorInsertToComplete(prevToken, "(type identifier : specialization)", "IftypeDeclaration");
+ 				// goto Lerr;
+ 				// Anything for e, as long as it's not NULL
+ 				e = new IntegerExp(loc, Id.ZERO, 0, Type.tint32);
+ 		    	e.setSourceRange(token.ptr, token.len);
+ 				nextToken();
+ 				break;
+ 			}
+ 			e = new IftypeExp(loc, targ, ident, tok, tspec, tok2);
+ 			break;
+ 		}
+ 
+ 		case TOKassert: {
+ 			Expression msg = null;
+ 
+ 			int start = token.ptr;
+ 			nextToken();
+ 			check(TOKlparen);
+ 			e = parseAssignExp();
+ 			if (token.value == TOKcomma) {
+ 				nextToken();
+ 				msg = parseAssignExp();
+ 			}
+ 			check(TOKrparen);
+ 			
+ 			e = new AssertExp(loc, e, msg);
+ 			e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 			break;
+ 		}
+ 		
+ 		case TOKmixin:
+ 		{
+ 			int start = token.ptr;
+ 		    nextToken();
+ 		    check(TOKlparen);
+ 		    e = parseAssignExp();
+ 		    check(TOKrparen);
+ 		    e = new CompileExp(loc, e);
+ 		    e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 		    break;
+ 		}
+ 
+ 		case TOKimport:
+ 		{
+ 			int start = token.ptr;
+ 		    nextToken();
+ 		    check(TOKlparen);
+ 		    e = parseAssignExp();
+ 		    check(TOKrparen);
+ 		    e = new FileExp(loc, e);
+ 		    e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 		    break;
+ 		}
+ 
+ 
+ 		case TOKlparen:
+ 		    if (peekPastParen(token).value == TOKlcurly) { // (arguments) {
+ 															// statements... }
+ 				save = TOKreserved;
+ 				// goto case_delegate;
+ 				{
+ 				Expression[] pe = { e };
+ 				parsePrimaryExp_case_delegate(pe, save);
+ 				e = pe[0];
+ 				}
+ 				break;
+ 			}
+ 			// ( expression )
+ 			int start = token.ptr;
+ 			nextToken();
+ 			e = parseExpression();
+ 
+ 			int end = token.ptr + token.len;
+ 			check(TOKrparen);
+ 
+ 			e.addParenthesis(start, end - start);
+ 			break;
+ 
+ 		case TOKlbracket:
+ 		{   
+ 			/* Parse array literals and associative array literals:
+ 		     *	[ value, value, value ... ]
+ 		     *	[ key:value, key:value, key:value ... ]
+ 		     */
+ 			Expressions values = new Expressions();
+ 			Expressions keys = null;
+ 
+ 			nextToken();
+ 			if (token.value != TOKrbracket) {
+ 				while (true) {
+ 					Expression e2 = parseAssignExp();
+ 					if (token.value == TOKcolon
+ 							&& (keys != null || values.size() == 0)) {
+ 						nextToken();
+ 						if (keys == null) {
+ 							keys = new Expressions();
+ 						}
+ 						keys.add(e2);
+ 						e2 = parseAssignExp();
+ 					} else if (keys != null) {
+ 						parsingErrorInsertToComplete(token, "key:value", "associative array literal");
+ 						keys = null;
+ 					}
+ 					values.add(e2);
+ 					if (token.value == TOKrbracket)
+ 						break;
+ 					check(TOKcomma);
+ 				}
+ 			}
+ 			check(TOKrbracket);
+ 
+ 			if (keys != null) {
+ 				e = new AssocArrayLiteralExp(loc, keys, values);
+ 			} else {
+ 				e = new ArrayLiteralExp(loc, values);
+ 			}
+ 		    break;
+ 		}
+ 		
+ 		case TOKlcurly:
+ 		    // { statements... }
+ 			save = TOKreserved;
+ 			// goto case_delegate;
+ 			{
+ 			Expression[] pe = { e };
+ 			parsePrimaryExp_case_delegate(pe, save);
+ 			e = pe[0];
+ 			}
+ 			break;
+ 
+ 		case TOKfunction:
+ 		case TOKdelegate:
+ 		    save = token.value;
+ 			nextToken();
+ 			// case_delegate:
+ 			{
+ 				Expression[] pe = { e };
+ 				parsePrimaryExp_case_delegate(pe, save);
+ 				e = pe[0];
+ 				break;
+ 			}
+ 
+ 		default:
+ 			parsingErrorInsertTokenAfter(prevToken, "Expression");
+ 		// Lerr:
+ 		    // Anything for e, as long as it's not NULL
+ 			e = new IntegerExp(loc, Id.ZERO, 0, Type.tint32);
+ 	    	e.setSourceRange(token.ptr, token.len);
+ 		    nextToken();
+ 		    break;
+ 	    }
+ 	    return parsePostExp(e);
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+ 	private Expression parsePostExp(Expression e) {
+ 		int start = e == null ? prevToken.ptr : e.start;
+ 		
+ 		while (true) {
+ 			switch (token.value) {
+ 			case TOKdot:
+ 				nextToken();
+ 				if (token.value == TOKidentifier) {
+ 					IdentifierExp id = newIdentifierExp();
+ 
+ 					nextToken();
+ 					if (token.value == TOKnot && peek(token).value == TOKlparen) { 
+ 						// identifier!(template-argument-list)
+ 						TemplateInstance tempinst;
+ 						
+ 						tempinst = new TemplateInstance(loc, id);						
+ 						nextToken();
+ 						
+ 						tempinst.tiargs = parseTemplateArgumentList();
+ 						tempinst.setSourceRange(id.start, prevToken.ptr + prevToken.len - id.start);
+ 						e = new DotTemplateInstanceExp(loc, e, tempinst);
+ 					} else {
+ 						e = new DotIdExp(loc, e, id);
+ 						e.start = start;
+ 						e.length = id.start + id.length - start;
+ 					}
+ 					continue;
+ 				} else if (token.value == TOKnew) {
+ 					e = parseNewExp(e);
+ 					continue;
+ 				} else {
+ 					parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 				}
+ 				break;
+ 
+ 			case TOKplusplus:
+ 			case TOKminusminus:
+ 				e = new PostExp(loc, token.value, e);
+ 				e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				break;
+ 
+ 			case TOKlparen:
+ 				e = new CallExp(loc, e, parseArguments());
+ 				e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				continue;
+ 
+ 			case TOKlbracket: { // array dereferences:
+ 				// array[index]
+ 				// array[]
+ 				// array[lwr .. upr]
+ 				Expression index;
+ 				Expression upr;
+ 
+ 				inBrackets++;
+ 				nextToken();
+ 				if (token.value == TOKrbracket) { // array[]
+ 					e = new SliceExp(loc, e, null, null);
+ 					nextToken();
+ 				} else {
+ 					index = parseAssignExp();
+ 					if (token.value == TOKslice) { // array[lwr .. upr]
+ 						nextToken();
+ 						upr = parseAssignExp();
+ 						e = new SliceExp(loc, e, index, upr);
+ 					} else { // array[index, i2, i3, i4, ...]
+ 						Expressions arguments = new Expressions();
+ 						arguments.add(index);
+ 						if (token.value == TOKcomma) {
+ 							nextToken();
+ 							while (true) {
+ 								Expression arg;
+ 
+ 								arg = parseAssignExp();
+ 								arguments.add(arg);
+ 								if (token.value == TOKrbracket)
+ 									break;
+ 								check(TOKcomma);
+ 							}
+ 						}
+ 						
+ 						e = new ArrayExp(loc, e, arguments);
+ 					}
+ 					check(TOKrbracket);
+ 					inBrackets--;
+ 				}
+ 				
+ 				e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 				continue;
+ 			}
+ 
+ 			default:
+ 				return e;
+ 			}
+ 			nextToken();
+ 	    }
+ 	}
+ 
+ 	private Expression parseUnaryExp() {
+ 		Expression e;
+ 
+ 		int start = token.ptr;
+ 
+ 		switch (token.value) {
+ 		case TOKand:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new AddrExp(loc, e);
+ 			break;
+ 
+ 		case TOKplusplus:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new IncrementExp(loc, e);
+ 			break;
+ 
+ 		case TOKminusminus:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new DecrementExp(loc, e);
+ 			break;
+ 
+ 		case TOKmul:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new PtrExp(loc, e);
+ 			break;
+ 
+ 		case TOKmin:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new NegExp(loc, e);
+ 			break;
+ 
+ 		case TOKadd:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new UAddExp(loc, e);
+ 			break;
+ 
+ 		case TOKnot:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new NotExp(loc, e);
+ 			break;
+ 
+ 		case TOKtilde:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new ComExp(loc, e);
+ 			break;
+ 
+ 		case TOKdelete:
+ 			nextToken();
+ 			e = parseUnaryExp();
+ 			e = new DeleteExp(loc, e);
+ 			break;
+ 
+ 		case TOKnew:
+ 			e = parseNewExp(null);
+ 			break;
+ 
+ 		case TOKcast: // cast(type) expression
+ 		{
+ 			Type t;
+ 
+ 			nextToken();
+ 			check(TOKlparen);
+ 			
+ 			if (apiLevel < D2) {
+ 				t = parseBasicType();
+ 				t = parseDeclarator(t, null); // ( type )
+ 				check(TOKrparen);
+ 	
+ 				e = parseUnaryExp();
+ 				e = new CastExp(loc, e, t);
+ 			} else {
+ 			    if ((token.value == TOKconst || token.value == TOKinvariant)
+ 						&& peek(token).value == TOKrparen) {
+ 			    	int modifierStart = token.ptr;
+ 					TOK tok = token.value;
+ 					nextToken();
+ 					nextToken();
+ 					e = parseUnaryExp();
+ 					e = new CastExp(loc, e, tok, modifierStart);
+ 				} else {
+ 					t = parseType(); // ( type )
+ 					check(TOKrparen);
+ 					e = parseUnaryExp();
+ 					e = new CastExp(loc, e, t);
+ 				}
+ 			}
+ 			break;
+ 		}
+ 
+ 		case TOKlparen: {
+ 			Token tk;
+ 			
+ 			int firstTokenStart = token.ptr;
+ 			int firstTokenLine = token.lineNumber;
+ 
+ 			tk = peek(token);
+ 			// #if CCASTSYNTAX
+ 			// If cast
+ 			Token[] pointer2_tk = { tk };
+ 			if (isDeclaration(tk, 0, TOKrparen, pointer2_tk)) {
+ 				tk = pointer2_tk[0];
+ 
+ 				tk = peek(tk); // skip over right parenthesis
+ 				switch (tk.value) {
+ 				case TOKdot:
+ 				case TOKplusplus:
+ 				case TOKminusminus:
+ 				case TOKnot:
+ 				case TOKdelete:
+ 				case TOKnew:
+ 				case TOKlparen:
+ 				case TOKidentifier:
+ 				case TOKthis:
+ 				case TOKsuper:
+ 				case TOKint32v:
+ 				case TOKuns32v:
+ 				case TOKint64v:
+ 				case TOKuns64v:
+ 				case TOKfloat32v:
+ 				case TOKfloat64v:
+ 				case TOKfloat80v:
+ 				case TOKimaginary32v:
+ 				case TOKimaginary64v:
+ 				case TOKimaginary80v:
+ 				case TOKnull:
+ 				case TOKtrue:
+ 				case TOKfalse:
+ 				case TOKcharv:
+ 				case TOKwcharv:
+ 				case TOKdcharv:
+ 				case TOKstring:
+ 					/*
+ 					 * #if 0 case TOKtilde: case TOKand: case TOKmul: case
+ 					 * TOKmin: case TOKadd: #endif
+ 					 */
+ 				case TOKfunction:
+ 				case TOKdelegate:
+ 				case TOKtypeof:
+ 					// CASE_BASIC_TYPES: // (type)int.size
+ 				case TOKwchar:
+ 				case TOKdchar:
+ 				case TOKbit:
+ 				case TOKbool:
+ 				case TOKchar:
+ 				case TOKint8:
+ 				case TOKuns8:
+ 				case TOKint16:
+ 				case TOKuns16:
+ 				case TOKint32:
+ 				case TOKuns32:
+ 				case TOKint64:
+ 				case TOKuns64:
+ 				case TOKfloat32:
+ 				case TOKfloat64:
+ 				case TOKfloat80:
+ 				case TOKimaginary32:
+ 				case TOKimaginary64:
+ 				case TOKimaginary80:
+ 				case TOKcomplex32:
+ 				case TOKcomplex64:
+ 				case TOKcomplex80:
+ 				case TOKvoid: { // (type) una_exp
+ 					Type t;
+ 
+ 					nextToken();
+ 					
+ 					if (apiLevel < D2) {
+ 						t = parseBasicType();
+ 						t = parseDeclarator(t, null);
+ 					} else {
+ 						t = parseType();
+ 					}
+ 					check(TOKrparen);
+ 
+ 					// if .identifier
+ 					if (token.value == TOKdot) {
+ 						nextToken();
+ 						if (token.value != TOKidentifier) {
+ 							parsingErrorInsertTokenAfter(prevToken, "Identifier");
+ 							// Change from DMD
+ 							e = new TypeDotIdExp(loc, t, null);
+ 							e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 							return e;
+ 						}
+ 						e = new TypeDotIdExp(loc, t, newIdentifierExp());
+ 						e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 						nextToken();
+ 						e = parsePostExp(e);
+ 					} else {
+ 						e = parseUnaryExp();
+ 						e = new CastExp(loc, e, t);
+ 						e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 						error(IProblem.CStyleCastIllegal, firstTokenLine, firstTokenStart, prevToken.ptr + prevToken.len - firstTokenStart);
+ 					}
+ 					return e;
+ 				}
+ 				}
+ 			}
+ 			// #endif
+ 			e = parsePrimaryExp();
+ 			break;
+ 		}
+ 		default:
+ 			e = parsePrimaryExp();
+ 			break;
+ 		}
+ 		
+ 		if (e == null) {
+ 			throw new IllegalStateException();
+ 		}
+ 
+ 		e.setSourceRange(start, prevToken.ptr + prevToken.len - start);
+ 
+ 		return e;
+ 	}
+ 
+ 	private void parsePrimaryExp_case_delegate(Expression[] e, TOK save) {
+ 		Arguments arguments;
+ 		int varargs = 0;
+ 		FuncLiteralDeclaration fd;
+ 		Type t;
+ 
+ 		if (token.value == TOKlcurly) {
+ 			t = null;
+ 			varargs = 0;
+ 			arguments = new Arguments();
+ 		} else {
+ 			if (token.value == TOKlparen)
+ 				t = null;
+ 			else {
+ 				t = parseBasicType();
+ 				t = parseBasicType2(t); // function return type
+ 			}
+ 			
+ 			int[] pointer2_varargs = { varargs };
+ 			arguments = parseParameters(pointer2_varargs);
+ 			varargs = pointer2_varargs[0];
+ 		}
+ 		
+ 		t = new TypeFunction(arguments, t, varargs, linkage);
+ 		fd = new FuncLiteralDeclaration(loc, t, save, null);
+ 		parseContracts(fd);
+ 		e[0] = new FuncExp(loc, fd);
+ 	}
+ 	
+ 	private Expression parseMulExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 
+ 	    e = parseUnaryExp();
+ 	    while (true)
+ 	    {
+ 		switch (token.value)
+ 		{
+ 		    case TOKmul: nextToken(); e2 = parseUnaryExp(); e = new MulExp(loc, e, e2); continue;
+ 		    case TOKdiv:   nextToken(); e2 = parseUnaryExp(); e = new DivExp(loc, e, e2); continue;
+ 		    case TOKmod:  nextToken(); e2 = parseUnaryExp(); e = new ModExp(loc, e, e2); continue;
+ 
+ 		    default:
+ 			break;
+ 		}
+ 		break;
+ 	    }
+ 	    return e;
+ 	}
+ 	
+ 	private Expression parseAddExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 
+ 	    e = parseMulExp();
+ 	    while (true)
+ 	    {
+ 		switch (token.value)
+ 		{
+ 		    case TOKadd:    nextToken(); e2 = parseMulExp(); e = new AddExp(loc, e, e2); continue;
+ 		    case TOKmin:    nextToken(); e2 = parseMulExp(); e = new MinExp(loc, e, e2); continue;
+ 		    case TOKtilde:  nextToken(); e2 = parseMulExp(); e = new CatExp(loc, e, e2); continue;
+ 
+ 		    default:
+ 			break;
+ 		}
+ 		break;
+ 	    }
+ 	    return e;
+ 	}
+ 	
+ 	private Expression parseShiftExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 
+ 	    e = parseAddExp();
+ 	    while (true)
+ 	    {
+ 		switch (token.value)
+ 		{
+ 		    case TOKshl:  nextToken(); e2 = parseAddExp(); e = new ShlExp(loc, e, e2);  continue;
+ 		    case TOKshr:  nextToken(); e2 = parseAddExp(); e = new ShrExp(loc, e, e2);  continue;
+ 		    case TOKushr: nextToken(); e2 = parseAddExp(); e = new UshrExp(loc, e, e2); continue;
+ 
+ 		    default:
+ 			break;
+ 		}
+ 		break;
+ 	    }
+ 	    return e;
+ 	}
+ 	
+ 	private Expression parseRelExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 	    TOK op;
+ 
+ 	    e = parseShiftExp();
+ 	    while (true)
+ 	    {
+ 		switch (token.value)
+ 		{
+ 		    case TOKlt:
+ 		    case TOKle:
+ 		    case TOKgt:
+ 		    case TOKge:
+ 		    case TOKunord:
+ 		    case TOKlg:
+ 		    case TOKleg:
+ 		    case TOKule:
+ 		    case TOKul:
+ 		    case TOKuge:
+ 		    case TOKug:
+ 		    case TOKue: 
+ 		    	op = token.value;
+ 		    	nextToken(); 
+ 		    	e2 = parseShiftExp();
+ 		    	e = new CmpExp(loc, op, e, e2); continue;
+ 		    case TOKin: 
+ 		    	nextToken(); 
+ 		    	e2 = parseShiftExp(); 
+ 		    	e = new InExp(loc, e, e2); 
+ 		    	continue;
+ 
+ 		    default:
+ 			break;
+ 		}
+ 		break;
+ 	    }
+ 	    return e;
+ 	}
+ 	
+ 	private Expression parseEqualExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 	    Token t;
+ 
+ 	    e = parseRelExp();
+ 	    while (true)
+ 	    {	TOK value = token.value;
+ 
+ 		switch (value)
+ 		{
+ 		    case TOKequal:
+ 		    case TOKnotequal:
+ 		    	nextToken();
+ 				e2 = parseRelExp();
+ 				e = new EqualExp(loc, value, e, e2);
+ 				continue;
+ 
+ 		    case TOKidentity:
+ 		    	error(
+ 		    			IProblem.ThreeEqualsIsNoLongerLegal, token.lineNumber, token.ptr, token.len);
+ 			//goto L1;
+ 			nextToken();
+ 			e2 = parseRelExp();
+ 			e = new IdentityExp(loc, value, e, e2);
+ 			continue;
+ 
+ 		    case TOKnotidentity:
+ 		    	error(
+ 		    			IProblem.NotTwoEqualsIsNoLongerLegal, token.lineNumber, token.ptr, token.len);
+ 			//goto L1;
+ 			nextToken();
+ 			e2 = parseRelExp();
+ 			e = new IdentityExp(loc, value, e, e2);
+ 			continue;
+ 
+ 		    case TOKis:
+ 			value = TOKidentity;
+ 			//goto L1;
+ 			nextToken();
+ 			e2 = parseRelExp();
+ 			e = new IdentityExp(loc, value, e, e2);
+ 			continue;
+ 
+ 		    case TOKnot:
+ 			// Attempt to identify '!is'
+ 			t = peek(token);
+ 			if (t.value != TOKis)
+ 			    break;
+ 			nextToken();
+ 			value = TOKnotidentity;
+ 			//goto L1;
+ 			nextToken();
+ 			e2 = parseRelExp();
+ 			e = new IdentityExp(loc, value, e, e2);
+ 			continue;
+ 
+ 		    // L1:
+ 			//nextToken();
+ 			//e2 = parseRelExp();
+ 			//e = new IdentityExp(value, loc, e, e2);
+ 			//continue;
+ 
+ 		    default:
+ 			break;
+ 		}
+ 		break;
+ 	    }
+ 	    return e;
+ 	}
+ 	
+ 	Expression parseCmpExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 	    Token t;
+ 
+ 	    e = parseShiftExp();
+ 	    TOK op = token.value;
+ 
+ 	    switch (op)
+ 	    {
+ 		case TOKequal:
+ 		case TOKnotequal:
+ 			 nextToken();
+ 			    e2 = parseShiftExp();
+ 			    e = new EqualExp(loc, op, e, e2);
+ 			    break;
+ 
+ 		case TOKis:
+ 		    //op = TOKidentity;
+ 		    nextToken();
+ 		    e2 = parseShiftExp();
+ 		    e = new IdentityExp(loc, op, e, e2);
+ 		    break;
+ 
+ 		case TOKnot:
+ 		    // Attempt to identify '!is'
+ 		    t = peek(token);
+ 		    if (t.value != TOKis)
+ 		    	break;
+ 		    nextToken();
+ 		    op = TOKnotis;
+ 		    nextToken();
+ 		    e2 = parseShiftExp();
+ 		    e = new IdentityExp(loc, op, e, e2);
+ 		    break;
+ 		    
+ 		case TOKlt:
+ 	    case TOKle:
+ 	    case TOKgt:
+ 	    case TOKge:
+ 	    case TOKunord:
+ 	    case TOKlg:
+ 	    case TOKleg:
+ 	    case TOKule:
+ 	    case TOKul:
+ 	    case TOKuge:
+ 	    case TOKug:
+ 	    case TOKue:
+ 	    	nextToken(); 
+ 	    	e2 = parseShiftExp(); 
+ 	    	e = new CmpExp(loc, op, e, e2); 
+ 	    	break;
+ 
+ 		case TOKin:
+ 		    nextToken();
+ 		    e2 = parseShiftExp();
+ 		    e = new InExp(loc, e, e2);
+ 		    break;
+ 
+ 		default:
+ 		    break;
+ 	    }
+ 	    return e;
+ 	}
+ 
+ 	
+ 	private Expression parseAndExp() {
+ 		Expression e;
+ 		Expression e2;
+ 
+ 		if (apiLevel == D0) {
+ 			e = parseEqualExp();
+ 			while (token.value == TOKand) {
+ 				nextToken();
+ 				e2 = parseEqualExp();
+ 				e = new AndExp(loc, e, e2);
+ 			}
+ 		} else {
+ 			e = parseCmpExp();
+ 			while (token.value == TOKand)
+ 			{
+ 			    nextToken();
+ 			    e2 = parseCmpExp();
+ 			    e = new AndExp(loc, e, e2);
+ 			}
+ 
+ 		}
+ 		return e;
+ 	}
+ 	
+ 	private Expression parseXorExp() {
+ 		Expression e;
+ 		Expression e2;
+ 
+ 		e = parseAndExp();
+ 		while (token.value == TOKxor) {
+ 			nextToken();
+ 			e2 = parseAndExp();
+ 			e = new XorExp(loc, e, e2);
+ 		}
+ 		return e;
+ 	}
+ 	
+ 	private Expression parseOrExp() {
+ 		Expression e;
+ 		Expression e2;
+ 
+ 		e = parseXorExp();
+ 		while (token.value == TOKor) {
+ 			nextToken();
+ 			e2 = parseXorExp();
+ 			e = new OrExp(loc, e, e2);
+ 		}
+ 		return e;
+ 	}
+ 	
+ 	private Expression parseAndAndExp() {
+ 		Expression e;
+ 		Expression e2;
+ 
+ 		e = parseOrExp();
+ 		while (token.value == TOKandand) {
+ 			nextToken();
+ 			e2 = parseOrExp();
+ 			e = new AndAndExp(loc, e, e2);
+ 		}
+ 		return e;
+ 	}
+ 	
+ 	private Expression parseOrOrExp() {
+ 		Expression e;
+ 		Expression e2;
+ 
+ 		e = parseAndAndExp();
+ 		while (token.value == TOKoror) {
+ 			nextToken();
+ 			e2 = parseAndAndExp();
+ 			e = new OrOrExp(loc, e, e2);
+ 		}
+ 		return e;
+ 	}
+ 
+ 	private Expression parseCondExp() {
+ 		Expression e;
+ 		Expression e1;
+ 		Expression e2;
+ 
+ 		e = parseOrOrExp();
+ 		if (token.value == TOKquestion) {
+ 			nextToken();
+ 			e1 = parseExpression();
+ 			check(TOKcolon);
+ 			e2 = parseCondExp();
+ 			e = new CondExp(loc, e, e1, e2);
+ 		}
+ 		return e;
+ 	}
+ 	
+ 	private Expression parseAssignExp()
+ 	{   Expression e;
+ 	    Expression e2;
+ 
+ 	    e = parseCondExp();
+ 	    while (true)
+ 	    {
+ 		switch (token.value)
+ 		{
+ 		case TOKassign:  nextToken(); e2 = parseAssignExp(); e = new AssignExp(loc, e, e2); continue;
+ 		case TOKaddass:  nextToken(); e2 = parseAssignExp(); e = new AddAssignExp(loc, e, e2); continue;
+ 		case TOKminass:  nextToken(); e2 = parseAssignExp(); e = new MinAssignExp(loc, e, e2); continue;
+ 		case TOKmulass:  nextToken(); e2 = parseAssignExp(); e = new MulAssignExp(loc, e, e2); continue;
+ 		case TOKdivass:  nextToken(); e2 = parseAssignExp(); e = new DivAssignExp(loc, e, e2); continue;
+ 		case TOKmodass:  nextToken(); e2 = parseAssignExp(); e = new ModAssignExp(loc, e, e2); continue;
+ 		case TOKandass:  nextToken(); e2 = parseAssignExp(); e = new AndAssignExp(loc, e, e2); continue;
+ 		case TOKorass:  nextToken(); e2 = parseAssignExp(); e = new OrAssignExp(loc, e, e2); continue;
+ 		case TOKxorass:  nextToken(); e2 = parseAssignExp(); e = new XorAssignExp(loc, e, e2); continue;
+ 		case TOKshlass:  nextToken(); e2 = parseAssignExp(); e = new ShlAssignExp(loc, e, e2); continue;
+ 		case TOKshrass:  nextToken(); e2 = parseAssignExp(); e = new ShrAssignExp(loc, e, e2); continue;
+ 		case TOKushrass:  nextToken(); e2 = parseAssignExp(); e = new UshrAssignExp(loc, e, e2); continue;
+ 		case TOKcatass:  nextToken(); e2 = parseAssignExp(); e = new CatAssignExp(loc, e, e2); continue;
+ 	    default:
+ 			break;
+ 		}
+ 		break;
+ 	    }
+ 	    return e;
+ 	}
+ 	
+ 	public Expression parseExpression() {
+ 		Expression e;
+ 		Expression e2;
+ 
+ 		e = parseAssignExp();
+ 		while (token.value == TOKcomma) {
+ 			nextToken();
+ 			e2 = parseAssignExp();
+ 			e = new CommaExp(loc, e, e2);
+ 		}
+ 		return e;
+ 	}
+ 	
+ 	/***************************************************************************
+ 	 * Collect argument list. Assume current token is '('.
+ 	 */
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private Expressions parseArguments() {
+ 		// function call
+ 		Expressions arguments;
+ 		Expression arg;
+ 		TOK endtok;
+ 
+ 		arguments = new Expressions();
+ 		if (token.value == TOKlbracket) {
+ 			endtok = TOKrbracket;
+ 		} else {
+ 			endtok = TOKrparen;
+ 		}
+ 
+ 		{
+ 			nextToken();
+ 			if (token.value != endtok) {
+ 				while (true) {
+ 					arg = parseAssignExp();
+ 					arguments.add(arg);
+ 					if (token.value == endtok)
+ 						break;
+ 					if (token.value == TOKeof) 
+ 						return arguments;
+ 					check(TOKcomma);
+ 				}
+ 			}
+ 			check(endtok);
+ 		}
+ 		return arguments;
+ 	}
+ 	
+ 	@SuppressWarnings("unchecked")
+ 	private Expression parseNewExp(Expression thisexp) {
+ 		Type t;
+ 		Expressions newargs = null;
+ 		Expressions arguments = null;
+ 		Expression e;
+ 
+ 		nextToken();
+ 		if (token.value == TOKlparen) {
+ 			newargs = parseArguments();
+ 		}
+ 
+ 		// An anonymous nested class starts with "class"
+ 		if (token.value == TOKclass) {
+ 			nextToken();
+ 			if (token.value == TOKlparen)
+ 				arguments = parseArguments();
+ 
+ 			BaseClasses baseClasses = null;
+ 			if (token.value != TOKlcurly)
+ 				baseClasses = parseBaseClasses();
+ 
+ 			IdentifierExp id = null;
+ 			ClassDeclaration cd = new ClassDeclaration(loc, id, baseClasses);
+ 
+ 			if (token.value != TOKlcurly) {
+ 				parsingErrorInsertToComplete(prevToken, "{ members }", "AnnonymousClassDeclaration");
+ 				cd.members = null;
+ 			} else {
+ 				nextToken();
+ 				Dsymbols decl = parseDeclDefs(false);
+ 				if (token.value != TOKrcurly) {
+ 					parsingErrorInsertToComplete(prevToken, "ClassBody", "AnnonymousClassDeclaration");
+ 				}
+ 				nextToken();
+ 				cd.members = decl;
+ 				cd.sourceMembers = new Dsymbols(decl);
+ 			}
+ 			
+ 			e = new NewAnonClassExp(loc, thisexp, newargs, cd, arguments);
+ 
+ 			return e;
+ 		}
+ 
+ 		// #if LTORARRAYDECL
+ 		int lineNumber = token.lineNumber;
+ 		t = parseBasicType();
+ 		t = parseBasicType2(t);
+ 		if (t != null) {
+ 			if (t.ty == Taarray) {
+ 				Type index = (Type) ((TypeAArray) t).index;
+ 				
+ 				Expression e2 = index.toExpression();
+ 				if (e2 != null) {
+ 					arguments = new Expressions();
+ 					arguments.add(e2);				
+ 					t = new TypeDArray(t.next);
+ 				} else {
+ 					error(IProblem.NeedSizeOfRightmostArray, lineNumber, index);
+ 					NullExp nullExp = new NullExp(loc);
+ 					nullExp.setSourceRange(token.ptr, token.len);
+ 					return nullExp;
+ 				}
+ 			} else if (t.ty == Tsarray) {
+ 				TypeSArray tsa = (TypeSArray) t;
+ 				Expression e2 = tsa.dim;
+ 	
+ 				arguments = new Expressions();
+ 				arguments.add(e2);
+ 				
+ 				t = new TypeDArray(t.next);
+ 			} else if (token.value == TOKlparen) {
+ 				arguments = parseArguments();
+ 			}
+ 		}
+ 		/*
+ 		 * #else t = parseBasicType(); while (token.value == TOKmul) { t = new
+ 		 * TypePointer(t); nextToken(); } if (token.value == TOKlbracket) {
+ 		 * Expression *e;
+ 		 * 
+ 		 * nextToken(); e = parseAssignExp(); arguments = new Array();
+ 		 * arguments->push(e); check(TOKrbracket); t = parseDeclarator(t, NULL);
+ 		 * t = new TypeDArray(t); } else if (token.value == TOKlparen) arguments =
+ 		 * parseArguments(); #endif
+ 		 */
+ 		e = new NewExp(loc, thisexp, newargs, t, arguments);
+ 		return e;
+ 	}
+ 	
+ 	private StringExp newStringExpForCurrentToken() {
+ 		StringExp string = new StringExp(loc, token.sourceString, token.len, (char) token.postfix);
+ 		string.setSourceRange(token.ptr, token.len);
+ 		return string;
+ 	}
+ 	
+ 	private StringExp newStringExpForPreviousToken() {
+ 		StringExp string = new StringExp(loc, prevToken.sourceString, token.len, (char) prevToken.postfix);
+ 		string.setSourceRange(prevToken.ptr, prevToken.len);
+ 		return string;
+ 	}
+ 	
+ 	private TypeAArray newTypeAArray(Type componentType, Type keyType) {
+ 		TypeAArray associativeArray = new TypeAArray(componentType, keyType);
+ 	    associativeArray.setSourceRange(componentType.start, token.ptr + token.len - componentType.start);
+ 	    return associativeArray;
+ 	}
+ 	
+ 	private CompoundStatement newBlock(Statements statements) {
+ 		return new CompoundStatement(loc, statements);
+ 	}
+ 	
+ 	private CompoundStatement newManyVarsBlock(Statements statements) {
+ 		CompoundStatement statement = new CompoundStatement(loc, statements);
+ 		statement.manyVars = true;
+ 		return statement;
+ 	}
+ 	
+ 	private DebugSymbol newDebugAssignmentForCurrentToken() {
+ 		if (token.value == TOKint32v) {
+ 			return new DebugSymbol(loc, token.intValue.longValue(), newVersionForCurrentToken());
+ 		} else if (token.value == TOKidentifier) {
+ 			return new DebugSymbol(loc, new IdentifierExp(loc, token.sourceString), newVersionForCurrentToken());
+ 		} else {
+ 			throw new RuntimeException("Can't happen");
+ 		}
+ 	}
+ 	
+ 	private Version newVersionForCurrentToken() {
+ 		Version version;
+ 		
+ 		if (token.value == TOKint32v) {
+ 			version = new Version(loc, token.sourceString);
+ 			version.setSourceRange(token.ptr, token.len);
+ 		} else if (token.value == TOKidentifier) {
+ 			version = new Version(loc, token.sourceString);
+ 			version.setSourceRange(token.ptr, token.len);
+ 		} else {
+ 			throw new RuntimeException("Can't happen");
+ 		}
+ 		
+ 		return version;
+ 	}
+ 	
+ 	private VersionSymbol newVersionAssignmentForCurrentToken() {
+ 		if (token.value == TOKint32v) {
+ 			return new VersionSymbol(loc, token.intValue.longValue(), newVersionForCurrentToken());
+ 		} else if (token.value == TOKidentifier) {
+ 			return new VersionSymbol(loc, newIdentifierExp(), newVersionForCurrentToken());
+ 		} else {
+ 			throw new RuntimeException("Can't happen");
+ 		}
+ 	}
+ 	
+ 	private VoidInitializer newVoidInitializerForToken(Token token) {
+ 		VoidInitializer voidInitializer = new VoidInitializer(loc);
+ 		voidInitializer.setSourceRange(token.ptr, token.len);
+ 		return voidInitializer;
+ 	}
+ 	
+ 	private TypeBasic newTypeBasicForCurrentToken() {
+ 		TypeBasic t = null;
+ 		switch(token.value) {
+ 		case TOKvoid: t = new TypeBasic(TY.Tvoid); break;
+ 		case TOKint8: t = new TypeBasic(TY.Tint8); break;
+ 		case TOKuns8: t = new TypeBasic(TY.Tuns8); break;
+ 		case TOKint16: t = new TypeBasic(TY.Tint16); break;
+ 		case TOKuns16: t = new TypeBasic(TY.Tuns16); break;
+ 		case TOKint32: t = new TypeBasic(TY.Tint32); break;
+ 		case TOKuns32: t = new TypeBasic(TY.Tuns32); break;
+ 		case TOKint64: t = new TypeBasic(TY.Tint64); break;
+ 		case TOKuns64: t = new TypeBasic(TY.Tuns64); break;
+ 		case TOKfloat32: t = new TypeBasic(TY.Tfloat32); break;
+ 		case TOKfloat64: t = new TypeBasic(TY.Tfloat64); break;
+ 		case TOKfloat80: t = new TypeBasic(TY.Tfloat80); break;
+ 		case TOKimaginary32: t = new TypeBasic(TY.Timaginary32); break;
+ 		case TOKimaginary64: t = new TypeBasic(TY.Timaginary64); break;
+ 		case TOKimaginary80: t = new TypeBasic(TY.Timaginary80); break;
+ 		case TOKcomplex32: t = new TypeBasic(TY.Tcomplex32); break;
+ 		case TOKcomplex64: t = new TypeBasic(TY.Tcomplex64); break;
+ 		case TOKcomplex80: t = new TypeBasic(TY.Tcomplex80); break;
+ 		case TOKbit: t = new TypeBasic(TY.Tbit); break;
+ 		case TOKbool: t = new TypeBasic(TY.Tbool); break;
+ 		case TOKchar: t = new TypeBasic(TY.Tchar); break;
+ 		case TOKwchar: t = new TypeBasic(TY.Twchar); break;
+ 		case TOKdchar: t = new TypeBasic(TY.Tdchar); break;
+ 		}
+ 		t.setSourceRange(token.ptr, token.len);
+ 		return t;
+ 	}
+ 	
+ 	private List<Comment> getLastDocComments() {
+ 		LinkedList<Comment> toReturn = new LinkedList<Comment>();
+ 		for(int i = comments.size() - 1; i >= lastDocCommentRead; i--) {
+ 			Comment comment = comments.get(i);
+ 			if (comment.isDDocComment()) {
+ 				toReturn.addFirst((Comment) comment);
+ 			} else {
+ 				break;
+ 			}
+ 		}
+ 		
+ 		lastDocCommentRead = comments.size();
+ 		
+ 		return toReturn;
+ 	}
+ 	
+ 	private void attachLeadingComments(ASTDmdNode declaration) {
+ 		if (prevToken.leadingComment != null) {
+ 			declaration.postDdoc = prevToken.leadingComment;
+ 		}
+ 	}
+ 	
+ 	private void parsingErrorInsertTokenAfter(Token targetToken, String expected) {
+ 		error(IProblem.ParsingErrorInsertTokenAfter, targetToken.lineNumber, targetToken.ptr, targetToken.len, new String[] { new String(targetToken.toString()), expected });
+ 	}
+ 	
+ 	private void parsingErrorDeleteToken(Token targetToken) {
+ 		error(IProblem.ParsingErrorDeleteToken, targetToken.lineNumber, targetToken.ptr, targetToken.len, new String[] { targetToken.toString() });
+ 	}
+ 	
+ 	private void parsingErrorInsertToComplete(Token targetToken, String insert, String toComplete) {
+ 		error(IProblem.ParsingErrorInsertToComplete, targetToken.lineNumber, targetToken.ptr, targetToken.len, new String[] { insert, toComplete });
+ 	}
+ 	
+ 	private String toWord(String s) {
+ 		return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+ 	}
+ 	
+ 	private void adjustPossitionAccordingToComments(ASTDmdNode node, List<Comment> preDDocs, Comment postDDoc) {
+ 		if ((preDDocs == null || preDDocs.isEmpty()) && postDDoc == null) {
+ 			return;
+ 		}
+ 		
+ 		int start = node.start;
+ 		int end = start + node.length;
+ 		
+ 		if (preDDocs != null && !preDDocs.isEmpty()) {
+ 			start = preDDocs.get(0).start;
+ 		}
+ 		
+ 		if (postDDoc != null) {
+ 			end = postDDoc.start + postDDoc.length;
+ 		}
+ 		
+ 		node.setSourceRange(start, end - start);
+ 	}
+ 	
+ 	@Override
+ 	public TOK nextToken() {
+ 		appendLeadingComments = true;
+ 		
+ 		// If many comments come in a rush, only the first
+ 		// one is to be attached to the previous token as a
+ 		// leading comment
+ 		boolean first = true;
+ 		TOK tok = super.nextToken();
+ 		while(tok == TOKlinecomment || tok == TOKdoclinecomment ||
+ 			  tok == TOKblockcomment || tok == TOKdocblockcomment ||
+ 			  tok == TOKpluscomment || tok == TOKdocpluscomment) {
+ 			
+ 			Comment comment;
+ 			switch(tok) {
+ 			case TOKlinecomment:
+ 				comment = new Comment(Comment.LINE_COMMENT, token.sourceString);
+ 				break;
+ 			case TOKblockcomment:
+ 				comment = new Comment(Comment.BLOCK_COMMENT, token.sourceString);
+ 				break;
+ 			case TOKpluscomment:
+ 				comment = new Comment(Comment.PLUS_COMMENT, token.sourceString);
+ 				break;
+ 			case TOKdoclinecomment:
+ 				comment = new Comment(Comment.DOC_LINE_COMMENT, token.sourceString);
+ 				break;
+ 			case TOKdocblockcomment:
+ 				comment = new Comment(Comment.DOC_BLOCK_COMMENT, token.sourceString);
+ 				break;
+ 			case TOKdocpluscomment:
+ 				comment = new Comment(Comment.DOC_PLUS_COMMENT, token.sourceString);
+ 				break;
+ 			default:
+ 				throw new IllegalStateException("Can't happen");
+ 			}
+ 			
+ 			comment.setSourceRange(token.ptr, token.len);
+ 			
+ 			comments.add(comment);
+ 			if (first) {
+ 				attachCommentToCurrentToken(comment);
+ 			}
+ 			
+ 			tok = super.nextToken();
+ 			first = false;
+ 		}
+ 		
+ 		while(tok == TOKPRAGMA) {
+ 			if (token.ptr == 0 && token.sourceString.length > 1 && token.sourceString[1] == '!') {
+ 				// Script line
+ 				Pragma pragma = new Pragma();
+ 				pragma.setSourceRange(0, token.len);
+ 				pragmas.add(pragma);
+ 			} else {
+ 				Pragma pragma = new Pragma();
+ 				pragma.setSourceRange(token.ptr, token.len);
+ 				pragmas.add(pragma);
+ 				
+ 				// Let's see if it's correct
+ 				// TODO improve performance
+ 				StringTokenizer st = new StringTokenizer(new String(token.sourceString).substring(1));
+ 				if (st.countTokens() != 3) {
+ 					error(IProblem.InvalidPragmaSyntax, token);
+ 					setMalformed(pragma);
+ 				} else {
+ 					String value = st.nextToken();
+ 					if (!"line".equals(value)) {
+ 						error(IProblem.InvalidPragmaSyntax, token);
+ 						setMalformed(pragma);
+ 					} else {
+ 						value = st.nextToken();
+ 						try {
+ 							int num = Integer.parseInt(value);
+ 							if (num <= 0) throw new NumberFormatException();
+ 							
+ 							value = st.nextToken();
+ 							if (!"__FILE__".equals(value)) {
+ 								if (value.length() < 2 || value.charAt(0) != '"' || value.charAt(value.length() - 1) != '"') {
+ 									error(IProblem.InvalidPragmaSyntax, token);
+ 									setMalformed(pragma);
+ 								}
+ 							}
+ 						} catch (NumberFormatException e) {
+ 							error(IProblem.InvalidPragmaSyntax, token);
+ 							setMalformed(pragma);
+ 						}
+ 					}
+ 				}
+ 			}
+ 			
+ 			tok = nextToken();
+ 		}
+ 		
+ 		return tok;
+ 	}
+ 	
+ 	@Override
+ 	protected void newline(boolean inComment) {
+ 		super.newline(inComment);
+ 		if (!inComment) {
+ 			appendLeadingComments = false;
+ 		}
+ 	}
+ 	
+ 	private IdentifierExp newIdentifierExp() {
+ 		return new IdentifierExp(loc, token);
+ 	}
+ 	
+ 	private void attachCommentToCurrentToken(Comment comment) {
+ 		if ((!appendLeadingComments || 
+ 					!comment.isDDocComment() || 
+ 					(prevToken.value != TOKsemicolon && 
+ 						prevToken.value != TOKrcurly))) return;
+ 		
+ 		if (prevToken.leadingComment == null) {
+ 			lastDocCommentRead = comments.size();	
+ 		}
+ 		prevToken.leadingComment = (Comment) comment;		
+ 	}
+ 
+ 	
+ }

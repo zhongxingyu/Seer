@@ -1,0 +1,255 @@
+ /*
+  * Created on 06.may.2005
+  *
+  * This software is licensed under the terms of the GNU GENERAL PUBLIC LICENSE
+  * Version 2, which can be found at http://www.gnu.org/copyleft/gpl.html
+  * 
+  */
+ package org.cubictest.ui.gef.command;
+ 
+ import java.util.List;
+ 
+ import org.cubictest.common.utils.ErrorHandler;
+ import org.cubictest.model.Common;
+ import org.cubictest.model.CommonTransition;
+ import org.cubictest.model.ConnectionPoint;
+ import org.cubictest.model.CustomTestStep;
+ import org.cubictest.model.ExtensionPoint;
+ import org.cubictest.model.ExtensionTransition;
+ import org.cubictest.model.Page;
+ import org.cubictest.model.SimpleTransition;
+ import org.cubictest.model.SubTest;
+ import org.cubictest.model.Test;
+ import org.cubictest.model.Transition;
+ import org.cubictest.model.TransitionNode;
+ import org.cubictest.model.UserInteractionsTransition;
+ import org.cubictest.ui.gef.controller.PageEditPart;
+ import org.cubictest.ui.gef.wizards.ExposeExtensionPointWizard;
+ import org.cubictest.ui.gef.wizards.NewUserInteractionsWizard;
+ import org.cubictest.ui.utils.ModelUtil;
+ import org.eclipse.draw2d.geometry.Point;
+ import org.eclipse.gef.EditPart;
+ import org.eclipse.gef.commands.Command;
+ import org.eclipse.gef.requests.DirectEditRequest;
+ import org.eclipse.jface.wizard.WizardDialog;
+ import org.eclipse.swt.widgets.Shell;
+ 
+ /**
+  * A command that creates a <code>Transition</code>.
+  * 
+  * @author SK Skytteren
+  * @author chr_schwarz
+  */
+ public class CreateTransitionCommand extends Command {
+ 
+ 	private TransitionNode sourceNode;
+ 
+ 	private TransitionNode targetNode;
+ 
+	/** Transition cahced for redo, or initial transition to add */
+ 	private Transition transition;
+ 
+ 	private Test test;
+ 	
+ 	private PageEditPart pageEditPart;
+ 	
+ 	private boolean autoCreateTargetPage = false;
+ 	
+ 	boolean executed = false;
+ 
+ 
+ 	/*
+ 	 * @see org.eclipse.gef.commands.Command#canExecute()
+ 	 */
+ 	public boolean canExecute() {
+ 		if (autoCreateTargetPage) {
+ 			return true;
+ 		}
+ 		return (ModelUtil.isLegalTransition(sourceNode, targetNode, false) == ModelUtil.TRANSITION_EDIT_VALID);
+ 	}
+ 
+ 
+ 	/*
+ 	 * @see org.eclipse.gef.commands.Command#execute()
+ 	 */
+ 	public void execute() {
+ 		super.execute();
+ 		if (executed) {
+ 			//idempotent
+ 			return;
+ 		}
+ 		if (autoCreateTargetPage) {
+ 			targetNode = new Page();
+ 			targetNode.setName("New page");
+ 			Point position = sourceNode.getPosition().getCopy();
+ 			if (pageEditPart == null) {
+ 				ErrorHandler.logAndThrow("PageEditPart not set. Cannot auto create target page.");
+ 			}
+ 			position.y = position.y + this.pageEditPart.getContentPane().getClientArea().height + 90;
+ 			int outTransitions = 0;
+ 			if (sourceNode.getOutTransitions() != null) {
+ 				for (Transition transition : sourceNode.getOutTransitions()) {
+ 					if (!(transition instanceof SimpleTransition)) {
+ 						outTransitions++;
+ 					}
+ 				}				
+ 				position.x = position.x + (outTransitions * 160);
+ 			}
+ 			targetNode.setPosition(position);
+ 			test.addPage((Page) targetNode);
+ 		}
+ 		
+		if (transition != null) {
+			//pre-populated transition, add directly:
+			test.addTransition(transition);
+		}
+		else {
+			//transition not pre-populated: 
+			
+ 			if (sourceNode instanceof SubTest && (targetNode instanceof Page || targetNode instanceof SubTest)) {
+ 				//ExtensionTransition from SubTest
+ 				SubTest subTest = (SubTest) sourceNode;
+ 				List<ExtensionPoint> exPoints = subTest.getTest().getAllExtensionPoints();
+ 				if (exPoints == null || exPoints.size() == 0) {
+ 					ErrorHandler.showErrorDialog("The \"" + subTest.getFileName() + "\" subtest does not contain any extension points.\n" +
+ 							"To continue, first add an extension point to the subtest and then retry this operation.");
+ 					return;
+ 				}
+ 				else if (exPoints.size() == 1) {
+ 					//auto select the single exPoint 
+ 					transition = new ExtensionTransition(sourceNode, targetNode, exPoints.get(0));
+ 				}
+ 				else {
+ 					//open dialog to select which exPoint to extend from:
+ 					ExposeExtensionPointWizard exposeExtensionPointWizard = new ExposeExtensionPointWizard(
+ 							(SubTest) sourceNode, test);
+ 					WizardDialog dlg = new WizardDialog(new Shell(),
+ 							exposeExtensionPointWizard);
+ 					if (dlg.open() == WizardDialog.CANCEL) {
+ 						return;
+ 					}
+ 					transition = new ExtensionTransition(sourceNode, targetNode,
+ 							exposeExtensionPointWizard.getSelectedExtensionPoint());
+ 					test.addTransition(transition);
+ 				}
+ 			}
+ 			else if(sourceNode instanceof Page && (targetNode instanceof Page || 
+ 					targetNode instanceof SubTest || targetNode instanceof CustomTestStep)) {
+ 				//User Interactions transition:
+ 				transition = new UserInteractionsTransition(sourceNode, targetNode);
+ 				test.addTransition(transition);
+ 				NewUserInteractionsWizard userActionWizard = new NewUserInteractionsWizard(
+ 						(UserInteractionsTransition) transition, test);
+ 				WizardDialog dlg = new WizardDialog(new Shell(), userActionWizard);
+ 
+ 				if (dlg.open() == WizardDialog.CANCEL) {
+ 					DeleteTransitionCommand cmd = new DeleteTransitionCommand(
+ 							transition, test);
+ 					cmd.execute();
+ 					transition.resetStatus();
+ 					if (autoCreateTargetPage) {
+ 						test.removePage((Page) targetNode);
+ 					}
+ 					return;
+ 				}
+ 
+ 				if (autoCreateTargetPage) {
+ 					//start direct edit:
+ 					for(Object obj : pageEditPart.getParent().getChildren()){
+ 						if (obj instanceof EditPart) {
+ 							EditPart ep = (EditPart) obj;
+ 							if(ep.getModel().equals(targetNode)){
+ 								//Start direct edit: 
+ 								ep.performRequest(new DirectEditRequest());
+ 								break;
+ 							}
+ 						}
+ 					}
+ 				}
+ 				
+ 			}
+ 			else if (sourceNode instanceof Common && targetNode instanceof Page) {
+ 				transition = new CommonTransition((Common) sourceNode,
+ 						(Page) targetNode);
+ 				test.addTransition(transition);
+ 			}
+ 			else if (sourceNode instanceof ConnectionPoint) {
+ 				transition = new SimpleTransition((ConnectionPoint) sourceNode,
+ 						targetNode);
+ 				test.addTransition(transition);
+ 			}
+ 			else if (targetNode instanceof ExtensionPoint) {
+ 				transition = new SimpleTransition(sourceNode, targetNode);
+ 				test.addTransition(transition);
+ 			}		
+ 			
+ 			executed = true;
+ 		}
+ 
+ 	}
+ 
+ 	/*
+ 	 * (non-Javadoc)
+ 	 * 
+ 	 * @see org.eclipse.gef.commands.Command#undo()
+ 	 */
+ 	public void undo() {
+ 		super.undo();
+ 		test.removeTransition(transition);
+ 		if (autoCreateTargetPage) {
+ 			test.removePage((Page) targetNode);
+ 		}
+ 		executed = false;
+ 	}
+ 
+ 	@Override
+ 	public void redo() {
+ 		if(transition != null) {
+ 			test.addTransition(transition);
+ 		}
+ 		if (autoCreateTargetPage) {
+ 			test.addPage((Page) targetNode);
+ 		}
+ 		executed = true;
+ 	}
+ 
+ 
+ 	public void setTest(Test test) {
+ 		this.test = test;
+ 	}
+ 
+ 	public void setPageEditPart(PageEditPart pageEditPart) {
+ 		this.pageEditPart = pageEditPart;
+ 	}
+ 
+ 	public void setSource(TransitionNode sourceNode) {
+ 		this.sourceNode = sourceNode;
+ 	}
+ 
+ 	public void setTarget(TransitionNode targetNode) {
+ 		this.targetNode = targetNode;
+ 	}
+ 
+ 
+ 	public void setAutoCreateTargetPage(boolean autoCreateTargetPage) {
+ 		this.autoCreateTargetPage = autoCreateTargetPage;
+ 	}
+ 
+ 
+ 	public boolean isAutoCreateTargetPage() {
+ 		return autoCreateTargetPage;
+ 	}
+ 
+ 
+ 	public TransitionNode getTarget() {
+ 		return targetNode;
+ 	}
+
+
+	/** 
+	 * Set initial transition to add (do not display input wizard)
+	 */
+	public void setTransition(Transition transition) {
+		this.transition = transition;
+	}
+ }

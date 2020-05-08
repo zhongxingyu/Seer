@@ -1,0 +1,347 @@
+ /*
+  * Copyright (C) 2012 Square, Inc.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ package dagger.internal;
+ 
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Queue;
+ import java.util.Set;
+ 
+ /**
+  * Links bindings to their dependencies.
+  */
+ public final class Linker {
+   private static final Object UNINITIALIZED = new Object();
+ 
+   /**
+    * The base {@code Linker} which will be consulted to satisfy bindings not
+    * otherwise satisfiable from this {@code Linker}. The top-most {@code Linker}
+    * in a chain will have a null base linker.
+    */
+   private final Linker base;
+ 
+   /** Bindings requiring a call to attach(). May contain deferred bindings. */
+   private final Queue<Binding<?>> toLink = new LinkedList<Binding<?>>();
+ 
+   /** True unless calls to requestBinding() were unable to satisfy the binding. */
+   private boolean attachSuccess = true;
+ 
+   /** All errors encountered during injection. */
+   private final List<String> errors = new ArrayList<String>();
+ 
+   /** All of the object graph's bindings. This may contain unlinked bindings. */
+   private final Map<String, Binding<?>> bindings = new HashMap<String, Binding<?>>();
+ 
+   private final Plugin plugin;
+ 
+   private final ErrorHandler errorHandler;
+ 
+   public Linker(Linker base, Plugin plugin, ErrorHandler errorHandler) {
+     if (plugin == null) throw new NullPointerException("plugin");
+     if (errorHandler == null) throw new NullPointerException("errorHandler");
+ 
+     this.base = base;
+     this.plugin = plugin;
+     this.errorHandler = errorHandler;
+   }
+ 
+   /**
+    * Adds all bindings in {@code toInstall}. The caller must call either {@link
+    * #linkAll} or {@link #requestBinding} and {@link #linkRequested} before the
+    * bindings can be used.
+    */
+   public void installBindings(Map<String, ? extends Binding<?>> toInstall) {
+     for (Map.Entry<String, ? extends Binding<?>> entry : toInstall.entrySet()) {
+       bindings.put(entry.getKey(), scope(entry.getValue()));
+     }
+   }
+ 
+   /**
+    * Links requested bindings and installed bindings, plus all of their
+    * transitive dependencies. This creates JIT bindings as necessary to fill in
+    * the gaps.
+    *
+    * @return all bindings known by this linker, which will all be linked.
+    */
+   public Map<String, Binding<?>> linkAll() {
+     for (Binding<?> binding : bindings.values()) {
+       if (!binding.isLinked()) {
+         toLink.add(binding);
+       }
+     }
+     linkRequested();
+     return bindings;
+   }
+ 
+   /**
+    * Links all requested bindings plus their transitive dependencies. This
+    * creates JIT bindings as necessary to fill in the gaps.
+    */
+   public void linkRequested() {
+     assertLockHeld();
+ 
+     Binding<?> binding;
+     while ((binding = toLink.poll()) != null) {
+       if (binding instanceof DeferredBinding) {
+         DeferredBinding deferredBinding = (DeferredBinding) binding;
+         String key = deferredBinding.deferredKey;
+         boolean mustBeInjectable = deferredBinding.mustBeInjectable;
+         if (bindings.containsKey(key)) {
+           continue; // A binding for this key has since been linked.
+         }
+         try {
+           Binding<?> jitBinding = createJitBinding(key, binding.requiredBy, mustBeInjectable);
+           // Fail if the type of binding we got wasn't capable of what was requested.
+           if (!key.equals(jitBinding.provideKey) && !key.equals(jitBinding.membersKey)) {
+             throw new IllegalStateException("Unable to create binding for " + key);
+           }
+           // Enqueue the JIT binding so its own dependencies can be linked.
+           toLink.add(jitBinding);
+           putBinding(jitBinding);
+         } catch (Exception e) {
+           if (e.getMessage() != null) {
+             addError(e.getMessage() + " required by " + binding.requiredBy);
+             bindings.put(key, Binding.UNRESOLVED);
+           } else if (e instanceof RuntimeException) {
+             throw (RuntimeException) e;
+           } else {
+             throw new RuntimeException(e);
+           }
+         }
+       } else {
+         // Attempt to attach the binding to its dependencies. If any dependency
+         // is not available, the attach will fail. We'll enqueue creation of
+         // that dependency and retry the attachment later.
+         attachSuccess = true;
+         binding.attach(this);
+         if (attachSuccess) {
+           binding.setLinked();
+         } else {
+           toLink.add(binding);
+         }
+       }
+     }
+ 
+     try {
+       errorHandler.handleErrors(errors);
+     } finally {
+       errors.clear();
+     }
+   }
+ 
+   /**
+    * Don't permit bindings to be linked without a lock. Callers should lock
+    * before requesting any bindings, link the requested bindings, retrieve
+    * the linked bindings, and then release the lock.
+    */
+   private void assertLockHeld() {
+     if (!Thread.holdsLock(this)) throw new AssertionError();
+   }
+ 
+   /**
+    * Creates a just-in-time binding for the key in {@code deferred}. The type of binding
+    * to be created depends on the key's type:
+    * <ul>
+    *   <li>Injections of {@code Provider<Foo>}, {@code MembersInjector<Bar>}, and
+    *       {@code Lazy<Blah>} will delegate to the bindings of {@code Foo}, {@code Bar}, and
+    *       {@code Blah} respectively.
+    *   <li>Injections of other types will use the injectable constructors of those classes.
+    * </ul>
+    */
+   private Binding<?> createJitBinding(String key, Object requiredBy, boolean mustBeInjectable)
+       throws ClassNotFoundException {
+     String builtInBindingsKey = Keys.getBuiltInBindingsKey(key);
+     if (builtInBindingsKey != null) {
+       return new BuiltInBinding<Object>(key, requiredBy, builtInBindingsKey);
+     }
+     String lazyKey = Keys.getLazyKey(key);
+     if (lazyKey != null) {
+       return new LazyBinding<Object>(key, requiredBy, lazyKey);
+     }
+ 
+     String className = Keys.getClassName(key);
+     if (className != null && !Keys.isAnnotated(key)) {
+       Binding<?> atInjectBinding = plugin.getAtInjectBinding(key, className, mustBeInjectable);
+       if (atInjectBinding != null) {
+         return atInjectBinding;
+       }
+     }
+ 
+     throw new IllegalArgumentException("No binding for " + key);
+   }
+ 
+ 
+   /**
+    * Returns the binding if it exists immediately. Otherwise this returns
+    * null. If the returned binding didn't exist or was unlinked, it will be
+    * enqueued to be linked.
+    */
+   public Binding<?> requestBinding(String key, Object requiredBy) {
+     return requestBinding(key, requiredBy, true);
+   }
+ 
+   /**
+    * Returns the binding if it exists immediately. Otherwise this returns
+    * null. If the returned binding didn't exist or was unlinked, it will be
+    * enqueued to be linked.
+    *
+    * @param mustBeInjectable true if the the referenced key doesn't need to be
+    *     injectable. This is necessary for entry points (so that framework code
+    *     can inject arbitrary entry points like JUnit test cases or Android
+    *     activities) and for supertypes.
+    */
+   public Binding<?> requestBinding(String key, Object requiredBy, boolean mustBeInjectable) {
+     assertLockHeld();
+ 
+     Binding<?> binding = null;
+     for (Linker linker = this; linker != null; linker = linker.base) {
+       binding = linker.bindings.get(key);
+       if (binding != null) {
+         if (linker != this && !binding.isLinked()) throw new AssertionError();
+         break;
+       }
+     }
+ 
+     if (binding == null) {
+       // We can't satisfy this binding. Make sure it'll work next time!
+       Binding<?> deferredBinding = new DeferredBinding(key, requiredBy, mustBeInjectable);
+       toLink.add(deferredBinding);
+       attachSuccess = false;
+       return null;
+     }
+ 
+     if (!binding.isLinked()) {
+       toLink.add(binding); // This binding was never linked; link it now!
+     }
+ 
+     return binding;
+   }
+ 
+   private <T> void putBinding(Binding<T> binding) {
+     binding = scope(binding);
+ 
+     // At binding insertion time it's possible that another binding for the same
+     // key to already exist. This occurs when an @Provides method returns a type T
+     // and we also inject the members of that type.
+     if (binding.provideKey != null) {
+       putIfAbsent(bindings, binding.provideKey, binding);
+     }
+     if (binding.membersKey != null) {
+       putIfAbsent(bindings, binding.membersKey, binding);
+     }
+   }
+ 
+   /**
+    * Returns a scoped binding for {@code binding}.
+    */
+   static <T> Binding<T> scope(final Binding<T> binding) {
+     if (!binding.isSingleton()) {
+       return binding;
+     }
+     if (binding instanceof SingletonBinding) throw new AssertionError();
+     return new SingletonBinding<T>(binding);
+   }
+ 
+   /**
+    * Puts the mapping {@code key, value} in {@code map} if no mapping for {@code
+    * key} already exists.
+    */
+   private <K, V> void putIfAbsent(Map<K, V> map, K key, V value) {
+     V replaced = map.put(key, value); // Optimistic: prefer only one hash operation lookup.
+     if (replaced != null) {
+       map.put(key, replaced);
+     }
+   }
+ 
+   /** Enqueue {@code message} as a fatal error to be reported to the user. */
+   private void addError(String message) {
+     errors.add(message);
+   }
+ 
+   /**
+    * A Binding that implements singleton behaviour around an existing binding.
+    */
+   private static class SingletonBinding<T> extends Binding<T> {
+     private final Binding<T> binding;
+     private Object onlyInstance = UNINITIALIZED;
+ 
+     private SingletonBinding(Binding<T> binding) {
+       super(binding.provideKey, binding.membersKey, true, binding.requiredBy);
+       this.binding = binding;
+     }
+ 
+     @Override public void attach(Linker linker) {
+       binding.attach(linker);
+     }
+ 
+     @Override public void injectMembers(T t) {
+       binding.injectMembers(t);
+     }
+ 
+     @SuppressWarnings("unchecked") // onlyInstance is either 'UNINITIALIZED' or a 'T'.
+     @Override public T get() {
+       // TODO (cgruber): Fix concurrency risk.
+       if (onlyInstance == UNINITIALIZED) {
+         onlyInstance = binding.get();
+       }
+       return (T) onlyInstance;
+     }
+ 
+     @Override public void getDependencies(Set<Binding<?>> get, Set<Binding<?>> injectMembers) {
+       binding.getDependencies(get, injectMembers);
+     }
+ 
+    @Override public boolean isLinked() {
+      return binding.isLinked();
+    }
+
+     @Override public String toString() {
+       return "@Singleton/" + binding.toString();
+     }
+   }
+ 
+   /** Handles linker errors appropriately. */
+   public interface ErrorHandler {
+     /**
+      * Fail if any errors have been enqueued.
+      * Implementations may throw exceptions or report the errors through another
+      * channel.  Callers are responsible for clearing enqueued errors.
+      *
+      * @param errors a potentially empty list of error messages.
+      */
+     void handleErrors(List<String> errors);
+   }
+ 
+   private static class DeferredBinding extends Binding<Object> {
+     final String deferredKey;
+     final boolean mustBeInjectable;
+     private DeferredBinding(String deferredKey, Object requiredBy, boolean mustBeInjectable) {
+       super(null, null, false, requiredBy);
+       this.deferredKey = deferredKey;
+       this.mustBeInjectable = mustBeInjectable;
+     }
+     @Override public void injectMembers(Object t) {
+       throw new UnsupportedOperationException("Deferred bindings must resolve first.");
+     }
+     @Override public void getDependencies(Set<Binding<?>> get, Set<Binding<?>> injectMembers) {
+       throw new UnsupportedOperationException("Deferred bindings must resolve first.");
+     }
+   }
+ 
+ }

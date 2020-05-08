@@ -1,0 +1,49 @@
+ package spia1001.InvFall;
+ 
+import java.util.logging.Logger;
+
+ import org.bukkit.event.Event;
+ import org.bukkit.event.Event.Priority;
+ import org.bukkit.plugin.PluginDescriptionFile;
+ import org.bukkit.plugin.PluginManager;
+ import org.bukkit.plugin.java.JavaPlugin;
+ /*
+ InvFall Plugin
+  
+ @author Chris Lloyd (SPIA1001)
+ */
+ 
+ public class InvFall extends JavaPlugin {
+	private Logger logger = Logger.getLogger("InvFall");
+ 	private PlayerManager playerManager = new PlayerManager();
+ 	private InvFallPlayerListener playerListener = new InvFallPlayerListener(playerManager,this);
+ 	private InvFallBlockListener blockListener = new InvFallBlockListener(playerManager,this);
+ 	public PermissionWrapper permissionWrapper;
+ 	
+ 	public void onDisable()
+ 	{
+ 		//playerManager.save();
+ 	}
+ 
+ 	public void onEnable() 
+ 	{
+ 		registerEvents();
+ 		permissionWrapper = new PermissionWrapper(this);
+ 		getCommand("invfall").setExecutor(new InvFallPluginCommand(permissionWrapper,playerManager,getServer()));
+ 		
+ 		PluginDescriptionFile pdfFile = this.getDescription();
+		log(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!" );
+ 	}
+ 	private void registerEvents()
+ 	{
+ 		PluginManager pm = getServer().getPluginManager();
+ 		pm.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Monitor, this);
+ 		pm.registerEvent(Event.Type.PLAYER_DROP_ITEM, playerListener, Priority.Monitor, this);
+ 		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Monitor, this);
+ 		pm.registerEvent(Event.Type.BLOCK_PLACE, blockListener, Priority.Monitor, this);
+ 	}
+	public void log(String string)
+	{
+		logger.info(string);
+	}
+ }
