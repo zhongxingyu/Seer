@@ -1,0 +1,116 @@
+ package voldemort.store.parser;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ import voldemort.utils.ByteUtils;
+ import voldemort.versioning.ClockEntry;
+ import voldemort.versioning.Occured;
+ import voldemort.versioning.VectorClock;
+ 
+ public class ClientNode {
+ 
+     private String client;
+     private VectorClock version;
+     private ArrayList<AccessNode> accesses;
+ 
+     public ClientNode(String client) {
+         this.client = client;
+         version = null;
+         accesses = new ArrayList<AccessNode>();
+     }
+ 
+     public ClientNode(byte[] bytes, int offset) {
+        int length = bytes[offset];
+         byte[] clientBytes = ByteUtils.copy(bytes, offset + 1, offset + length + 1);
+         String c = ByteUtils.getString(clientBytes, "UTF-8");
+         this.client = c;
+        if(bytes[offset + length + 1] == 1)
+            this.version = new VectorClock(bytes, offset + 2 + length);
+        else
+            this.version = null;
+ 
+     }
+ 
+     public String getClient() {
+         return client;
+     }
+ 
+     public VectorClock getVersion() {
+         return version;
+     }
+ 
+     public int sizeInBytes() {
+        return client.length() + 2 + (version == null ? 0 : version.sizeInBytes());
+     }
+ 
+     public byte[] toBytes() {
+        byte[] clientBytes = ByteUtils.getBytes(client, "UTF-8");
+
+         byte[] serialized = ByteUtils.cat(new byte[] { (byte) client.length() },
+                                           clientBytes,
+                                          new byte[] { (byte) (version == null ? 0 : 1) },
+                                          version == null ? new byte[0] : version.toBytes());
+         return serialized;
+     }
+ 
+     public void addAccess(AccessNode node) {
+         if(client.equals(node.getClient()) && node.getOpType() == AccessType.SET) {
+             accesses.add(node);
+         }
+     }
+ 
+     public void setVersion(VectorClock v) {
+         if(version == null) {
+             version = v;
+         } else {
+            // System.out.println("current version :" + version +
+            // " new version : " + v);
+             List<ClockEntry> versions = v.getEntries();
+             List<ClockEntry> clientVersions = version.getEntries();
+             List<ClockEntry> newVersions = new ArrayList<ClockEntry>();
+             int i = 0;
+             int j = 0;
+             while(i < versions.size() && j < clientVersions.size()) {
+                 ClockEntry v1 = versions.get(i);
+                 ClockEntry v2 = clientVersions.get(j);
+                 if(v1.getNodeId() == v2.getNodeId()) {
+                     newVersions.add(new ClockEntry(v1.getNodeId(), Math.min(v1.getVersion(),
+                                                                             v2.getVersion())));
+                     i++;
+                     j++;
+                 } else if(v1.getNodeId() < v2.getNodeId()) {
+                     newVersions.add(v1.clone());
+                     i++;
+                 } else {
+                     newVersions.add(v2.clone());
+                     j++;
+                 }
+             }
+ 
+             // for(int k = i; k < versions.size(); k++)
+             // newVersions.add(versions.get(k).clone());
+             // for(int k = j; k < clientVersions.size(); k++)
+             // newVersions.add(clientVersions.get(k).clone());
+ 
+             long timestamp = Math.min(version.getTimestamp(), v.getTimestamp());
+ 
+             version = new VectorClock(newVersions, timestamp);
+         }
+ 
+         for(AccessNode node: accesses) {
+             if(node.getVersion().compare(version) == Occured.AFTER) {
+                 node.setDirty();
+             }
+         }
+     }
+ 
+     @Override
+     public String toString() {
+         return client + " " + version;
+     }
+ 
+     public void accept(GraphVisitor visitor) {
+         visitor.visit(this);
+     }
+ }

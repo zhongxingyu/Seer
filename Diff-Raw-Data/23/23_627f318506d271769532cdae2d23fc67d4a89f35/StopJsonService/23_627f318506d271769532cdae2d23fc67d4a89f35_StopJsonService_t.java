@@ -1,0 +1,51 @@
+ package jp.co.nttcom.eai.webadmin.service.apps;
+ 
+ import java.io.IOException;
+ import java.util.Collections;
+ import java.util.HashMap;
+ import java.util.Map;
+ import jp.co.nttcom.eai.webadmin.client.RestClient;
+ import jp.co.nttcom.eai.webadmin.config.AppConfig;
+ import jp.co.nttcom.eai.webadmin.service.AbstractJsonService;
+ import jp.co.nttcom.eai.webadmin.service.ServiceException;
+ 
+ /**
+  * <p>[概 要] アプリケーション停止クラス。</p>
+  * <p>[詳 細] 指定したアプリケーションを停止します。</p>
+  * <p>[備 考] </p>
+  * <p>[環 境] JavaSE 6.0</p>
+  *
+  * @author Seiji Sogabe
+  */
+ public class StopJsonService extends AbstractJsonService {
+ 
+     /**
+      * <p>[概 要] アプリケーション停止処理</p>
+      * <p>[詳 細] 指定されたアプリケーションに該当するサーバにアクセスし、停止します。
+      * </p>
+      * <p>クエリーパラメータ<code>params</code>には、アプリケーション名(
+      * <code>id</code>)を 指定する必要があります。
+      * </p>
+      *
+      * @param url 接続先URL
+      * @param params クエリーパラメータ
+      * @return レスポンス
+      * @throws IOException 入出力エラー
+      */
+    public String[] create(Map<String, String> map) throws ServiceException, IOException {
+         // 接続先アプリケーション名
+         String id = map.get("id");
+         if (id == null) {
+             throw new IllegalArgumentException();
+         }
+ 
+         Map<String, String> data = new HashMap<String, String>();
+         data.put("id", id);
+ 
+         AppConfig appConfig = getAppConfig(id);
+         
+         RestClient.doPost(appConfig.getUrl() + "apps/stop.json", Collections.EMPTY_MAP, data);
+        
+        return new String[] { "success" };
+     }
+ }

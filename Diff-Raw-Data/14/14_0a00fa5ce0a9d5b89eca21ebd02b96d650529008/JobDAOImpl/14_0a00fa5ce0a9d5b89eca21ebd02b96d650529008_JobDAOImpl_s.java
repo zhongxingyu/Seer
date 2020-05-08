@@ -1,0 +1,85 @@
+ package dmitrygusev.ping.services.dao.impl;
+ 
+ import static com.google.appengine.api.datastore.KeyFactory.createKey;
+ 
+ import java.util.List;
+ 
+ import javax.persistence.EntityManager;
+ import javax.persistence.Query;
+ 
+ import org.apache.tapestry5.ioc.annotations.Inject;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import com.google.appengine.api.datastore.Key;
+ 
+ import dmitrygusev.ping.entities.Job;
+ import dmitrygusev.ping.entities.Schedule;
+ import dmitrygusev.ping.services.dao.JobDAO;
+ 
+ @SuppressWarnings("unchecked")
+ public class JobDAOImpl implements JobDAO {
+ 
+     private static final Logger logger = LoggerFactory.getLogger(JobDAOImpl.class);
+ 
+    public static final String FIND_RECENT_JOB_QUERY = "SELECT j FROM Job j ORDER BY j.lastBackupTimestamp ASC";
+
+ 	@Inject
+     public EntityManager em;
+ 	
+ 	@Override
+ 	public Job findRecent() {
+        Query q = em.createQuery(FIND_RECENT_JOB_QUERY).setMaxResults(1);
+     
+         List<Job> result = q.getResultList();
+         
+         return result.isEmpty() ? null : result.get(0);
+ 	}
+ 	
+ 	public List<Job> getJobsByCronString(String cronString) {
+ 		Query q = em.createQuery("SELECT j FROM Job j WHERE j.cronString = :cronString");
+ 		q.setParameter("cronString", cronString);
+ 		return q.getResultList();
+ 	}
+ 	
+ 	public void update(Job job) {
+ 	    if (!em.getTransaction().isActive()){
+ 	        // see Application#internalUpdateJob(Job)
+ 	        logger.debug("Transaction is not active. Begin new one...");
+ 	        
+ 	        // XXX Rewrite this to handle transactions more gracefully
+ 	        em.getTransaction().begin();
+ 	    }
+ 		em.merge(job);
+ 	}
+ 	
+ 	public void delete(Long scheduleId, Long id) {
+ 		Job job = find(scheduleId, id);
+ 	
+ 		if (job != null) {
+ 			em.remove(job);
+ 		}
+ 	}
+ 	
+ 	@Override
+ 	public Job find(Long scheduleId, Long id) {
+ 		Query q = em.createQuery("SELECT j FROM Job j WHERE j.key = :key").
+ 			setParameter("key", createKey(Schedule.class.getSimpleName(), scheduleId).
+ 					getChild(Job.class.getSimpleName(), id));
+ 		
+ 		List<Job> result = q.getResultList();
+ 		
+ 		return result.isEmpty() ? null : result.get(0);
+ 	}
+ 
+ 	@Override
+ 	public Job find(Key jobKey) {
+ 		return em.find(Job.class, jobKey);
+ 	}
+ 
+     @Override
+     public List<Job> getAllJobs() {
+         Query q = em.createQuery("SELECT FROM Job");
+         return q.getResultList();
+     }
+ }

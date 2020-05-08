@@ -1,0 +1,247 @@
+ /*
+  * Redberry: symbolic tensor computations.
+  *
+  * Copyright (c) 2010-2012:
+  *   Stanislav Poslavsky   <stvlpos@mail.ru>
+  *   Bolotin Dmitriy       <bolotin.dmitriy@gmail.com>
+  *
+  * This file is part of Redberry.
+  *
+  * Redberry is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * Redberry is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with Redberry. If not, see <http://www.gnu.org/licenses/>.
+  */
+ package cc.redberry.core.indices;
+ 
+import cc.redberry.core.combinatorics.IntPermutationsGenerator;
+import cc.redberry.core.combinatorics.Symmetry;
+ import cc.redberry.core.context.CC;
+ import cc.redberry.core.parser.ParserIndices;
+ import cc.redberry.core.tensor.SimpleTensor;
+ import cc.redberry.core.tensor.random.TRandom;
+ import junit.framework.Assert;
+ import org.apache.commons.math3.random.Well19937c;
+ import org.junit.Test;
+ 
+ import java.util.Arrays;
+ 
+ import static cc.redberry.core.tensor.Tensors.*;
+ import static org.junit.Assert.assertTrue;
+ 
+ /**
+  * @author Dmitry Bolotin
+  * @author Stanislav Poslavsky
+  */
+ public class IndicesTest {
+ 
+     public IndicesTest() {
+     }
+ 
+     @Test
+     public void testGetSymmetries() {
+         SimpleTensor t = (SimpleTensor) parse("g_mn");
+         addSymmetry(t, IndexType.LatinLower, false, 1, 0);
+         assertTrue(CC.getNameDescriptor(t.getName()).getSymmetries() == t.getIndices().getSymmetries());
+     }
+ 
+     @Test
+     public void testGetUpper1() {
+         Indices indices = parse("g_mn*T^ab*D^n_b").getIndices(); //sorted indices
+         Indices upper = ParserIndices.parseSimple("^a");
+         assertTrue(indices.getFree().getUpper().equals(upper.getAllIndices()));
+     }
+ 
+     @Test
+     public void testGetLower() {
+         Indices indices = parse("g_mn*T^ab*D^n_b").getIndices(); //sorted indices
+         Indices upper = ParserIndices.parseSimple("_m");
+         assertTrue(indices.getFree().getLower().equals(upper.getAllIndices()));
+     }
+ 
+     @Test
+     public void testGetFreeIndices() {
+         Indices indices = parse("g_mn*T^ab*D^n_b").getIndices(); //sorted indices
+         Indices free = ParserIndices.parseSimple("_m^a");
+         assertTrue(indices.getFree().equalsRegardlessOrder(free));
+ 
+         Indices indices1 = parse("g_mn^abn_b").getIndices(); //ordered indices
+         assertTrue(indices1.getFree().equalsRegardlessOrder(free));
+     }
+ 
+     @Test
+     public void testGetInverseIndices1() {
+         Indices indices = parse("g_mn*T^ab*D^n_b").getIndices(); //sorted indices
+         Indices inverse = indices.getInverse();
+         Indices expected = ParserIndices.parseSimple("^mn_abn^b");
+ 
+         assertTrue(expected.equalsRegardlessOrder(inverse));
+         expected = IndicesFactory.createSorted(expected);
+         assertTrue(inverse.getLower().equals(expected.getLower()));
+         assertTrue(inverse.getUpper().equals(expected.getUpper()));
+ 
+         SimpleIndices indices1 = (SimpleIndices) parse("g_mn^abn_b").getIndices(); //ordered indices
+         assertTrue(indices1.getInverse().equalsRegardlessOrder(expected));
+         assertTrue(indices1.getSymmetries() == indices1.getInverse().getSymmetries());
+     }
+ 
+     @Test
+     public void testGetInverseIndices2() {
+         Indices indices = parse("g_mn*T_ab").getIndices(); //sorted indices
+         Indices inverse = indices.getInverse();
+         Indices expected = ParserIndices.parseSimple("^abmn");
+ 
+         assertTrue(expected.equalsRegardlessOrder(inverse));
+         assertTrue(inverse.getLower().equals(expected.getLower()));
+         assertTrue(inverse.getUpper().equals(expected.getUpper()));
+     }
+ 
+     @Test
+     public void testGetInverseIndices3() {
+         Indices indices = parse("g^mn*T^ab").getIndices(); //sorted indices
+         Indices inverse = indices.getInverse();
+         Indices expected = ParserIndices.parseSimple("_abmn");
+ 
+         assertTrue(expected.equalsRegardlessOrder(inverse));
+         assertTrue(inverse.getLower().equals(expected.getLower()));
+         assertTrue(inverse.getUpper().equals(expected.getUpper()));
+     }
+ 
+     @Test
+     public void testGetInverseIndices4() {
+         Indices indices = parse("g_n*T^a*D_bzx").getIndices(); //sorted indices
+         Indices inverse = indices.getInverse();
+         Indices expected = ParserIndices.parseSimple("^n_a^bzx");
+ 
+         assertTrue(expected.equalsRegardlessOrder(inverse));
+         expected = IndicesFactory.createSorted(expected);
+         assertTrue(inverse.getLower().equals(expected.getLower()));
+         assertTrue(inverse.getUpper().equals(expected.getUpper()));
+     }
+ 
+     @Test(expected = InconsistentIndicesException.class)
+     public void testTestConsistent1() {
+         //_dd
+         Indices indices = ParserIndices.parseSimple("^abcio_sdd");
+         indices.testConsistentWithException();
+     }
+ 
+     @Test(expected = InconsistentIndicesException.class)
+     public void testTestConsistent2() {
+         //_dd^d
+         Indices indices1 = ParserIndices.parseSimple("^abcio_sdd^d");
+         indices1.testConsistentWithException();
+     }
+ //    @Test
+ //    public void applyEmptyIndexMapping() {
+ //        IndexMappingImpl im = new IndexMappingImpl();
+ //        Indices indices = CC.parse("G_MN").getIndices();
+ //        Indices copy = indices.clone();
+ //        indices.applyIndexMapping(im);
+ //        assertTrue(indices.equals(copy));
+ //    }
+ 
+     @Test
+     public void testGetByTypeSimpleIndices() {
+         TRandom tRandom = new TRandom(100,
+                 1000,
+                 new int[]{0, 0, 0, 0},
+                 new int[]{10, 10, 10, 10},
+                 false, new Well19937c());
+         IndicesTypeStructure typeStructure;
+         Indices indices;
+         SimpleIndicesBuilder builder;
+         for (int i = 0; i < 1000; ++i) {
+             builder = new SimpleIndicesBuilder();
+             typeStructure = tRandom.nextNameDescriptor().getIndicesTypeStructure();
+             indices = IndicesFactory.createSimple(null, tRandom.nextIndices(typeStructure));
+             int typeCount;
+             for (int k = 0; k < IndexType.TYPES_COUNT; ++k) {
+                 typeCount = typeStructure.typeCount((byte) k);
+                 Assert.assertEquals(typeCount, indices.size(IndexType.getType((byte) k)));
+                 if (typeCount == 0)
+                     continue;
+                 for (int p = 0; p < typeCount; ++p) {
+                     int index = indices.get(p, IndexType.getType((byte) k));
+                     Assert.assertEquals(IndicesUtils.getType(index), (byte) k);
+                     builder.append(IndicesFactory.createSimple(null, index));
+                 }
+             }
+             Assert.assertEquals(indices, builder.getIndices());
+         }
+     }
+ 
+     @Test
+     public void testGetByTypeSortedIndices() {
+         TRandom tRandom = new TRandom(100,
+                 1000,
+                 new int[]{0, 0, 0, 0},
+                 new int[]{10, 10, 10, 10},
+                 false, new Well19937c());
+         IndicesTypeStructure typeStructure;
+         Indices indices;
+         IndicesBuilder builder;
+         for (int i = 0; i < 1000; ++i) {
+             builder = new IndicesBuilder();
+             typeStructure = tRandom.nextNameDescriptor().getIndicesTypeStructure();
+             indices = IndicesFactory.createSorted(tRandom.nextIndices(typeStructure));
+             int typeCount;
+             for (int k = 0; k < IndexType.TYPES_COUNT; ++k) {
+                 typeCount = typeStructure.typeCount((byte) k);
+                 Assert.assertEquals(typeCount, indices.size(IndexType.getType((byte) k)));
+                 if (typeCount == 0)
+                     continue;
+                 for (int p = 0; p < typeCount; ++p) {
+                     int index = indices.get(p, IndexType.getType((byte) k));
+                     Assert.assertEquals(IndicesUtils.getType(index), (byte) k);
+                     builder.append(IndicesFactory.createSimple(null, index));
+                 }
+             }
+             Assert.assertEquals(indices, builder.getIndices());
+         }
+     }
+ 
+     @Test
+    public void testDiffIds1() {
+         SimpleTensor r = parseSimple("R_abcd");
+         addSymmetry(r, IndexType.LatinLower, false, 2, 3, 0, 1);
+         addSymmetry(r, IndexType.LatinLower, true, 1, 0, 2, 3);
+         short[] diffIds = r.getIndices().getDiffIds();
+         short[] expected = new short[4];
+         Assert.assertTrue(Arrays.equals(diffIds, expected));
+     }
+
+    @Test
+    public void testDiffIds2() {
+        Symmetry[] symmetries = new Symmetry[]{
+                new Symmetry(new int[]{1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, false),
+                new Symmetry(new int[]{0, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11}, false),
+                new Symmetry(new int[]{0, 1, 3, 2, 4, 5, 6, 7, 8, 9, 10, 11}, false),
+                new Symmetry(new int[]{0, 1, 2, 4, 3, 5, 6, 7, 8, 9, 10, 11}, false),
+                new Symmetry(new int[]{0, 1, 2, 3, 5, 4, 6, 7, 8, 9, 10, 11}, false),
+                new Symmetry(new int[]{0, 1, 2, 3, 4, 6, 7, 11, 10, 9, 8, 5}, false),
+                new Symmetry(new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 10, 9}, false)
+        };
+        IntPermutationsGenerator gen = new IntPermutationsGenerator(symmetries.length);
+        int[] p;
+        while (gen.hasNext()) {
+            CC.resetTensorNames();
+            SimpleTensor r = parseSimple("R_abcdefghijkl");
+            p = gen.next();
+            for (int i = 0; i < p.length; ++i)
+                r.getIndices().getSymmetries().addUnsafe(symmetries[p[i]]);
+
+            short[] diffIds = r.getIndices().getDiffIds();
+            short[] expected = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0};
+            Assert.assertTrue(Arrays.equals(diffIds, expected));
+        }
+    }
+ }

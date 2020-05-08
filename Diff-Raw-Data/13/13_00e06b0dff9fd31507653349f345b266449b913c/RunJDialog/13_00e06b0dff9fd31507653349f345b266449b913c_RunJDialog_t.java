@@ -1,0 +1,1014 @@
+ /*
+  * To change this template, choose Tools | Templates
+  * and open the template in the editor.
+  */
+ 
+ /*
+  * RunJDialog.java
+  *
+  * Created on Nov 26, 2011, 7:20:01 PM
+  */
+ package jgenfit;
+ 
+ import java.io.BufferedInputStream;
+ import java.io.BufferedReader;
+ import java.io.DataInputStream;
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.FileNotFoundException;
+ import java.io.FileOutputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ 
+ import java.util.Arrays;
+ import java.util.Comparator;
+ import java.util.Properties;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import javax.swing.DefaultListModel;
+ 
+ import javax.swing.JFrame;
+ import javax.swing.JOptionPane;
+ import jgenfit.bussines.GenfitController;
+ import jgenfit.bussines.experiment.GeneralSection;
+ import jgenfit.events.GenfitEvent;
+ import jgenfit.events.GenfitEventListener;
+ import jgenfit.events.GenfitEventType;
+ import jgenfit.utils.OutputDisplayer;
+ import utils.GenfitPropertiesReader;
+ import utils.OSDetector;
+ 
+ /**
+  *
+  * @author alex
+  */
+ public class RunJDialog extends javax.swing.JDialog implements GenfitEventListener {
+ 
+     private GenfitController genfitController;
+     private File fileEdited;
+     private String gnuPlotFilePath;
+ 
+     /** Creates new form RunJDialog */
+     public RunJDialog(java.awt.Frame parent, boolean modal) {
+         super(parent, modal);
+         initComponents();
+ 
+ 
+        // Properties prop = new Properties();
+         try {
+             /*
+             prop.load(new FileInputStream("settings.properties"));
+             this.jTextFieldGenfitFolder.setText(prop.getProperty("genfitfolder"));
+             this.jTextFieldInputCode.setText(prop.getProperty("inputcode"));
+             this.jTextFieldOutputFolder.setText(prop.getProperty("outputfolder"));
+             this.gnuPlotFilePath =  prop.getProperty("gnuplot");
+             */
+             this.jTextFieldGenfitFolder.setText(GenfitPropertiesReader.getGenfitFolder());
+             this.jTextFieldInputCode.setText(GenfitPropertiesReader.getInputCode());
+             this.jTextFieldOutputFolder.setText(GenfitPropertiesReader.getOutputFolder());
+             this.gnuPlotFilePath = GenfitPropertiesReader.getGNUPlot();
+                     
+             if (!GenfitPropertiesReader.getFourierFile().equals("NONE")){
+                 this.jTextFieldFourier.setText(GenfitPropertiesReader.getFourierFile());
+                 this.jCheckBoxFourier.setSelected(true);
+             }
+             if (!GenfitPropertiesReader.getParameterFile().equals("NONE")){
+                 this.jTextFieldParameter.setText(GenfitPropertiesReader.getParameterFile());
+                 this.jCheckBoxParameter.setSelected(true);
+             }
+             
+             this.populate();
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+     }
+ 
+     public File getOutputFolder() {
+         String output = this.jTextFieldOutputFolder.getText();
+         File outputFile = new File(output);
+         if (outputFile.exists()) {
+             return outputFile;
+         }
+         return null;
+     }
+     
+     
+     
+     public void populate() {
+         this.jList1.removeAll();
+         
+         this.jList1.setEnabled(false);
+         if (this.getOutputFolder() != null) {
+             File outpuFolderFile = this.getOutputFolder();
+             File[] listOfFiles = outpuFolderFile.listFiles();
+             
+             Arrays.sort(listOfFiles, new Comparator<File>(){
+                     public int compare(File f1, File f2)
+                     {
+                         return -1*Long.valueOf(f1.lastModified()).compareTo(f2.lastModified());
+                     } });
+             
+             DefaultListModel listModel = new DefaultListModel();
+             this.jList1.setModel(listModel);
+             for (int i = 0; i < listOfFiles.length; i++) {
+                 if (listOfFiles[i].isFile()) {
+ 
+                     if (!this.jTextFieldFilter.getText().isEmpty()) {
+                         if (listOfFiles[i].getName().contains(this.jTextFieldFilter.getText())) {
+                             listModel.addElement(listOfFiles[i].getName());
+                         }
+                     } else {
+                         listModel.addElement(listOfFiles[i].getName());
+                     }
+                     //System.out.println("File " + listOfFiles[i].getName());
+                 } else if (listOfFiles[i].isDirectory()) {
+                     //System.out.println("Directory " + listOfFiles[i].getName());
+                 }
+             }
+ 
+             this.jList1.setModel(listModel);
+             this.jList1.setEnabled(true);
+         }
+ 
+ 
+     }
+ 
+     /** This method is called from within the constructor to
+      * initialize the form.
+      * WARNING: Do NOT modify this code. The content of this method is
+      * always regenerated by the Form Editor.
+      */
+     @SuppressWarnings("unchecked")
+     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+     private void initComponents() {
+ 
+         jButtonRUN = new javax.swing.JButton();
+         jPanel2 = new javax.swing.JPanel();
+         jButton1 = new javax.swing.JButton();
+         jLabel3 = new javax.swing.JLabel();
+         jTextFieldInputCode = new javax.swing.JTextField();
+         jLabel4 = new javax.swing.JLabel();
+         jTextFieldGenfitFolder = new javax.swing.JTextField();
+         jButton3 = new javax.swing.JButton();
+         jLabel7 = new javax.swing.JLabel();
+         jTextFieldOutputFolder = new javax.swing.JTextField();
+         jButton5 = new javax.swing.JButton();
+         jScrollPane2 = new javax.swing.JScrollPane();
+         jList1 = new javax.swing.JList();
+         jScrollPane1 = new javax.swing.JScrollPane();
+         jTextArea1 = new javax.swing.JTextArea();
+         jLabel1 = new javax.swing.JLabel();
+         jTextFieldFilter = new javax.swing.JTextField();
+         jButtonSaveParameterFile = new javax.swing.JButton();
+         jButton6 = new javax.swing.JButton();
+         jPanel1 = new javax.swing.JPanel();
+         jTextFieldParameter = new javax.swing.JTextField();
+         jLabel6 = new javax.swing.JLabel();
+         jTextFieldFourier = new javax.swing.JTextField();
+         jLabel5 = new javax.swing.JLabel();
+         jCheckBoxParameter = new javax.swing.JCheckBox();
+         jButton2 = new javax.swing.JButton();
+         jCheckBoxFourier = new javax.swing.JCheckBox();
+         jButton4 = new javax.swing.JButton();
+         jButton7 = new javax.swing.JButton();
+         jButton8 = new javax.swing.JButton();
+         jButtonSaveParameterFile1 = new javax.swing.JButton();
+         jLabel8 = new javax.swing.JLabel();
+         jButtonRUN1 = new javax.swing.JButton();
+ 
+         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(jgenfit.JGenfitApp.class).getContext().getResourceMap(RunJDialog.class);
+         setBackground(resourceMap.getColor("Form.background")); // NOI18N
+         setName("Form"); // NOI18N
+ 
+         jButtonRUN.setText(resourceMap.getString("jButtonRUN.text")); // NOI18N
+         jButtonRUN.setName("jButtonRUN"); // NOI18N
+         jButtonRUN.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButtonRUNActionPerformed(evt);
+             }
+         });
+ 
+         jPanel2.setBackground(resourceMap.getColor("jPanel2.background")); // NOI18N
+         jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+         jPanel2.setName("jPanel2"); // NOI18N
+ 
+         jButton1.setText(resourceMap.getString("jButton1.text")); // NOI18N
+         jButton1.setName("jButton1"); // NOI18N
+         jButton1.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton1ActionPerformed(evt);
+             }
+         });
+ 
+         jLabel3.setText(resourceMap.getString("jLabel3.text")); // NOI18N
+         jLabel3.setName("jLabel3"); // NOI18N
+ 
+         jTextFieldInputCode.setText(resourceMap.getString("jTextFieldInputCode.text")); // NOI18N
+         jTextFieldInputCode.setName("jTextFieldInputCode"); // NOI18N
+ 
+         jLabel4.setText(resourceMap.getString("jLabel4.text")); // NOI18N
+         jLabel4.setName("jLabel4"); // NOI18N
+ 
+         jTextFieldGenfitFolder.setEditable(false);
+         jTextFieldGenfitFolder.setText(resourceMap.getString("jTextFieldGenfitFolder.text")); // NOI18N
+         jTextFieldGenfitFolder.setEnabled(false);
+         jTextFieldGenfitFolder.setName("jTextFieldGenfitFolder"); // NOI18N
+ 
+         jButton3.setText(resourceMap.getString("jButton3.text")); // NOI18N
+         jButton3.setName("jButton3"); // NOI18N
+         jButton3.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton3ActionPerformed(evt);
+             }
+         });
+ 
+         jLabel7.setText(resourceMap.getString("jLabel7.text")); // NOI18N
+         jLabel7.setName("jLabel7"); // NOI18N
+ 
+         jTextFieldOutputFolder.setEditable(false);
+         jTextFieldOutputFolder.setText(resourceMap.getString("jTextFieldOutputFolder.text")); // NOI18N
+         jTextFieldOutputFolder.setEnabled(false);
+         jTextFieldOutputFolder.setName("jTextFieldOutputFolder"); // NOI18N
+ 
+         jButton5.setText(resourceMap.getString("jButton5.text")); // NOI18N
+         jButton5.setName("jButton5"); // NOI18N
+         jButton5.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton5ActionPerformed(evt);
+             }
+         });
+ 
+         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+         jPanel2.setLayout(jPanel2Layout);
+         jPanel2Layout.setHorizontalGroup(
+             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+             .add(jPanel2Layout.createSequentialGroup()
+                 .addContainerGap()
+                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jButton1)
+                     .add(jPanel2Layout.createSequentialGroup()
+                         .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                             .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+                                 .add(jLabel7)
+                                 .add(18, 18, 18)
+                                 .add(jTextFieldOutputFolder))
+                             .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel2Layout.createSequentialGroup()
+                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                     .add(jPanel2Layout.createSequentialGroup()
+                                         .add(jLabel4)
+                                         .add(36, 36, 36))
+                                     .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel2Layout.createSequentialGroup()
+                                         .add(jLabel3)
+                                         .add(31, 31, 31)))
+                                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                     .add(jTextFieldInputCode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                     .add(jTextFieldGenfitFolder, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 434, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                         .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                             .add(jButton5)
+                             .add(jButton3))))
+                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+         );
+         jPanel2Layout.setVerticalGroup(
+             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel2Layout.createSequentialGroup()
+                 .addContainerGap()
+                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                     .add(jLabel3)
+                     .add(jTextFieldInputCode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                 .add(9, 9, 9)
+                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                     .add(jLabel4)
+                     .add(jTextFieldGenfitFolder, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                     .add(jButton3))
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(jPanel2Layout.createSequentialGroup()
+                         .add(153, 153, 153)
+                         .add(jButton1))
+                     .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                         .add(jTextFieldOutputFolder, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                         .add(jLabel7)
+                         .add(jButton5))))
+         );
+ 
+         jScrollPane2.setName("jScrollPane2"); // NOI18N
+ 
+         jList1.setName("jList1"); // NOI18N
+         jList1.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                 jList1ValueChanged(evt);
+             }
+         });
+         jScrollPane2.setViewportView(jList1);
+ 
+         jScrollPane1.setName("jScrollPane1"); // NOI18N
+ 
+         jTextArea1.setColumns(20);
+         jTextArea1.setFont(resourceMap.getFont("jTextArea1.font")); // NOI18N
+         jTextArea1.setRows(5);
+         jTextArea1.setText(resourceMap.getString("jTextArea1.text")); // NOI18N
+         jTextArea1.setName("jTextArea1"); // NOI18N
+         jScrollPane1.setViewportView(jTextArea1);
+ 
+         jLabel1.setText(resourceMap.getString("jLabel1.text")); // NOI18N
+         jLabel1.setName("jLabel1"); // NOI18N
+ 
+         jTextFieldFilter.setText(resourceMap.getString("jTextFieldFilter.text")); // NOI18N
+         jTextFieldFilter.setName("jTextFieldFilter"); // NOI18N
+         jTextFieldFilter.addKeyListener(new java.awt.event.KeyAdapter() {
+             public void keyReleased(java.awt.event.KeyEvent evt) {
+                 jTextFieldFilterKeyReleased(evt);
+             }
+             public void keyTyped(java.awt.event.KeyEvent evt) {
+                 jTextFieldFilterKeyTyped(evt);
+             }
+         });
+ 
+         jButtonSaveParameterFile.setText(resourceMap.getString("jButtonSaveParameterFile.text")); // NOI18N
+         jButtonSaveParameterFile.setName("jButtonSaveParameterFile"); // NOI18N
+         jButtonSaveParameterFile.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButtonSaveParameterFileActionPerformed(evt);
+             }
+         });
+ 
+         jButton6.setText(resourceMap.getString("jButton6.text")); // NOI18N
+         jButton6.setName("jButton6"); // NOI18N
+         jButton6.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton6ActionPerformed(evt);
+             }
+         });
+ 
+         jPanel1.setBackground(resourceMap.getColor("jPanel1.background")); // NOI18N
+         jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+         jPanel1.setName("jPanel1"); // NOI18N
+ 
+         jTextFieldParameter.setEditable(false);
+         jTextFieldParameter.setText(resourceMap.getString("jTextFieldParameter.text")); // NOI18N
+         jTextFieldParameter.setEnabled(false);
+         jTextFieldParameter.setName("jTextFieldParameter"); // NOI18N
+ 
+         jLabel6.setText(resourceMap.getString("jLabel6.text")); // NOI18N
+         jLabel6.setName("jLabel6"); // NOI18N
+ 
+         jTextFieldFourier.setEditable(false);
+         jTextFieldFourier.setText(resourceMap.getString("jTextFieldFourier.text")); // NOI18N
+         jTextFieldFourier.setEnabled(false);
+         jTextFieldFourier.setName("jTextFieldFourier"); // NOI18N
+ 
+         jLabel5.setText(resourceMap.getString("jLabel5.text")); // NOI18N
+         jLabel5.setName("jLabel5"); // NOI18N
+ 
+         jCheckBoxParameter.setBackground(resourceMap.getColor("jCheckBoxParameter.background")); // NOI18N
+         jCheckBoxParameter.setText(resourceMap.getString("jCheckBoxParameter.text")); // NOI18N
+         jCheckBoxParameter.setName("jCheckBoxParameter"); // NOI18N
+         jCheckBoxParameter.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jCheckBoxParameterActionPerformed(evt);
+             }
+         });
+ 
+         jButton2.setText(resourceMap.getString("jButton2.text")); // NOI18N
+         jButton2.setName("jButton2"); // NOI18N
+         jButton2.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton2ActionPerformed(evt);
+             }
+         });
+ 
+         jCheckBoxFourier.setBackground(resourceMap.getColor("jCheckBoxFourier.background")); // NOI18N
+         jCheckBoxFourier.setText(resourceMap.getString("jCheckBoxFourier.text")); // NOI18N
+         jCheckBoxFourier.setName("jCheckBoxFourier"); // NOI18N
+         jCheckBoxFourier.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jCheckBoxFourierActionPerformed(evt);
+             }
+         });
+ 
+         jButton4.setText(resourceMap.getString("jButton4.text")); // NOI18N
+         jButton4.setName("jButton4"); // NOI18N
+         jButton4.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton4ActionPerformed(evt);
+             }
+         });
+ 
+         jButton7.setText(resourceMap.getString("jButton7.text")); // NOI18N
+         jButton7.setName("jButton7"); // NOI18N
+         jButton7.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton7ActionPerformed(evt);
+             }
+         });
+ 
+         jButton8.setText(resourceMap.getString("jButton8.text")); // NOI18N
+         jButton8.setName("jButton8"); // NOI18N
+         jButton8.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButton8ActionPerformed(evt);
+             }
+         });
+ 
+         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+         jPanel1.setLayout(jPanel1Layout);
+         jPanel1Layout.setHorizontalGroup(
+             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+             .add(jPanel1Layout.createSequentialGroup()
+                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                     .add(jPanel1Layout.createSequentialGroup()
+                         .addContainerGap()
+                         .add(jLabel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 64, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                             .add(jCheckBoxParameter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 350, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                             .add(jCheckBoxFourier, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 351, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                             .add(jTextFieldFourier, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 375, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                     .add(jPanel1Layout.createSequentialGroup()
+                         .add(10, 10, 10)
+                         .add(jLabel6)
+                         .add(18, 18, 18)
+                         .add(jTextFieldParameter)))
+                 .add(6, 6, 6)
+                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(jPanel1Layout.createSequentialGroup()
+                         .add(jButton2)
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                         .add(jButton7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE))
+                     .add(jPanel1Layout.createSequentialGroup()
+                         .add(jButton4)
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                         .add(jButton8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)))
+                 .addContainerGap())
+         );
+         jPanel1Layout.setVerticalGroup(
+             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
+                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                 .add(jCheckBoxFourier)
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                     .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                         .add(jTextFieldFourier, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                         .add(jButton2)
+                         .add(jButton7))
+                     .add(jLabel5))
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                 .add(jCheckBoxParameter)
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                     .add(jTextFieldParameter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                     .add(jLabel6)
+                     .add(jButton4)
+                     .add(jButton8))
+                 .addContainerGap())
+         );
+ 
+         jButtonSaveParameterFile1.setText(resourceMap.getString("jButtonSaveParameterFile1.text")); // NOI18N
+         jButtonSaveParameterFile1.setName("jButtonSaveParameterFile1"); // NOI18N
+         jButtonSaveParameterFile1.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButtonSaveParameterFile1ActionPerformed(evt);
+             }
+         });
+ 
+         jLabel8.setText(resourceMap.getString("jLabel8.text")); // NOI18N
+         jLabel8.setName("jLabel8"); // NOI18N
+ 
+         jButtonRUN1.setText(resourceMap.getString("jButtonRUN1.text")); // NOI18N
+         jButtonRUN1.setName("jButtonRUN1"); // NOI18N
+         jButtonRUN1.addActionListener(new java.awt.event.ActionListener() {
+             public void actionPerformed(java.awt.event.ActionEvent evt) {
+                 jButtonRUN1ActionPerformed(evt);
+             }
+         });
+ 
+         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+         getContentPane().setLayout(layout);
+         layout.setHorizontalGroup(
+             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+             .add(layout.createSequentialGroup()
+                 .addContainerGap()
+                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(layout.createSequentialGroup()
+                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                             .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                             .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                             .add(jLabel8, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE)
+                             .add(org.jdesktop.layout.GroupLayout.LEADING, jButtonRUN1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 89, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                             .add(org.jdesktop.layout.GroupLayout.LEADING, jButtonRUN)))
+                     .add(layout.createSequentialGroup()
+                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                             .add(layout.createSequentialGroup()
+                                 .add(jLabel1)
+                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                 .add(jTextFieldFilter, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE)
+                                 .add(10, 10, 10))
+                             .add(layout.createSequentialGroup()
+                                 .add(jScrollPane2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 172, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
+                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                             .add(layout.createSequentialGroup()
+                                 .add(jButtonSaveParameterFile1)
+                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                 .add(jButtonSaveParameterFile)
+                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                 .add(jButton6, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 92, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                             .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 534, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 24, Short.MAX_VALUE)))
+                 .addContainerGap())
+         );
+         layout.setVerticalGroup(
+             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+             .add(layout.createSequentialGroup()
+                 .addContainerGap()
+                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(layout.createSequentialGroup()
+                         .add(jButtonRUN, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 92, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                         .add(jLabel8))
+                     .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 119, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                     .add(jButtonRUN1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                     .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                     .add(jLabel1)
+                     .add(jTextFieldFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                     .add(layout.createSequentialGroup()
+                         .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                         .add(18, 18, 18)
+                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                                 .add(jButtonSaveParameterFile)
+                                 .add(jButton6))
+                             .add(jButtonSaveParameterFile1)))
+                     .add(jScrollPane2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 248, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+         );
+ 
+         pack();
+     }// </editor-fold>//GEN-END:initComponents
+ 
+     public static boolean isWindows() {
+         String os = System.getProperty("os.name").toLowerCase();
+         // windows
+         return (os.indexOf("win") >= 0);
+     }
+ 
+    
+ 
+     private String getFourierFile() throws Exception {
+         if (!this.jTextFieldFourier.getText().isEmpty()) {
+             return (this.jTextFieldFourier.getText());
+         }
+         return "NONE";
+     }
+ 
+     private String getParameterFile() throws Exception {
+         if (!this.jTextFieldParameter.getText().isEmpty()) {
+             return (this.jTextFieldParameter.getText());
+         }
+         return "NONE";
+     }
+ private void run(String galloCommandOSName) {  
+      String inputFolder = this.jTextFieldGenfitFolder.getText();
+     String inputCode = this.jTextFieldInputCode.getText();
+     String outputFolder = this.jTextFieldOutputFolder.getText();
+ 
+     try {
+         String saveOutput = inputFolder + "/gen" + inputCode + ".dat";
+         GeneralSection generalSection = this.genfitController.getGeneralSection();
+         generalSection.setValue("Prefix", "");
+         this.genfitController.save(generalSection);
+         this.genfitController.save(saveOutput);
+ 
+        
+ 
+         try {
+             File executer = new File(inputFolder.trim() + "/" + galloCommandOSName);
+             if (executer.exists()) {
+                 String fourier = "0";
+                 String fourierFamily = new String();
+                 if (!this.jTextFieldFourier.getText().isEmpty()) {
+                     fourier = "1";
+                     fourierFamily = new File(this.getFourierFile()).getAbsolutePath().replace(new File(this.getFourierFile()).getName(), new File(this.getFourierFile()).getName().substring(0, 7));          //.getnsubstring(0, 7);
+                 }
+ 
+                 String parameter = "0";
+                 if (!this.jTextFieldParameter.getText().isEmpty()) {
+                     parameter = "1";
+                 }
+ 
+ 
+                 String[] command = {inputFolder.trim() + "/" + galloCommandOSName, inputCode, fourier, parameter, inputFolder, this.getFourierFile(), this.getParameterFile(), outputFolder, fourierFamily};          
+                 ProcessBuilder pb = new ProcessBuilder(command);                
+                 OutputDisplayer displayer = new OutputDisplayer(jTextArea1);
+                 displayer.commence(pb.start());
+ 
+                 GenfitPropertiesReader.setGenfitFolder(inputFolder);
+                 GenfitPropertiesReader.setInputCode(inputCode);
+                 GenfitPropertiesReader.setOutputFolder(outputFolder);
+                 GenfitPropertiesReader.setFourierFlag(fourier);
+                 GenfitPropertiesReader.setFourierFile(this.getFourierFile());
+                 GenfitPropertiesReader.setParameterFile(this.getParameterFile());
+                 GenfitPropertiesReader.setParameterFlag(parameter);                
+                 this.populate();
+             }
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+         finally{
+            
+         }
+ 
+         //Runtime.getRuntime().exec(command);
+     } catch (Exception ex) {
+         System.out.println(ex.getMessage());
+         Logger.getLogger(RunJDialog.class.getName()).log(Level.SEVERE, null, ex);
+     }
+   
+ }
+ 
+ 
+ private void jButtonRUNActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUNActionPerformed
+     String galloCommandOSName = "pollo4mac";
+ 
+     if (OSDetector.isMac() || OSDetector.isUnix()) {
+         galloCommandOSName = "pollo4mac";
+     } else {
+         galloCommandOSName = "pollo4windows.bat";
+     }
+     run(galloCommandOSName);
+ 
+ }//GEN-LAST:event_jButtonRUNActionPerformed
+ 
+     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+       
+     }//GEN-LAST:event_jButton1ActionPerformed
+ 
+     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+         SelectFileJDialog select = new SelectFileJDialog(null, true);
+         select.setEvent(GenfitEventType.GENFIT_FOURIER_SELECTED);
+ 
+         String sasFolder;
+         try {
+             sasFolder = GenfitPropertiesReader.getGenfitFolder();
+             if (new File(sasFolder).exists()){
+                 select.setSelectedFile(new File(sasFolder));
+             }
+         }catch (Exception ex) {
+             Logger.getLogger(RunJDialog.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         select.genfitEvent.addListener(this);
+         select.setVisible(true);
+         this.jCheckBoxFourier.setSelected(true);
+         //this.jCheckBoxParameter
+     }//GEN-LAST:event_jButton2ActionPerformed
+ 
+     private void jList1ValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jList1ValueChanged
+ 
+         if (this.jList1.getSelectedValue() == null) {
+             return;
+         }
+         
+         this.jButtonSaveParameterFile.setText("Save (gen" + this.jTextFieldInputCode.getText() + ".par) and use as Parameter file");
+          
+         File file = new File(this.getOutputFolder() + "/" + this.jList1.getSelectedValue());
+ 
+         FileInputStream fis = null;
+         BufferedInputStream bis = null;
+         DataInputStream dis = null;
+         StringBuilder br = new StringBuilder();
+         try {
+             fis = new FileInputStream(file);
+             bis = new BufferedInputStream(fis);
+             dis = new DataInputStream(bis);
+ 
+             while (dis.available() != 0) {
+                 br.append(dis.readLine() + "\n");
+             }
+ 
+             this.jTextArea1.setText(br.toString());
+             // dispose all the resources after using them.
+             fis.close();
+             bis.close();
+             dis.close();
+ 
+ 
+             this.fileEdited = file;
+ 
+         } catch (FileNotFoundException e) {
+             e.printStackTrace();
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+     }//GEN-LAST:event_jList1ValueChanged
+ 
+     private void jTextFieldFilterKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldFilterKeyTyped
+     }//GEN-LAST:event_jTextFieldFilterKeyTyped
+ 
+     private void jTextFieldFilterKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldFilterKeyReleased
+         this.populate();
+     }//GEN-LAST:event_jTextFieldFilterKeyReleased
+ 
+     private void writeFile(String filename, String text) throws IOException {
+         FileOutputStream fos = null;
+         try {
+            
+             fos = new FileOutputStream(filename);
+             fos.write(text.getBytes("UTF-8"));
+         } catch (IOException e) {
+             fos.close();
+             throw e;
+         }
+     }
+     
+     private File getSelectedFile(){
+            // String fileName = this.jList1.getSelectedValue().toString();
+             
+              File[] files = this.getOutputFolder().listFiles();
+                 for (int i = 0; i < files.length; i++) {
+                     if (files[i].getName().equals(this.jList1.getSelectedValue().toString())) {
+                         return files[i];
+                     }
+                 }
+                 return null;
+     }
+ 
+     private void jButtonSaveParameterFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveParameterFileActionPerformed
+ 
+         String output = this.getOutputFolder().getAbsolutePath();
+         String parameterFile = this.getSelectedFile().getAbsolutePath();//output + "/" + fileName;
+ 
+         String newParameterFile = output + "\\gen" + this.jTextFieldInputCode.getText() + ".par";
+        if (OSDetector.isMac() || OSDetector.isUnix()){
+            newParameterFile = output + "/gen" + this.jTextFieldInputCode.getText() + ".par";
+        }
+      
+         if (new File(parameterFile).exists()) {
+              this.jTextFieldParameter.setText(newParameterFile);
+              this.jCheckBoxParameter.setSelected(true);
+         }
+         
+          try {
+             this.writeFile(newParameterFile, this.jTextArea1.getText());
+         } catch (IOException ex) {
+             Logger.getLogger(RunJDialog.class.getName()).log(Level.SEVERE, null, ex);
+         }
+           
+     }//GEN-LAST:event_jButtonSaveParameterFileActionPerformed
+ 
+     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+         this.setVisible(false);
+     }//GEN-LAST:event_jButton6ActionPerformed
+ 
+     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+         SelectFolderJDialog select = new SelectFolderJDialog(null, true);
+         
+         String sasFolder;
+         try {
+             sasFolder = GenfitPropertiesReader.getGenfitFolder();
+             
+             if (new File(sasFolder).exists()){
+                 select.setSelectedFile(new File(sasFolder));
+             }
+         }catch (Exception ex) {
+             Logger.getLogger(RunJDialog.class.getName()).log(Level.SEVERE, null, ex);
+         }
+        
+         select.setEvent(GenfitEventType.GENFIT_HOME_SELECTED);
+         select.genfitEvent.addListener(this);
+         select.setVisible(true);
+     }//GEN-LAST:event_jButton3ActionPerformed
+ 
+ private void jCheckBoxFourierActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxFourierActionPerformed
+     if (this.jCheckBoxFourier.isSelected() == false){
+         this.jTextFieldFourier.setText(new String());
+     }
+ }//GEN-LAST:event_jCheckBoxFourierActionPerformed
+ 
+ private void jCheckBoxParameterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxParameterActionPerformed
+   if (this.jCheckBoxParameter.isSelected() == false){
+         this.jTextFieldParameter.setText(new String());
+     }
+ }//GEN-LAST:event_jCheckBoxParameterActionPerformed
+ 
+ private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+         SelectFileJDialog select = new SelectFileJDialog(null, true);
+         select.setEvent(GenfitEventType.GENFIT_PARAMETER_SELECTED);
+          String sasFolder;
+         try {
+             sasFolder = GenfitPropertiesReader.getGenfitFolder();
+             
+             if (new File(sasFolder).exists()){
+                 select.setSelectedFile(new File(sasFolder));
+             }
+         }catch (Exception ex) {
+             Logger.getLogger(RunJDialog.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         select.genfitEvent.addListener(this);
+         select.setVisible(true);
+         this.jCheckBoxParameter.setSelected(true);
+ }//GEN-LAST:event_jButton4ActionPerformed
+ 
+ private void jButtonSaveParameterFile1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveParameterFile1ActionPerformed
+         
+        String newParameterFile = this.getSelectedFile().getAbsolutePath();//this.getOutputFolder().getAbsolutePath() + "\\gen" + this.jTextFieldInputCode.getText() + ".par";
+        if (new File(newParameterFile).exists()) {
+              this.jTextFieldFourier.setText(newParameterFile);
+              this.jCheckBoxFourier.setSelected(true);
+         }
+         
+ }//GEN-LAST:event_jButtonSaveParameterFile1ActionPerformed
+ 
+ private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+     SelectFolderJDialog select = new SelectFolderJDialog(null, true);
+         select.setEvent(GenfitEventType.GENFIT_OUTPUTFOLDER_SELECTED);
+         select.genfitEvent.addListener(this);
+         String sasFolder;
+         try {
+             sasFolder = GenfitPropertiesReader.getGenfitFolder();
+             if (new File(sasFolder).exists()){
+                 select.setSelectedFile(new File(sasFolder));
+             }
+         }catch (Exception ex) {
+             Logger.getLogger(RunJDialog.class.getName()).log(Level.SEVERE, null, ex);
+         }
+         
+         select.setVisible(true);
+ }//GEN-LAST:event_jButton5ActionPerformed
+ 
+ /**
+  * 
+  * @param type 0 -> fourier and 1 -> parameter
+  * @param file 
+  */
+ public void setFilePath(int type, File file){
+     if (type == 0){
+         this.jTextFieldFourier.setText(file.getAbsolutePath());
+     }
+     if (type == 1){
+         this.jTextFieldParameter.setText(file.getAbsolutePath());
+     }
+ }
+ /** Fourier type = 0 **/
+ private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+      EditFileSaveAsJDialog editFileJDialog = new EditFileSaveAsJDialog(null, true, this, 0);
+    
+         try {
+             File file = new File(this.jTextFieldFourier.getText());
+             if (file.exists()){
+                      editFileJDialog.setFile(file);
+                      editFileJDialog.setVisible(true);
+             }
+             
+         } catch (Exception ex) {
+             Logger.getLogger(JGenfitView.class.getName()).log(Level.SEVERE, null, ex);
+         }
+        
+ }//GEN-LAST:event_jButton7ActionPerformed
+ 
+ private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+          EditFileSaveAsJDialog editFileJDialog = new EditFileSaveAsJDialog(null, true, this, 1);  
+         try {
+             File file = new File(this.jTextFieldParameter.getText());
+             if (file.exists()){
+                      editFileJDialog.setFile(file);
+                      editFileJDialog.setVisible(true);
+             }            
+         } catch (Exception ex) {
+             Logger.getLogger(JGenfitView.class.getName()).log(Level.SEVERE, null, ex);
+         }
+ }//GEN-LAST:event_jButton8ActionPerformed
+ 
+ private void jButtonRUN1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRUN1ActionPerformed
+      String galloCommandOSName = "gallo4mac";
+ 
+     if (OSDetector.isMac() || OSDetector.isUnix()) {
+         galloCommandOSName = "gallo4mac";
+     } else {
+         galloCommandOSName = "gallo4windows.bat";
+     }
+     run(galloCommandOSName);
+ }//GEN-LAST:event_jButtonRUN1ActionPerformed
+ 
+     /**
+      * @param args the command line arguments
+      */
+     public static void main(String args[]) {
+         /* Set the Nimbus look and feel */
+         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+          */
+         try {
+             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                 if ("Nimbus".equals(info.getName())) {
+                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                     break;
+                 }
+             }
+         } catch (ClassNotFoundException ex) {
+             java.util.logging.Logger.getLogger(RunJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         } catch (InstantiationException ex) {
+             java.util.logging.Logger.getLogger(RunJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         } catch (IllegalAccessException ex) {
+             java.util.logging.Logger.getLogger(RunJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+             java.util.logging.Logger.getLogger(RunJDialog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+         }
+         //</editor-fold>
+ 
+         /* Create and display the dialog */
+         java.awt.EventQueue.invokeLater(new Runnable() {
+ 
+             public void run() {
+                 RunJDialog dialog = new RunJDialog(new javax.swing.JFrame(), true);
+                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+ 
+                     @Override
+                     public void windowClosing(java.awt.event.WindowEvent e) {
+                         System.exit(0);
+                     }
+                 });
+                 dialog.setVisible(true);
+             }
+         });
+     }
+     // Variables declaration - do not modify//GEN-BEGIN:variables
+     private javax.swing.JButton jButton1;
+     private javax.swing.JButton jButton2;
+     private javax.swing.JButton jButton3;
+     private javax.swing.JButton jButton4;
+     private javax.swing.JButton jButton5;
+     private javax.swing.JButton jButton6;
+     private javax.swing.JButton jButton7;
+     private javax.swing.JButton jButton8;
+     private javax.swing.JButton jButtonRUN;
+     private javax.swing.JButton jButtonRUN1;
+     private javax.swing.JButton jButtonSaveParameterFile;
+     private javax.swing.JButton jButtonSaveParameterFile1;
+     private javax.swing.JCheckBox jCheckBoxFourier;
+     private javax.swing.JCheckBox jCheckBoxParameter;
+     private javax.swing.JLabel jLabel1;
+     private javax.swing.JLabel jLabel3;
+     private javax.swing.JLabel jLabel4;
+     private javax.swing.JLabel jLabel5;
+     private javax.swing.JLabel jLabel6;
+     private javax.swing.JLabel jLabel7;
+     private javax.swing.JLabel jLabel8;
+     private javax.swing.JList jList1;
+     private javax.swing.JPanel jPanel1;
+     private javax.swing.JPanel jPanel2;
+     private javax.swing.JScrollPane jScrollPane1;
+     private javax.swing.JScrollPane jScrollPane2;
+     private javax.swing.JTextArea jTextArea1;
+     private javax.swing.JTextField jTextFieldFilter;
+     private javax.swing.JTextField jTextFieldFourier;
+     private javax.swing.JTextField jTextFieldGenfitFolder;
+     private javax.swing.JTextField jTextFieldInputCode;
+     private javax.swing.JTextField jTextFieldOutputFolder;
+     private javax.swing.JTextField jTextFieldParameter;
+     // End of variables declaration//GEN-END:variables
+ 
+     public void handleGenfitEvent(GenfitEvent e) {
+         switch (e.getType()) {
+             /*case OUTPUT_FOLDER_SELECTED:
+             this.jTextFieldOutputFolder.setText(e.filePath);
+             break;*/
+             case GENFIT_OUTPUTFOLDER_SELECTED:
+                 this.jTextFieldOutputFolder.setText(e.filePath);
+                 this.populate();
+                 break;
+             case GENFIT_FOLDER_SELECTED:
+                 this.jTextFieldGenfitFolder.setText(e.filePath);
+                 break;
+             case GENFIT_FOURIER_SELECTED:
+                 this.jTextFieldFourier.setText(e.filePath);
+                 break;
+             case GENFIT_PARAMETER_SELECTED:
+                 this.jTextFieldParameter.setText(e.filePath);
+                 break;
+             case GENFIT_HOME_SELECTED:
+                 this.jTextFieldGenfitFolder.setText(e.filePath);
+                 break;
+             default:
+                 break;
+ 
+         }
+     }
+ 
+     void setController(GenfitController genfitController) {
+         this.genfitController = genfitController;
+         this.setTitle("RUN " + this.genfitController.getGenfitFile().getAbsolutePath());
+     }
+ }

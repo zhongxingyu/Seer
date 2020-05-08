@@ -1,0 +1,458 @@
+ package com.thoughtworks.qdox.parser;
+ 
+ import junit.framework.TestCase;
+ 
+ import java.io.FileReader;
+ import java.io.IOException;
+ import java.io.StringReader;
+ import java.lang.reflect.Field;
+ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import com.thoughtworks.qdox.parser.impl.JFlexLexer;
+ import com.thoughtworks.qdox.parser.impl.Parser;
+ 
+ public class LexerTest extends TestCase {
+ 
+     private static Map tokens;
+ 
+     static {
+         tokens = new HashMap();
+         Field[] tokenFlds = Parser.class.getDeclaredFields();
+         for (int i = 0; i < tokenFlds.length; i++) {
+             Field f = tokenFlds[i];
+             try {
+                 if (!f.getName().startsWith("YY")) {
+                     tokens.put(new Integer(f.getShort(Parser.class)), f.getName());
+                 }
+             } catch (Exception e) {
+                 // we don't care!
+             }
+         }
+     }
+ 
+     public LexerTest(String s) {
+         super(s);
+     }
+ 
+    public void testEmptyInput() throws Exception {
+        String in = "";
+        Lexer lexer = new JFlexLexer(new StringReader(in));
+        assertLex(0, lexer);
+    }
+
+    public void testNewlines() throws Exception {
+        String in = "DOS\r\nUNIX\nMAC\r";
+        Lexer lexer = new JFlexLexer(new StringReader(in));
+        assertLex(Parser.IDENTIFIER, "DOS", lexer);
+        assertLex(Parser.IDENTIFIER, "UNIX", lexer);
+        assertLex(Parser.IDENTIFIER, "MAC", lexer);
+        assertLex(0, lexer);
+    }
+
+     public void testStaticBlock() throws Exception {
+         String in = ""
+                 + "class X { "
+                 + " static { "
+                 + "   something(); "
+                 + " } "
+                 + "} ";
+ 
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CLASS, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.BRACEOPEN, lexer);
+         assertLex(Parser.STATIC, lexer);
+         assertLex(Parser.CODEBLOCK, lexer);
+         assertLex(Parser.BRACECLOSE, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testFieldAssignment() throws Exception {
+         checkAssignment("0");
+         checkAssignment("\"hello\"");
+         checkAssignment("new Thingy()");
+         checkAssignment("new Thingy(\"xxx\", 3, x.getBlah())");
+         checkAssignment("new Thingy(\"xx;x\", 3, x.getBlah())");
+         checkAssignment("StaticClass.intance()");
+         checkAssignment("[1,2,3]");
+         checkAssignment("/* , ; } */");
+        }
+ 
+     public void testAnonymousInnerClassAssignment() throws Exception {
+         checkAssignment("new Thingifier() { void doThings(int x) { blah(); } }");
+         checkAssignment("new Thingifier() { void doThings(int x) { a = \"aaa\"; } }");
+     }
+ 
+     private void checkAssignment(String assignment) throws IOException {
+         String in = ""
+                 + "class X { "
+                 + " int x = " + assignment + "; "
+                 + "} ";
+ 
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CLASS, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.BRACEOPEN, lexer);
+ 
+         assertLex(Parser.IDENTIFIER, "int", lexer);
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+ 
+         assertLex(Parser.BRACECLOSE, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testMultipleFields() throws Exception {
+         String in = ""
+         + "class X { "
+         + " int x, y = 2; "
+         + "} ";
+ 
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CLASS, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.BRACEOPEN, lexer);
+ 
+         assertLex(Parser.IDENTIFIER, "int", lexer);
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.COMMA, lexer);
+         assertLex(Parser.IDENTIFIER, "y", lexer);
+         assertLex(Parser.SEMI, lexer);
+         
+         assertLex(Parser.BRACECLOSE, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testUnicodeInTest() throws Exception {
+         checkAssignment("\"\u0000\"");
+     }
+ 
+     public void testUnicodeInFile() throws Exception {
+         Lexer lexer = new JFlexLexer(new FileReader("src/test/com/thoughtworks/qdox/testdata/Unicode.java"));
+         assertLex(Parser.PACKAGE, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.DOT, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.DOT, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.DOT, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(Parser.CLASS, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.BRACEOPEN, lexer);
+ 
+         assertLex(Parser.IDENTIFIER, "String", lexer);
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+ 
+         assertLex(Parser.BRACECLOSE, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testInnerClass() throws Exception {
+         String in = ""
+                 + "class X { "
+                 + " class InnerClass { "
+                 + "   int x = 1; "
+                 + " } "
+                 + " int y = 2; "
+                 + "} ";
+ 
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CLASS, lexer);
+         assertLex(Parser.IDENTIFIER, lexer);
+         assertLex(Parser.BRACEOPEN, lexer);
+         assertLex(Parser.CLASS, lexer);
+         assertLex(Parser.IDENTIFIER, "InnerClass", lexer);
+         assertLex(Parser.BRACEOPEN, lexer);
+         assertLex(Parser.IDENTIFIER, "int", lexer);
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(Parser.BRACECLOSE, lexer);
+         assertLex(Parser.IDENTIFIER, "int", lexer);
+         assertLex(Parser.IDENTIFIER, "y", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(Parser.BRACECLOSE, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testCurliesInStringsOrChars() throws Exception {
+ 
+         checkAssignment("\"{\"");
+         checkAssignment("\"}\"");
+         checkAssignment("'}'");
+         checkAssignment("'{'");
+ 
+     }
+ 
+     public void testDoubleBackSlashesInStringsOrChars() throws Exception {
+ 
+         checkAssignment("\"\\\\\""); // x = "\\"
+         checkAssignment("'\\\\'"); // x = '\\'
+ 
+     }
+ 
+     public void testFunnyCharsInStringsOrChars() throws Exception {
+         checkAssignment("\"ߧ\"");
+         checkAssignment("'ߧ'");
+     }
+ 
+     public void testQuoteInCharInCodeBlock() throws Exception {
+         String in = "{'\"'}";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CODEBLOCK, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testDoubleQuotesInCharInAssignment() throws Exception {
+         String in = "x = '\"';";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testSingleQuoteInCharInAssignment() throws Exception {
+         String in = "x = '\\'';";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testStringWithDoubleQuotesIn() throws Exception {
+         String in = "x = \"blah \\\" blah\";";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testCommentsWithSingleQuoteInCodeBlock() throws Exception {
+         String in = "{ /* ' */ }";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CODEBLOCK, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testCommentsWithDoubleQuotesInCodeBlock() throws Exception {
+         String in = "{ /* \" */ }";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.CODEBLOCK, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testCommentsWithQuotesInAssignment() throws Exception {
+         String in = "a x = y /* don't do stuff*/;";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.IDENTIFIER, "a", lexer);
+         assertLex(Parser.IDENTIFIER, "x", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(0, lexer);
+ 
+         in = "a z = \n"
+                 + "// thing's thing \n"
+                 + "0;";
+         lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.IDENTIFIER, "a", lexer);
+         assertLex(Parser.IDENTIFIER, "z", lexer);
+         assertLex(Parser.SEMI, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testDocletTags() throws Exception {
+         String in = ""
+                 + "/**\n"
+                 + " * @hello world\n"
+                 + " * @a b c d\n"
+                 + " * @bye\n"
+                 + " * @bye:bye\n"
+                 + " */";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+ 
+         assertLex(Parser.JAVADOCTAG, "@hello", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "world", lexer);
+ 
+         assertLex(Parser.JAVADOCTAG, "@a", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "b", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "c", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "d", lexer);
+ 
+         assertLex(Parser.JAVADOCTAG, "@bye", lexer);
+ 
+         assertLex(Parser.JAVADOCTAG, "@bye:bye", lexer);
+ 
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testOneLinerDocComment() throws Exception {
+         String in = "/** @hello world */";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+ 
+         assertLex(Parser.JAVADOCTAG, "@hello", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "world", lexer);
+ 
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testCompressedDocComment() throws Exception {
+         String in = "/**@foo bar*/";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+         
+         assertLex(Parser.JAVADOCTAG, "@foo", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "bar", lexer);
+         
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testDocCommentContainingAtSymbols() throws Exception {
+         String in = ""
+             + "/**\n"
+             + " * joe@truemesh.com\n"
+             + " * {@link here}.\n"
+             + " * me @home\n"
+             + " * geeks @ play\n"
+             + " */";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+ 
+         assertLex(Parser.JAVADOCTOKEN, "joe@truemesh.com", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "{@link", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "here}.", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "me", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "@home", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "geeks", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "@", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "play", lexer);
+ 
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testDocCommentContainingStars() throws Exception {
+         String in = ""
+                 + "/**\n"
+                 + " * 5 * 4\n"
+                 + " * SELECT COUNT(*)\n"
+                 + " * **stars**everywhere** \n"
+                 + " */";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+ 
+         assertLex(Parser.JAVADOCTOKEN, "5", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "*", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "4", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "SELECT", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "COUNT(*)", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "**stars**everywhere**", lexer);
+ 
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testExtraStarsAreIgnoredAtStartAndEnd() throws Exception {
+         String in = ""
+                 + "/*****\n"
+                 + " * blah\n"
+                 + " *****/";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+         assertLex(Parser.JAVADOCTOKEN, "blah", lexer);
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testExtraStarsCompressed() throws Exception {
+         String in = ""
+                 + "/***blah***/public";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+         assertLex(Parser.JAVADOCTOKEN, "blah", lexer);
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(Parser.PUBLIC, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testIgnoreStarPrefix() throws Exception {
+         String in = ""
+             + "/**\n"
+             + " * simple\n"
+             + "\t    * indented\n"
+             + " *nospace\n"
+             + " *** multistar\n"
+             + " *\n"
+             + " */";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.JAVADOCSTART, lexer);
+         
+         assertLex(Parser.JAVADOCTOKEN, "simple", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "indented", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "nospace", lexer);
+         assertLex(Parser.JAVADOCTOKEN, "multistar", lexer);
+         
+         assertLex(Parser.JAVADOCEND, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testArrayTokens() throws Exception {
+         String in = "String[] []o[]";
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(Parser.IDENTIFIER, "String", lexer);
+         assertLex(Parser.SQUAREOPEN, lexer);
+         assertLex(Parser.SQUARECLOSE, lexer);
+         assertLex(Parser.SQUAREOPEN, lexer);
+         assertLex(Parser.SQUARECLOSE, lexer);
+         assertLex(Parser.IDENTIFIER, "o", lexer);
+         assertLex(Parser.SQUAREOPEN, lexer);
+         assertLex(Parser.SQUARECLOSE, lexer);
+         assertLex(0, lexer);
+     }
+ 
+     public void testKeyWords() throws Exception {
+         assertSingleLex("package", Parser.PACKAGE);
+         assertSingleLex("import", Parser.IMPORT);
+         assertSingleLex("public", Parser.PUBLIC);
+         assertSingleLex("protected", Parser.PROTECTED);
+         assertSingleLex("private", Parser.PRIVATE);
+         assertSingleLex("static", Parser.STATIC);
+         assertSingleLex("final", Parser.FINAL);
+         assertSingleLex("abstract", Parser.ABSTRACT);
+         assertSingleLex("native", Parser.NATIVE);
+         assertSingleLex("strictfp", Parser.STRICTFP);
+         assertSingleLex("synchronized", Parser.SYNCHRONIZED);
+         assertSingleLex("transient", Parser.TRANSIENT);
+         assertSingleLex("volatile", Parser.VOLATILE);
+         assertSingleLex("class", Parser.CLASS);
+         assertSingleLex("interface", Parser.INTERFACE);
+         assertSingleLex("throws", Parser.THROWS);
+         assertSingleLex("extends", Parser.EXTENDS);
+         assertSingleLex("implements", Parser.IMPLEMENTS);
+     }
+ 
+     private void assertSingleLex(String in, short expectedLex) throws Exception {
+         Lexer lexer = new JFlexLexer(new StringReader(in));
+         assertLex(expectedLex, lexer);
+         assertLex(0, lexer);
+     }
+ 
+ 
+     private void assertLex(int expectedToken, Lexer lexer) throws IOException {
+         Object expected = tokens.get(new Integer(expectedToken));
+         Object actual = tokens.get(new Integer(lexer.lex()));
+         assertEquals(expected, actual);
+     }
+ 
+     private void assertLex(int expectedToken, String expectedText, Lexer lexer) throws IOException {
+         assertLex(expectedToken, lexer);
+         assertEquals(expectedText, lexer.text());
+     }
+ 
+ }

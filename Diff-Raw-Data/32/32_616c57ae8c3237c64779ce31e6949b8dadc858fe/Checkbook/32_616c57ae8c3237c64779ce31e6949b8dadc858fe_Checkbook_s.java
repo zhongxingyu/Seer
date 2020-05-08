@@ -1,0 +1,144 @@
+ /* A simple Activity for the Checkbook screen
+  * Most of the work seen in the Checkbook screen is actually the fragments,
+  * not this class. This class is just a simple parent Activity for the fragments
+  */
+ 
+ package com.databases.example;
+ 
+ import com.actionbarsherlock.app.SherlockFragmentActivity;
+ import com.actionbarsherlock.view.MenuItem;
+ import com.databases.example.Transactions.DatePickerFragment;
+ import com.databases.example.Transactions.TimePickerFragment;
+ 
+ import android.os.Bundle;
+ import android.util.Log;
+ import android.view.View;
+ import android.widget.ScrollView;
+ import android.support.v4.app.DialogFragment;
+ import android.support.v4.widget.DrawerLayout;
+ 
+ public class Checkbook extends SherlockFragmentActivity {
+ 
+ 	//NavigationDrawer
+ 	private Drawer mDrawerLayout;
+ 
+ 	@Override
+ 	public void onCreate(Bundle savedInstanceState) { 
+ 		super.onCreate(savedInstanceState);
+ 		setContentView(R.layout.checkbook);
+ 		getSupportActionBar().setHomeButtonEnabled(true);
+ 
+ 		//The transaction frame, if null it means we can't see transactions in this particular view
+ 		View checkbook_frame = findViewById(R.id.checkbook_frag_frame);
+ 
+ 		/*
+ 		 * Hack fix for when in transactions (single pane), rotating keeps the account back stack
+ 		 * so dual pane users have to hit back twice to leave checkbook
+ 		 */
+ 		if(savedInstanceState!=null){
+ 			//Clear BackStack
+ 			while(getSupportFragmentManager().getBackStackEntryCount()>0){
+ 				getSupportFragmentManager().popBackStackImmediate();
+ 			}
+ 		}
+ 
+ 		//NavigationDrawer
+ 		DrawerLayout view = (DrawerLayout) findViewById(R.id.drawer_layout);
+ 		ScrollView drawer = (ScrollView) findViewById(R.id.drawer);
+ 		mDrawerLayout = new Drawer(this,view,drawer);
+ 
+ 		/*NOTE To Self
+ 		 * took out the if because changing orientation resulted
+ 		 * in transaction fragment staying in accountsFrame
+ 		 * if you went to transactions in a single pane and then rotated
+ 		 * Removing if forces the frags to be replaced every time so not very efficient
+ 		 */
+ 
+ 		//if (savedInstanceState==null){
+ 		Accounts account_frag = new Accounts();
+ 		Transactions transaction_frag = new Transactions();
+ 
+ 		//Bundle for Transaction fragment
+ 		Bundle argsTran = new Bundle();
+ 		argsTran.putBoolean("showAll", true);
+ 		argsTran.putBoolean("boolSearch", false);
+ 
+ 		//Bundle for Account fragment
+ 		Bundle argsAccount = new Bundle();
+ 		argsAccount.putBoolean("boolSearch", false);
+ 
+ 		transaction_frag.setArguments(argsTran);
+ 		account_frag.setArguments(argsAccount);
+ 
+ 		if(checkbook_frame==null){
+ 			Log.d("Checkbook-onCreate","checkbook_frame=null");
+ 			getSupportFragmentManager().beginTransaction()
+ 			.replace(R.id.account_frag_frame, account_frag,"account_frag_tag").replace(R.id.transaction_frag_frame, transaction_frag, "transaction_frag_tag").commit();
+ 		}
+ 		else{
+ 			Log.d("Checkbook-onCreate","checkbook_frame!=null");
+ 			getSupportFragmentManager().beginTransaction().
+ 			replace(R.id.checkbook_frag_frame, account_frag,"account_frag_tag").commit();
+ 		}
+ 
+ 		getSupportFragmentManager().executePendingTransactions();
+ 
+ 		//}
+ 		//
+ 		//		else{
+ 		//
+ 		//			if(checkbook_frame==null){
+ 		//				getSupportFragmentManager().beginTransaction()
+ 		//				.addToBackStack("account_frag_tag")
+ 		//				.addToBackStack("transaction_frag_tag")
+ 		//				.remove(getSupportFragmentManager().findFragmentByTag("account_frag_tag"))
+ 		//				.remove(getSupportFragmentManager().findFragmentByTag("transaction_frag_tag"))
+ 		//				.replace(R.id.account_frag_frame, getSupportFragmentManager().findFragmentByTag("account_frag_tag"),"account_frag_tag").replace(R.id.transaction_frag_frame, getSupportFragmentManager().findFragmentByTag("transaction_frag_tag"), "transaction_frag_tag")
+ 		//				.commit();
+ 		//			}
+ 		//			else{
+ 		//				getSupportFragmentManager().beginTransaction()
+ 		//				.addToBackStack("account_frag_tag")
+ 		//				.addToBackStack("transaction_frag_tag")
+ 		//				.remove(getSupportFragmentManager().findFragmentByTag("account_frag_tag"))
+ 		//				.remove(getSupportFragmentManager().findFragmentByTag("transaction_frag_tag"))
+ 		//				.replace(R.id.checkbook_frag_frame, getSupportFragmentManager().findFragmentByTag("account_frag_tag"),"account_frag_tag")
+ 		//				.commit();
+ 		//			}
+ 		//
+ 		//			getSupportFragmentManager().executePendingTransactions();
+ 		//
+ 		//		}
+ 
+ 	}//end onCreate
+ 
+ 	@Override
+ 	protected void onSaveInstanceState(Bundle bundle1){
+ 		Log.d("Checkbook-saveInstanceState", "Save anything important...");
+ 	}
+ 
+ 	//For Menu Items
+ 	@Override
+ 	public boolean onOptionsItemSelected(MenuItem item) {
+ 		switch (item.getItemId()) {
+ 		case android.R.id.home:    
+ 			mDrawerLayout.toggle();
+ 			break;
+ 		}
+ 
+ 		return super.onOptionsItemSelected(item);
+ 	}
+ 
+ 	//Method for selecting a Time when adding a transaction
+ 	public void showTimePickerDialog(View v){
+ 		DialogFragment newFragment = new TimePickerFragment();
+ 		newFragment.show(this.getSupportFragmentManager(), "timePicker");	
+ 	}
+ 
+ 	//Method for selecting a Date when adding a transaction
+ 	public void showDatePickerDialog(View v) {
+ 		DialogFragment newFragment = new DatePickerFragment();
+ 		newFragment.show(this.getSupportFragmentManager(), "datePicker");
+ 	}
+ 
+ }//end Checkbook

@@ -1,0 +1,575 @@
+ package org.openplans.tools.tracking.impl.util;
+ 
+ import gov.sandia.cognition.math.matrix.Vector;
+ import gov.sandia.cognition.statistics.distribution.MultivariateGaussian;
+ 
+ import java.util.Collection;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ 
+ import org.openplans.tools.tracking.graph_builder.PlainStreetEdgeWithOSMData;
+ import org.openplans.tools.tracking.graph_builder.TurnVertexWithOSMData;
+ import org.openplans.tools.tracking.impl.VehicleState;
+ import org.openplans.tools.tracking.impl.graph.BaseGraph;
+ import org.openplans.tools.tracking.impl.graph.CartesianDistanceLibrary;
+ import org.openplans.tools.tracking.impl.graph.InferredEdge;
+ import org.openplans.tools.tracking.impl.graph.paths.InferredPath;
+ import org.openplans.tools.tracking.impl.graph.paths.PathEdge;
+ import org.openplans.tools.tracking.impl.graph.paths.algorithms.MultiDestinationAStar;
+ import org.openplans.tools.tracking.impl.statistics.StandardRoadTrackingFilter;
+ import org.opentripplanner.common.geometry.DistanceLibrary;
+ import org.opentripplanner.routing.core.RoutingRequest;
+ import org.opentripplanner.routing.core.TraverseMode;
+ import org.opentripplanner.routing.edgetype.StreetEdge;
+ import org.opentripplanner.routing.edgetype.TurnEdge;
+ import org.opentripplanner.routing.graph.Edge;
+ import org.opentripplanner.routing.graph.Graph;
+ import org.opentripplanner.routing.graph.Graph.LoadLevel;
+ import org.opentripplanner.routing.graph.Vertex;
+ import org.opentripplanner.routing.impl.GraphServiceImpl;
+ import org.opentripplanner.routing.impl.StreetVertexIndexServiceImpl;
+ import org.opentripplanner.routing.impl.StreetVertexIndexServiceImpl.CandidateEdgeBundle;
+ import org.opentripplanner.routing.spt.GraphPath;
+ import org.opentripplanner.routing.spt.ShortestPathTree;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import org.springframework.context.ApplicationContext;
+ import org.springframework.context.support.GenericApplicationContext;
+ 
+ import com.google.common.base.Preconditions;
+ import com.google.common.cache.CacheBuilder;
+ import com.google.common.cache.CacheLoader;
+ import com.google.common.cache.LoadingCache;
+ import com.google.common.collect.Iterables;
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
+ import com.vividsolutions.jts.geom.Coordinate;
+ import com.vividsolutions.jts.geom.Envelope;
+ import com.vividsolutions.jts.geom.Geometry;
+ import com.vividsolutions.jts.index.strtree.STRtree;
+ 
+ public class OtpGraph {
+ 
+   private static final Logger log = LoggerFactory
+       .getLogger(OtpGraph.class);
+ 
+   private final GraphServiceImpl gs;
+ 
+ 	/**
+ 	 * This is the edge-based graph used in routing; neither it nor any edges
+ 	 * form it should ever be used outside of this class.
+ 	 */
+   private final Graph turnGraph;
+ 	/**
+ 	 * This is the original (intersection-and-street-segment) graph, used for
+ 	 * all inference tasks other than routing.
+ 	 */
+   private final Graph baseGraph;
+ 
+   private final StreetVertexIndexServiceImpl indexService;
+ 
+   private final static RoutingRequest defaultOptions = new RoutingRequest(
+       TraverseMode.CAR);  
+   private STRtree turnEdgeIndex = new STRtree();
+   private STRtree baseEdgeIndex = new STRtree();
+   private STRtree turnVertexIndex = new STRtree();
+   private DistanceLibrary distanceLibrary = new CartesianDistanceLibrary();
+ 
+   private static class PathKey {
+ 
+ 	    private final VehicleState state;
+ 	    private final Coordinate startCoord;
+ 	    private final Coordinate endCoord;
+ 	    private final double distanceToTravel;
+ 
+ 	    public PathKey(VehicleState state, Coordinate start,
+ 	      Coordinate end, double distance) {
+ 	      Preconditions.checkNotNull(state);
+ 	      Preconditions.checkNotNull(start);
+ 	      Preconditions.checkNotNull(end);
+ 	      this.state = state;
+ 	      this.startCoord = start;
+ 	      this.endCoord = end;
+ 	      this.distanceToTravel = distance;
+ 	    }
+ 
+ 	    @Override
+ 	    public boolean equals(Object obj) {
+ 	      if (this == obj) {
+ 	        return true;
+ 	      }
+ 	      if (obj == null) {
+ 	        return false;
+ 	      }
+ 	      if (getClass() != obj.getClass()) {
+ 	        return false;
+ 	      }
+ 	      final PathKey other = (PathKey) obj;
+ 	      if (endCoord == null) {
+ 	        if (other.endCoord != null) {
+ 	          return false;
+ 	        }
+ 	      } else if (!endCoord.equals(other.endCoord)) {
+ 	        return false;
+ 	      }
+ 	      if (startCoord == null) {
+ 	        if (other.startCoord != null) {
+ 	          return false;
+ 	        }
+ 	      } else if (!startCoord.equals(other.startCoord)) {
+ 	        return false;
+ 	      }
+ 	      return true;
+ 	    }
+ 
+ 	    public double getDistanceToTravel() {
+ 	      return distanceToTravel;
+ 	    }
+ 
+ 	    public Coordinate getEndCoord() {
+ 	      return endCoord;
+ 	    }
+ 
+ 	    public Coordinate getStartCoord() {
+ 	      return startCoord;
+ 	    }
+ 
+ 	    public VehicleState getState() {
+ 	      return state;
+ 	    }
+ 
+ 	    @Override
+ 	    public int hashCode() {
+ 	      final int prime = 31;
+ 	      int result = 1;
+ 	      result = prime * result
+ 	          + ((endCoord == null) ? 0 : endCoord.hashCode());
+ 	      result = prime * result
+ 	          + ((startCoord == null) ? 0 : startCoord.hashCode());
+ 	      return result;
+ 	    }
+ 
+ 	  }
+ 
+ 	  public static class VertexPair {
+ 
+ 	    private final Vertex startVertex;
+ 	    private final Vertex endVertex;
+ 
+ 	    public VertexPair(Vertex startVertex, Vertex endVertex) {
+ 	      this.startVertex = startVertex;
+ 	      this.endVertex = endVertex;
+ 	    }
+ 
+ 	    @Override
+ 	    public boolean equals(Object obj) {
+ 	      if (this == obj) {
+ 	        return true;
+ 	      }
+ 	      if (obj == null) {
+ 	        return false;
+ 	      }
+ 	      if (getClass() != obj.getClass()) {
+ 	        return false;
+ 	      }
+ 	      final VertexPair other = (VertexPair) obj;
+ 	      if (endVertex == null) {
+ 	        if (other.endVertex != null) {
+ 	          return false;
+ 	        }
+ 	      } else if (!endVertex.equals(other.endVertex)) {
+ 	        return false;
+ 	      }
+ 	      if (startVertex == null) {
+ 	        if (other.startVertex != null) {
+ 	          return false;
+ 	        }
+ 	      } else if (!startVertex.equals(other.startVertex)) {
+ 	        return false;
+ 	      }
+ 	      return true;
+ 	    }
+ 
+ 	    public Vertex getEndVertex() {
+ 	      return endVertex;
+ 	    }
+ 
+ 	    public Vertex getStartVertex() {
+ 	      return startVertex;
+ 	    }
+ 
+ 	    @Override
+ 	    public int hashCode() {
+ 	      final int prime = 31;
+ 	      int result = 1;
+ 	      result = prime * result
+ 	          + ((endVertex == null) ? 0 : endVertex.hashCode());
+ 	      result = prime * result
+ 	          + ((startVertex == null) ? 0 : startVertex.hashCode());
+ 	      return result;
+ 	    }
+ 
+ 	  }
+ 
+ 	  private final Map<VertexPair, InferredEdge> edgeToInfo = Maps
+ 	      .newHashMap();
+ 
+ 
+ 	  private final LoadingCache<PathKey, Set<InferredPath>> pathsCache = CacheBuilder
+ 	      .newBuilder().maximumSize(1000)
+ 	      .build(new CacheLoader<PathKey, Set<InferredPath>>() {
+ 	        @Override
+ 	        public Set<InferredPath> load(PathKey key) {
+ 	          return computePaths(key);
+ 	        }
+ 	      });
+ 
+ 
+   private void createIndices(Graph graph, STRtree edgeIndex, STRtree vertexIndex) {
+ 
+     for (final Vertex v : graph.getVertices()) {
+       if (vertexIndex != null) {
+         final Geometry vertexGeometry = GeoUtils.lonlatToGeometry(v
+             .getCoordinate());
+         final Envelope vertexEnvelope = vertexGeometry.getEnvelopeInternal();
+         vertexIndex.insert(vertexEnvelope, v);
+       }
+ 
+       for (final Edge e : v.getOutgoing()) {
+         if (graph.getIdForEdge(e) != null) {
+           final Geometry geometry = e.getGeometry();
+           final Envelope envelope = geometry.getEnvelopeInternal();
+           edgeIndex.insert(envelope, e);
+         }
+       }
+     }
+   }
+   
+ 
+   public OtpGraph(String path) {
+     log.info("Loading OTP graph...");
+ 
+     gs = new GraphServiceImpl();
+     gs.setLoadLevel(LoadLevel.DEBUG);
+ 
+     final ApplicationContext appContext = new GenericApplicationContext();
+ 
+     gs.setResourceLoader(appContext);
+ 
+     gs.setPath(path);
+     gs.refreshGraphs();
+ 
+     turnGraph = gs.getGraph();
+     baseGraph = turnGraph.getService(BaseGraph.class).getBaseGraph();
+ 
+     indexService = new StreetVertexIndexServiceImpl(baseGraph, distanceLibrary);
+     createIndices(baseGraph, baseEdgeIndex, null);
+     createIndices(turnGraph, turnEdgeIndex, turnVertexIndex);
+ 
+     log.info("Graph loaded..");
+   }
+ 
+   public Graph getBaseGraph() {
+     return baseGraph;
+   }
+ 
+   public GraphServiceImpl getGs() {
+     return gs;
+   }
+ 
+   public StreetVertexIndexServiceImpl getIndexService() {
+     return indexService;
+   }
+ 
+   public RoutingRequest getOptions() {
+     return defaultOptions;
+   }
+ 
+ 
+   public int getVertexCount() {
+     return baseGraph.getVertices().size();
+   }
+ 
+   public List<StreetEdge> snapToGraph(Coordinate toCoords) {
+ 
+     Preconditions.checkNotNull(toCoords);
+ 
+     final RoutingRequest options = OtpGraph.defaultOptions;
+     /*
+      * XXX: indexService uses lon/lat
+      */
+     final CandidateEdgeBundle edgeBundle = indexService
+         .getClosestEdges(
+             new Coordinate(toCoords.y, toCoords.x), options, null,
+             null);
+     return edgeBundle.toEdgeList();
+   }
+ 
+   public static List<Edge> filterForStreetEdges(Collection<Edge> edges) {
+     final List<Edge> result = Lists.newArrayList();
+     for (final Edge out : edges) {
+       if (!(out instanceof StreetEdge)) {
+         continue;
+       }
+       result.add(out);
+     }
+     return result;
+   }
+ 
+   public static boolean isStreetEdge(Edge pathEdge) {
+     if (!(pathEdge instanceof StreetEdge))
+       return false;
+     else
+       return true;
+   }
+ 
+   private Set<InferredPath> computePaths(PathKey key) {
+ 
+     /*
+      * We always consider moving off of an edge, staying on an edge, and
+      * whatever else we can find.
+      */
+     final InferredEdge currentEdge = key.getState().getInferredEdge();
+ 
+    final Coordinate toCoord = GeoUtils.reverseCoordinates(key
+         .getEndCoord());
+     final Set<InferredPath> paths = Sets.newHashSet(InferredPath
+         .getEmptyPath());
+     final Set<Edge> startEdges = Sets.newHashSet();
+     final double stateStdDevDistance = 1.98d * Math.sqrt(key
+         .getState().getBelief().getCovariance().normFrobenius());
+     if (!currentEdge.isEmptyEdge()) {
+ 
+       PlainStreetEdgeWithOSMData edge = (PlainStreetEdgeWithOSMData) currentEdge.getEdge();
+       for (Edge outgoing : edge.getTurnVertex().getOutgoing()) {
+         startEdges.add(outgoing);
+       }
+     } else {
+      final Coordinate fromCoord = GeoUtils.reverseCoordinates(key
+           .getStartCoord());
+       final Envelope fromEnv = new Envelope(fromCoord);
+       fromEnv.expandBy(GeoUtils
+           .getMetersInAngleDegrees(stateStdDevDistance));
+ 
+       for (final Object obj : turnEdgeIndex.query(fromEnv)) {
+     	//FIXME STRTree queries are not exact; we may wish to limit this list
+         final Edge edge = (Edge) obj;
+         startEdges.add(edge);
+       }
+     }
+ 
+     final Set<Edge> endEdges = Sets.newHashSet();
+ 
+     final Envelope toEnv = new Envelope(toCoord);
+     final double obsStdDevDistance = 1.98d * Math.sqrt(key.getState()
+         .getMovementFilter().getObsVariance().normFrobenius());
+     toEnv.expandBy(GeoUtils
+         .getMetersInAngleDegrees(obsStdDevDistance));
+ 
+     final RoutingRequest options = new RoutingRequest(TraverseMode.CAR);
+     for (final Object obj : turnEdgeIndex.query(
+         toEnv)) {
+       final Edge edge = (Edge) obj;
+       if (((StreetEdge) edge).canTraverse(options)) {
+     	  endEdges.add(edge);
+       }
+     }
+ 
+     for (final Edge startEdge : startEdges) {
+       final MultiDestinationAStar forwardAStar = new MultiDestinationAStar(
+     		  turnGraph, endEdges, toCoord, obsStdDevDistance, startEdge);
+       final MultiDestinationAStar backwardAStar = new MultiDestinationAStar(
+     		  turnGraph, endEdges, toCoord, obsStdDevDistance, startEdge);
+ 
+       final ShortestPathTree spt1 = forwardAStar.getSPT(false);
+       final ShortestPathTree spt2 = backwardAStar.getSPT(true);
+ 
+       for (final Edge endEdge : endEdges) {
+         final GraphPath forwardPath = spt1.getPath(
+             endEdge.getToVertex(), false);
+         if (forwardPath != null) {
+           final InferredPath forwardResult = copyAStarResults(
+               forwardPath, getBaseEdge(startEdge), false);
+           if (forwardResult != null) {
+             paths.add(forwardResult);
+             // for debugging
+             forwardResult.setStartEdge(this.getInferredEdge(startEdge));
+             forwardResult.setEndEdge(this.getInferredEdge(endEdge));
+           }
+         }
+         final GraphPath backwardPath = spt2.getPath(
+             endEdge.getFromVertex(), false);
+         if (backwardPath != null) {
+           final InferredPath backwardResult = copyAStarResults(
+               backwardPath, startEdge, true);
+           if (backwardResult != null) {
+             paths.add(backwardResult);
+             // for debugging
+             backwardResult.setStartEdge(this.getInferredEdge(startEdge));
+             backwardResult.setEndEdge(this.getInferredEdge(endEdge));
+           }
+         }
+       }
+     }
+ 
+     return paths;
+   }
+   
+   private Edge getBaseEdge(Edge edge) {
+ 	if (edge instanceof TurnEdge) {
+        TurnVertexWithOSMData base = (TurnVertexWithOSMData) edge
+     	             	.getFromVertex();
+        edge = base.getOriginal();
+ 	}
+ 	return edge;
+   }
+ 
+ 
+ private InferredPath copyAStarResults(GraphPath gpath,
+     Edge startEdge, boolean isReverse) {
+     final double direction = isReverse ? -1d : 1d;
+     double pathDist = 0d;
+     final List<PathEdge> path = Lists.newArrayList();
+     final PathEdge startPathEdge = PathEdge.getEdge(this.getInferredEdge(startEdge));
+     if (gpath.edges.isEmpty()) {
+       path.add(startPathEdge);
+     } else {
+       for (final Edge edge : isReverse ? Lists.reverse(gpath.edges)
+           : gpath.edges) {
+         PathEdge pathEdge = getValidPathEdge(edge, pathDist, direction, path);
+         pathDist += direction * pathEdge.getInferredEdge().getLength();
+         path.add(pathEdge);
+       }
+     }
+     if (!path.isEmpty())
+       return InferredPath.getInferredPath(path);
+     else
+       return null;
+   }
+ 
+   private PathEdge getValidPathEdge(Edge edge, double pathDist, double direction, List<PathEdge> path) {
+     edge = getBaseEdge(edge);
+     if (OtpGraph.isStreetEdge(edge)
+         && edge.getGeometry() != null
+         && edge.getDistance() > 0d
+         && baseGraph.getIdForEdge(edge) != null
+         && !edge.equals(Iterables.getLast(path, null))) {
+ 
+       return PathEdge.getEdge(this.getInferredEdge(edge), pathDist);
+ 
+     } else if (edge.getFromVertex() != null
+         && !edge.getFromVertex().getOutgoingStreetEdges()
+             .isEmpty()) {
+ 
+       for (final Edge streetEdge : edge.getFromVertex()
+           .getOutgoingStreetEdges()) {
+ 
+         if (streetEdge.getGeometry() != null
+             && !streetEdge.equals(Iterables.getLast(path, null))
+             && streetEdge.getDistance() > 0d
+             && baseGraph.getIdForEdge(streetEdge) != null) {
+ 
+           /*
+            * Find a valid street edge to work with
+            */
+           return PathEdge.getEdge(this.getInferredEdge(streetEdge), pathDist);
+         }
+       }
+     }
+     
+     return null;
+   }
+   
+   //unused
+   public InferredEdge getEdge(int id) {
+ 
+     final Edge edge = baseGraph.getEdgeById(id);
+     final VertexPair key = new VertexPair(
+         edge.getFromVertex(), edge.getToVertex());
+     InferredEdge edgeInfo = edgeToInfo.get(key);
+ 
+     if (edgeInfo == null) {
+       edgeInfo = new InferredEdge(edge, id, this);
+       edgeToInfo.put(key, edgeInfo);
+     }
+ 
+     return edgeInfo;
+   }
+ 
+   public InferredEdge getInferredEdge(Edge edge) {
+ 	edge = getBaseEdge(edge);
+ 
+     final VertexPair key = new VertexPair(
+         edge.getFromVertex(), edge.getToVertex());
+     InferredEdge edgeInfo = edgeToInfo.get(key);
+ 
+     if (edgeInfo == null) {
+       final Integer edgeId = baseGraph.getIdForEdge(edge);
+       edgeInfo = new InferredEdge(edge, edgeId, this);
+       edgeToInfo.put(key, edgeInfo);
+     }
+ 
+     return edgeInfo;
+   }
+ 
+   public List<StreetEdge> getNearbyEdges(
+     MultivariateGaussian initialBelief,
+     StandardRoadTrackingFilter trackingFilter) {
+     Preconditions.checkArgument(initialBelief
+         .getInputDimensionality() == 4);
+ 
+     final Envelope toEnv = new Envelope(
+         GeoUtils.convertToLonLat(StandardRoadTrackingFilter.getOg()
+             .times(initialBelief.getMean())));
+     final double varDistance = 1.98d * Math.sqrt(trackingFilter
+         .getObsVariance().normFrobenius());
+     toEnv.expandBy(GeoUtils.getMetersInAngleDegrees(varDistance));
+ 
+     final List<StreetEdge> streetEdges = Lists.newArrayList();
+     for (final Object obj : baseEdgeIndex.query(
+         toEnv)) {
+       final Edge edge = (Edge) obj;
+       streetEdges.add((StreetEdge) edge);
+     }
+     return streetEdges;
+   }
+ 
+   /**
+    * Get nearby street edges from a projected point.
+    * 
+    * @param mean
+    * @return
+    */
+   public Set<InferredEdge> getNearbyEdges(Vector mean) {
+     final Set<InferredEdge> results = Sets.newHashSet();
+     final Coordinate latlon = GeoUtils.convertToLatLon(mean);
+     final List<StreetEdge> snappedEdges = snapToGraph(latlon);
+     for (final Edge edge : snappedEdges) {
+       results.add(getInferredEdge(edge));
+     }
+     return results;
+   }
+ 
+   public Set<InferredPath> getPaths(VehicleState fromState,
+     Coordinate toCoord) {
+     Preconditions.checkNotNull(fromState);
+ 
+     final Coordinate fromCoord;
+     if (!fromState.getInferredEdge().isEmptyEdge()) {
+       fromCoord = fromState.getInferredEdge().getCenterPointCoord();
+     } else {
+       fromCoord = GeoUtils.convertToLatLon(fromState
+           .getMeanLocation());
+     }
+ 
+     final Set<InferredPath> paths = Sets.newHashSet();
+     final PathKey startEndEntry = new PathKey(
+         fromState, fromCoord, toCoord, 0d);
+     paths.addAll(pathsCache.getUnchecked(startEndEntry));
+     return paths;
+   }
+ 
+ 
+ }

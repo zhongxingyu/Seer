@@ -1,0 +1,62 @@
+ /*
+  * Sonar Web Plugin
+  * Copyright (C) 2010 SonarSource and Matthijs Galesloot
+  * dev@sonar.codehaus.org
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ package org.sonar.plugins.web.checks.coding;
+ 
+ import org.junit.Test;
+ import org.sonar.plugins.web.checks.AbstractCheckTester;
+ import org.sonar.plugins.web.visitor.WebSourceCode;
+ 
+ import java.io.FileNotFoundException;
+ import java.io.StringReader;
+ 
+ import static org.fest.assertions.Assertions.assertThat;
+ 
+ /**
+  * @author Matthijs Galesloot
+  */
+ public class DoubleQuotesCheckTest extends AbstractCheckTester {
+ 
+   @Test
+   public void testDoubleQuotesCheck() throws FileNotFoundException {
+ 
+     String fragment = "<h:someNode class='redflag'/>";
+ 
+     WebSourceCode sourceCode = parseAndCheck(new StringReader(fragment), DoubleQuotesCheck.class);
+ 
+     assertThat(sourceCode.getViolations().size()).isGreaterThan(0);
+   }
+ 
+   @Test
+   public void nestedTags() {
+     String fragment = "<form name=\"tabClickForm\" action='<c:url value=\"FlexPricerAvailabilityServlet\"/>' method=\"post\">";
+ 
+     WebSourceCode sourceCode = parseAndCheck(new StringReader(fragment), DoubleQuotesCheck.class);
+ 
+     assertThat(sourceCode.getViolations().size()).isEqualTo(0);
+   }
+
+  @Test
+  public void should_not_detect_non_quotes_attributes() {
+    String fragment = "<h:someNode class=redflag />";
+
+    WebSourceCode sourceCode = parseAndCheck(new StringReader(fragment), DoubleQuotesCheck.class);
+
+    assertThat(sourceCode.getViolations()).isEmpty();
+  }
+
+ }

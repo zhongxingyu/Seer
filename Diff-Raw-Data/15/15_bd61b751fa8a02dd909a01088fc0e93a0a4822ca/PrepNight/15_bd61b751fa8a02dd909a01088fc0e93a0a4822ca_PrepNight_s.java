@@ -1,0 +1,99 @@
+ /* The contents of this file are subject to the terms
+  * of the Common Development and Distribution License
+  * (the License). You may not use this file except in
+  * compliance with the License.
+  *
+  * You can obtain a copy of the License at
+  * https://opensso.dev.java.net/public/CDDLv1.0.html or
+  * opensso/legal/CDDLv1.0.txt
+  * See the License for the specific language governing
+  * permission and limitations under the License.
+  *
+  * When distributing Covered Code, include this CDDL
+  * Header Notice in each file and include the License file
+  * at opensso/legal/CDDLv1.0.txt.
+  * If applicable, add the following below the CDDL Header,
+  * with the fields enclosed by brackets [] replaced by
+  * your own identifying information:
+  * "Portions Copyrighted [year] [name of copyright owner]"
+  *
+ * $Id: PrepNight.java,v 1.1 2006-07-18 07:45:07 veiming Exp $
+  *
+  * Copyright 2005 Sun Microsystems Inc. All Rights Reserved
+  */
+ 
+ package com.sun.identity.tools.nightly;
+ 
+ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.FileWriter;
+ import java.io.IOException;
+ import java.text.MessageFormat;
+ import java.util.Set;
+ import java.util.TreeSet;
+ 
+ /**
+  * Nightly Preparation Implementation.
+  */
+ public class PrepNight {
+    private final static String TEMPLATE = "<a href=\"{0}\">{0}</a>";
+     /**
+      * Creates a new instance of <code>Stat</code>.
+      */
+     private PrepNight() {
+     }
+     
+     private static void createIndexHTML(String baseDir)
+         throws IOException
+     {
+         Set<String> fileNames = getFileContent(baseDir);
+         StringBuffer buff = new StringBuffer();
+ 
+         for (String name : fileNames) {
+             Object[] param = {name};
+             buff.append(MessageFormat.format(TEMPLATE, param))
+                 .append("<br />");
+         }
+         writeToFile(baseDir + "/index.html", buff.toString());
+     }
+ 
+     private static Set<String> getFileContent(String baseDir)
+         throws IOException
+     {
+         Set<String> binaries = new TreeSet<String>();
+         File dir = new File(baseDir);
+         String[] files = dir.list();
+         for (int i = 0; i < files.length; i++) {
+             String name = baseDir + "/"  + files[i];
+             if ((new File(name)).isFile()) {
+                 binaries.add(files[i]);
+             }
+         }
+         return binaries;
+     }
+ 
+     private static void writeToFile(String filename, String content)
+         throws IOException
+     {
+         if (filename != null) {
+             File fileHandle = new File(filename);
+             FileWriter out = null;
+             try {
+                 out = new FileWriter(filename);
+                 out.write(content);
+             } finally {
+                 if (out != null) {
+                     out.close();
+                 }
+             }
+         }
+     }
+ 
+     public static void main(String[] args) {
+         try {
+             createIndexHTML(args[0]);
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+     }
+ }

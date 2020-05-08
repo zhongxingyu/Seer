@@ -1,0 +1,296 @@
+ /*
+  * Geotools - OpenSource mapping toolkit
+  * (C) 2002, Centre for Computational Geography
+  * (C) 2001, Institut de Recherche pour le Dveloppement
+  *
+  *    This library is free software; you can redistribute it and/or
+  *    modify it under the terms of the GNU Lesser General Public
+  *    License as published by the Free Software Foundation; either
+  *    version 2.1 of the License, or (at your option) any later version.
+  *
+  *    This library is distributed in the hope that it will be useful,
+  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  *    Lesser General Public License for more details.
+  *
+  *    You should have received a copy of the GNU Lesser General Public
+  *    License along with this library; if not, write to the Free Software
+  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  *
+  * Contacts:
+  *     UNITED KINGDOM: James Macgill
+  *             mailto:j.macgill@geog.leeds.ac.uk
+  *
+  *     FRANCE: Surveillance de l'Environnement Assiste par Satellite
+  *             Institut de Recherche pour le Dveloppement / US-Espace
+  *             mailto:seasnet@teledetection.fr
+  *
+  *     CANADA: Observatoire du Saint-Laurent
+  *             Institut Maurice-Lamontagne
+  *             mailto:osl@osl.gc.ca
+  */
+ package org.geotools.resources;
+ 
+ // Geotools dependencies
+ import org.geotools.cs.*;
+ import org.geotools.ct.*;
+ import org.geotools.pt.*;
+ import org.geotools.resources.cts.Resources;
+ import org.geotools.resources.cts.ResourceKeys;
+ 
+ // Miscellaneous
+ import java.awt.geom.Point2D;
+ import java.awt.geom.Rectangle2D;
+ 
+ 
+ /**
+  * A set of static methods working on OpenGIS objects.  Some of those methods
+  * are useful, but not really rigorous. This is why they do not appear in the
+  * "official" package, but instead in this private one. <strong>Do not rely on
+  * this API!</strong> It may change in incompatible way in any future version.
+  *
+ * @version $Id: CTSUtilities.java,v 1.2 2002/10/09 19:36:34 desruisseaux Exp $
+  * @author Martin Desruisseaux
+  */
+ public final class CTSUtilities {
+     /**
+      * Do not allow creation of
+      * instances of this class.
+      */
+     private CTSUtilities() {
+     }
+     
+     /**
+      * Returns the dimension of the first axis of a particular type.
+      * For example, <code>getDimensionOf(cs,&nbsp;AxisInfo.TIME)</code>
+      * would returns the dimension number of time axis.
+      */
+     public static int getDimensionOf(final CoordinateSystem cs, final AxisInfo axis) {
+         final int dimension = cs.getDimension();
+         final AxisOrientation orientation = axis.orientation.absolute();
+         for (int i=0; i<dimension; i++) {
+             if (orientation.equals(cs.getAxis(i).orientation.absolute())) {
+                 return i;
+             }
+         }
+         return -1;
+     }
+     
+     /**
+      * Returns a two-dimensional coordinate system representing the two first dimensions
+      * of the specified coordinate system. If <code>cs</code> is already a two-dimensional
+      * coordinate system, then it is returned unchanged. Otherwise, if it is a
+      * {@link CompoundCoordinateSystem}, then the head coordinate system is examined.
+      *
+      * @param  cs The coordinate system.
+      * @return A two-dimensional coordinate system that represents the two first
+      *         dimensions of <code>cs</code>.
+      * @throws IllegalArgumentException if <code>cs</code> can't be reduced to
+      *         a two-coordinate system.
+      */
+     public static CoordinateSystem getCoordinateSystem2D(CoordinateSystem cs)
+             throws IllegalArgumentException
+     {
+         if (cs!=null) {
+             while (cs.getDimension()!=2) {
+                 if (!(cs instanceof CompoundCoordinateSystem)) {
+                     throw new IllegalArgumentException(Resources.format(ResourceKeys.ERROR_CANT_REDUCE_TO_TWO_DIMENSIONS_$1, cs.getName(null)));
+                 }
+                 cs = ((CompoundCoordinateSystem) cs).getHeadCS();
+             }
+         }
+         return cs;
+     }
+     
+     /**
+      * Returns the first horizontal coordinate system found in a coordinate system,
+      * or <code>null</code> if there is none. Note: in a future version,  we may
+      * implement this method directly into {@link CoordinateSystem} (not sure yet
+      * if it would be a good idea).
+      */
+     public static HorizontalCoordinateSystem getHorizontalCS(final CoordinateSystem cs) {
+         if (cs instanceof HorizontalCoordinateSystem) {
+             return (HorizontalCoordinateSystem) cs;
+         }
+         if (cs instanceof CompoundCoordinateSystem) {
+             HorizontalCoordinateSystem hcs;
+             final CompoundCoordinateSystem comp = (CompoundCoordinateSystem) cs;
+             if ((hcs=getHorizontalCS(comp.getHeadCS())) != null) return hcs;
+             if ((hcs=getHorizontalCS(comp.getTailCS())) != null) return hcs;
+         }
+         return null;
+     }
+     
+     /**
+      * Returns the first vertical coordinate system found in a coordinate system,
+      * or <code>null</code> if there is none. Note: if a future version,
+      * we may implement this method directly into {@link CoordinateSystem}
+      * (not sure yet if it would be a good idea).
+      */
+     public static VerticalCoordinateSystem getVerticalCS(final CoordinateSystem cs) {
+         if (cs instanceof VerticalCoordinateSystem) {
+             return (VerticalCoordinateSystem) cs;
+         }
+         if (cs instanceof CompoundCoordinateSystem) {
+             VerticalCoordinateSystem vcs;
+             final CompoundCoordinateSystem comp = (CompoundCoordinateSystem) cs;
+             if ((vcs=getVerticalCS(comp.getHeadCS())) != null) return vcs;
+             if ((vcs=getVerticalCS(comp.getTailCS())) != null) return vcs;
+         }
+         return null;
+     }
+     
+     /**
+      * Returns the first temporal coordinate system found in a coordinate system,
+      * or <code>null</code> if there is none. Note: if a future version,
+      * we may implement this method directly into {@link CoordinateSystem}
+      * (not sure yet if it would be a good idea).
+      */
+     public static TemporalCoordinateSystem getTemporalCS(final CoordinateSystem cs) {
+         if (cs instanceof TemporalCoordinateSystem) {
+             return (TemporalCoordinateSystem) cs;
+         }
+         if (cs instanceof CompoundCoordinateSystem) {
+             TemporalCoordinateSystem cts;
+             final CompoundCoordinateSystem comp = (CompoundCoordinateSystem) cs;
+             if ((cts=getTemporalCS(comp.getHeadCS())) != null) return cts;
+             if ((cts=getTemporalCS(comp.getTailCS())) != null) return cts;
+         }
+         return null;
+     }
+     
+     /**
+      * Transform an envelope. The transformation is only approximative.
+      *
+      * @param  transform The transform to use.
+      * @param  envelope Envelope to transform. This envelope will not be modified.
+      * @return The transformed envelope. It may not have the same number of dimensions
+      *         than the original envelope.
+      * @throws TransformException if a transform failed.
+      */
+     public static Envelope transform(final MathTransform transform, final Envelope envelope)
+             throws TransformException
+     {
+         final int sourceDim = transform.getDimSource();
+         final int targetDim = transform.getDimTarget();
+         if (envelope.getDimension() != sourceDim) {
+             throw new MismatchedDimensionException(sourceDim, envelope.getDimension());
+         }
+         int           coordinateNumber = 0;
+         Envelope           transformed = null;
+         CoordinatePoint       targetPt = null;
+         final CoordinatePoint sourcePt = new CoordinatePoint(sourceDim);
+         for (int i=sourceDim; --i>=0;) sourcePt.ord[i]=envelope.getMinimum(i);
+         
+   loop: do {
+             // Transform a point and add the transformed
+             // point to the destination envelope.
+             targetPt = transform.transform(sourcePt, targetPt);
+             if (transformed!=null) {
+                 transformed.add(targetPt);
+             } else {
+                 transformed = new Envelope(targetPt, targetPt);
+             }
+             
+             // Get the next point's coordinate.   The 'coordinateNumber' variable should
+             // be seen as a number in base 3 where the number of digits is equals to the
+             // number of dimensions. For example, a 4-D space would have numbers ranging
+             // from "0000" to "2222". The digits are then translated into minimal, central
+             // or maximal ordinates.
+             int n = ++coordinateNumber;
+             for (int i=sourceDim; --i>=0;) {
+                 switch (n % 3) {
+                     case 0: sourcePt.ord[i] = envelope.getMinimum(i); n/=3; break;
+                     case 1: sourcePt.ord[i] = envelope.getCenter (i); continue loop;
+                     case 2: sourcePt.ord[i] = envelope.getMaximum(i); continue loop;
+                 }
+             }
+             break;
+         }
+         while (true);
+         return transformed;
+     }
+     
+     /**
+      * Transform an envelope. The transformation is only approximative.
+      * Invoking this method is equivalent to invoking the following:
+      * <br>
+      * <pre>transform(transform, new Envelope(source)).toRectangle2D()</pre>
+      *
+      * @param  transform The transform to use. Source and target dimension must be 2.
+      * @param  source The rectangle to transform (may be <code>null</code>).
+      * @param  dest  The destination rectangle (may be <code>source</code>).
+      *         If <code>null</code>, a new rectangle will be created and returned.
+      * @return <code>dest</code>, or a new rectangle if <code>dest</code> was non-null
+      *         and <code>source</code> was null.
+      * @throws TransformException if a transform failed.
+      */
+     public static Rectangle2D transform(final MathTransform2D transform, final Rectangle2D source, final Rectangle2D dest) throws TransformException {
+         if (source==null) {
+             return null;
+         }
+         double xmin=Double.POSITIVE_INFINITY;
+         double ymin=Double.POSITIVE_INFINITY;
+         double xmax=Double.NEGATIVE_INFINITY;
+         double ymax=Double.NEGATIVE_INFINITY;
+         final Point2D.Double point=new Point2D.Double();
+         for (int i=0; i<8; i++) {
+             /*
+              *   (0)----(5)----(1)
+              *    |             |
+              *   (4)           (7)
+              *    |             |
+              *   (2)----(6)----(3)
+              */
+             point.x = (i&1)==0 ? source.getMinX() : source.getMaxX();
+             point.y = (i&2)==0 ? source.getMinY() : source.getMaxY();
+             switch (i) {
+                 case 5: // fallthrough
+                 case 6: point.x=source.getCenterX(); break;
+                 case 7: // fallthrough
+                 case 4: point.y=source.getCenterY(); break;
+             }
+             transform.transform(point, point);
+             if (point.x<xmin) xmin=point.x;
+             if (point.x>xmax) xmax=point.x;
+             if (point.y<ymin) ymin=point.y;
+             if (point.y>ymax) ymax=point.y;
+         }
+         if (dest!=null) {
+             dest.setRect(xmin, ymin, xmax-xmin, ymax-ymin);
+             return dest;
+         }
+         return new XRectangle2D(xmin, ymin, xmax-xmin, ymax-ymin);
+     }
+     
+     /**
+      * Retourne une chane de caractres reprsentant la rgion gographique spcifie. La
+      * chane retourne sera de la forme "4500.00'N-5000.00'N 3000.00'E-4000.00'E". Si
+      * une projection cartographique est ncessaire pour obtenir cette reprsentation, elle
+      * sera faite automatiquement. Cette chane sert surtout  des fins de dboguage et sa
+      * forme peut varier.
+      */
+     public static String toWGS84String(final CoordinateSystem cs, Rectangle2D bounds) {
+         StringBuffer buffer=new StringBuffer();
+         try {
+             if (!GeographicCoordinateSystem.WGS84.equivalents(cs)) {
+                 final CoordinateTransformation tr = CoordinateTransformationFactory.getDefault().createFromCoordinateSystems(cs, GeographicCoordinateSystem.WGS84);
+                 bounds = transform((MathTransform2D) tr.getMathTransform(), bounds, null);
+             }
+             final AngleFormat fmt=new AngleFormat("DDMM.m'");
+             buffer=fmt.format(new  Latitude(bounds.getMinY()), buffer, null); buffer.append('-');
+             buffer=fmt.format(new  Latitude(bounds.getMaxY()), buffer, null); buffer.append(' ');
+             buffer=fmt.format(new Longitude(bounds.getMinX()), buffer, null); buffer.append('-');
+             buffer=fmt.format(new Longitude(bounds.getMaxX()), buffer, null);
+         } catch (TransformException exception) {
+             buffer.append(Utilities.getShortClassName(exception));
+             final String message=exception.getLocalizedMessage();
+             if (message!=null) {
+                 buffer.append(": ");
+                 buffer.append(message);
+             }
+         }
+         return buffer.toString();
+     }
+ }

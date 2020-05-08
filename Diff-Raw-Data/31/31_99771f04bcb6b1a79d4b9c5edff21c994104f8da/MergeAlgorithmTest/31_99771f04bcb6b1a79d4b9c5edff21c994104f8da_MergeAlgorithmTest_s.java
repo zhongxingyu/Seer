@@ -1,0 +1,190 @@
+ /*
+  * Copyright (C) 2009, Christian Halstrick <christian.halstrick@sap.com>
+  * and other copyright owners as documented in the project's IP log.
+  *
+  * This program and the accompanying materials are made available
+  * under the terms of the Eclipse Distribution License v1.0 which
+  * accompanies this distribution, is reproduced below, and is
+  * available at http://www.eclipse.org/org/documents/edl-v10.php
+  *
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or
+  * without modification, are permitted provided that the following
+  * conditions are met:
+  *
+  * - Redistributions of source code must retain the above copyright
+  *   notice, this list of conditions and the following disclaimer.
+  *
+  * - Redistributions in binary form must reproduce the above
+  *   copyright notice, this list of conditions and the following
+  *   disclaimer in the documentation and/or other materials provided
+  *   with the distribution.
+  *
+  * - Neither the name of the Eclipse Foundation, Inc. nor the
+  *   names of its contributors may be used to endorse or promote
+  *   products derived from this software without specific prior
+  *   written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+  * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+  * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+  * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+ package org.eclipse.jgit.merge;
+ 
+ import java.io.ByteArrayOutputStream;
+ import java.io.IOException;
+ 
+ import junit.framework.TestCase;
+ 
+ import org.eclipse.jgit.diff.RawText;
+ import org.eclipse.jgit.diff.RawTextComparator;
+ import org.eclipse.jgit.lib.Constants;
+ 
+ public class MergeAlgorithmTest extends TestCase {
+ 	MergeFormatter fmt=new MergeFormatter();
+ 
+ 	/**
+ 	 * Check for a conflict where the second text was changed similar to the
+ 	 * first one, but the second texts modification covers one more line.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testTwoConflictingModifications() throws IOException {
+ 		assertEquals(t("a<b=Z>Zdefghij"),
+ 				merge("abcdefghij", "abZdefghij", "aZZdefghij"));
+ 	}
+ 
+ 	/**
+ 	 * Test a case where we have three consecutive chunks. The first text
+ 	 * modifies all three chunks. The second text modifies the first and the
+ 	 * last chunk. This should be reported as one conflicting region.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testOneAgainstTwoConflictingModifications() throws IOException {
+ 		assertEquals(t("aZ<Z=c>Zefghij"),
+ 				merge("abcdefghij", "aZZZefghij", "aZcZefghij"));
+ 	}
+ 
+ 	/**
+ 	 * Test a merge where only the second text contains modifications. Expect as
+ 	 * merge result the second text.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testNoAgainstOneModification() throws IOException {
+ 		assertEquals(t("aZcZefghij"),
+ 				merge("abcdefghij", "abcdefghij", "aZcZefghij"));
+ 	}
+ 
+ 	/**
+ 	 * Both texts contain modifications but not on the same chunks. Expect a
+ 	 * non-conflict merge result.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testTwoNonConflictingModifications() throws IOException {
+ 		assertEquals(t("YbZdefghij"),
+ 				merge("abcdefghij", "abZdefghij", "Ybcdefghij"));
+ 	}
+ 
+ 	/**
+ 	 * Merge two complicated modifications. The merge algorithm has to extend
+ 	 * and combine conflicting regions to get to the expected merge result.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testTwoComplicatedModifications() throws IOException {
+		assertEquals(t("a<ZZZZfZh=bYdYYYY>ZY"),
+ 				merge("abcdefghij", "aZZZZfZhZj", "abYdYYYYiY"));
+ 	}
+ 
+ 	/**
+ 	 * Test a conflicting region at the very start of the text.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testConflictAtStart() throws IOException {
+ 		assertEquals(t("<Z=Y>bcdefghij"),
+ 				merge("abcdefghij", "Zbcdefghij", "Ybcdefghij"));
+ 	}
+ 
+ 	/**
+ 	 * Test a conflicting region at the very end of the text.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testConflictAtEnd() throws IOException {
+ 		assertEquals(t("abcdefghi<Z=Y>"),
+ 				merge("abcdefghij", "abcdefghiZ", "abcdefghiY"));
+ 	}
+ 
+ 	/**
+ 	 * Check for a conflict where the second text was changed similar to the
+ 	 * first one, but the second texts modification covers one more line.
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testSameModification() throws IOException {
+ 		assertEquals(t("abZdefghij"),
+ 				merge("abcdefghij", "abZdefghij", "abZdefghij"));
+ 	}
+ 
+ 	/**
+ 	 * Check that a deleted vs. a modified line shows up as conflict (see Bug
+ 	 * 328551)
+ 	 *
+ 	 * @throws IOException
+ 	 */
+ 	public void testDeleteVsModify() throws IOException {
+ 		assertEquals(t("ab<=Z>defghij"),
+ 				merge("abcdefghij", "abdefghij", "abZdefghij"));
+ 	}
+ 
+ 	private String merge(String commonBase, String ours, String theirs) throws IOException {
+ 		MergeResult r = MergeAlgorithm.merge(RawTextComparator.DEFAULT,
+ 				T(commonBase), T(ours), T(theirs));
+ 		ByteArrayOutputStream bo=new ByteArrayOutputStream(50);
+ 		fmt.formatMerge(bo, r, "B", "O", "T", Constants.CHARACTER_ENCODING);
+ 		return new String(bo.toByteArray(), Constants.CHARACTER_ENCODING);
+ 	}
+ 
+ 	public static String t(String text) {
+ 		StringBuilder r = new StringBuilder();
+ 		for (int i = 0; i < text.length(); i++) {
+ 			char c = text.charAt(i);
+ 			switch (c) {
+ 			case '<':
+ 				r.append("<<<<<<< O\n");
+ 				break;
+ 			case '=':
+ 				r.append("=======\n");
+ 				break;
+ 			case '>':
+ 				r.append(">>>>>>> T\n");
+ 				break;
+ 			default:
+ 				r.append(c);
+ 				r.append('\n');
+ 			}
+ 		}
+ 		return r.toString();
+ 	}
+ 
+ 	public static RawText T(String text) {
+ 		return new RawText(Constants.encode(t(text)));
+ 	}
+ 
+ }

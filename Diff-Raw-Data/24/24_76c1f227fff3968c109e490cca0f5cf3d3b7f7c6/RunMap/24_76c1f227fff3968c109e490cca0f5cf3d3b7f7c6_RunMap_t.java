@@ -1,0 +1,257 @@
+ /*******************************************************************************
+  *
+  * Copyright (c) 2004-2009 Oracle Corporation.
+  *
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+ *
+  *    Kohsuke Kawaguchi, Tom Huybrechts
+  *
+  *
+ *******************************************************************************/
+ 
+ package hudson.model;
+ 
+ import java.io.File;
+ import java.io.FilenameFilter;
+ import java.io.IOException;
+ import java.util.AbstractMap;
+ import java.util.Collections;
+ import java.util.Comparator;
+ import java.util.HashMap;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.SortedMap;
+ import java.util.TreeMap;
+ import java.util.logging.Logger;
+ import java.text.SimpleDateFormat;
+ import java.text.ParseException;
+ 
+ /**
+  * {@link Map} from build number to {@link Run}.
+  *
+  * <p> This class is multi-thread safe by using copy-on-write technique, and it
+  * also updates the bi-directional links within {@link Run} accordingly.
+  *
+  * @author Kohsuke Kawaguchi
+  */
+ public final class RunMap<R extends Run<?, R>> extends AbstractMap<Integer, R> implements SortedMap<Integer, R> {
+     // copy-on-write map
+ 
+     private transient volatile SortedMap<Integer, R> builds;
+     /**
+      * Read-only view of this map.
+      */
+     private final SortedMap<Integer, R> view = Collections.unmodifiableSortedMap(this);
+     private transient volatile Map<Integer, Long> buildsTimeMap = new HashMap<Integer, Long>();
+ 
+     public RunMap() {
+         builds = new TreeMap<Integer, R>(BUILD_TIME_COMPARATOR);
+     }
+ 
+     public Set<Entry<Integer, R>> entrySet() {
+         // since the map is copy-on-write, make sure no one modifies it
+         return Collections.unmodifiableSet(builds.entrySet());
+     }
+ 
+     public synchronized R put(R value) {
+         return put(value.getNumber(), value);
+     }
+ 
+     @Override
+     public synchronized R put(Integer key, R value) {
+         // copy-on-write update
+         TreeMap<Integer, R> m = new TreeMap<Integer, R>(builds);
+ 
+         buildsTimeMap.put(key, value.getTimeInMillis());
+         R r = update(m, key, value);
+ 
+         this.builds = m;
+         return r;
+     }
+ 
+     @Override
+     public synchronized void putAll(Map<? extends Integer, ? extends R> rhs) {
+         // copy-on-write update
+         TreeMap<Integer, R> m = new TreeMap<Integer, R>(builds);
+ 
+         for (Map.Entry<? extends Integer, ? extends R> e : rhs.entrySet()) {
+             buildsTimeMap.put(e.getKey(), e.getValue().getTimeInMillis());
+             update(m, e.getKey(), e.getValue());
+         }
+ 
+         this.builds = m;
+     }
+ 
+     private R update(TreeMap<Integer, R> m, Integer key, R value) {
+         // things are bit tricky because this map is order so that the newest one comes first,
+         // yet 'nextBuild' refers to the newer build.
+         R first = m.isEmpty() ? null : m.get(m.firstKey());
+         R r = m.put(key, value);
+         SortedMap<Integer, R> head = m.headMap(key);
+         if (!head.isEmpty()) {
+        	if(m.containsKey(head.lastKey())) {
+				R prev = m.get(head.lastKey());
+				value.previousBuild = prev.previousBuild;
+				value.nextBuild = prev;
+				if (containsValue(value.previousBuild)) {
+					value.previousBuild.nextBuild = value;
+				}
+				prev.previousBuild = value;
+             }
+         } else {
+             value.previousBuild = first;
+             value.nextBuild = null;
+            if (containsValue(first)) {
+                 first.nextBuild = value;
+             }
+         }
+         return r;
+     }
+ 
+     public synchronized boolean remove(R run) {
+         if (run.nextBuild != null) {
+             run.nextBuild.previousBuild = run.previousBuild;
+         }
+         if (run.previousBuild != null) {
+             run.previousBuild.nextBuild = run.nextBuild;
+         }
+ 
+         // copy-on-write update
+         TreeMap<Integer, R> m = new TreeMap<Integer, R>(builds);
+         buildsTimeMap.remove(run.getNumber());
+         R r = m.remove(run.getNumber());
+         this.builds = m;
+ 
+         return r != null;
+     }
+ 
+     public synchronized void reset(TreeMap<Integer, R> builds) {
+         this.builds = new TreeMap<Integer, R>(BUILD_TIME_COMPARATOR);
+         putAll(builds);
+     }
+ 
+     /**
+      * Gets the read-only view of this map.
+      */
+     public SortedMap<Integer, R> getView() {
+         return view;
+     }
+ 
+ //
+ // SortedMap delegation
+ //
+     public Comparator<? super Integer> comparator() {
+         return builds.comparator();
+     }
+ 
+     public SortedMap<Integer, R> subMap(Integer fromKey, Integer toKey) {
+         return builds.subMap(fromKey, toKey);
+     }
+ 
+     public SortedMap<Integer, R> headMap(Integer toKey) {
+         return builds.headMap(toKey);
+     }
+ 
+     public SortedMap<Integer, R> tailMap(Integer fromKey) {
+         return builds.tailMap(fromKey);
+     }
+ 
+     public Integer firstKey() {
+         return builds.firstKey();
+     }
+ 
+     public Integer lastKey() {
+         return builds.lastKey();
+     }
+     public static final Comparator<Comparable> COMPARATOR = new Comparator<Comparable>() {
+         public int compare(Comparable o1, Comparable o2) {
+             return -o1.compareTo(o2);
+         }
+     };
+     /**
+      * Compare Build by timestamp
+      */
+     private Comparator<Integer> BUILD_TIME_COMPARATOR = new Comparator<Integer>() {
+         public int compare(Integer i1, Integer i2) {
+             Long date1 = buildsTimeMap.get(i1);
+             Long date2 = buildsTimeMap.get(i2);
+             if (null == date1 || null == date2) {
+                 return COMPARATOR.compare(i1, i2);
+             }
+             return -date1.compareTo(date2);
+         }
+     };
+ 
+     /**
+      * {@link Run} factory.
+      */
+     public interface Constructor<R extends Run<?, R>> {
+ 
+         R create(File dir) throws IOException;
+     }
+ 
+     /**
+      * Fills in {@link RunMap} by loading build records from the file system.
+      *
+      * @param job Job that owns this map.
+      * @param cons Used to create new instance of {@link Run}.
+      */
+     public synchronized void load(Job job, Constructor<R> cons) {
+         final SimpleDateFormat formatter = Run.ID_FORMATTER.get();
+ 
+         TreeMap<Integer, R> builds = new TreeMap<Integer, R>(BUILD_TIME_COMPARATOR);
+         File buildDir = job.getBuildDir();
+         buildDir.mkdirs();
+         String[] buildDirs = buildDir.list(new FilenameFilter() {
+             public boolean accept(File dir, String name) {
+                 // HUDSON-1461 sometimes create bogus data directories with impossible dates, such as year 0, April 31st,
+                 // or August 0th. Date object doesn't roundtrip those, so we eventually fail to load this data.
+                 // Don't even bother trying.
+                 if (!isCorrectDate(name)) {
+                     LOGGER.fine("Skipping " + new File(dir, name));
+                     return false;
+                 }
+                 return !name.startsWith("0000") && new File(dir, name).isDirectory();
+             }
+ 
+             private boolean isCorrectDate(String name) {
+                 try {
+                     if (formatter.format(formatter.parse(name)).equals(name)) {
+                         return true;
+                     }
+                 } catch (ParseException e) {
+                     // fall through
+                 }
+                 return false;
+             }
+         });
+ 
+         for (String build : buildDirs) {
+             File d = new File(buildDir, build);
+             if (new File(d, "build.xml").exists()) {
+                 // if the build result file isn't in the directory, ignore it.
+                 try {
+                     R b = cons.create(d);
+                     buildsTimeMap.put(b.getNumber(), b.getTimeInMillis());
+                     builds.put(b.getNumber(), b);
+                 } catch (IOException e) {
+                     e.printStackTrace();
+                 } catch (InstantiationError e) {
+                     e.printStackTrace();
+                 }
+             }
+         }
+ 
+         reset(builds);
+ 
+         for (R r : builds.values()) {
+             r.onLoad();
+         }
+     }
+     private static final Logger LOGGER = Logger.getLogger(RunMap.class.getName());
+ }

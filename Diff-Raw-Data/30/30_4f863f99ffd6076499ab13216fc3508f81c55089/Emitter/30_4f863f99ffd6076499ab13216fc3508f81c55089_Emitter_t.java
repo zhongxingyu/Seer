@@ -1,0 +1,189 @@
+ /*
+  * Emitter.java
+  * Copyright (C) 2011,2012 Wannes De Smet
+  * 
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  * 
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  * 
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ package org.xenmaster.monitoring;
+ 
+ import java.io.BufferedReader;
+ import java.io.IOException;
+ import java.io.InputStreamReader;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+ 
+ import net.wgr.core.ReflectionUtils;
+ import net.wgr.lang.I18N;
+ import net.wgr.wcp.Commander;
+ import net.wgr.wcp.Scope;
+ import net.wgr.wcp.command.Command;
+ 
+ import org.apache.log4j.Logger;
+ import org.xenmaster.api.entity.Event;
+ import org.xenmaster.api.entity.NamedEntity;
+ import org.xenmaster.api.entity.Task;
+import org.xenmaster.api.entity.XenApiEntity;
+ import org.xenmaster.api.util.CachingFacility;
+ import org.xenmaster.monitoring.LogEntry.Level;
+ 
+ /**
+  * Issues requested monitoring data "formally and with authority" 
+  * @created Oct 30, 2011
+  * @author double-u
+  */
+ public class Emitter {
+ 
+     protected List<EventDescriptor> descriptors;
+ 
+     public Emitter() {
+         descriptors = new ArrayList<>();
+         buildDescriptors();
+     }
+ 
+     protected final void buildDescriptors() {
+         try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/trans_" + I18N.instance().getDefaultLocale().getLanguage() + ".events")))) {
+             String line;
+             while ((line = br.readLine()) != null) {
+                 if (line.startsWith("#")) {
+                     continue;
+                 }
+                 descriptors.add(EventDescriptor.fromString(line));
+             }
+         } catch (IOException ex) {
+             Logger.getLogger(getClass()).error("Failed to read event file", ex);
+         }
+     }
+ 
+     public void listenToEvents(EventHandler eh) {
+         eh.addListener(new EventHandler.EventListener() {
+ 
+             @Override
+             public void eventOcurred(Event event) {
+                 if (event.getSnapshot() == null) {
+                     return;
+                 }
+                
+                XenApiEntity snapshot = event.getSnapshot();
+ 
+                 // Task come and go too quickly, they are mostly already gone before we can get their reference
+                boolean hasValidReference = event.getOperation() == Event.Operation.MOD && !(snapshot instanceof Task);
+                String reference = snapshot.getReference(hasValidReference);
+                Object cachedObject = CachingFacility.get(reference, snapshot.getClass());
+                Map<String, Object> diff = ReflectionUtils.diff(cachedObject, snapshot);
+ 
+                 if (diff.size() < 1) {
+                     // Nothing was changed?
+                     return;
+                 }
+ 
+                 String title = event.getOperation().name();
+                 String message = "";
+                 ApiEventEntry.Level level = LogEntry.Level.INFORMATION;
+ 
+                if (hasValidReference) {                    
+                     diffIt:
+                     for (Map.Entry<String, Object> d : diff.entrySet()) {
+                         for (EventDescriptor ed : descriptors) {
+                            if (d.getValue() == null) {
+                                 continue;
+                             }
+ 
+                            if (ed.match(snapshot.getClass().getSimpleName(), d.getKey(), d.getValue().toString())) {
+                                 title = ed.getTitle();
+                                 message = ed.getDescription();
+ 
+                                if (NamedEntity.class.isAssignableFrom(snapshot.getClass())) {
+                                    NamedEntity ne = (NamedEntity) snapshot;
+                                     title = String.format(title, ne.getName(), ne.getDescription());
+                                     message = String.format(message, ne.getName(), ne.getDescription());
+                                     level = ed.getLevel();
+                                 }
+                                 break diffIt;
+                             }
+                         }
+                     }
+                 }
+ 
+                ApiEventEntry le = new ApiEventEntry(reference, event.getEventClass(),
+                         title, message, diff, event.getOperation().name(), level);
+                 emit(le);
+             }
+         }, 0);
+     }
+ 
+     public static void emit(LogEntry le) {
+         LogEntry filledIn = le;
+         filledIn.doLocalization();
+         Commander.get().commandeer(new Command("log", "event", le), new Scope(Scope.Target.ALL));
+     }
+ 
+     protected static final class EventDescriptor {
+ 
+         protected String className;
+         protected String field;
+         protected String newValue;
+         protected String title, description;
+         protected ApiEventEntry.Level level;
+         protected final static Pattern EVENT_DESCRIPTOR_LINE = Pattern.compile("([^\\.]+)\\.([^:]+):([^=]+)=([^;]+);([^;]+);(.+)");
+ 
+         public EventDescriptor(String className, String field, String newValue, ApiEventEntry.Level level, String title, String description) {
+             this.className = className;
+             this.field = field;
+             this.newValue = newValue;
+             this.title = title;
+             this.description = description;
+             this.level = level;
+         }
+ 
+         public boolean match(String className, String fieldName, String newValue) {
+             return this.className.equals(className) && this.field.equals(fieldName) && this.newValue.equals(newValue);
+         }
+ 
+         public static EventDescriptor fromString(String string) {
+             Matcher m = EVENT_DESCRIPTOR_LINE.matcher(string);
+             if (!m.find()) {
+                 throw new IllegalArgumentException("Event descriptor line is not valid");
+             }
+ 
+             return new EventDescriptor(m.group(1).trim(), m.group(2).trim(), m.group(3).trim(), ApiEventEntry.Level.valueOf(m.group(4).trim()), m.group(5).trim(), m.group(6).trim());
+         }
+ 
+         public String getClassName() {
+             return className;
+         }
+ 
+         public String getField() {
+             return field;
+         }
+ 
+         public String getNewValue() {
+             return newValue;
+         }
+ 
+         public String getTitle() {
+             return title;
+         }
+ 
+         public String getDescription() {
+             return description;
+         }
+ 
+         public Level getLevel() {
+             return level;
+         }
+     }
+ }

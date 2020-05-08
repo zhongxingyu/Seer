@@ -1,0 +1,86 @@
+ package lycanite.lycanitesmobs;
+ 
+ import lycanite.lycanitesmobs.api.helpers.LMReflectionHelper;
+ import net.minecraft.potion.Potion;
+ 
+ public class PotionBase extends Potion {
+ 	public static int customPotionOffset = 0;
+ 	public static int customPotionLength = 24;
+ 	
+ 	// ==================================================
+ 	//                    Constructor
+ 	// ==================================================
+ 	public static void reserveEffectIDSpace() {
+		customPotionOffset = Potion.potionTypes.length;
+		int newLength = customPotionOffset + customPotionLength;
+ 		LycanitesMobs.printDebug("EffectsSetup", "~O========== Custom Potion Effects Setup ==========O~");
+		LycanitesMobs.printDebug("EffectsSetup", "Initial size is: " + Potion.potionTypes.length + " (vanilla size is: 32)");
+		LycanitesMobs.printDebug("EffectsSetup", "Size will be increased by: " + customPotionLength + " (these slots are reserved for this mod)");
+ 		LycanitesMobs.printDebug("EffectsSetup", "New Size will be: " + newLength);
+		LycanitesMobs.printDebug("EffectsSetup", "New Effects from this mod should automatically start with ID: " + customPotionOffset + " They shouldn't exceed: " + (newLength - 1));
+		LycanitesMobs.printDebug("EffectsSetup", "If the initial size is larger than the vanilla then another mod has increased its size, here it should then be increased further.");
+		LycanitesMobs.printDebug("EffectsSetup", "Any mods that add effects after this mod should then extend the list further where ID " + (newLength - 1) + " may then be exceeded, but not by this mod.");
+ 		
+		Potion[] potionTypes = new Potion[newLength];
+		LycanitesMobs.printDebug("EffectsSetup", "Created the new extended list: " + potionTypes);
+		System.arraycopy(Potion.potionTypes, 0, potionTypes, 0, customPotionOffset);
+ 		
+		LMReflectionHelper.setPrivateFinalValue(Potion.class, null, potionTypes, "potionTypes", "field_76425_a");
+ 		LycanitesMobs.printDebug("EffectsSetup", "Replaced the old list with the new list: " + Potion.potionTypes);
+ 		LycanitesMobs.printDebug("EffectsSetup", "New list length is: " + Potion.potionTypes.length + " this should be " + newLength);
+ 	}
+ 	
+ 	public static int getNextPotionID() {
+ 		return customPotionOffset++;
+ 	}
+ 	
+ 	
+ 	// ==================================================
+ 	//                    Constructor
+ 	// ==================================================
+ 	public PotionBase(String name, boolean badEffect, int color) {
+ 		super(getNextPotionID(), badEffect, color);
+ 		this.setPotionName(name);
+ 		this.effectAdded(false);
+ 	}
+ 
+ 	public PotionBase(int forcedID, String name, boolean badEffect, int color) {
+ 		super(forcedID, badEffect, color);
+ 		this.setPotionName(name);
+ 		this.effectAdded(true);
+ 	}
+ 	
+ 	public void effectAdded(boolean forced) {
+ 		if(this.getId() >= Potion.potionTypes.length) {
+ 			LycanitesMobs.printWarning("", "A problem occured when adding a new Potion Effect:");
+ 			LycanitesMobs.printWarning("", "The effect ID is higher than the effect bounds, this will cause problems in game. For safety the game has been crashed!");
+ 			if(forced)
+ 				LycanitesMobs.printWarning("", "Automatic Effect IDs should work now, please try them, if the error persists please enable Custmo Effects Debugging via the config and psot the bug report.");
+ 			else
+ 				LycanitesMobs.printWarning("", "Please enable Effect ID Debugging via the config and report this bug along the debug into and any mods that may also add custom effect IDs.");
+ 			LycanitesMobs.printWarning("", "You can disable custom effects via the config which should stop this issue, however the custom effects wont be available.");
+ 			LycanitesMobs.printWarning("", "Potion Effect Name: " + this.getName() + " ID: " + this.getId());
+ 			throw new RuntimeException();
+ 		}
+ 		LycanitesMobs.printDebug("EffectsSetup", "New Potion Effect added: " + this.getName() + "(ID: " + this.getId() + (forced ? " FORCED" : "") + ")");
+ 	}
+ 	
+ 	
+ 	// ==================================================
+ 	//                    Visuals
+ 	// ==================================================
+ 	@Override
+ 	 public boolean isInstant() {
+         return false;
+     }
+ 	
+ 	
+ 	// ==================================================
+ 	//                    Visuals
+ 	// ==================================================
+ 	@Override
+ 	public Potion setIconIndex(int par1, int par2) {
+         super.setIconIndex(par1, par2);
+         return this;
+     }
+ }

@@ -1,0 +1,257 @@
+ import java.io.*;
+ import java.util.*;
+ import javax.mail.*;
+ import javax.mail.internet.*; 
+ 
+ /** Mailer. No relation to Norman. Sends an email message.
+  * My old Sender class, recast as a Bean for use in JSP's & elsewhere.
+  * @author Ian F. Darwin
+  * @version $Id$
+  */
+ public class Mailer {
+ 	/** The javamail session object. */
+ 	protected Session session;
+ 	/** The sender's email address */
+ 	protected String from;
+ 	/** The subject of the message. */
+ 	protected String subject;
+ 	/** The recipient ("To:"), as Strings. */
+ 	protected ArrayList toList = new ArrayList();
+ 	/** The CC list, as Strings. */
+ 	protected ArrayList ccList = new ArrayList();
+ 	/** The BCC list, as Strings. */
+ 	protected ArrayList bccList = new ArrayList();
+ 	/** The text of the message. */
+ 	protected String body;
+ 	/** The SMTP relay host */
+ 	protected String mailHost;
+ 	/** The verbosity setting */
+ 	protected boolean verbose;
+ 
+ 	/** Get from */
+ 	public String getFrom() {
+ 		return from;
+ 	}
+ 
+ 	/** Set from */
+ 	public void setFrom(String fm) {
+ 		from = fm;
+ 	}
+ 
+ 	/** Get subject */
+ 	public String getSubject() {
+ 		return subject;
+ 	}
+ 
+ 	/** Set subject */
+ 	public void setSubject(String subj) {
+ 		subject = subj;
+ 	}
+ 
+ 	// SETTERS/GETTERS FOR TO: LIST 
+ 
+ 	/** Get tolist, as an array of Strings */
+ 	public ArrayList getToList() {
+ 		return toList;
+ 	}
+ 
+ 	/** Set to list to an ArrayList of Strings */
+ 	public void setToList(ArrayList to) {
+ 		toList = to;
+ 	}
+ 
+ 	/** Set to as a string like "tom, mary, robin@host". Loses any
+ 	 * previously-set values. */
+ 	public void setToList(String s) {
+ 		toList = tokenize(s);
+ 	}
+ 
+ 	/** Add one "to" recipient */
+ 	public void addTo(String to) {
+ 		toList.add(to);
+ 	}
+ 
+ 	// SETTERS/GETTERS FOR CC: LIST 
+ 
+ 	/** Get cclist, as an array of Strings */
+ 	public ArrayList getCcList() {
+ 		return ccList;
+ 	}
+ 
+ 	/** Set cc list to an ArrayList of Strings */
+ 	public void setCcList(ArrayList cc) {
+ 		ccList = cc;
+ 	}
+ 
+ 	/** Set cc as a string like "tom, mary, robin@host". Loses any
+ 	 * previously-set values. */
+ 	public void setCcList(String s) {
+ 		ccList = tokenize(s);
+ 	}
+ 
+ 	/** Add one "cc" recipient */
+ 	public void addCc(String cc) {
+ 		ccList.add(cc);
+ 	}
+ 
+ 	// SETTERS/GETTERS FOR BCC: LIST 
+ 
+ 	/** Get bcclist, as an array of Strings */
+ 	public ArrayList getBccList() {
+ 		return bccList;
+ 	}
+ 
+ 	/** Set bcc list to an ArrayList of Strings */
+ 	public void setBccList(ArrayList bcc) {
+ 		bccList = bcc;
+ 	}
+ 
+ 	/** Set bcc as a string like "tom, mary, robin@host". Loses any
+ 	 * previously-set values. */
+ 	public void setBccList(String s) {
+ 		bccList = tokenize(s);
+ 	}
+ 
+ 	/** Add one "bcc" recipient */
+ 	public void addBcc(String bcc) {
+ 		bccList.add(bcc);
+ 	}
+ 
+ 	// SETTER/GETTER FOR MESSAGE BODY
+ 
+ 	/** Get message */
+ 	public String getBody() {
+ 		return body;
+ 	}
+ 
+ 	/** Set message */
+ 	public void setBody(String text) {
+ 		body = text;
+ 	}
+ 
+ 	// SETTER/GETTER FOR VERBOSITY
+ 
+ 	/** Get verbose */
+ 	public boolean isVerbose() {
+ 		return verbose;
+ 	}
+ 
+ 	/** Set verbose */
+ 	public void setVerbose(boolean v) {
+ 		verbose = v;
+ 	}
+ 
+ 	/** Check if all required fields have been set before sending.
+ 	 * Normally called e.g., by a JSP before calling doSend.
+ 	 * Is also called by doSend for verification.
+ 	 */
+ 	public boolean isComplete() {
+		if (from == null    || from.length()==0 ||
+		    subject == null || subject.length()==0 ||
+		    toList.size()==0 ||
+		    body == null || body.length()==0 ||
+		    mailHost == null || mailHost.length()==0 )
+ 			return false;
+ 		return true;
+ 	}
+ 
+ 	public void setServer(String s) {
+ 		mailHost = s;
+ 	}
+ 
+ 	/** Send the message.
+ 	 */
+ 	public synchronized void doSend() throws MessagingException {
+ 
+ 		if (!isComplete())
+ 			throw new IllegalArgumentException(
+ 				"doSend called before message was complete");
+ 
+ 		/** Properties object used to pass props into the MAIL API */
+ 		Properties props = new Properties();
+ 		props.put("mail.smtp.host", mailHost);
+ 
+ 		// Create the Session object
+ 		if (session == null) {
+ 			session = Session.getDefaultInstance(props, null);
+ 			if (verbose)
+ 				session.setDebug(true);		// Verbose!
+ 		}
+ 		
+ 		// create a message
+ 		final Message mesg = new MimeMessage(session);
+ 
+ 		InternetAddress[] addresses;
+ 
+ 		// TO Address list
+ 		addresses = new InternetAddress[toList.size()];
+ 		for (int i=0; i<addresses.length; i++)
+ 			addresses[i] = new InternetAddress((String)toList.get(i));
+ 		mesg.setRecipients(Message.RecipientType.TO, addresses);
+ 
+ 		// From Address
+ 		mesg.setFrom(new InternetAddress(from));
+ 
+ 		// CC Address list
+ 		addresses = new InternetAddress[ccList.size()];
+ 		for (int i=0; i<addresses.length; i++)
+ 			addresses[i] = new InternetAddress((String)ccList.get(i));
+ 		mesg.setRecipients(Message.RecipientType.CC, addresses);
+ 
+ 		// BCC Address list
+ 		addresses = new InternetAddress[bccList.size()];
+ 		for (int i=0; i<addresses.length; i++)
+ 			addresses[i] = new InternetAddress((String)bccList.get(i));
+ 		mesg.setRecipients(Message.RecipientType.BCC, addresses);
+ 
+ 		// The Subject
+ 		mesg.setSubject(subject);
+ 
+ 		// Now the message body.
+ 		mesg.setText(body);
+ 
+ 		// Finally, send the message! (use static Transport method)
+ 		// Do this in a Thread as it sometimes is too slow for JServ
+ 		new Thread() {
+ 			public void run() {
+ 				try {
+ 					Transport.send(mesg);
+ 				} catch (MessagingException e) {
+ 					throw new IllegalArgumentException(
+ 					"Transport.send() threw: " + e.toString());
+ 				}
+ 			}
+ 		}.start();
+ 	}
+ 
+ 	/** Convenience method that does it all with one call. */
+ 	public static void send(String mailhost, 
+ 		String recipient, String sender, String subject, String message) 
+	throws MailException {
+ 		Mailer m = new Mailer();
+		m.setSMTPhost(mailhost);
+ 		m.addTo(recipient);
+ 		m.setFrom(sender);
+ 		m.setSubject(subject);
+ 		m.setBody(message);
+ 		m.doSend();
+ 	}
+ 
+ 
+ 	/** Convert a list of addresses to an ArrayList. This will work
+ 	 * for simple names like "tom, mary@foo.com, 123.45@c$.com"
+ 	 * but will fail on certain complex (but RFC-valid) names like
+ 	 * "(Darwin, Ian) <ian@darwinsys.com>".
+ 	 * Or even "Ian Darwin <ian@darwinsys.com>".
+ 	 */
+ 	protected ArrayList tokenize(String s) {
+ 		ArrayList al = new ArrayList();
+ 		StringTokenizer tf = new StringTokenizer(s, ",");
+ 		// For each word found in the line
+ 		while (tf.hasMoreTokens()) {
+ 			// trim blanks, and add to list.
+ 			al.add(tf.nextToken().trim());
+ 		}
+ 		return al;
+ 	}
+ }

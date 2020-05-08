@@ -1,0 +1,81 @@
+ package goo.TeaTimer;
+ 
+ import android.content.Context;
+ import android.content.res.Resources;
+ import android.graphics.Bitmap;
+ import android.graphics.Canvas;
+ import android.graphics.Color;
+ import android.graphics.Paint;
+import android.graphics.RadialGradient;
+ import android.graphics.RectF;
+import android.graphics.Shader;
+ 
+ class CircleAnimation implements TimerAnimation.TimerDrawing
+ {
+ 	Context mContext = null;
+ 	// buffer 
+ 	private final int WIDTH = 180;
+ 	private final int HEIGHT = 180;
+ 	private final int STROKE = 0;
+ 	private int mRadius = 85,mInnerRadius=30;
+ 
+ 	private Paint mCirclePaint,mInnerPaint,mArcPaint;
+ 	
+	public CircleAnimation(Resources resources)
+ 	{
+ 		mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+ 		mCirclePaint.setColor(Color.rgb(0,0,0));
+ 	
+ 		mInnerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+ 		mInnerPaint.setColor(Color.rgb(24,24,24));
+ 		
+		int end = resources.getColor(R.color.tea_fill);
+		
+		int offset = 50;
+		
+		int r = Color.red(end) - offset;
+		int g = Color.green(end) - offset;
+		int b = Color.blue(end) - offset;
+		
+		int start = Color.rgb(r, g, b);
+		
+		RadialGradient gradient = new RadialGradient(	WIDTH/2.0f, HEIGHT/2.0f, mRadius, 
+														start, 										
+														end, 
+														Shader.TileMode.CLAMP);
+		
+ 		mArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+ 		mArcPaint.setStyle(Paint.Style.FILL);
+		mArcPaint.setShader(gradient);
+		
+ 	}
+ 	
+ 	/**
+ 	 * Updates the image to be in sync with the current time
+ 	 * @param time in milliseconds
+ 	 * @param max the original time set in milliseconds
+ 	 */
+ 	public Bitmap updateImage(int time,int max)
+ 	{	
+ 		
+ 		Bitmap bitmap = Bitmap.createBitmap(WIDTH,HEIGHT,Bitmap.Config.ARGB_8888);
+ 		
+ 		float p = (max == 0) ? 0 : (time/(float)max);
+ 		
+ 		float w2 = WIDTH/2.0f;
+ 		float h2 = HEIGHT/2.0f;
+ 		
+ 		Canvas canvas = new Canvas(bitmap);
+ 		
+ 		canvas.drawCircle(w2,h2,mRadius,mCirclePaint);
+ 		
+ 		RectF rect = new RectF(w2-mRadius, h2-mRadius, w2+mRadius, h2+mRadius);
+		
+ 		canvas.drawArc(rect,270,360*(1-p),true,mArcPaint);
+ 		
+ 		canvas.drawCircle(w2,h2,mInnerRadius,mInnerPaint);
+ 		
+ 		return bitmap;
+ 		
+ 	}
+ }

@@ -1,0 +1,234 @@
+ package com.kik.plugin.launch;
+import java.io.BufferedInputStream;
+ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.List;
+  
+ /**
+  * Usage of following class can go as ...
+  * <P><PRE><CODE>
+  * 		SysCommandExecutor cmdExecutor = new SysCommandExecutor();
+  * 		cmdExecutor.setOutputLogDevice(new LogDevice());
+  * 		cmdExecutor.setErrorLogDevice(new LogDevice());
+  * 		int exitStatus = cmdExecutor.runCommand(commandLine);
+  * </CODE></PRE></P>
+  * 
+  * OR
+  * 
+  * <P><PRE><CODE>
+  * 		SysCommandExecutor cmdExecutor = new SysCommandExecutor(); 		
+  * 		int exitStatus = cmdExecutor.runCommand(commandLine);
+  * 
+  * 		String cmdError = cmdExecutor.getCommandError();
+  * 		String cmdOutput = cmdExecutor.getCommandOutput(); 
+  * </CODE></PRE></P> 
+  */
+ public class SysCommandExecutor
+ {	
+	private static final int MAX_BUFFER_SIZE = 1024;
+ 	public static interface ILogDevice
+ 	{
+ 		public void log(String str);
+ 	}
+ 	
+ 	public static class AsyncStreamReader extends Thread
+ 	{
+ 		private StringBuffer fBuffer = null;
+ 		private InputStream fInputStream = null;
+ 		private String fThreadId = null;
+ 		private boolean fStop = false;
+ 		private ILogDevice fLogDevice = null;
+ 		
+ 		private String fNewLine = null;
+ 		
+ 		public AsyncStreamReader(InputStream inputStream, StringBuffer buffer, ILogDevice logDevice, String threadId)
+ 		{
+ 			fInputStream = inputStream;
+ 			fBuffer = buffer;
+ 			fThreadId = threadId;
+ 			fLogDevice = logDevice;
+ 			
+ 			fNewLine = System.getProperty("line.separator");
+ 		}	
+ 		
+ 		public String getBuffer() {		
+ 			return fBuffer.toString();
+ 		}
+ 		
+ 		public void run()
+ 		{
+ 			try {
+ 				readCommandOutput();
+ 			} catch (Exception ex) {
+ 				//ex.printStackTrace(); //DEBUG
+ 			}
+ 		}
+ 		
+ 		private void readCommandOutput() throws IOException
+ 		{		
+			BufferedInputStream bufOut = new BufferedInputStream(fInputStream);		
+ 			String line = null;
+			byte[] ret = new byte[MAX_BUFFER_SIZE];
+			boolean done = false;
+
+			while (!done) {
+				int read = bufOut.read(ret);
+				if (read == -1) {
+					done = true;
+					break;
+				}
+				fBuffer.append(new String(ret, 0, read));	
+			}
+				
+ 			bufOut.close();
+ 			//printToConsole("END OF: " + fThreadId); //DEBUG
+ 		}
+ 		
+ 		public void stopReading() {
+ 			fStop = true;
+ 		}
+ 		
+ 		private void printToDisplayDevice(String line)
+ 		{
+ 			if( fLogDevice != null )
+ 				fLogDevice.log(line);
+ 			else
+ 			{
+ 				//printToConsole(line);//DEBUG
+ 			}
+ 		}
+ 		
+ 		private synchronized void printToConsole(String line) {
+ 			System.out.println(line);
+ 		}
+ 	}
+ 	
+ 	private ILogDevice fOuputLogDevice = null;
+ 	private ILogDevice fErrorLogDevice = null;
+ 	private String fWorkingDirectory = null;
+ 	private List fEnvironmentVarList = null;
+ 	
+ 	private StringBuffer fCmdOutput = null;
+ 	private StringBuffer fCmdError = null;
+ 	private AsyncStreamReader fCmdOutputThread = null;
+ 	private AsyncStreamReader fCmdErrorThread = null;	
+ 	
+ 	public void setOutputLogDevice(ILogDevice logDevice)
+ 	{
+ 		fOuputLogDevice = logDevice;
+ 	}
+ 	
+ 	public void setErrorLogDevice(ILogDevice logDevice)
+ 	{
+ 		fErrorLogDevice = logDevice;
+ 	}
+ 	
+ 	public void setWorkingDirectory(String workingDirectory) {
+ 		fWorkingDirectory = workingDirectory;
+ 	}
+ 	
+ 	public void setEnvironmentVar(String name, String value)
+ 	{
+ 		if( fEnvironmentVarList == null )
+ 			fEnvironmentVarList = new ArrayList();
+ 		
+ 		fEnvironmentVarList.add(new EnvironmentVar(name, value));
+ 	}
+ 	
+ 	public String getCommandOutput() {		
+ 		return fCmdOutput.toString();
+ 	}
+ 	
+ 	public String getCommandError() {
+ 		return fCmdError.toString();
+ 	}
+ 	
+ 	public int runCommand(String commandLine) throws Exception
+ 	{
+ 		/* run command */
+ 		Process process = runCommandHelper(commandLine);
+ 		
+ 		/* start output and error read threads */
+ 		startOutputAndErrorReadThreads(process.getInputStream(), process.getErrorStream());
+ 	    
+ 		/* wait for command execution to terminate */
+ 		int exitStatus = -1;
+ 		try {
+ 			exitStatus = process.waitFor();
+ 					
+ 		} catch (Throwable ex) {
+ 			throw new Exception(ex.getMessage());
+ 			
+ 		} finally {
+ 			/* notify output and error read threads to stop reading */
+ 			notifyOutputAndErrorReadThreadsToStopReading();
+ 		}
+ 		
+ 		return exitStatus;
+ 	}	
+ 	
+ 	private Process runCommandHelper(String commandLine) throws IOException
+ 	{
+ 		Process process = null;		
+ 		if( fWorkingDirectory == null )
+ 			process = Runtime.getRuntime().exec(commandLine, getEnvTokens());
+ 		else
+ 			process = Runtime.getRuntime().exec(commandLine, getEnvTokens(), new File(fWorkingDirectory));
+ 		
+ 		return process;
+ 	}
+ 	
+ 	private void startOutputAndErrorReadThreads(InputStream processOut, InputStream processErr)
+ 	{
+ 		fCmdOutput = new StringBuffer();
+ 		fCmdOutputThread = new AsyncStreamReader(processOut, fCmdOutput, fOuputLogDevice, "OUTPUT");		
+ 		fCmdOutputThread.start();
+ 		
+ 		fCmdError = new StringBuffer();
+ 		fCmdErrorThread = new AsyncStreamReader(processErr, fCmdError, fErrorLogDevice, "ERROR");
+ 		fCmdErrorThread.start();
+ 	}
+ 	
+ 	private void notifyOutputAndErrorReadThreadsToStopReading()
+ 	{
+ 		fCmdOutputThread.stopReading();
+ 		fCmdErrorThread.stopReading();
+ 	}
+ 	
+ 	private String[] getEnvTokens()
+ 	{
+ 		if( fEnvironmentVarList == null )
+ 			return null;
+ 		
+ 		String[] envTokenArray = new String[fEnvironmentVarList.size()];
+ 		Iterator envVarIter = fEnvironmentVarList.iterator();
+ 		int nEnvVarIndex = 0; 
+ 		while (envVarIter.hasNext() == true)
+ 		{
+ 			EnvironmentVar envVar = (EnvironmentVar)(envVarIter.next());
+ 			String envVarToken = envVar.fName + "=" + envVar.fValue;
+ 			envTokenArray[nEnvVarIndex++] = envVarToken;
+ 		}
+ 		
+ 		return envTokenArray;
+ 	}	
+ }
+  
+ class EnvironmentVar
+ {
+ 	public String fName = null;
+ 	public String fValue = null;
+ 	
+ 	public EnvironmentVar(String name, String value)
+ 	{
+ 		fName = name;
+ 		fValue = value;
+ 	}
+ }
+  
+ 

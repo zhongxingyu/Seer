@@ -1,0 +1,274 @@
+ /* -*- compile-command: "cd ../../../../../; ant install"; -*- */
+ /*
+  * Copyright 2009 - 2011 by Eric House (xwords@eehouse.org).  All
+  * rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+  * published by the Free Software Foundation; either version 2 of the
+  * License, or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful, but
+  * WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  */
+ 
+ package org.eehouse.android.xw4;
+ 
+ import android.content.Context;
+ import android.content.Intent;
+ import android.database.DataSetObserver;
+ import android.os.Bundle;
+ import android.text.TextUtils;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.widget.BaseAdapter;
+ import android.widget.Button;
+ import android.widget.EditText;
+ import android.widget.ListAdapter;
+ import android.widget.SectionIndexer;
+ import android.widget.Spinner;
+ import android.widget.TextView;
+ import android.widget.AdapterView;
+ import android.widget.AdapterView.OnItemSelectedListener;
+ import java.util.Arrays;
+ 
+ import junit.framework.Assert;
+ 
+ import org.eehouse.android.xw4.jni.JNIUtilsImpl;
+ import org.eehouse.android.xw4.jni.XwJNI;
+ 
+ public class DictBrowseActivity extends XWListActivity
+     implements View.OnClickListener, OnItemSelectedListener {
+ 
+     public static final String DICT_NAME = "DICT_NAME";
+    public static final String DICT_MIN = "DICT_MIN";
+    public static final String DICT_MAX = "DICT_MAX";
+ 
+     private static final int MIN_LEN = 2;
+ 
+     private int m_dictClosure = 0;
+     private int m_lang;
+     private String m_name;
+     private float m_textSize;
+     private Spinner m_minSpinner;
+     private Spinner m_maxSpinner;
+    private int m_min;
+     private int m_max;
+ 
+ 
+ // - Steps to reproduce the problem:
+ // Create ListView, set custom adapter which implements ListAdapter and
+ // SectionIndexer but do not extends BaseAdapter. Enable fast scroll in
+ // layout. This will effect in ClassCastException.
+ 
+ 
+     private class DictListAdapter extends BaseAdapter
+         implements SectionIndexer {
+ 
+         private String[] m_prefixes;
+         private int[] m_indices;
+         private int m_nWords;
+ 
+         public DictListAdapter()
+         {
+             super();
+ 
+             XwJNI.dict_iter_setMinMax( m_dictClosure, m_min, m_max );
+             m_nWords = XwJNI.dict_iter_wordCount( m_dictClosure );
+             setTitle( Utils.format( DictBrowseActivity.this, 
+                                     R.string.dict_browse_titlef,
+                                     m_name, m_nWords ) );
+         }
+ 
+         public Object getItem( int position ) 
+         {
+             TextView text = new TextView( DictBrowseActivity.this );
+             String str = XwJNI.dict_iter_nthWord( m_dictClosure, position );
+             if ( null != str ) {
+                 text.setText( str );
+                 text.setOnClickListener( DictBrowseActivity.this );
+                 text.setTextSize( m_textSize );
+             }
+             return text;
+         }
+ 
+         public View getView( int position, View convertView, ViewGroup parent ) {
+             return (View)getItem( position );
+         }
+ 
+         public long getItemId( int position ) { return position; }
+ 
+         public int getCount() { 
+             Assert.assertTrue( 0 != m_dictClosure );
+             return m_nWords;
+         }
+ 
+         // SectionIndexer
+         public int getPositionForSection( int section )
+         {
+             return m_indices[section];
+         }
+         
+         public int getSectionForPosition( int position )
+         {
+             int section = Arrays.binarySearch( m_indices, position );
+             if ( section < 0 ) {
+                 section *= -1;
+             }
+             if ( section >= m_indices.length ) {
+                 section = m_indices.length - 1;
+             }
+             return section;
+         }
+         
+         public Object[] getSections() 
+         {
+             m_prefixes = XwJNI.dict_iter_getPrefixes( m_dictClosure );
+             m_indices = XwJNI.dict_iter_getIndices( m_dictClosure );
+             return m_prefixes;
+         }
+     }
+ 
+     @Override
+     protected void onCreate( Bundle savedInstanceState ) 
+     {
+         super.onCreate( savedInstanceState );
+ 
+         Intent intent = getIntent();
+         String name = null == intent? null:intent.getStringExtra( DICT_NAME );
+         if ( null == name ) {
+             finish();
+         } else {
+             m_name = name;
+             m_lang = DictLangCache.getDictLangCode( this, name );
+ 
+             m_textSize = 2.0f + new TextView( this ).getTextSize();
+ 
+             String[] names = { name };
+             DictUtils.DictPairs pairs = DictUtils.openDicts( this, names );
+             m_dictClosure = XwJNI.dict_iter_init( pairs.m_bytes[0], 
+                                                   pairs.m_paths[0],
+                                                   JNIUtilsImpl.get() );
+ 
+             setContentView( R.layout.dict_browser );
+ 
+             Button button = (Button)findViewById( R.id.search_button );
+             button.setOnClickListener( new View.OnClickListener() {
+                     public void onClick( View view )
+                     {
+                         findButtonClicked();
+                     }
+                 } );
+ 
+            m_min = intent.getIntExtra( DICT_MIN, MIN_LEN );
+
+             m_minSpinner = (Spinner)findViewById( R.id.wordlen_min );
+             m_minSpinner.setOnItemSelectedListener( this );
+            m_minSpinner.setSelection( m_min - MIN_LEN );
+             m_maxSpinner = (Spinner)findViewById( R.id.wordlen_max );
+             m_maxSpinner.setOnItemSelectedListener( this );
+             m_max = m_maxSpinner.getCount() + MIN_LEN - 1;
+            m_max = intent.getIntExtra( DICT_MAX, m_max );
+             m_maxSpinner.setSelection( m_max - MIN_LEN );
+ 
+             setListAdapter( new DictListAdapter() );
+             getListView().setFastScrollEnabled( true );
+         }
+     }
+ 
+     @Override
+     protected void onDestroy()
+     {
+         XwJNI.dict_iter_destroy( m_dictClosure );
+         m_dictClosure = 0;
+         super.onDestroy();
+     }
+ 
+ 
+     // Just in case onDestroy didn't get called....
+     @Override
+     public void finalize()
+     {
+         XwJNI.dict_iter_destroy( m_dictClosure );
+         try {
+             super.finalize();
+         } catch ( java.lang.Throwable err ){
+             Utils.logf( "%s", err.toString() );
+         }
+     }
+ 
+     //////////////////////////////////////////////////
+     // View.OnClickListener interface
+     //////////////////////////////////////////////////
+     @Override
+     public void onClick( View view )
+     {
+         TextView text = (TextView)view;
+         String[] words = { text.getText().toString() };
+         launchLookup( words, m_lang, true );
+     }
+ 
+ 
+     //////////////////////////////////////////////////
+     // AdapterView.OnItemSelectedListener interface
+     //////////////////////////////////////////////////
+     public void onItemSelected( AdapterView<?> parent, View view, 
+                                 int position, long id )
+     {
+         int newval = position + MIN_LEN;
+         if ( parent == m_minSpinner ) {
+             setMinMax( newval, m_max );
+         } else if ( parent == m_maxSpinner ) {
+             setMinMax( m_min, newval );
+         }
+     }
+ 
+     public void onNothingSelected( AdapterView<?> parent )
+     {
+     }
+ 
+     private void findButtonClicked()
+     {
+         EditText edit = (EditText)findViewById( R.id.word_edit );
+         String text = edit.getText().toString();
+         if ( null != text && 0 < text.length() ) {
+             int pos = XwJNI.dict_iter_getStartsWith( m_dictClosure, text );
+             if ( 0 <= pos ) {
+                 getListView().setSelection( pos );
+             } else {
+                 Utils.showf( this, R.string.dict_browse_nowordsf, 
+                              m_name, text );
+             }
+         }
+     }
+ 
+     private void setMinMax( int min, int max )
+     {
+        // I can't make a second call to setListAdapter() work, nor
+        // does notifyDataSetChanged do anything toward refreshing the
+        // adapter/making it recognized a changed dataset.  So, as a
+        // workaround, relaunch the activity with different
+        // parameters.
+         if ( m_min != min || m_max != max ) {
+            Intent intent = getIntent();
+            intent.putExtra( DICT_MIN, min );
+            intent.putExtra( DICT_MAX, max );
+            startActivity( intent );
+
+            finish();
+         }
+     }
+ 
+     public static void launch( Context caller, String name )
+     {
+         Intent intent = new Intent( caller, DictBrowseActivity.class );
+         intent.putExtra( DICT_NAME, name );
+         caller.startActivity( intent );
+     }
+ }

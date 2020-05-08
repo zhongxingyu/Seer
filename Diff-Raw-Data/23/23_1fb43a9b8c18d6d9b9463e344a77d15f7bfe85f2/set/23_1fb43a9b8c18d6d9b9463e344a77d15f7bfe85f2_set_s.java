@@ -1,0 +1,305 @@
+ /*@
+  
+ axiomatic SetGen {
+ 
+   type SET;
+   type ELEM;
+ 
+   predicate mem ( ELEM e, SET s );
+ 
+   predicate eq ( SET s1, SET s2) =
+   	\forall ELEM x ; mem(x, s1) <==> mem(x, s2);
+ 
+   axiom extensionality:
+     \forall SET s1 s2; eq(s1, s2) ==> s1 = s2;
+ 
+   predicate subset (SET sub, SET sup) =
+   	\forall ELEM x; mem(x, sub) ==> mem(x, sup);
+ 
+   lemma subset_refl:
+     \forall SET s; subset(s, s);
+ 
+   lemma subset_trans:
+     \forall SET s1 s2 s3; subset(s1. s2) ==> subset(s2, s3) ==> subset(s1, s3);
+ 
+   logic SET empty();
+ 
+   predicate is_empty (SET s) =
+   	\forall ELEM x; ! mem(x, s);
+ 
+   axiom empty_def1: is_empty(empty())
+ 
+   lemma mem_empty: \forall ELEM x; mem(x, empty()) <==> \false;
+ 
+   (** addition *)
+   function add 'a (set 'a) : set 'a
+ 
+   axiom add_def1:
+     forall x y: 'a. forall s: set 'a.
+     mem x (add y s) <-> x = y \/ mem x s
+ 
+   function singleton (x: 'a) : set 'a = add x empty
+ 
+   (** removal *)
+   function remove 'a (set 'a) : set 'a
+ 
+   axiom remove_def1:
+     forall x y : 'a, s : set 'a.
+     mem x (remove y s) <-> x <> y /\ mem x s
+ 
+   lemma subset_remove:
+     forall x: 'a, s: set 'a. subset (remove x s) s
+ 
+   (** union *)
+   function union (set 'a) (set 'a) : set 'a
+ 
+   axiom union_def1:
+     forall s1 s2: set 'a, x: 'a.
+     mem x (union s1 s2) <-> mem x s1 \/ mem x s2
+ 
+   (** intersection *)
+   function inter (set 'a) (set 'a) : set 'a
+ 
+   axiom inter_def1:
+     forall s1 s2: set 'a, x: 'a.
+     mem x (inter s1 s2) <-> mem x s1 /\ mem x s2
+ 
+   (** difference *)
+   function diff (set 'a) (set 'a) : set 'a
+ 
+   axiom diff_def1:
+     forall s1 s2: set 'a, x: 'a.
+     mem x (diff s1 s2) <-> mem x s1 /\ not (mem x s2)
+ 
+   lemma subset_diff:
+     forall s1 s2: set 'a. subset (diff s1 s2) s1
+ 
+   (** arbitrary element *)
+   function choose (s:set 'a) : 'a
+ 
+   axiom choose_def:
+     forall s: set 'a. not (is_empty s) -> mem (choose s) s
+ 
+ end
+ 
+ (** {2 Potentially infinite sets} *)
+ 
+ theory Set
+ 
+   clone export SetGen
+ 
+   (** the set of all x of type 'a *)
+   constant all: set 'a
+ 
+   axiom all_def: forall x: 'a. mem x all
+ 
+ end
+ 
+ (** {2 Set Comprehension} *)
+ 
+ theory SetComprehension
+ 
+   use export Set
+   use HighOrd as HO
+ 
+   (** { x | p x } *)
+   function comprehension (p: HO.pred 'a) : set 'a
+ 
+   axiom comprehension_def:
+     forall p: HO.pred 'a.
+     forall x: 'a. mem x (comprehension p) <-> p x
+ 
+   (** { x | x in U and p(x) } *)
+   function filter (p: HO.pred 'a) (u: set 'a) : set 'a =
+     comprehension (\ x: 'a. p x /\ mem x u)
+ 
+   (** { f x | x in U } *)
+   function map (f: HO.func 'a 'b) (u: set 'a) : set 'b =
+     comprehension (\ y: 'b. exists x: 'a. mem x u /\ y = f x)
+ 
+   lemma map_def:
+     forall f: HO.func 'a 'b, u: set 'a.
+     forall x: 'a. mem x u -> mem (f x) (map f u)
+ 
+ end
+ 
+ (** {2 Finite sets} *)
+ 
+ theory Fset
+ 
+   use import int.Int
+   clone export SetGen
+ 
+   function cardinal (set 'a) : int
+ 
+   axiom cardinal_nonneg: forall s: set 'a. cardinal s >= 0
+ 
+   axiom cardinal_empty:
+     forall s: set 'a. cardinal s = 0 <-> is_empty s
+ 
+   axiom cardinal_add:
+     forall x : 'a. forall s : set 'a.
+     not (mem x s) -> cardinal (add x s) = 1 + cardinal s
+ 
+   axiom cardinal_remove:
+     forall x : 'a. forall s : set 'a.
+     mem x s -> cardinal s = 1 + cardinal (remove x s)
+ 
+   axiom cardinal_subset:
+     forall s1 s2 : set 'a. subset s1 s2 -> cardinal s1 <= cardinal s2
+ 
+   lemma cardinal1:
+     forall s: set 'a. cardinal s = 1 ->
+     forall x: 'a. mem x s -> x = choose s
+ 
+ end
+ 
+ theory FsetNth
+ 
+   use import int.Int
+   use import Fset
+ 
+   function nth (i: int) (s: set 'a) : 'a
+ 
+   axiom nth_injective:
+     forall s: set 'a, i j: int.
+     0 <= i < cardinal s -> 0 <= j < cardinal s -> nth i s = nth j s -> i = j
+ 
+   axiom nth_surjective:
+     forall s: set 'a, x: 'a. mem x s ->
+     exists i: int. 0 <= i < cardinal s /\ x = nth i s
+ 
+ end
+ 
+ (** {2 Induction principle on finite sets} *)
+ 
+ theory FsetInduction
+ 
+   use import Fset
+ 
+   type t
+ 
+   predicate p (set t)
+ 
+   axiom Induction :
+     (forall s: set t. is_empty s -> p s) ->
+     (forall s: set t. p s -> forall t: t.
+       not (mem t s) -> p (add t s)) ->
+     forall s: set t. p s
+ 
+ end
+ 
+ (** {2 Finite sets of integers} *)
+ 
+ theory Fsetint
+ 
+   use export int.Int
+   use export Fset
+ 
+   function min_elt (set int) : int
+ 
+   axiom min_elt_def1:
+     forall s: set int. not (is_empty s) -> mem (min_elt s) s
+   axiom min_elt_def2:
+     forall s: set int. not (is_empty s) ->
+     forall x: int. mem x s -> min_elt s <= x
+ 
+   function max_elt (set int) : int
+ 
+   axiom max_elt_def1:
+     forall s: set int. not (is_empty s) -> mem (max_elt s) s
+   axiom max_elt_def2:
+     forall s: set int. not (is_empty s) ->
+     forall x: int. mem x s -> x <= max_elt s
+ 
+   (** the set {0,1,...,n-1} *)
+   function below int : set int
+ 
+   axiom below_def: forall x n: int. mem x (below n) <-> 0 <= x < n
+ 
+   lemma cardinal_below:
+     forall n: int. cardinal (below n) = if n >= 0 then n else 0
+ 
+ end
+ 
+ (** {2 Finite set iterators} *)
+ 
+ theory Min
+ 
+   use import Fset
+   use import int.Int
+ 
+   type param
+ 
+   type elt
+ 
+   function cost param elt : int
+ 
+   function min param (set elt) : int
+ 
+   axiom min_is_a_lower_bound:
+     forall p:param, s:set elt, x:elt. mem x s -> cost p x >= min p s
+ 
+   axiom min_appears_in_set:
+     forall p:param, s:set elt. not (is_empty s) ->
+       exists x:elt. mem x s /\ cost p x = min p s
+ 
+ end
+ 
+ (** {2 Sets realized as maps} *)
+ 
+ theory SetMap
+ 
+   use import map.Map
+   use import bool.Bool
+ 
+   type set 'a = map 'a bool
+ 
+   predicate mem (x:'a) (s:set 'a) = s[x] = True
+ 
+   constant empty : set 'a = const False
+ 
+   predicate is_empty (s : set 'a) = forall x : 'a. not (mem x s)
+ 
+   goal Empty_def1 : is_empty(empty : set 'a)
+ 
+   function add (x:'a) (s:set 'a) : set 'a = s[x <- True]
+ 
+   function remove (x:'a) (s:set 'a) : set 'a =  s[x <- False]
+ 
+   function union (set 'a) (set 'a) : set 'a
+ 
+   axiom Union_def :
+     forall s1 s2 : set 'a. forall x : 'a.
+     (union s1 s2)[x] = orb s1[x] s2[x]
+ 
+   function inter (set 'a) (set 'a) : set 'a
+ 
+   axiom Inter_def :
+     forall s1 s2 : set 'a. forall x : 'a.
+     (inter s1 s2)[x] = andb s1[x] s2[x]
+ 
+   function diff (set 'a) (set 'a) : set 'a
+ 
+   axiom Diff_def1 :
+     forall s1 s2 : set 'a. forall x : 'a.
+     (diff s1 s2)[x] = andb s1[x] (notb s2[x])
+ 
+   predicate equal(s1 s2 : set 'a) = forall x : 'a. s1[x] = s2[x]
+ 
+   axiom Equal_is_eq : forall s1 s2 : set 'a. equal s1 s2 -> s1 = s2
+ 
+   predicate subset(s1 s2 : set 'a) = forall x : 'a. mem x s1 -> mem x s2
+ 
+   function complement (set 'a) : set 'a
+ 
+   axiom Complement_def :
+     forall s : set 'a. forall x : 'a.
+     (complement s)[x] = notb s[x]
+ 
+ end
+ 
+ 
+ }
+ 
+ */

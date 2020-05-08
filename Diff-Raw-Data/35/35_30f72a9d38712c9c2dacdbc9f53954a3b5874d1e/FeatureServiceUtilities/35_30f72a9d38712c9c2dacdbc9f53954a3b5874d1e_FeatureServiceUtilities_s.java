@@ -1,0 +1,194 @@
+ /*
+  * To change this template, choose Tools | Templates
+  * and open the template in the editor.
+  */
+ package de.cismet.cismap.commons.featureservice;
+ 
+ import de.cismet.cismap.commons.exceptions.BadHttpStatusCodeException;
+ import de.cismet.cismap.commons.wfs.capabilities.FeatureType;
+ import de.cismet.cismap.commons.wfs.capabilities.WFSCapabilities;
+ import java.io.IOException;
+ import java.util.Arrays;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Vector;
+ import org.jdom.Document;
+ import org.jdom.Element;
+ import org.jdom.Namespace;
+ import org.jdom.output.XMLOutputter;
+ 
+ /**
+  * The FeatureServiceUtilities class provides various methods to make the FeatureService-
+  * funcionality possible.
+  * @author nh
+  */
+ public class FeatureServiceUtilities
+ {
+     public static final String[] GEO_PROPERTY_TYPES = {"GeometryPropertyType", "GeometricPrimtivePropertyType", "PointPropertyType", "CurvePropertyType", "SurfacePropertyType", "SolidPropertyType", "PointPropertyType", "CompositeCurveType", "CompositeSurfaceType", "CompositeSolidType", "GeometricComplexPropertyType", "MultiGeometryPropertyType", "MultiPointPropertyType", "MultiCurvePropertyType", "MultiSurfacePropertyType", "MultiSolidPropertyType", "MultiGeometryPropertyType", "MultiLineStringPropertyType"};
+   /** Log4J initialisation */
+   private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger("de.cismet.cismap.commons.featureservice.FeatureServiceUtilities");//NOI18N
+   /** typestring of the string-type */
+   public static final String STRING_PROPERTY_TYPE = "string";//NOI18N
+   /** typestring of the integer-type */
+   public static final String INTEGER_PROPERTY_TYPE = "integer";//NOI18N
+   /** name of the name-attribute */
+   public static final String XML_NAME_STRING = "name";//NOI18N
+   /** name of the type-attribute */
+   public static final String XML_TYPE_STRING = "type";//NOI18N
+   /** name of the isGeometry-attribute */
+   public static final String IS_GEOMETRY = "isGeometry";//NOI18N
+   /** name of the GetFeature-element */
+   public static final String GET_FEATURE = "GetFeature";//NOI18N
+   /** WFS namespace-contant */
+   public static final Namespace WFS = Namespace.getNamespace("wfs", "http://www.opengis.net/wfs");//NOI18N
+ //  /** OGC namespace-contant */
+ //  public static final Namespace OGC = Namespace.getNamespace("ogc", "http://www.opengis.net/ogc");//NOI18N
+ //  /** GML namespace-contant */
+ //  public static final Namespace GML = Namespace.getNamespace("gml", "http://www.opengis.net/gml");//NOI18N
+ //  /** OWS namespace-contant */
+ //  public static final Namespace OWS = Namespace.getNamespace("ows", "http://www.opengis.net/ows");//NOI18N
+ //  /** XSD namespace-contant */
+ //  public static final Namespace xsd = Namespace.getNamespace("xsd", "http://www.w3.org/2001/XMLSchema");//NOI18N
+ //  /** name of the CismapQuery-element */
+ //  public static final String CISMAP_QUERY = "CismapQuery";//NOI18N
+ //  /** name of the Query-element */
+ //  public static final String QUERY = "Query";//NOI18N
+ //  /** name of the CismapDescribeFeatureType-element */
+ //  public static final String CISMAP_DESCRIBEFEATURETYPE = "CismapDescribeFeatureType";//NOI18N
+ //  /** name of the DescribeFeatureType-element */
+ //  public static final String DESCRIBEFEATURETYPE = "DescribeFeatureType";//NOI18N
+ //  /** name of the CismapGetCapabilities-element */
+ //  public static final String CISMAP_GETCAPABILITIES = "CismapGetCapabilities";//NOI18N
+ //  /** name of the GetCapabilities-element */
+ //  public static final String GETCAPABILITIES = "GetCapabilities";//NOI18N
+ //  /** name of the ServiceIdentification-element */
+ //  public static final String SERVICE_IDENT = "ServiceIdentification";//NOI18N
+ //  /** name of the Filter-element */
+ //  public static final String FILTER = "Filter";//NOI18N
+ //  /** name of the BoundingBox-element */
+ //  public static final String BBOX = "BBOX";//NOI18N
+ //  /** name of the GetFeature-element */
+ //  public static final String TYPE_NAME = "typeName";//NOI18N
+ //  /** name of the GetFeature-element */
+ //  public static final String DEFAULT_TYPENAME = "TypeName";//NOI18N
+ //  /** name of the GetFeature-element */
+ //  public static final String PROPERTY_NAME = "PropertyName";//NOI18N
+ //  /** typestring of the GML-geometry-type */
+ //  public static final String GEO_PROPERTY_TYPE = "GeometryPropertyType";//NOI18N
+ //  /** typestring of the GML-geometry-type */
+ //  public static final String GEO_PROPERTY_TYPE_WITH_NS = "gml:GeometryPropertyType";//NOI18N
+ //  /** name of the maxFeatures-attribute */
+ //  public final static String MAX_FEATURES = "maxFeatures";//NOI18N
+ 
+ 
+   static {
+     Arrays.sort(GEO_PROPERTY_TYPES);
+   }
+ 
+     /**
+     * Creates a string from a JDOM-element.
+     * @param e JDOM-element
+     * @return XML-string
+     */
+     public static String elementToString(Element e) {
+         if (e == null) {
+             return "";//NOI18N
+         } else {
+            XMLOutputter out = new XMLOutputter("    ", true);//NOI18N
+            out.setTextTrim(true);
+             return out.outputString(e);
+         }
+     }
+ 
+   /**
+    * Returns name of the FeatureService if existing in the capabilities.
+    * @return name of the FeatureService or the ServiceTypename, if no name found
+    */
+     public static String getServiceName(WFSCapabilities cap) {
+         String name = cap.getService().getTitle();
+ 
+         if (name == null || name.equals("")) {
+             name = cap.getService().getAbstract();
+         }
+         if (name == null || name.equals("")) {
+             name = cap.getService().getName();
+         }
+         
+         return name;
+     }
+ 
+   /**
+    * Creates a string from a JDOM-document.
+    * @param doc JDOM-cocument
+    * @return das String which represents the document
+    */
+   public static String parseDocumentToString(Document doc)
+   {
+     log.debug("parseDocumentToString()");//NOI18N
+     XMLOutputter out = new XMLOutputter();
+     return out.outputString(doc);
+   }
+ 
+     /**
+     * Creates a list of JDOM-elements containing all attributes of each FeatureType from
+     * the FeatureTypeList.
+     * @param postURL URL of the servers
+     * @param featTypes FeatureTypeList from the WFSCapabilties
+     * @return List all FeatureTypes as element with their attributes as children
+     */
+     public static HashMap<FeatureType, Vector<FeatureServiceAttribute>> getElementDeclarations(WFSCapabilities cap) throws BadHttpStatusCodeException, IOException {
+         log.debug("getElementDeclarations(" + cap.getURL() + ")");//NOI18N
+         // create hashmap that will be returned
+         HashMap<FeatureType, Vector<FeatureServiceAttribute>> result = new HashMap<FeatureType, Vector<FeatureServiceAttribute>>();
+ 
+         for (FeatureType ft : cap.getFeatureTypeList()) {
+             Vector<FeatureServiceAttribute> attributes = ft.getFeatureAttributes();
+             if (attributes != null) {
+                 result.put(ft, attributes);
+             }
+         }
+         
+         return result;
+     }
+ 
+   /**
+    *
+    * @param e
+    * @return true, if and only if the given type is a geometry type
+    */
+   public static boolean isElementOfGeometryType(String typeName) {
+     String localTypeName = typeName;
+ 
+     // remove the namespace
+     if (localTypeName.indexOf(":") != -1) {
+         localTypeName = localTypeName.substring( localTypeName.indexOf(":") + 1);
+     }
+ 
+     boolean res = (Arrays.binarySearch(GEO_PROPERTY_TYPES, localTypeName) >= 0);
+ 
+     return res;
+   }
+ 
+ 
+   /**
+    * Creates FeatureServiceAttributes by parsing the children of the delivered JDOM-element.
+    * @param describeFeatureXML JDOM-element
+    * @return vector with FeatureServiceAttributes
+    */
+   public static HashMap<String, FeatureServiceAttribute> getFeatureServiceAttributes(Element describeFeatureXML)
+   {
+     HashMap<String, FeatureServiceAttribute> fsaMap = new HashMap(describeFeatureXML.getChildren().size());
+     for (Element currentElement : (List<Element>) describeFeatureXML.getChildren())
+     {
+       try
+       {
+         FeatureServiceAttribute fsa = new FeatureServiceAttribute(currentElement);
+         fsaMap.put(fsa.getName(), fsa);
+       } catch (Exception ex)
+       {
+         log.warn("An element could not be parsed as attribute: " + currentElement, ex);//NOI18N
+       }
+     }
+     return fsaMap;
+   }
+ }

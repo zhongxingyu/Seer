@@ -1,0 +1,53 @@
+ /*
+    Copyright 2013 Nationale-Nederlanden
+ 
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+ 
+        http://www.apache.org/licenses/LICENSE-2.0
+ 
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+ */
+ package nl.nn.adapterframework.jdbc.dbms;
+ 
+ import java.sql.Connection;
+ 
+ import nl.nn.adapterframework.jdbc.JdbcException;
+ import nl.nn.adapterframework.util.JdbcUtil;
+ 
+ import org.apache.commons.lang.StringUtils;
+ 
+ /**
+ * preliminary version of Db2DbmsSupport.
+  * 
+ * @author  Gerrit van Brakel
+ * @since  
+  */
+ public class Db2DbmsSupport extends GenericDbmsSupport {
+ 
+ 	public int getDatabaseType() {
+ 		return DbmsSupportFactory.DBMS_DB2;
+ 	}
+ 	
+ 	public String getDbmsName() {
+ 		return "DB2";
+ 	}
+ 
+ 	public String prepareQueryTextForWorkQueueReading(int batchSize, String selectQuery) throws JdbcException {
+ 		if (StringUtils.isEmpty(selectQuery) || !selectQuery.toLowerCase().startsWith(KEYWORD_SELECT)) {
+ 			throw new JdbcException("query ["+selectQuery+"] must start with keyword ["+KEYWORD_SELECT+"]");
+ 		}
+		// see http://publib.boulder.ibm.com/infocenter/dzichelp/v2r2/index.jsp?topic=/com.ibm.db29.doc.sqlref/db2z_sql_skiplockeddata.htm
+		return selectQuery+" FOR UPDATE SKIP LOCKED DATA";
+ 	}
+ 
+ 	public String getSchema(Connection conn) throws JdbcException {
+ 		return JdbcUtil.executeStringQuery(conn, "SELECT CURRENT SERVER FROM SYSIBM.SYSDUMMY1");
+ 	}
+ 
+ }

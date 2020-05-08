@@ -1,0 +1,245 @@
+ /**
+  * Mar 11, 2011
+  */
+ package v9t9.gui.client.swt.bars;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.TreeMap;
+ 
+ import org.eclipse.swt.SWT;
+ import org.eclipse.swt.events.SelectionAdapter;
+ import org.eclipse.swt.events.SelectionEvent;
+ import org.eclipse.swt.graphics.Image;
+ import org.eclipse.swt.graphics.Point;
+ import org.eclipse.swt.widgets.Composite;
+ import org.eclipse.swt.widgets.Control;
+ import org.eclipse.swt.widgets.Menu;
+ import org.eclipse.swt.widgets.MenuItem;
+ import org.eclipse.swt.widgets.Shell;
+ 
+ import ejs.base.properties.IProperty;
+ import ejs.base.properties.IPropertyListener;
+ 
+ import v9t9.common.cpu.ICpu;
+ import v9t9.common.cpu.IExecutor;
+ import v9t9.common.dsr.IDeviceIndicatorProvider;
+ import v9t9.common.machine.IMachine;
+ import v9t9.common.settings.Settings;
+ import v9t9.gui.EmulatorGuiData;
+ import v9t9.gui.client.swt.SwtWindow;
+ import v9t9.gui.client.swt.shells.DiskSelectorDialog;
+ import v9t9.gui.client.swt.shells.ModuleSelector;
+ import v9t9.gui.client.swt.shells.ROMSetupDialog;
+ 
+ /**
+  * This is the bar of buttons and status icons on the left-hand side of
+  * the emulator window.  It contains the main configuration controls
+  * and information about disk/device activity. 
+  * @author ejs
+  *
+  */
+ public class EmulatorStatusBar extends BaseEmulatorBar {
+ 
+ 	private List<ImageDeviceIndicator> indicators;
+ 	private ImageProvider deviceImageProvider;
+ 	private IProperty realTime;
+ 	private IProperty compile;
+ 	private IProperty cyclesPerSecond;
+ 	private IProperty devicesChanged;
+ 	private BlankIcon indicatorsBlank;
+ 	/**
+ 	 * @param swtWindow
+ 	 * @param mainComposite
+ 	 */
+ 	public EmulatorStatusBar(final SwtWindow swtWindow, 
+ 			ImageProvider iconImageProvider,
+ 			Composite mainComposite, final IMachine machine,
+ 			int[] colors, float[] points, boolean isHorizontal) {
+ 		super(swtWindow, iconImageProvider, 
+ 				mainComposite, machine, colors, points, isHorizontal);
+ 		
+ 		realTime = Settings.get(machine, ICpu.settingRealTime);
+ 		compile = Settings.get(machine, IExecutor.settingCompile);
+ 		cyclesPerSecond = Settings.get(machine, ICpu.settingCyclesPerSecond);
+ 
+ 		
+ 		deviceImageProvider = createDeviceImageProvider(swtWindow.getShell());
+ 
+ 		createButton(IconConsts.ROM_SETUP,
+ 				"Setup ROMs", new SelectionAdapter() {
+ 					@Override
+ 					public void widgetSelected(SelectionEvent e) {
+ 						ROMSetupDialog dialog = ROMSetupDialog.createDialog(
+ 								swtWindow.getShell(), machine, swtWindow);
+ 			        	dialog.open();
+ 					}
+ 				}
+ 			);
+		
+		new BlankIcon(buttonBar, SWT.NONE);
+ 			
+ 		if (machine.getModuleManager() != null) {
+ 			createButton(IconConsts.MODULE_SWITCH,
+ 				"Switch module", new SelectionAdapter() {
+ 					@Override
+ 					public void widgetSelected(SelectionEvent e) {
+ 						swtWindow.toggleToolShell(ModuleSelector.MODULE_SELECTOR_TOOL_ID,
+ 								ModuleSelector.getToolShellFactory(machine, buttonBar, swtWindow));
+ 					}
+ 				}
+ 			);
+ 			new BlankIcon(buttonBar, SWT.NONE);
+ 		}
+ 		
+ 		createButton(IconConsts.DISK_SETUP,
+ 			"Setup disks", new SelectionAdapter() {
+ 				@Override
+ 				public void widgetSelected(SelectionEvent e) {
+ 					swtWindow.toggleToolShell(DiskSelectorDialog.DISK_SELECTOR_TOOL_ID, 
+ 							DiskSelectorDialog.getToolShellFactory(machine, buttonBar));
+ 				}
+ 			}
+ 		);		
+ 		
+ 		devicesChanged = Settings.get(machine, IDeviceIndicatorProvider.settingDevicesChanged);
+ 
+ 		indicators = new ArrayList<ImageDeviceIndicator>();
+ 		
+ 		indicatorsBlank = new BlankIcon(buttonBar, SWT.NONE);
+ 		
+ 		for (IDeviceIndicatorProvider provider : machine.getModel().getDeviceIndicatorProviders(machine))
+ 			addDeviceIndicatorProvider(provider);
+ 
+ 
+ 		devicesChanged.addListener(new IPropertyListener() {
+ 			
+ 			@Override
+ 			public void propertyChanged(IProperty property) {
+ 				buttonBar.getDisplay().asyncExec(new Runnable() {
+ 					public void run() {
+ 						for (ImageDeviceIndicator indic : indicators) {
+ 							indic.dispose();
+ 						}
+ 						indicators.clear();
+ 
+ 						for (IDeviceIndicatorProvider provider : machine.getModel().getDeviceIndicatorProviders(machine))
+ 							addDeviceIndicatorProvider(provider);
+ 						
+ 						buttonBar.layout(true, true);
+ 					}
+ 				});
+ 			}
+ 		});
+ 
+ 		createButton(IconConsts.CPU_ACCELERATE, "Accelerate execution",
+ 				new SelectionAdapter() {
+ 					@Override
+ 					public void widgetSelected(SelectionEvent e) {
+ 						Control button = (Control) e.widget;
+ 						Point size = button.getSize();
+ 						swtWindow.showMenu(createAccelMenu(button), button, size.x / 2, size.y / 2);
+ 					}
+ 				});
+ 
+ 	}
+
+ 	private Menu createAccelMenu(final Control parent) {
+ 		final Menu menu = new Menu(parent);
+ 		return populateAccelMenu(menu);
+ 	}
+ 	
+ 
+ 	private Menu populateAccelMenu(final Menu menu) {
+ 		for (int mult = 1; mult <= 10; mult++) {
+ 			createAccelMenuItem(menu, mult, mult + "x");
+ 		}
+ 
+ 		new MenuItem(menu, SWT.SEPARATOR);
+ 		
+ 		MenuItem item = new MenuItem(menu, SWT.CHECK);
+ 		item.setText("Unbounded");
+ 		if (!realTime.getBoolean()) {
+ 			item.setSelection(true);
+ 		}
+ 		item.addSelectionListener(new SelectionAdapter() {
+ 			@Override
+ 			public void widgetSelected(SelectionEvent e) {
+ 				boolean setting = false;
+ 				realTime.setBoolean(setting);
+ 			}
+ 		});
+ 
+ 		new MenuItem(menu, SWT.SEPARATOR);
+ 		
+ 		for (int div = 2; div <= 5; div++) {
+ 			createAccelMenuItem(menu, 1.0 / div, "1/" + div);
+ 		}
+ 		
+ 		if (machine.getExecutor().getCompilerStrategy().canCompile()) {	
+ 			new MenuItem(menu, SWT.SEPARATOR);
+ 			item = new MenuItem(menu, SWT.CHECK);
+ 			item.setText("Compile to Bytecode");
+ 			if (compile.getBoolean()) {
+ 				item.setSelection(true);
+ 			}
+ 			item.addSelectionListener(new SelectionAdapter() {
+ 				@Override
+ 				public void widgetSelected(SelectionEvent e) {
+ 					compile.setBoolean(!compile.getBoolean());
+ 				}
+ 			});
+ 		}
+ 
+ 		return menu;
+ 	}
+ 
+ 	private void createAccelMenuItem(final Menu menu, double factor, String label) {
+ 		boolean isRealTime = realTime.getBoolean();
+ 		int curCycles = cyclesPerSecond.getInt();
+ 		MenuItem item = new MenuItem(menu, SWT.RADIO);
+ 		final int cycles = (int) (machine.getCpu().getBaseCyclesPerSec() * factor);
+ 		item.setText(((factor >= 1 && factor < 10) ? "&" : "") + label + " (" + cycles + ")");
+ 		if (isRealTime && cycles == curCycles) {
+ 			item.setSelection(true);
+ 		}
+ 		item.addSelectionListener(new SelectionAdapter() {
+ 			@Override
+ 			public void widgetSelected(SelectionEvent e) {
+ 				realTime.setBoolean(true);
+ 				cyclesPerSecond.setInt(cycles);
+ 			}
+ 		});
+ 	}
+ 	
+ 
+ 
+ 
+ 	/**
+ 	 * @return
+ 	 */
+ 	private static ImageProvider createDeviceImageProvider(Shell shell) {
+ 
+ 		TreeMap<Integer, Image> mainIcons = new TreeMap<Integer, Image>();
+ 		for (int size : new int[] { 16, 32, 64, 128 }) {
+ 			Image icons = EmulatorGuiData.loadImage(shell.getDisplay(), "icons/dev_icons_" + size + ".png");
+ 			mainIcons.put(size, icons);
+ 		}
+ 
+ 		return new MultiImageSizeProvider(mainIcons);
+ 	}
+ 
+ 	public void dispose() {
+ 		for (ImageDeviceIndicator indic : indicators)
+ 			indic.dispose();
+ 		indicators.clear();
+ 	}
+ 
+ 	public void addDeviceIndicatorProvider(IDeviceIndicatorProvider provider) {
+ 		ImageDeviceIndicator indic = new ImageDeviceIndicator(buttonBar, SWT.NONE, 
+ 				deviceImageProvider, provider);
+ 		indic.moveAbove(indicatorsBlank);
+ 		indicators.add(indic);
+ 	}
+ 
+ }

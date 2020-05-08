@@ -1,0 +1,113 @@
+ /*******************************************************************************
+  * Copyright (c) 2005 IBM Corporation and others.
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  * 
+  * Contributors:
+  *     IBM Corporation - initial API and implementation
+  *******************************************************************************/
+ package org.eclipse.core.internal.localstore;
+ 
+ import java.net.URI;
+ import org.eclipse.core.filesystem.EFS;
+ import org.eclipse.core.filesystem.IFileStore;
+ import org.eclipse.core.internal.utils.FileUtil;
+ import org.eclipse.core.resources.IPathVariableManager;
+ import org.eclipse.core.resources.ResourcesPlugin;
+ import org.eclipse.core.runtime.*;
+ 
+ /**
+  * Represents the root of a file system that is connected to the workspace.
+  * A file system can be rooted on any resource.
+  */
+ public class FileStoreRoot {
+ 	private int chop;
+ 	/**
+ 	 * When a root is changed, the old root object is marked invalid
+ 	 * so that other resources with a cache of the root will know they need to update.
+ 	 */
+ 	private boolean isValid = true;
+ 	/**
+ 	 * If this root represents a resource in the local file system, this path
+ 	 * represents the root location.  This value is null if the root represents
+ 	 * a non-local file system
+ 	 */
+ 	private IPath localRoot = null;
+ 
+ 	private URI root;
+ 
+ 	private final IPathVariableManager variableManager;
+ 
+ 	/**
+ 	 * Defines the root of a file system within the workspace tree.
+ 	 * @param rootURI The virtual file representing the root of the file
+ 	 * system that has been mounted
+ 	 * @param workspacePath The workspace path at which this file
+ 	 * system has been mounted
+ 	 */
+ 	FileStoreRoot(URI rootURI, IPath workspacePath) {
+ 		Assert.isNotNull(rootURI);
+ 		Assert.isNotNull(workspacePath);
+ 		this.variableManager = ResourcesPlugin.getWorkspace().getPathVariableManager();
+ 		this.root = rootURI;
+ 		this.chop = workspacePath.segmentCount();
+		this.localRoot = FileUtil.toPath(root);
+ 	}
+ 
+ 	/**
+ 	 * Returns the resolved, absolute file system location of the resource
+ 	 * corresponding to the given workspace path, or null if none could
+ 	 * be computed.
+ 	 */
+ 	public URI computeURI(IPath workspacePath) {
+ 		IPath childPath = workspacePath.removeFirstSegments(chop);
+ 		final URI rootURI = variableManager.resolveURI(root);
+ 		if (childPath.segmentCount() == 0)
+ 			return rootURI;
+ 		try {
+ 			return EFS.getStore(rootURI).getChild(childPath).toURI();
+ 		} catch (CoreException e) {
+ 			return null;
+ 		}
+ 	}
+ 
+ 	IFileStore createStore(IPath workspacePath) {
+ 		IPath childPath = workspacePath.removeFirstSegments(chop);
+ 		IFileStore rootStore;
+ 		try {
+ 			rootStore = EFS.getStore(variableManager.resolveURI(root));
+ 		} catch (CoreException e) {
+ 			//handles case where resource location cannot be resolved
+ 			//such as unresolved path variable or invalid file system scheme
+ 			return EFS.getNullFileSystem().getStore(workspacePath);
+ 		}
+ 		if (childPath.segmentCount() == 0)
+ 			return rootStore;
+ 		return rootStore.getChild(childPath);
+ 	}
+ 
+ 	boolean isValid() {
+ 		return isValid;
+ 	}
+ 
+ 	IPath localLocation(IPath workspacePath) {
+ 		if (localRoot == null)
+ 			return null;
+ 		IPath location;
+ 		if (workspacePath.segmentCount() <= chop)
+ 			location = localRoot;
+ 		else
+ 			location = localRoot.append(workspacePath.removeFirstSegments(chop));
+ 		location = variableManager.resolvePath(location);
+ 		//if path is still relative then path variable could not be resolved
+ 		if (!location.isAbsolute())
+ 			return null;
+ 		return location;
+ 	}
+ 
+ 	void setValid(boolean value) {
+ 		this.isValid = value;
+ 	}
+ }

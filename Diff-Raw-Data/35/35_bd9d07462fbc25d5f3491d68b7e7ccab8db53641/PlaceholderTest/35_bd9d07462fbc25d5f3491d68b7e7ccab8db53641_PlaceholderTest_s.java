@@ -1,0 +1,14 @@
+ package com.teoware.quickstart.interfaces;
+ 
+import static org.junit.Assert.*;
+
+ import org.junit.Test;
+ 
+ public class PlaceholderTest {
+ 
+ 	@Test
+ 	public void test() {
+		fail("Not yet implemented");
+ 	}
+
+ }

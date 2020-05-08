@@ -1,0 +1,374 @@
+ package hudson.tasks;
+ 
+ import hudson.CopyOnWrite;
+ import hudson.FilePath.FileCallable;
+ import hudson.Functions;
+ import hudson.Launcher;
+ import hudson.Launcher.LocalLauncher;
+ import hudson.Util;
+ import hudson.EnvVars;
+ import hudson.maven.MavenEmbedder;
+ import hudson.maven.MavenUtil;
+ import hudson.maven.RedeployPublisher;
+ import hudson.model.AbstractBuild;
+ import hudson.model.AbstractProject;
+ import hudson.model.BuildListener;
+ import hudson.model.Descriptor;
+ import hudson.model.ParametersAction;
+ import hudson.remoting.Callable;
+ import hudson.remoting.VirtualChannel;
+ import hudson.util.ArgumentListBuilder;
+ import hudson.util.FormFieldValidator;
+ import hudson.util.NullStream;
+ import hudson.util.StreamTaskListener;
+ import org.kohsuke.stapler.StaplerRequest;
+ import org.kohsuke.stapler.StaplerResponse;
+ import org.kohsuke.stapler.DataBoundConstructor;
+ import org.apache.maven.embedder.MavenEmbedderException;
+ 
+ import javax.servlet.ServletException;
+ import java.io.File;
+ import java.io.IOException;
+ import java.io.Serializable;
+ import java.util.Map;
+ import java.util.StringTokenizer;
+ 
+ import net.sf.json.JSONObject;
+ 
+ /**
+  * Build by using Maven.
+  *
+  * @author Kohsuke Kawaguchi
+  */
+ public class Maven extends Builder {
+     /**
+      * The targets and other maven options.
+      * Can be separated by SP or NL.
+      */
+     private final String targets;
+ 
+     /**
+      * Identifies {@link MavenInstallation} to be used.
+      */
+     private final String mavenName;
+    
+    private final static String MAVEN_1_INSTALLATION_COMMON_FILE = "bin/maven";
+    private final static String MAVEN_2_INSTALLATION_COMMON_FILE = "bin/mvn";
+ 
+     @DataBoundConstructor
+     public Maven(String targets,String name) {
+         this.targets = targets;
+         this.mavenName = name;
+     }
+ 
+     public String getTargets() {
+         return targets;
+     }
+ 
+     /**
+      * Gets the Maven to invoke,
+      * or null to invoke the default one.
+      */
+     public MavenInstallation getMaven() {
+         for( MavenInstallation i : DESCRIPTOR.getInstallations() ) {
+             if(mavenName !=null && i.getName().equals(mavenName))
+                 return i;
+         }
+         return null;
+     }
+ 
+     /**
+      * Looks for <tt>pom.xlm</tt> or <tt>project.xml</tt> to determine the maven executable
+      * name.
+      */
+     private static final class DecideDefaultMavenCommand implements FileCallable<String> {
+         // command line arguments.
+         private final String arguments;
+ 
+         public DecideDefaultMavenCommand(String arguments) {
+             this.arguments = arguments;
+         }
+ 
+         public String invoke(File ws, VirtualChannel channel) throws IOException {
+             String seed=null;
+ 
+             // check for the -f option
+             StringTokenizer tokens = new StringTokenizer(arguments);
+             while(tokens.hasMoreTokens()) {
+                 String t = tokens.nextToken();
+                 if(t.equals("-f") && tokens.hasMoreTokens()) {
+                     File file = new File(ws,tokens.nextToken());
+                     if(!file.exists())
+                         continue;   // looks like an error, but let the execution fail later
+                     if(file.isDirectory())
+                         // in M1, you specify a directory in -f
+                         seed = "maven";
+                     else
+                         // in M2, you specify a POM file name.
+                         seed = "mvn";
+                     break;
+                 }
+             }
+ 
+             if(seed==null) {
+                 // as of 1.212 (2008 April), I think Maven2 mostly replaced Maven1, so
+                 // switching to err on M2 side.
+                 if(new File(ws,"project.xml").exists())
+                     seed = "maven";
+                 else
+                     seed = "mvn";
+             }
+ 
+             if(Functions.isWindows())
+                 seed += ".bat";
+             return seed;
+         }
+     }
+ 
+     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+         AbstractProject proj = build.getProject();
+ 
+         String targets = this.targets;
+         ParametersAction parameters = build.getAction(ParametersAction.class);
+         if (parameters != null)
+             targets = parameters.substitute(build,targets);
+ 
+         int startIndex = 0;
+         int endIndex;
+         do {
+             // split targets into multiple invokations of maven separated by |
+             endIndex = targets.indexOf('|', startIndex);
+             if (-1 == endIndex) {
+                 endIndex = targets.length();
+             }
+ 
+             Map<String,String> env = build.getEnvVars();
+ 
+             String normalizedTarget = targets
+                     .substring(startIndex, endIndex)
+                     .replaceAll("[\t\r\n]+"," ");
+             normalizedTarget = Util.replaceMacro(normalizedTarget,env);
+ 
+             ArgumentListBuilder args = new ArgumentListBuilder();
+             MavenInstallation ai = getMaven();
+             if(ai==null) {
+                 String execName = proj.getWorkspace().act(new DecideDefaultMavenCommand(normalizedTarget));
+                 args.add(execName);
+             } else {
+                 String exec = ai.getExecutable(launcher);
+                 if(exec==null) {
+                     listener.fatalError(Messages.Maven_NoExecutable(ai.getMavenHome()));
+                     return false;
+                 }
+                 args.add(exec);
+             }
+             args.addKeyValuePairs("-D",build.getBuildVariables());
+             args.addTokenized(normalizedTarget);
+ 
+             if(ai!=null) {
+                 // if somebody has use M2_HOME they will get a classloading error
+                 // when M2_HOME points to a different version of Maven2 from
+                 // MAVEN_HOME (as Maven 2 gives M2_HOME priority.)
+                 // 
+                 // The other solution would be to set M2_HOME if we are calling Maven2 
+                 // and MAVEN_HOME for Maven1 (only of use for strange people that
+                 // are calling Maven2 from Maven1)
+                 env.put("M2_HOME",ai.getMavenHome());
+                 env.put("MAVEN_HOME",ai.getMavenHome());
+             }
+             // just as a precaution
+             // see http://maven.apache.org/continuum/faqs.html#how-does-continuum-detect-a-successful-build
+             env.put("MAVEN_TERMINATE_CMD","on");
+ 
+             try {
+                 int r = launcher.launch(args.toCommandArray(),env,listener.getLogger(),proj.getModuleRoot()).join();
+                 if (0 != r) {
+                     return false;
+                 }
+             } catch (IOException e) {
+                 Util.displayIOException(e,listener);
+                 e.printStackTrace( listener.fatalError(Messages.Maven_ExecFailed()) );
+                 return false;
+             }
+             startIndex = endIndex + 1;
+         } while (startIndex < targets.length());
+         return true;
+     }
+ 
+     public Descriptor<Builder> getDescriptor() {
+         return DESCRIPTOR;
+     }
+ 
+     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+ 
+     public static final class DescriptorImpl extends Descriptor<Builder> {
+         @CopyOnWrite
+         private volatile MavenInstallation[] installations = new MavenInstallation[0];
+ 
+         private DescriptorImpl() {
+             super(Maven.class);
+             load();
+         }
+ 
+ 
+         protected void convert(Map<String, Object> oldPropertyBag) {
+             if(oldPropertyBag.containsKey("installations"))
+                 installations = (MavenInstallation[]) oldPropertyBag.get("installations");
+         }
+ 
+         public String getHelpFile() {
+             return "/help/project-config/maven.html";
+         }
+ 
+         public String getDisplayName() {
+             return Messages.Maven_DisplayName();
+         }
+ 
+         public MavenInstallation[] getInstallations() {
+             return installations;
+         }
+ 
+         @Override
+         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+             this.installations = req.bindJSONToList(MavenInstallation.class, json.get("maven")).toArray(new MavenInstallation[0]);
+             save();
+             return true;
+         }
+ 
+         public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+             return req.bindJSON(Maven.class,formData);
+         }
+ 
+ 
+     //
+     // web methods
+     //
+         /**
+          * Checks if the MAVEN_HOME is valid.
+          */
+         public void doCheckMavenHome( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+             // this can be used to check the existence of a file on the server, so needs to be protected
+             new FormFieldValidator(req,rsp,true) {
+                 public void check() throws IOException, ServletException {
+                     File f = getFileParameter("value");
+                     if(f.getPath().equals("")) {
+                         error(Messages.Maven_MavenHomeRequired());
+                         return;
+                     }
+                     if(!f.isDirectory()) {
+                         error(Messages.Maven_NotADirectory(f));
+                         return;
+                     }
+ 
+                    File maven1File = new File(f,MAVEN_1_INSTALLATION_COMMON_FILE);
+                    File maven2File = new File(f,MAVEN_2_INSTALLATION_COMMON_FILE);
+
+                    if(!maven1File.exists() && !maven2File.exists()) {
+                        error(Messages.Maven_NotMavenDirectory(f));
+                        return;
+                    }
+ 
+                     ok();
+                 }
+             }.process();
+         }
+     }
+ 
+     public static final class MavenInstallation implements Serializable {
+         private final String name;
+         private final String mavenHome;
+ 
+         @DataBoundConstructor
+         public MavenInstallation(String name, String home) {
+             this.name = name;
+             this.mavenHome = home;
+         }
+ 
+         /**
+          * install directory.
+          */
+         public String getMavenHome() {
+             return mavenHome;
+         }
+ 
+         public File getHomeDir() {
+             return new File(mavenHome);
+         }
+ 
+         /**
+          * Human readable display name.
+          */
+         public String getName() {
+             return name;
+         }
+ 
+         /**
+          * Gets the executable path of this maven on the given target system.
+          */
+         public String getExecutable(Launcher launcher) throws IOException, InterruptedException {
+             return launcher.getChannel().call(new Callable<String,IOException>() {
+                 public String call() throws IOException {
+                     File exe = getExeFile("maven");
+                     if(exe.exists())
+                         return exe.getPath();
+                     exe = getExeFile("mvn");
+                     if(exe.exists())
+                         return exe.getPath();
+                     return null;
+                 }
+             });
+         }
+ 
+         private File getExeFile(String execName) {
+             if(File.separatorChar=='\\')
+                 execName += ".bat";
+ 
+             String m2Home = Util.replaceMacro(getMavenHome(),EnvVars.masterEnvVars);
+ 
+             return new File(m2Home, "bin/" + execName);
+         }
+ 
+         /**
+          * Returns true if the executable exists.
+          */
+         public boolean getExists() {
+             try {
+                 return getExecutable(new LocalLauncher(new StreamTaskListener(new NullStream())))!=null;
+             } catch (IOException e) {
+                 return false;
+             } catch (InterruptedException e) {
+                 return false;
+             }
+         }
+ 
+         public MavenEmbedder createEmbedder(BuildListener listener, String profiles) throws MavenEmbedderException, IOException {
+             return MavenUtil.createEmbedder(listener,getHomeDir(),profiles);
+         }
+ 
+         private static final long serialVersionUID = 1L;
+     }
+ 
+     /**
+      * Optional interface that can be implemented by {@link AbstractProject}
+      * that has "contextual" {@link MavenInstallation} associated with it.
+      *
+      * <p>
+      * Code like {@link RedeployPublisher} uses this interface in an attempt
+      * to use the consistent Maven installation attached to the project.
+      *
+      * @since 1.235
+      */
+     public interface ProjectWithMaven {
+         /**
+          * Gets the {@link MavenInstallation} associated with the project.
+          * Can be null.
+          *
+          * <p>
+          * If the Maven installation can not be uniquely determined,
+          * it's often better to return just one of them, rather than returning
+          * null, since this method is currently ultimately only used to
+          * decide where to parse <tt>conf/settings.xml</tt> from.
+          */
+         MavenInstallation inferMavenInstallation();
+     }
+ }

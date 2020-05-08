@@ -1,0 +1,482 @@
+ /* This class is part of the XP framework's EAS connectivity
+  *
+  * $Id$ 
+  */
+ 
+ package net.xp_framework.easc.protocol.standard;
+ 
+ import java.lang.reflect.Field;
+ import java.lang.reflect.Modifier;
+ import java.lang.reflect.Method;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Date;
+ import java.util.Iterator;
+ import net.xp_framework.easc.protocol.standard.Handler;
+ import net.xp_framework.easc.protocol.standard.ArraySerializer;
+ import net.xp_framework.easc.protocol.standard.Invokeable;
+ import net.xp_framework.easc.protocol.standard.SerializationException;
+ 
+ /**
+  * Serializer / unserializer for PHP serialized data
+  *
+  * Usage example:
+  * <code>
+  *   Object o= Serializer.valueOf("s:11:\"Hello World\";");
+  *   System.out.println(o);
+  * </code>
+  *
+  * Usage example:
+  * <code>
+  *   String s= Serializer.representationOf("Hello");
+  *   System.out.println(s);
+  * </code>
+  *
+  * @see   http://php.net/unserialize
+  * @see   http://php.net/serialize
+  */
+ public class Serializer {
+     
+     private static class MethodTarget<Return, Parameter> implements Invokeable<Return, Parameter> {
+         private Method method = null;
+         
+         MethodTarget(Method m) {
+             this.method= m;    
+         }
+         
+         public Return invoke(Parameter p) throws Exception {
+             return (Return)this.method.invoke(null, new Object[] { p });
+         }
+     }
+ 
+     private static class Length {
+         public int value = 0;
+ 
+         public Length(int initial) {
+             this.value = initial;
+         }
+         
+         @Override public String toString() {
+             return "Length(" + this.value + ")";
+         }
+     }
+     
+     private static enum Token {
+         T_NULL {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 length.value= 2;
+                 return null;
+             }
+         },
+ 
+         T_BOOLEAN {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 length.value= 4; 
+                 return ('1' == serialized.charAt(2));
+             }
+         },
+ 
+         T_INTEGER {
+             public Object handle(String serialized, Length length) throws Exception { 
+                String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                length.value= value.length() + 3;
+                return Integer.parseInt(value);
+             }
+         },
+ 
+         T_LONG {
+             public Object handle(String serialized, Length length) throws Exception { 
+                String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                length.value= value.length() + 3;
+                return Long.parseLong(value);
+             }
+         },
+ 
+         T_FLOAT {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                 length.value= value.length() + 3;
+                 return Float.parseFloat(value);
+             }
+         },
+ 
+         T_DOUBLE {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                 length.value= value.length() + 3;
+                 return Double.parseDouble(value);
+             }
+         },
+ 
+         T_STRING {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String strlength= serialized.substring(2, serialized.indexOf(':', 2));
+                 int offset= 2 + strlength.length() + 2;
+                 int parsed= Integer.parseInt(strlength);
+ 
+                 length.value= offset + parsed + 2;
+                 return serialized.substring(offset, parsed+ offset); 
+ 
+             }
+         },
+ 
+         T_ARRAY {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String arraylength= serialized.substring(2, serialized.indexOf(':', 2));
+                 int parsed= Integer.parseInt(arraylength);
+                 int offset= arraylength.length() + 2 + 2;
+                 HashMap h= new HashMap(parsed);
+                 
+                 for (int i= 0; i < parsed; i++) {
+                     Object key= Serializer.valueOf(serialized.substring(offset), length);
+                     offset+= length.value;
+                     Object value= Serializer.valueOf(serialized.substring(offset), length);
+                     offset+= length.value;
+                     
+                     h.put(key, value);
+                 }
+ 
+                 length.value= offset + 1;
+                 return h;
+             }
+         }, 
+ 
+         T_OBJECT {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String classnamelength= serialized.substring(2, serialized.indexOf(':', 2));
+                 int offset= classnamelength.length() + 2 + 2;
+                 int parsed= Integer.parseInt(classnamelength);
+                 Class c= null;
+                 Object instance= null;
+ 
+                 // Load class
+                 try {
+                     c= Class.forName(serialized.substring(offset, parsed+ offset)); 
+                 } catch (ClassNotFoundException e) {
+                     throw new SerializationException(e.getMessage());
+                 }
+                 
+                 // Instanciate
+                 instance= c.newInstance();
+                 
+                 String objectlength= serialized.substring(parsed+ offset+ 2, serialized.indexOf(':', parsed+ offset+ 2));
+                 offset+= parsed+ 2 + objectlength.length() + 2;
+                 
+                 // Set field values
+                 for (int i= 0; i < Integer.parseInt(objectlength); i++) {
+                     Field f= c.getDeclaredField((String)Serializer.valueOf(serialized.substring(offset), length));
+                     offset+= length.value;
+                     Object value= Serializer.valueOf(serialized.substring(offset), length);
+                     offset+= length.value;
+                     
+                     f.setAccessible(true);
+                     if (f.getType() == char.class) {
+                         f.setChar(instance, ((String)value).charAt(0));
+                     } else if (f.getType() == byte.class) {
+                         f.setByte(instance, ((Byte)value).byteValue());
+                     } else if (f.getType() == short.class) {
+                         f.setShort(instance, ((Short)value).shortValue());
+                     } else if (f.getType() == int.class) {
+                         f.setInt(instance, ((Integer)value).intValue());
+                     } else if (f.getType() == long.class) {
+                         f.setLong(instance, ((Long)value).longValue());
+                     } else if (f.getType() == double.class) {
+                         f.setDouble(instance, ((Double)value).doubleValue());
+                     } else if (f.getType() == float.class) {
+                         f.setFloat(instance, ((Float)value).floatValue());
+                     } else if (f.getType() == boolean.class) {
+                         f.setBoolean(instance, ((Boolean)value).booleanValue());
+                     } else {
+                         f.set(instance, value);
+                     }
+                 }
+ 
+                 return instance;
+             }
+         },
+ 
+         T_DATE {
+             public Object handle(String serialized, Length length) throws Exception { 
+                String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                length.value= value.length() + 3;
+                return new Date(Long.parseLong(value) * 1000);
+             }
+         },
+ 
+         T_BYTE {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                 length.value= value.length() + 3;
+                 return Byte.parseByte(value);
+             }
+         },
+ 
+         T_SHORT {
+             public Object handle(String serialized, Length length) throws Exception { 
+                 String value= serialized.substring(2, serialized.indexOf(';', 2));
+ 
+                 length.value= value.length() + 3;
+                 return Short.parseShort(value);
+             }
+         };
+       
+         private static HashMap<Character, Token> map= new HashMap<Character, Token>();
+       
+         static {
+             map.put('N', T_NULL);
+             map.put('b', T_BOOLEAN);
+             map.put('i', T_INTEGER);
+             map.put('l', T_LONG);
+             map.put('f', T_FLOAT);
+             map.put('d', T_DOUBLE);
+             map.put('s', T_STRING);
+             map.put('a', T_ARRAY);
+             map.put('O', T_OBJECT);
+             map.put('T', T_DATE);
+             map.put('B', T_BYTE);
+             map.put('S', T_SHORT);
+         }
+       
+         public static Token valueOf(char c) throws Exception {
+             if (!map.containsKey(c)) {
+                 throw new SerializationException("Unknown type '" + c + "'");
+             }
+             return map.get(c);
+         }
+       
+         abstract public Object handle(String serialized, Length length) throws Exception;
+     }
+ 
+     private static HashMap<Class, Invokeable<?, ?>> typeMap= new HashMap<Class, Invokeable<?, ?>>();
+     
+     static {
+         
+         // Set up typeMap by inspecting all class methods with @Handler annotation
+         for (Method m : Serializer.class.getDeclaredMethods()) {
+             if (!m.isAnnotationPresent(Handler.class)) continue;
+             
+             registerMapping(m.getParameterTypes()[0], new MethodTarget<String, Object>(m));
+         }
+     }
+     
+     public static void registerMapping(Class c, Invokeable<?, ?> i) {
+         typeMap.put(c, i);
+     }
+ 
+     private static ArrayList<Field> classFields(Class c) {
+         ArrayList<Field> list= new ArrayList<Field>();
+         
+         for (Field f : c.getDeclaredFields()) {
+             if (Modifier.isTransient(f.getModifiers())) continue;
+             list.add(f);
+         }
+         
+         return list;
+     }
+ 
+     private static String representationOf(Object o, Invokeable i) throws Exception {
+         if (i != null) return (String)i.invoke(o);
+ 
+         // Default object serialization
+         StringBuffer buffer= new StringBuffer();
+         Class c= o.getClass();
+         long numFields = 0;
+ 
+         for (Field f : classFields(c)) {
+             buffer.append("s:");
+             buffer.append(f.getName().length());
+             buffer.append(":\"");
+             buffer.append(f.getName());
+             buffer.append("\";");
+ 
+             f.setAccessible(true);
+             buffer.append(representationOf(f.get(o), typeMap.get(f.getType())));
+             numFields++;
+         }
+ 
+         buffer.append("}");        
+         buffer.insert(0, "O:" + c.getName().length() + ":\"" + c.getName() + "\":" + numFields + ":{");
+         return buffer.toString();
+     }
+ 
+     @Handler public static String representationOf(String s) {
+         return "s:" + s.length() + ":\"" + s + "\";";
+     } 
+ 
+     @Handler public static String representationOf(char c) {
+         return "s:1:\"" + c + "\";";
+     }
+     
+     @Handler public static String representationOf(final char[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Character c) {
+         return "s:1:\"" + c + "\";";
+     }
+ 
+     @Handler public static String representationOf(byte b) {
+         return "i:" + b + ";";
+     }
+     
+     @Handler public static String representationOf(final byte[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Byte b) {
+         return "i:" + b + ";";
+     }
+ 
+     @Handler public static String representationOf(short s) {
+         return "i:" + s + ";";
+     }
+     
+     @Handler public static String representationOf(final short[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Short s) {
+         return "i:" + s + ";";
+     }
+ 
+     @Handler public static String representationOf(int i) {
+         return "i:" + i + ";";
+     }
+ 
+     @Handler public static String representationOf(final int[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Integer i) {
+         return "i:" + i + ";";
+     }
+ 
+     @Handler public static String representationOf(long l) {
+        return "i:" + l + ";";
+     }
+ 
+     @Handler public static String representationOf(final long[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Long l) {
+        return "i:" + l + ";";
+     }
+ 
+     @Handler public static String representationOf(double d) {
+         return "d:" + d + ";";
+     }
+     
+     @Handler public static String representationOf(final double[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Double d) {
+         return "d:" + d + ";";
+     }
+ 
+     @Handler public static String representationOf(float f) {
+        return "d:" + f + ";";
+     }
+     
+     @Handler public static String representationOf(final float[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Float f) {
+        return "d:" + f + ";";
+     }
+ 
+     @Handler public static String representationOf(boolean b) {
+         return "b:" + (b ? 1 : 0) + ";";
+     }
+ 
+     @Handler public static String representationOf(final boolean[] array) throws Exception {
+         return new ArraySerializer() {
+             public void yield(int i) {
+                 this.buffer.append(representationOf(array[i]));
+             }
+         }.run(array.length);
+     }
+ 
+     @Handler public static String representationOf(Boolean b) {
+         return "b:" + (b ? 1 : 0) + ";";
+     }
+ 
+     @Handler public static String representationOf(HashMap h) throws Exception {
+         StringBuffer buffer= new StringBuffer("a:" + h.size() + ":{");
+         
+         for (Iterator it= h.keySet().iterator(); it.hasNext(); ) {
+             Object key= it.next();
+             Object value= h.get(key);
+ 
+             buffer.append(representationOf(key, typeMap.get(key.getClass())));
+             buffer.append(representationOf(value, typeMap.get(value.getClass())));
+         }
+         
+         buffer.append("}");
+         return buffer.toString();
+     }
+ 
+     @Handler public static String representationOf(Date d) throws Exception {
+         return "T:" + d.getTime() / 1000 + ";";   // getTime() returns *milliseconds*
+     }
+     
+     @Handler public static String representationOf(Object o) throws Exception {
+         return representationOf(o, typeMap.get(o.getClass()));
+     }
+ 
+     @Handler public static String representationOf(Object[] a) throws Exception {
+         StringBuffer buffer= new StringBuffer("a:" + a.length + ":{");
+ 
+         for (int i= 0; i < a.length; i++) {
+             buffer.append("i:" + i + ";");
+             buffer.append(representationOf(a[i], typeMap.get(a[i].getClass())));
+         }
+ 
+         buffer.append("}");
+         return buffer.toString();
+     }
+     
+     private static Object valueOf(String serialized, Length length) throws Exception {
+         return Token.valueOf(serialized.charAt(0)).handle(serialized, length);
+     }
+     
+     public static Object valueOf(String serialized) throws Exception {
+         return valueOf(serialized, new Length(0));
+     }
+ }

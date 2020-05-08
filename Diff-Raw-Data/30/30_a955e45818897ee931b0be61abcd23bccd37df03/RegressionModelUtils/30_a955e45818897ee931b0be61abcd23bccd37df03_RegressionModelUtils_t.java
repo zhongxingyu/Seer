@@ -1,0 +1,16 @@
+ package com.github.tteofili.nlputils;
+ 
+ /**
+ * Utility class for calculating various regression models costs
+  */
+ public class RegressionModelUtils {
+ 
+     public static double ordinaryLeastSquares(TrainingSet trainingSet, Hypothesis hypothesis) {
+         double output = 0;
+         for (TrainigExample trainigExample : trainingSet) {
+             output += Math.pow(hypothesis.calculateOutput(trainigExample.getInputs()) - trainigExample.getOutput(), 2);
+         }
+         return output / 2;
+     }
+ 
+ }

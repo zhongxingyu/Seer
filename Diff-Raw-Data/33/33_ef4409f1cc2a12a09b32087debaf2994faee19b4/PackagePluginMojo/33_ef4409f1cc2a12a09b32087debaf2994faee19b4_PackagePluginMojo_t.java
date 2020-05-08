@@ -1,0 +1,265 @@
+ /*******************************************************************************
+  * Copyright (c) 2008, 2011 Sonatype Inc. and others.
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+  *    Sonatype Inc. - initial API and implementation
+  *******************************************************************************/
+ package org.eclipse.tycho.packaging;
+ 
+ import java.io.BufferedOutputStream;
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.FileNotFoundException;
+ import java.io.FileOutputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.jar.Attributes;
+ import java.util.jar.Attributes.Name;
+ import java.util.jar.Manifest;
+ 
+ import org.apache.maven.archiver.MavenArchiveConfiguration;
+ import org.apache.maven.archiver.MavenArchiver;
+ import org.apache.maven.plugin.MojoExecutionException;
+ import org.codehaus.plexus.archiver.jar.JarArchiver;
+ import org.codehaus.plexus.archiver.util.DefaultFileSet;
+ import org.eclipse.tycho.ReactorProject;
+ import org.eclipse.tycho.core.TychoConstants;
+ import org.eclipse.tycho.core.facade.BuildProperties;
+ import org.eclipse.tycho.core.osgitools.DefaultReactorProject;
+ import org.eclipse.tycho.core.osgitools.project.BuildOutputJar;
+ import org.eclipse.tycho.core.osgitools.project.EclipsePluginProject;
+ import org.eclipse.tycho.packaging.sourceref.SourceReferenceComputer;
+ import org.eclipse.tycho.packaging.sourceref.SourceReferencesProvider;
+ 
+ /**
+  * Creates a jar-based plugin and attaches it as an artifact
+  * 
+  * @goal package-plugin
+  */
+ public class PackagePluginMojo extends AbstractTychoPackagingMojo {
+ 
+     /**
+      * The output directory of the jar file
+     * 
+      * By default this is the Maven "target/" directory.
+     * 
+      * @parameter expression="${project.build.directory}"
+      * @required
+      */
+     protected File buildDirectory;
+ 
+     protected EclipsePluginProject pdeProject;
+ 
+     /**
+      * The Jar archiver.
+      * 
+      * parameter expression="${component.org.codehaus.plexus.archiver.Archiver#jar}" required
+      */
+     private JarArchiver jarArchiver = new JarArchiver();
+ 
+     /**
+      * Additional files to be included in the bundle jar. This can be used when
+     * <tt>bin.includes</tt> in build.properties is not flexible enough , e.g. for generated files.
+     * If conflicting, additional files win over <tt>bin.includes</tt><br/>
+      * Example:<br/>
+      * 
+      * <pre>
+      * &lt;additionalFileSets&gt;
+      *  &lt;fileSet&gt;
+      *   &lt;directory&gt;${project.build.directory}/mytool-gen/&lt;/directory&gt;
+      *   &lt;includes&gt;
+      *    &lt;include&gt;&#42;&#42;/*&lt;/include&gt;
+      *   &lt;/includes&gt;
+      *  &lt;/fileSet&gt;     
+      * &lt;/additionalFileSets&gt;
+      * </pre>
+      * 
+      * @parameter
+      */
+     private DefaultFileSet[] additionalFileSets;
+ 
+     /**
+      * Name of the generated JAR.
+      * 
+      * @parameter alias="jarName" expression="${project.build.finalName}"
+      * @required
+      */
+     protected String finalName;
+ 
+     /**
+      * The maven archiver to use.
+      * 
+      * @parameter
+      */
+     private MavenArchiveConfiguration archive = new MavenArchiveConfiguration();
+ 
+     /**
+      * Whether to generate an <a
+      * href="http://wiki.eclipse.org/PDE/UI/SourceReferences">Eclipse-SourceReferences</a> MANIFEST
+      * header. When using this parameter, property ${tycho.scmUrl} must be set and be a valid <a
+      * href="http://maven.apache.org/scm/scm-url-format.html">maven SCM URL</a>.
+      * 
+      * Example configuration:
+      * 
+      * <pre>
+      *         &lt;sourceReferences&gt;
+      *           &lt;generate&gt;true&lt;/generate&gt;
+      *         &lt;/sourceReferences&gt;
+      * </pre>
+      * 
+      * Note that a {@link SourceReferencesProvider} component must be registered for the SCM type
+      * being used. You may also override the generated value by configuring:
+      * 
+      * <pre>
+      *         &lt;sourceReferences&gt;
+      *           &lt;generate&gt;true&lt;/generate&gt;
+      *           &lt;customValue&gt;scm:myscm:customSourceReferenceValue&lt;/customValue&gt;
+      *         &lt;/sourceReferences&gt;
+      * </pre>
+      * 
+      * @parameter
+      */
+     private SourceReferences sourceReferences = new SourceReferences();
+ 
+     /**
+      * @component
+      */
+     private SourceReferenceComputer soureReferenceComputer;
+ 
+     public void execute() throws MojoExecutionException {
+         pdeProject = (EclipsePluginProject) project.getContextValue(TychoConstants.CTX_ECLIPSE_PLUGIN_PROJECT);
+ 
+         expandVersion();
+ 
+         createSubJars();
+ 
+         File pluginFile = createPluginJar();
+ 
+         project.getArtifact().setFile(pluginFile);
+     }
+ 
+     private void createSubJars() throws MojoExecutionException {
+         for (BuildOutputJar jar : pdeProject.getOutputJars()) {
+             if (!jar.isDirClasspathEntry()) {
+                 makeJar(jar);
+             }
+         }
+     }
+ 
+     private File makeJar(BuildOutputJar jar) throws MojoExecutionException {
+         String jarName = jar.getName();
+         BuildProperties buildProperties = pdeProject.getBuildProperties();
+         String customManifest = buildProperties.getJarToManifestMap().get(jarName);
+         try {
+             File jarFile = new File(project.getBasedir(), jarName);
+             JarArchiver archiver = new JarArchiver();
+             archiver.setDestFile(jarFile);
+             archiver.addDirectory(jar.getOutputDirectory());
+             if (customManifest != null) {
+                 for (File sourceFolder : jar.getSourceFolders()) {
+                     File manifestFile = new File(sourceFolder, customManifest);
+                     if (manifestFile.isFile()) {
+                         archiver.setManifest(manifestFile);
+                         break;
+                     }
+                 }
+             }
+             archiver.createArchive();
+             return jarFile;
+         } catch (Exception e) {
+             throw new MojoExecutionException("Could not create jar " + jarName, e);
+         }
+     }
+ 
+     private File createPluginJar() throws MojoExecutionException {
+         try {
+             MavenArchiver archiver = new MavenArchiver();
+             archiver.setArchiver(jarArchiver);
+ 
+             File pluginFile = new File(buildDirectory, finalName + ".jar");
+             if (pluginFile.exists()) {
+                 pluginFile.delete();
+             }
+             BuildProperties buildProperties = pdeProject.getBuildProperties();
+             List<String> binIncludesList = buildProperties.getBinIncludes();
+             List<String> binExcludesList = buildProperties.getBinExcludes();
+            // 1. additional filesets should win over bin.includes, so we add them first
+            if (additionalFileSets != null) {
+                for (DefaultFileSet fileSet : additionalFileSets) {
+                    if (fileSet.getDirectory() != null && fileSet.getDirectory().isDirectory()) {
+                        archiver.getArchiver().addFileSet(fileSet);
+                    }
+                }
+            }
+             List<String> binIncludesIgnoredForValidation = new ArrayList<String>();
+            // 2. handle dir classpath entries and "."
+             for (BuildOutputJar outputJar : pdeProject.getOutputJarMap().values()) {
+                 String jarName = outputJar.getName();
+                 if (binIncludesList.contains(jarName) && outputJar.isDirClasspathEntry()) {
+                     binIncludesIgnoredForValidation.add(jarName);
+                     String prefix = ".".equals(jarName) ? "" : jarName;
+                     archiver.getArchiver().addDirectory(outputJar.getOutputDirectory(), prefix);
+                 }
+             }
+            // 3. handle nested jars and included resources
+             checkBinIncludesExist(buildProperties, binIncludesIgnoredForValidation.toArray(new String[0]));
+             archiver.getArchiver().addFileSet(getFileSet(project.getBasedir(), binIncludesList, binExcludesList));
+ 
+             File manifest = updateManifest();
+             if (manifest.exists()) {
+                 archive.setManifestFile(manifest);
+             }
+ 
+             archiver.setOutputFile(pluginFile);
+             if (!archive.isForced()) {
+                 // optimized archive creation not supported for now because of build qualifier mismatch issues
+                 // see TYCHO-502
+                 getLog().warn("ignoring unsupported archive forced = false parameter.");
+                 archive.setForced(true);
+             }
+             archiver.createArchive(project, archive);
+ 
+             return pluginFile;
+         } catch (Exception e) {
+             throw new MojoExecutionException("Error assembling JAR", e);
+         }
+     }
+ 
+     private File updateManifest() throws FileNotFoundException, IOException, MojoExecutionException {
+         File mfile = new File(project.getBasedir(), "META-INF/MANIFEST.MF");
+ 
+         InputStream is = new FileInputStream(mfile);
+         Manifest mf;
+         try {
+             mf = new Manifest(is);
+         } finally {
+             is.close();
+         }
+         Attributes attributes = mf.getMainAttributes();
+ 
+         if (attributes.getValue(Name.MANIFEST_VERSION) == null) {
+             attributes.put(Name.MANIFEST_VERSION, "1.0");
+         }
+ 
+         ReactorProject reactorProject = DefaultReactorProject.adapt(project);
+         attributes.putValue("Bundle-Version", reactorProject.getExpandedVersion());
+         soureReferenceComputer.addSourceReferenceHeader(mf, sourceReferences, project);
+         mfile = new File(project.getBuild().getDirectory(), "MANIFEST.MF");
+         mfile.getParentFile().mkdirs();
+         BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(mfile));
+         try {
+             mf.write(os);
+         } finally {
+             os.close();
+         }
+ 
+         return mfile;
+     }
+ 
+ }

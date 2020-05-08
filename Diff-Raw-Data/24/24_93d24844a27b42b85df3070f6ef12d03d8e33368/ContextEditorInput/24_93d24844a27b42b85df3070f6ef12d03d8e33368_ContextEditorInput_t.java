@@ -1,0 +1,62 @@
+ /*******************************************************************************
+  * Copyright (c) 2004 - 2006 University Of British Columbia and others.
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+  *     University Of British Columbia - initial API and implementation
+  *******************************************************************************/
+ 
+ package org.eclipse.mylar.internal.context.ui.editors;
+ 
+ import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.mylar.internal.tasks.ui.TaskListImages;
+ import org.eclipse.mylar.tasks.core.ITask;
+ import org.eclipse.ui.IEditorInput;
+ import org.eclipse.ui.IPersistableElement;
+ 
+ /**
+  * @author Mik Kersten
+  */
+ public class ContextEditorInput implements IEditorInput {
+ 
+	private static final String LABEL = "Task Context Editor";
+	
+ 	private ITask task;
+ 
+ 	public ContextEditorInput(ITask task) {
+ 		this.task = task;
+ 	}
+ 
+ 	public boolean exists() {
+ 		return false;
+ 	}
+ 
+ 	public ImageDescriptor getImageDescriptor() {
+		return TaskListImages.TASK_ACTIVE_CENTERED;
+ 	}
+ 
+ 	public String getName() {
+		return LABEL;
+ 	}
+ 
+ 	public IPersistableElement getPersistable() {
+ 		return null;
+ 	}
+ 
+ 	public String getToolTipText() {
+ 		return null;
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+ 	public Object getAdapter(Class adapter) {
+ 		return null;
+ 	}
+ 
+ 	public ITask getTask() {
+ 		return task;
+ 	}
+ 
+ }

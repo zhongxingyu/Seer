@@ -1,0 +1,473 @@
+ /*
+  * Copyright (C) 2012 Brian Muramatsu
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.btmura.android.reddit.provider;
+ 
+ import java.io.BufferedInputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.net.HttpURLConnection;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ 
+ import android.content.ContentValues;
+ import android.content.Context;
+ import android.database.Cursor;
+ import android.database.sqlite.SQLiteDatabase;
+ import android.database.sqlite.SQLiteOpenHelper;
+ import android.os.Bundle;
+ import android.text.TextUtils;
+ import android.util.JsonReader;
+ import android.util.JsonToken;
+ 
+ import com.btmura.android.reddit.BuildConfig;
+ import com.btmura.android.reddit.app.CommentLogic;
+ import com.btmura.android.reddit.app.CommentLogic.CommentList;
+ import com.btmura.android.reddit.database.CommentActions;
+ import com.btmura.android.reddit.database.Comments;
+ import com.btmura.android.reddit.database.Kinds;
+ import com.btmura.android.reddit.database.Sessions;
+ import com.btmura.android.reddit.net.RedditApi;
+ import com.btmura.android.reddit.net.Urls;
+ import com.btmura.android.reddit.text.Formatter;
+ import com.btmura.android.reddit.util.Array;
+ import com.btmura.android.reddit.util.JsonParser;
+ 
+ class CommentListing extends JsonParser implements Listing, CommentList {
+ 
+     public static final String TAG = "CommentListing";
+ 
+     private static final String[] PROJECTION = {
+             CommentActions._ID,
+             CommentActions.COLUMN_ACCOUNT,
+             CommentActions.COLUMN_ACTION,
+             CommentActions.COLUMN_THING_ID,
+             CommentActions.COLUMN_TEXT,
+     };
+ 
+     private static final int INDEX_ID = 0;
+     private static final int INDEX_ACCOUNT_NAME = 1;
+     private static final int INDEX_ACTION = 2;
+     private static final int INDEX_THING_ID = 3;
+     private static final int INDEX_TEXT = 4;
+ 
+     // TODO: Pass estimate of size to CommentListing rather than doing this.
+     public final ArrayList<ContentValues> values = new ArrayList<ContentValues>(360);
+     public long networkTimeMs;
+     public long parseTimeMs;
+ 
+     private final HashMap<String, ContentValues> valueMap = new HashMap<String, ContentValues>();
+     private final Formatter formatter = new Formatter();
+     private final Context context;
+     private final SQLiteOpenHelper dbHelper;
+     private final String accountName;
+     private final String thingId;
+     private final String linkId;
+     private final int numComments;
+     private final String cookie;
+ 
+     private final String sessionTag;
+ 
+     static CommentListing newInstance(Context context, SQLiteOpenHelper dbHelper,
+             String accountName, String thingId, String linkId, int numComments, String cookie) {
+         return new CommentListing(context, dbHelper, accountName, thingId, linkId, numComments,
+                 cookie);
+     }
+ 
+     private CommentListing(Context context,
+             SQLiteOpenHelper dbHelper,
+             String accountName,
+             String thingId,
+             String linkId,
+             int numComments,
+             String cookie) {
+         this.context = context;
+         this.dbHelper = dbHelper;
+         this.accountName = accountName;
+         this.thingId = thingId;
+         this.linkId = linkId;
+         this.numComments = numComments;
+         this.cookie = cookie;
+         this.sessionTag = makeSessionTag();
+     }
+ 
+     private String makeSessionTag() {
+         StringBuilder tag = new StringBuilder(accountName).append("-").append(thingId);
+         if (!TextUtils.isEmpty(linkId)) {
+             tag.append("-").append(linkId);
+         }
+         return tag.toString();
+     }
+ 
+     @Override
+     public String getSessionTag() {
+         return sessionTag;
+     }
+ 
+     @Override
+     public int getSessionType() {
+         return Sessions.TYPE_COMMENTS;
+     }
+ 
+     public ArrayList<ContentValues> getValues() throws IOException {
+         long t1 = System.currentTimeMillis();
+         CharSequence url = Urls.commentListing(thingId, linkId, numComments, Urls.TYPE_JSON);
+         HttpURLConnection conn = RedditApi.connect(url, cookie, true, false);
+         InputStream input = null;
+         try {
+             input = new BufferedInputStream(conn.getInputStream());
+             long t2 = System.currentTimeMillis();
+ 
+             JsonReader reader = new JsonReader(new InputStreamReader(input));
+             parseListingArray(reader);
+             if (BuildConfig.DEBUG) {
+                 long t3 = System.currentTimeMillis();
+                 networkTimeMs = t2 - t1;
+                 parseTimeMs = t3 - t2;
+             }
+             return values;
+         } finally {
+            if (input != null) {
+                input.close();
+            }
+             conn.disconnect();
+         }
+     }
+ 
+     public void performExtraWork(Context context) {
+     }
+ 
+     public void addCursorExtras(Bundle bundle) {
+     }
+ 
+     public long getNetworkTimeMs() {
+         return networkTimeMs;
+     }
+ 
+     public long getParseTimeMs() {
+         return parseTimeMs;
+     }
+ 
+     public String getTargetTable() {
+         return Comments.TABLE_NAME;
+     }
+ 
+     public boolean isAppend() {
+         return false;
+     }
+ 
+     @Override
+     public boolean shouldParseReplies() {
+         return true;
+     }
+ 
+     @Override
+     public void onEntityStart(int index) {
+         ContentValues v = new ContentValues(20);
+         v.put(Comments.COLUMN_ACCOUNT, accountName);
+         values.add(v);
+     }
+ 
+     @Override
+     public void onAuthor(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_AUTHOR, readString(reader, ""));
+     }
+ 
+     @Override
+     public void onBody(JsonReader reader, int index) throws IOException {
+         CharSequence body = formatter.formatNoSpans(context, readString(reader, ""));
+         values.get(index).put(Comments.COLUMN_BODY, body.toString());
+     }
+ 
+     @Override
+     public void onCreatedUtc(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_CREATED_UTC, reader.nextLong());
+     }
+ 
+     @Override
+     public void onDomain(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_DOMAIN, reader.nextString());
+     }
+ 
+     @Override
+     public void onDowns(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_DOWNS, reader.nextInt());
+     }
+ 
+     @Override
+     public void onHidden(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_HIDDEN, reader.nextBoolean());
+     }
+ 
+     @Override
+     public void onIsSelf(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_SELF, reader.nextBoolean());
+     }
+ 
+     @Override
+     public void onKind(JsonReader reader, int index) throws IOException {
+         ContentValues v = values.get(index);
+         v.put(Comments.COLUMN_NESTING, replyNesting);
+         v.put(Comments.COLUMN_KIND, Kinds.parseKind(reader.nextString()));
+     }
+ 
+     @Override
+     public void onLikes(JsonReader reader, int index) throws IOException {
+         int likes = 0;
+         if (reader.peek() == JsonToken.BOOLEAN) {
+             likes = reader.nextBoolean() ? 1 : -1;
+         } else {
+             reader.skipValue();
+         }
+         values.get(index).put(Comments.COLUMN_LIKES, likes);
+     }
+ 
+     @Override
+     public void onName(JsonReader reader, int index) throws IOException {
+         String id = readString(reader, "");
+         ContentValues v = values.get(index);
+         v.put(Comments.COLUMN_THING_ID, id);
+         valueMap.put(id, v);
+     }
+ 
+     @Override
+     public void onNumComments(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_NUM_COMMENTS, reader.nextInt());
+     }
+ 
+     @Override
+     public void onOver18(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_OVER_18, reader.nextBoolean());
+     }
+ 
+     @Override
+     public void onPermaLink(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_PERMA_LINK, reader.nextString());
+     }
+ 
+     @Override
+     public void onSaved(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_SAVED, reader.nextBoolean());
+     }
+ 
+     @Override
+     public void onScore(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_SCORE, reader.nextInt());
+     }
+ 
+     @Override
+     public void onSelfText(JsonReader reader, int index) throws IOException {
+         CharSequence body = formatter.formatNoSpans(context, readString(reader, ""));
+         values.get(index).put(Comments.COLUMN_BODY, body.toString());
+     }
+ 
+     @Override
+     public void onSubreddit(JsonReader reader, int index) throws IOException {
+         // TODO: Seems like a waste since these are all in the same subreddit.
+         values.get(index).put(Comments.COLUMN_SUBREDDIT, reader.nextString());
+     }
+ 
+     @Override
+     public void onTitle(JsonReader reader, int index) throws IOException {
+         CharSequence title = formatter.formatNoSpans(context, readString(reader, ""));
+         values.get(index).put(Comments.COLUMN_TITLE, title.toString());
+     }
+ 
+     @Override
+     public void onUps(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_UPS, reader.nextInt());
+     }
+ 
+     @Override
+     public void onUrl(JsonReader reader, int index) throws IOException {
+         values.get(index).put(Comments.COLUMN_URL, reader.nextString());
+     }
+ 
+     @Override
+     public void onThumbnail(JsonReader reader, int index) throws IOException {
+         // TODO: Remove code duplication with ThingListing.
+         String thumbnail = readString(reader, null);
+         if (!TextUtils.isEmpty(thumbnail) && thumbnail.startsWith("http")) {
+             values.get(index).put(Comments.COLUMN_THUMBNAIL_URL, thumbnail);
+         }
+     }
+ 
+     @Override
+     public void onParseEnd() {
+         // We don't support loading more comments right now.
+         removeMoreComments();
+ 
+         // Merge local inserts and deletes that haven't been synced yet.
+         mergeActions();
+ 
+         // Tag each row with a sequence number for later insertions.
+         writeSequenceNumbers();
+     }
+ 
+     private void removeMoreComments() {
+         int size = values.size();
+         for (int i = 0; i < size;) {
+             ContentValues v = values.get(i);
+             Integer type = (Integer) v.get(Comments.COLUMN_KIND);
+             if (type.intValue() == Kinds.KIND_MORE) {
+                 values.remove(i);
+                 size--;
+             } else {
+                 i++;
+             }
+         }
+     }
+ 
+     private void mergeActions() {
+         // Track the fake number of insertions and deletions.
+         int delta = 0;
+ 
+         SQLiteDatabase db = dbHelper.getReadableDatabase();
+ 
+         // Select by parent ID to see changes by all accounts, since the user can pick what account
+         // to use when making a comment. Do the same for edits and deletes to be consistent.
+         Cursor c = db.query(CommentActions.TABLE_NAME, PROJECTION,
+                 CommentActions.SELECT_BY_PARENT_THING_ID, Array.of(thingId),
+                 null, null, CommentActions.SORT_BY_ID);
+         try {
+             while (c.moveToNext()) {
+                 long actionId = c.getLong(INDEX_ID);
+                 String actionAccountName = c.getString(INDEX_ACCOUNT_NAME);
+                 int action = c.getInt(INDEX_ACTION);
+                 String text = c.getString(INDEX_TEXT);
+                 String actionThingId = c.getString(INDEX_THING_ID);
+                 switch (action) {
+                     case CommentActions.ACTION_INSERT:
+                         if (insertThing(actionId, actionAccountName, actionThingId, text)) {
+                             delta++;
+                         }
+                         break;
+ 
+                     case CommentActions.ACTION_DELETE:
+                         if (deleteThing(actionThingId)) {
+                             delta--;
+                         }
+                         break;
+ 
+                     case CommentActions.ACTION_EDIT:
+                         editThing(actionId, actionThingId, text);
+                         break;
+ 
+                     default:
+                         throw new IllegalStateException();
+                 }
+             }
+         } finally {
+             c.close();
+         }
+ 
+         if (!values.isEmpty() && delta != 0) {
+             // Update the header comment count with our fake inserts and deletes.
+             Integer numComments = (Integer) values.get(0).get(Comments.COLUMN_NUM_COMMENTS);
+             values.get(0).put(Comments.COLUMN_NUM_COMMENTS, numComments.intValue() + delta);
+         }
+     }
+ 
+     private void writeSequenceNumbers() {
+         int count = values.size();
+         for (int i = 0; i < count; i++) {
+             values.get(i).put(Comments.COLUMN_SEQUENCE, i);
+         }
+     }
+ 
+     private boolean insertThing(long actionId, String actionAccountName, String actionThingId,
+             String body) {
+         int size = values.size();
+         for (int i = 0; i < size; i++) {
+             ContentValues v = values.get(i);
+             String id = v.getAsString(Comments.COLUMN_THING_ID);
+ 
+             // This thing could be a placeholder we previously inserted.
+             if (TextUtils.isEmpty(id)) {
+                 continue;
+             }
+ 
+             if (id.equals(actionThingId)) {
+                 ContentValues p = new ContentValues(7 + 1); // +1 for session id.
+                 p.put(Comments.COLUMN_ACCOUNT, actionAccountName);
+                 p.put(Comments.COLUMN_AUTHOR, actionAccountName);
+                 p.put(Comments.COLUMN_BODY, body);
+                 p.put(Comments.COLUMN_COMMENT_ACTION_ID, actionId);
+                 p.put(Comments.COLUMN_KIND, Kinds.KIND_COMMENT);
+                 p.put(Comments.COLUMN_NESTING, CommentLogic.getInsertNesting(this, i));
+ 
+                 values.add(CommentLogic.getInsertPosition(this, i), p);
+                 size++;
+ 
+                 return true;
+             }
+         }
+         return false;
+     }
+ 
+     private boolean deleteThing(String actionThingId) {
+         int size = values.size();
+         for (int i = 0; i < size; i++) {
+             ContentValues v = values.get(i);
+             String id = v.getAsString(Comments.COLUMN_THING_ID);
+             if (actionThingId.equals(id)) {
+                 // Mark the header comment or comment with children as
+                 // [deleted] instead of completely removing it.
+                 if (i == 0) {
+                     v.put(Comments.COLUMN_AUTHOR, Comments.DELETED_AUTHOR);
+                     return false;
+                 } else if (CommentLogic.hasChildren(this, i)) {
+                     v.put(Comments.COLUMN_AUTHOR, Comments.DELETED_AUTHOR);
+                     v.put(Comments.COLUMN_BODY, Comments.DELETED_BODY);
+                     return false;
+                 } else {
+                     values.remove(i);
+                     size--;
+                     return true;
+                 }
+             }
+         }
+         return false;
+     }
+ 
+     private void editThing(long actionId, String actionThingId, String text) {
+         ContentValues v = valueMap.get(actionThingId);
+         if (v != null) {
+             v.put(Comments.COLUMN_BODY, text);
+             v.put(Comments.COLUMN_COMMENT_ACTION_ID, actionId);
+         }
+     }
+ 
+     public int getCommentCount() {
+         return values.size();
+     }
+ 
+     public long getCommentId(int position) {
+         // Cast to avoid auto-boxing in the getAsLong method.
+         return ((Long) values.get(position).get(Comments._ID)).longValue();
+     }
+ 
+     public int getCommentNesting(int position) {
+         // Cast to avoid auto-boxing in the getAsInteger method.
+         return ((Integer) values.get(position).get(Comments.COLUMN_NESTING)).intValue();
+     }
+ 
+     public int getCommentSequence(int position) {
+         // Cast to avoid auto-boxing in the getAsInteger method.
+         return ((Integer) values.get(position).get(Comments.COLUMN_SEQUENCE)).intValue();
+     }
+ }

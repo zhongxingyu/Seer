@@ -1,0 +1,231 @@
+ package org.ngrinder.perftest.service;
+ 
+ import static org.hamcrest.Matchers.is;
+ import static org.hamcrest.Matchers.not;
+ import static org.hamcrest.Matchers.nullValue;
+ import static org.junit.Assert.assertThat;
+ import static org.junit.Assert.assertTrue;
+ 
+ import java.io.File;
+ import java.io.IOException;
+ import java.util.List;
+ import java.util.Set;
+ 
+ import net.grinder.AgentControllerDaemon;
+ import net.grinder.SingleConsole;
+ import net.grinder.SingleConsole.SamplingLifeCycleListener;
+ import net.grinder.common.GrinderProperties;
+ import net.grinder.communication.AgentControllerCommunicationDefauts;
+ import net.grinder.statistics.StatisticsSet;
+ 
+ import org.apache.commons.io.FileUtils;
+ import org.apache.commons.io.IOUtils;
+ import org.junit.After;
+import org.junit.AfterClass;
+ import org.junit.Before;
+import org.junit.BeforeClass;
+ import org.junit.Test;
+ import org.ngrinder.agent.model.AgentInfo;
+ import org.ngrinder.agent.service.AgentManagerService;
+ import org.ngrinder.chart.service.MonitorService;
+ import org.ngrinder.common.constant.NGrinderConstants;
+ import org.ngrinder.common.util.ThreadUtil;
+ import org.ngrinder.model.PerfTest;
+ import org.ngrinder.model.Status;
+ import org.ngrinder.monitor.MonitorConstants;
+ import org.ngrinder.monitor.agent.AgentMonitorServer;
+ import org.ngrinder.monitor.controller.model.SystemDataModel;
+ import org.ngrinder.script.model.FileEntry;
+ import org.ngrinder.script.model.FileType;
+ import org.ngrinder.script.repository.MockFileEntityRepsotory;
+ import org.ngrinder.script.util.CompressionUtil;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.core.io.ClassPathResource;
+ 
+ public class PerfTestRunnableTest extends AbstractPerfTestTransactionalTest implements NGrinderConstants {
+ 
+ 	@Autowired
+ 	private MockPerfTestRunnable perfTestRunnable;
+ 
+ 	AgentControllerDaemon agentControllerDaemon;
+ 
+ 	@Autowired
+ 	private AgentManager agentManager;
+ 
+ 	@Autowired
+ 	private AgentManagerService agentService;
+ 	
+ 	@Autowired
+ 	private MonitorService monitorService;
+ 
+ 	@Autowired
+ 	public MockFileEntityRepsotory fileEntityRepository;
+ 	
+ 	public PerfTest currentTest;
+ 
+	@BeforeClass
+	public static void initMonitor() {
+		try {
+			Set<String> collector = MonitorConstants.SYSTEM_DATA_COLLECTOR;
+			AgentMonitorServer.getInstance().init(MonitorConstants.DEFAULT_MONITOR_PORT, collector);
+			AgentMonitorServer.getInstance().start();
+		} catch (Exception e) {
+			LOG.error("ERROR: {}", e.getMessage());
+			LOG.debug("Error while starting Monitor", e);
+		}
+		ThreadUtil.sleep(2000);
+	}
+	
+	@AfterClass
+	public static void stopMonitor() {
+		AgentMonitorServer.getInstance().stop();
+	}
+	
+ 	@Before
+ 	public void before() throws IOException {
+ 		ClassPathResource classPathResource = new ClassPathResource("native_lib/.sigar_shellrc");
+ 		String nativeLib = classPathResource.getFile().getParentFile().getAbsolutePath();
+ 		System.setProperty("java.library.path",
+ 						nativeLib + File.pathSeparator + System.getProperty("java.library.path"));
+ 		System.out.println("Java Lib Path : " + System.getProperty("java.library.path"));
+ 		CompressionUtil compressUtil = new CompressionUtil();
+ 
+ 		File tempRepo = new File(System.getProperty("java.io.tmpdir"), "repo");
+ 		fileEntityRepository.setUserRepository(new File(tempRepo, getTestUser().getUserId()));
+ 		File testUserRoot = fileEntityRepository.getUserRepoDirectory(getTestUser()).getParentFile();
+ 
+ 		testUserRoot.mkdirs();
+ 		compressUtil.unzip(new ClassPathResource("TEST_USER.zip").getFile(), testUserRoot);
+ 		testUserRoot.deleteOnExit();
+ 
+ 		prepareUserRepo();
+ 		clearAllPerfTest();
+ 		currentTest = createPerfTest("test1", Status.READY, null);
+ 		List<PerfTest> allPerfTest = perfTestService.getAllPerfTest();
+ 
+ 		assertThat(allPerfTest.size(), is(1));
+ 		allPerfTest.get(0).setScriptName("/hello/world.py");
+ 		allPerfTest.get(0).setDuration(30000L);
+ 		perfTestService.savePerfTest(testUser, allPerfTest.get(0));
+ 		agentControllerDaemon = new AgentControllerDaemon("127.0.0.1");
+ 		agentControllerDaemon.setAgentConfig(agentConfig1);
+ 		agentControllerDaemon.run(AgentControllerCommunicationDefauts.DEFAULT_AGENT_CONTROLLER_SERVER_PORT);
+ 		
+ 		LOG.info("* Start nGrinder Monitor *");
+ 		MonitorConstants.init(agentConfig2);
+ 		
+
+ 		
+ 		int agentCount = 0;
+ 		int checkLoop = 0;
+ 		while (true) {
+ 			agentCount = agentManager.getAllAttachedAgents().size();
+ 			if (agentCount != 0 || checkLoop++ > 20) {
+ 				break;
+ 			}
+ 			System.out.println("WAIT UNTIL AGENT IS CONNECTED - TRY COUNT " + checkLoop);
+ 			sleep(1000);
+ 		}
+ 
+ 		List<AgentInfo> agentList = agentService.getAgentList();
+ 		for (AgentInfo each : agentList) {
+ 			agentService.approve(each.getIp(), true);
+ 		}
+ 
+ 		agentList = agentService.getAgentList();
+ 		assertThat(agentCount, is(1));
+ 	}
+ 
+ 	@After
+ 	public void after() {
+ 		agentControllerDaemon.shutdown();
+ 		sleep(3000);
+ 	}
+ 
+ 	@Test
+ 	public void testDoTest() throws IOException {
+ 		for (int i = 0; i < 10; i++) {
+ 			if (agentManager.getAllFreeApprovedAgents().size() == 1) {
+ 				break;
+ 			}
+ 			sleep(1000);
+ 		}
+ 		perfTestRunnable.startTest();
+ 		sleep(20000);
+ 		perfTestRunnable.finishTest();
+ 		sleep(5000);
+ 		List<SystemDataModel> systemData = monitorService.getSystemMonitorData(currentTest.getId(), "127.0.0.1");
+ 		assertTrue(systemData.size()>0);
+ 
+ 	}
+ 
+ 	boolean ended = false;
+ 
+ 	@Test
+ 	public void testStartConsole() throws IOException {
+ 		assertThat(agentManager.getAllApprovedAgents().size(), is(1));
+ 		// Get perf test
+ 		PerfTest perfTest = perfTestService.getPerfTestCandiate();
+ 		perfTest.setScriptName("/hello/world.py");
+ 		assertThat(perfTest, not(nullValue()));
+ 
+ 		// Start console
+ 		SingleConsole singleConsole = perfTestRunnable.startConsole(perfTest);
+ 		assertThat(singleConsole, not(nullValue()));
+ 		assertThat(singleConsole.getConsolePort(), is(perfTest.getPort()));
+ 
+ 		// Start agents
+ 		perfTest.setAgentCount(1);
+ 		System.out.println(perfTest);
+ 		GrinderProperties grinderProperties = perfTestService.getGrinderProperties(perfTest);
+ 		singleConsole.setReportPath(perfTestService.getReportFileDirectory(perfTest));
+ 
+ 		// Distribute files
+ 		perfTestService.prepareDistribution(perfTest);
+ 		perfTestRunnable.startAgentsOn(perfTest, grinderProperties, singleConsole);
+ 		sleep(3000);
+ 		perfTestRunnable.distributeFileOn(perfTest, grinderProperties, singleConsole);
+ 
+ 		singleConsole.addSamplingLifeCyleListener(new SamplingLifeCycleListener() {
+ 			@Override
+ 			public void onSamplingStarted() {
+ 				System.out.println("Sampling is started");
+ 			}
+ 
+ 			@Override
+ 			public void onSamplingEnded() {
+ 				ended = true;
+ 			}
+ 
+ 			@Override
+ 			public void onSampling(File file, StatisticsSet intervalStatistics, StatisticsSet cumulativeStatistics) {
+ 				// TODO Auto-generated method stub
+ 
+ 			}
+ 		});
+ 
+ 		// Run test
+ 		perfTestRunnable.runTestOn(perfTest, grinderProperties, singleConsole);
+ 		sleep(10000);
+ 		// Waiting for termination
+ 		singleConsole.waitUntilAllAgentDisconnected();
+ 	}
+ 
+ 	private void prepareUserRepo() throws IOException {
+ 		CompressionUtil compressUtil = new CompressionUtil();
+ 		File userRepoDirectory = fileEntityRepository.getUserRepoDirectory(null);
+ 		FileUtils.deleteQuietly(userRepoDirectory);
+ 		compressUtil.unzip(new ClassPathResource("TEST_USER.zip").getFile(), userRepoDirectory.getParentFile());
+ 		FileEntry fileEntryDir = new FileEntry();
+ 		fileEntryDir.setPath("/hello");
+ 		fileEntryDir.setFileType(FileType.DIR);
+ 		fileEntityRepository.save(getTestUser(), fileEntryDir, null);
+ 
+ 		FileEntry fileEntry = new FileEntry();
+ 		fileEntry.setPath("/hello/world.py");
+ 		String worldString = IOUtils.toString(new ClassPathResource("world.py").getInputStream());
+ 		fileEntry.setContent(worldString);
+ 		fileEntry.setFileType(FileType.PYTHON_SCRIPT);
+ 		fileEntityRepository.save(getTestUser(), fileEntry, "UTF-8");
+ 	}
+ }

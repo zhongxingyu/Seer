@@ -1,0 +1,393 @@
+ /*******************************************************************************
+  * Copyright (c) 2006 IBM 
+  * All rights reserved. This program and the accompanying materials
+  * are made available under the terms of the Eclipse Public License v1.0
+  * which accompanies this distribution, and is available at
+  * http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+  *    Andy Clement - initial API and implementation
+  *******************************************************************************/
+ package org.aspectj.systemtest.ajc152;
+ 
+ import java.io.File;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.List;
+ 
+ import junit.framework.Test;
+ 
+ import org.aspectj.ajdt.internal.core.builder.AsmHierarchyBuilder;
+ import org.aspectj.asm.AsmManager;
+ import org.aspectj.asm.IHierarchy;
+ import org.aspectj.asm.IProgramElement;
+ import org.aspectj.asm.IRelationshipMap;
+ import org.aspectj.asm.internal.Relationship;
+ import org.aspectj.testing.XMLBasedAjcTestCase;
+ import org.aspectj.util.CharOperation;
+ import org.aspectj.weaver.World;
+ 
+ public class Ajc152Tests extends org.aspectj.testing.XMLBasedAjcTestCase {
+ 
+ //  public void testverifyErrNoTypeCflowField_pr145693() {runTest("verifyErrNoTypeCflowField");}
+ //  public void testBrokenIfArgsCflowAtAj_pr145018() { runTest("ataj crashing with cflow, if and args");}
+ //  public void testItdCallingGenericMethod_pr145391() { runTest("itd calling generic method");}
+ //  public void testItdCallingGenericMethod_pr145391_2() { runTest("itd calling generic method - 2");}
+ //  public void testAdviceNotWovenAspectPath_pr147841() { runTest("advice not woven on aspectpath");}
+ //  public void testClassCastForInvalidAnnotationValue_pr148537() { runTest("classcast annotation value");}
+  public void testSeparateCallAspectOf_pr148727() { runTest("separate compilation calling aspectOf and hasAspect"); }
+  public void testIntegratedCallAspectOf_pr148727() { runTest("integrated compilation calling aspectOf and hasAspect"); }
+   public void testFreakyNewArrayJoinpoint_pr148786() { runTest("freaky new array joinpoint"); }
+   public void testPrivilegeGeneric_pr148545() { runTest("nosuchmethoderror for privileged aspect");}
+   public void testPrivilegeGeneric_pr148545_2() { runTest("nosuchmethoderror for privileged aspect - 2");}
+   public void testUnknownAnnotationNPE() { runTest("NPE for unknown annotation");}
+   public void testDuplicateBridgeMethods_pr147801_1() { runTest("duplicate bridge methods");}
+   public void testPackageIgnoredForException_pr147701_1() { runTest("package for exception ignored");}
+   public void testPackageIgnoredForException_pr147701_2() { runTest("package for exception ignored - 2");}
+   public void testPackageIgnoredForException_pr147701_3() { runTest("package for exception ignored - 3");}
+   public void testBrokenAddSerialVersionUID_pr145950() {runTest("fails to discover Serializable");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_1() {runTest("no unnecessary declaration of thrown exception warning - 1");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_2() {runTest("no unnecessary declaration of thrown exception warning - 2");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_3() {runTest("no unnecessary declaration of thrown exception warning - 3");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_4() {runTest("no unnecessary declaration of thrown exception warning - 4");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_5() {runTest("no unnecessary declaration of thrown exception warning - 5");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_6() {runTest("no unnecessary declaration of thrown exception warning - 6");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_7() {runTest("no unnecessary declaration of thrown exception warning - 7");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_8() {runTest("no unnecessary declaration of thrown exception warning - 8");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_9() {runTest("no unnecessary declaration of thrown exception warning - 9");}
+   public void testNoUnnecessaryDeclarationOfThrownExcp_pr129282_10() {runTest("no unnecessary declaration of thrown exception warning - 10");}  
+   public void testAtAJVerificationError_pr144602() { runTest("atAJ perthis aspect verification error");}
+   public void testLTWAndGeneratingSUID_pr144465() { runTest("ltw with serialversionUID creation"); }
+   public void testAspects14PerSingleton_pr122253() { runTest("aspects14 - persingleton");}
+   public void testAspects14PerCflow_pr122253() { runTest("aspects14 - percflow");}
+   public void testAspects14PerThis_pr122253() { runTest("aspects14 - perthis");}
+   public void testAspects14PerTypeWithin_pr122253() { runTest("aspects14 - pertypewithin");}
+   public void testFunkyGenericErrorWithITDs_pr126355() { runTest("bizarre generic error with itds");}
+   public void testConcretizingAbstractMethods_pr142466() { runTest("aop.xml aspect inheriting but not concretizing abstract method");}
+   public void testConcretizingAbstractMethods_pr142466_2() { runTest("aop.xml aspect inheriting but not concretizing abstract method - 2");}
+   public void testComplexGenericDecl_pr137568() { runTest("complicated generics declaration");}
+   public void testItdOnInnerTypeOfGenericType_pr132349() { runTest("ITD on inner type of generic type");}
+   public void testItdOnInnerTypeOfGenericType_pr132349_2() { runTest("ITD on inner type of generic type - 2");}
+   public void testItdOnInnerTypeOfGenericType_pr132349_3() { runTest("ITD on inner type of generic type - 3");}
+ //  public void testCovarianceAndDecp_pr128443_1() { runTest("covariance and decp - 1"); }
+   public void testLTWGeneratedAspectAbstractMethod_pr125480() { runTest("aop.xml aspect inheriting abstract method ");} 
+   public void testLTWGeneratedAspectAbstractMethod_pr125480_2() { runTest("aop.xml aspect inheriting abstract method - code style");} 
+   //public void testSuperITDExplosion_pr134425() { runTest("super ITDs");}
+   //public void testMisbehavingDeclareAnnotation_pr135865() { runTest("misbehaving declare annotation");}
+   //public void testMisbehavingDeclareAnnotation_pr135865_2() { runTest("misbehaving declare annotation - 2");}
+   public void testCompletelyBrokenAopConcretization_pr142165_1() { runTest("broken concretization");}
+   public void testCompletelyBrokenAopConcretization_pr142165_2() { runTest("broken concretization - 2");}
+   public void testCompletelyBrokenAopConcretization_pr142165_3() { runTest("broken concretization - 3");}
+   public void testVerifyErrorLTW_pr135068() { runTest("ltw verifyerror");}
+   public void testVerifyErrorLTW_pr135068_2() { runTest("ltw verifyerror - 2");}
+   public void testVerifyErrorLTW_pr135068_3() { runTest("ltw verifyerror - 3");}
+   public void testVerifyErrorLTW_pr135068_4() { runTest("ltw verifyerror - 4");}
+   public void testVerifyErrorForComplexCflow_pr136026() { runTest("verifyerror");}
+   public void testVerifyErrorForComplexCflow_pr136026_2() { runTest("verifyerror - 2");}
+   public void testAnnotationsAndGenericsBCException_pr129704() { runTest("annotations and generics leading to BCException");}
+   public void testMethodTooBigAfterWeaving_pr138384() { runTest("method too big"); }
+   public void testNotAtWithincode_pr138158_1() { runTest("not at withincode - 1");}
+   public void testNotAtWithincode_pr138158_2() { runTest("not at withincode - 2");}
+   public void testNotAtWithincode_pr138158_3() { runTest("not at within - 3");}
+   public void testNpeOnDup_pr138143() { runTest("npe on duplicate method with ataj");}
+   public void testPointcutsAndGenerics_pr137496_1() { runTest("pointcuts and generics - B");}
+   public void testPointcutsAndGenerics_pr137496_2() { runTest("pointcuts and generics - D");}
+   public void testPointcutsAndGenerics_pr137496_3() { runTest("pointcuts and generics - E");}
+   public void testPointcutsAndGenerics_pr137496_4() { runTest("pointcuts and generics - F");}
+   public void testPointcutsAndGenerics_pr137496_5() { runTest("pointcuts and generics - G");}
+   public void testPointcutsAndGenerics_pr137496_6() { runTest("pointcuts and generics - H");}
+   public void testAspectLibrariesAndASM_pr135001() { runTest("aspect libraries and asm");}
+   public void testStackOverflow_pr136258() { runTest("stack overflow");}
+   public void testIncorrectOverridesEvaluation13() { runTest("incorrect overrides evaluation - 1.3"); }
+//  public void testIncorrectOverridesEvaluation14() { runTest("incorrect overrides evaluation - 1.4"); }
+   public void testIncorrectOverridesEvaluation15() { runTest("incorrect overrides evaluation - 1.5"); }
+   public void testAtWithinCodeBug_pr138798() { runTest("atWithinCodeBug"); }
+   public void testReferencePCutInDeclareWarning_pr138215() { runTest("Reference pointcut fails inside @DeclareWarning");}
+   public void testReferencePCutInPerClause_pr138219() { runTest("Can't use a FQ Reference pointcut in any pointcut expression referenced by a per-clause");}
+   public void testReferencePCutInPerClause_pr130722() { runTest("FQ Reference pointcut from perclause ref pc"); }
+   public void testDoubleAnnotationMatching_pr138223() { runTest("Double at annotation matching (no binding)");}
+   public void testSuperCallsInAtAspectJAdvice_pr139749() { runTest("Super calls in @AspectJ advice");}
+   public void testNoClassCastExceptionWithPerThis_pr138286() { runTest("No ClassCastException with perThis");}
+   public void testGenericAspectHierarchyWithBounds_pr147845() { runTest("Generic abstract aspect hierarchy with bounds"); }
+   public void testJRockitBooleanReturn_pr148007() { runTest("jrockit boolean fun");}
+   public void testJRockitBooleanReturn2_pr148007() { runTest("jrockit boolean fun (no aspects)");}
+   public void testSyntheticAjcMembers_pr147711() { runTest("synthetic ajc$ members"); }
+   
+   public void testDeclareAtMethodRelationship_pr143924() {
+ 	  //AsmManager.setReporting("c:/debug.txt",true,true,true,true);
+ 	  runTest("declare @method relationship");
+ 	  IHierarchy top = AsmManager.getDefault().getHierarchy();
+ 	  
+   	  // get the IProgramElements corresponding to the different code entries
+   	  IProgramElement decam = top.findElementForLabel(top.getRoot(),
+   			  IProgramElement.Kind.DECLARE_ANNOTATION_AT_METHOD,
+   			  "declare @method: * debit(..) : @Secured(role = \"supervisor\")");  	   	 
+   	  assertNotNull("Couldn't find 'declare @method' element in the tree",decam);
+   	  IProgramElement method = top.findElementForLabel(top.getRoot(),
+   			  IProgramElement.Kind.METHOD,"debit(java.lang.String,long)");
+   	  assertNotNull("Couldn't find the 'debit(String,long)' method element in the tree",method);
+ 
+   	  List matches = AsmManager.getDefault().getRelationshipMap().get(decam);	
+   	  assertNotNull("'declare @method' should have some relationships but does not",matches);
+   	  assertTrue("'declare @method' should have one relationships but has " + matches.size(),matches.size()==1);
+   	  List matchesTargets = ((Relationship)matches.get(0)).getTargets();
+   	  assertTrue("'declare @method' should have one targets but has" + matchesTargets.size(),matchesTargets.size()==1);
+   	  IProgramElement target = AsmManager.getDefault().getHierarchy().findElementForHandle((String)matchesTargets.get(0));
+   	  assertEquals("target of relationship should be the 'debit(java.lang.String,long)' method but is IPE with label "
+   			  + target.toLabelString(),method,target);
+   	  
+   	  // check that the debit method has an annotated by relationship with the declare @method
+   	  matches = AsmManager.getDefault().getRelationshipMap().get(method);	
+   	  assertNotNull("'debit(java.lang.String,long)' should have some relationships but does not",matches);
+   	  assertTrue("'debit(java.lang.String,long)' should have one relationships but has " + matches.size(),matches.size()==1);
+   	  matchesTargets = ((Relationship)matches.get(0)).getTargets();
+   	  assertTrue("'debit(java.lang.String,long)' should have one targets but has" + matchesTargets.size(),matchesTargets.size()==1);
+   	  target = AsmManager.getDefault().getHierarchy().findElementForHandle((String)matchesTargets.get(0));
+   	  assertEquals("target of relationship should be the 'declare @method' ipe but is IPE with label "
+   			  + target.toLabelString(),decam,target);
+   	  
+   }
+   
+ // this next one reported as a bug by Rob Harrop, but I can't reproduce the failure yet...
+ //public void testAtAspectWithReferencePCPerClause_pr138220() { runTest("@Aspect with reference pointcut in perclause");}  
+ 
+   public void testJarChecking_pr137235_1() { runTest("directory with .jar extension: source and outjar"); }	    
+   public void testJarChecking_pr137235_2() { runTest("directory with .jar extension"); }
+   public void testMakePreMethodNPE_pr136393() { runTest("NPE in makePreMethod");}
+ 
+   public void testGetParameterHandles_pr141730() {
+ 	  runTest("new IProgramElement handle methods");  
+ 	  
+ 	  checkParametersForIPE("intMethod(int)",IProgramElement.Kind.METHOD,"I",true);
+ 	  checkParametersForIPE("stringMethod(java.lang.String)",IProgramElement.Kind.METHOD,"Ljava/lang/String;",true);
+ 	  checkParametersForIPE("myClassMethod(MyClass)",IProgramElement.Kind.METHOD,"LMyClass;",true);
+ 	  checkParametersForIPE("genericMethod(java.util.List<java.lang.String>)",IProgramElement.Kind.METHOD,"Pjava/util/List<Ljava/lang/String;>;",true);
+ 	  checkParametersForIPE("genericMethod2(MyGenericClass<java.lang.String,MyClass>)",IProgramElement.Kind.METHOD,"PMyGenericClass<Ljava/lang/String;LMyClass;>;",true);
+ 	  checkParametersForIPE("main(java.lang.String[])",IProgramElement.Kind.METHOD,"[Ljava/lang/String;",true);
+ 	  checkParametersForIPE("multiMethod(java.lang.String[][])",IProgramElement.Kind.METHOD,"[[Ljava/lang/String;",true);
+ 	  checkParametersForIPE("intArray(int[])",IProgramElement.Kind.METHOD,"[I",true);
+ 	  
+   	  IHierarchy top = AsmManager.getDefault().getHierarchy();      
+   	  IProgramElement twoArgsMethod = top.findElementForLabel(
+   			  top.getRoot(),IProgramElement.Kind.METHOD,"twoArgsMethod(int,java.lang.String)");
+       assertNotNull("Couldn't find 'twoArgsMethod(int,java.lang.String)' element in the tree",twoArgsMethod);
+       List l = twoArgsMethod.getParameterSignatures();
+       assertEquals("",((char[])l.get(0))[0],'I');
+       boolean eq = CharOperation.equals(((char[])l.get(1)),"Ljava/lang/String;".toCharArray());
+       assertTrue("expected parameter to be 'Ljava/lang/String;' but found '" +
+         		new String(((char[])l.get(1))) + "'",eq);
+   }
+   
+   public void testGetParameterTypes_pr141730() {
+ 	  runTest("new IProgramElement handle methods"); 
+ 	  
+ 	  checkParametersForIPE("intMethod(int)",IProgramElement.Kind.METHOD,"int",false);
+ 	  checkParametersForIPE("stringMethod(java.lang.String)",IProgramElement.Kind.METHOD,"java.lang.String",false);
+ 	  checkParametersForIPE("myClassMethod(MyClass)",IProgramElement.Kind.METHOD,"MyClass",false);
+ 	  checkParametersForIPE("genericMethod(java.util.List<java.lang.String>)",IProgramElement.Kind.METHOD,"java.util.List<java.lang.String>",false);
+ 	  checkParametersForIPE("genericMethod2(MyGenericClass<java.lang.String,MyClass>)",IProgramElement.Kind.METHOD,"MyGenericClass<java.lang.String,MyClass>",false);
+ 	  checkParametersForIPE("main(java.lang.String[])",IProgramElement.Kind.METHOD,"java.lang.String[]",false);
+ 	  checkParametersForIPE("multiMethod(java.lang.String[][])",IProgramElement.Kind.METHOD,"java.lang.String[][]",false);
+ 	  checkParametersForIPE("intArray(int[])",IProgramElement.Kind.METHOD,"int[]",false);
+   }
+   
+   public void testToSignatureString_pr141730() {
+ 	  runTest("new IProgramElement handle methods"); 
+ 	  
+ 	  checkSignatureOfIPE("main(java.lang.String[])",IProgramElement.Kind.METHOD);
+ 	  checkSignatureOfIPE("C",IProgramElement.Kind.CLASS);
+ 	  checkSignatureOfIPE("C()",IProgramElement.Kind.CONSTRUCTOR);
+ 	  checkSignatureOfIPE("method()",IProgramElement.Kind.METHOD);
+ 	  checkSignatureOfIPE("p()",IProgramElement.Kind.POINTCUT);
+ 	  checkSignatureOfIPE("before(): p..",IProgramElement.Kind.ADVICE,"before()");
+ 	  checkSignatureOfIPE("MyClass.method()",IProgramElement.Kind.INTER_TYPE_METHOD);
+ 	  checkSignatureOfIPE("multiMethod(java.lang.String[][])",IProgramElement.Kind.METHOD);
+ 	  checkSignatureOfIPE("intArray(int[])",IProgramElement.Kind.METHOD);
+ 	  checkSignatureOfIPE("MyClass.MyClass()",IProgramElement.Kind.INTER_TYPE_CONSTRUCTOR);
+   }
+ 
+   // if not filling in the model for aspects contained in jar files then
+   // want to ensure that the relationship map is correct and has nodes
+   // which can be used in AJDT - ensure no NPE occurs for the end of
+   // the relationship with aspectpath
+   public void testAspectPathRelWhenNotFillingInModel_pr141730() {
+ 	  World.createInjarHierarchy = false;
+ 	  try {
+ 		  runTest("ensure aspectpath injar relationships are correct when not filling in model");
+ 		  
+ 		  // expecting:
+ 		  // 	sourceOfRelationship main in MyFoo.java
+           //		relationship advised by
+           //			target MyBar.aj
+ 		  // 
+ 		  // and
+ 		  //
+ 		  // 	sourceOfRelationship MyBar.aj
+           //		relationship advises
+           //			target main in MyFoo.java
+ 
+ 		  
+ 		  IHierarchy top = AsmManager.getDefault().getHierarchy();
+ 		  IRelationshipMap asmRelMap = AsmManager.getDefault().getRelationshipMap();
+ 		  assertEquals("expected two sources of relationships but only found " 
+ 				  + asmRelMap.getEntries().size(),2,asmRelMap.getEntries().size());
+ 		  for (Iterator iter = asmRelMap.getEntries().iterator(); iter.hasNext();) {
+ 			  String sourceOfRelationship = (String) iter.next();
+ 			  IProgramElement ipe = top.findElementForHandle(sourceOfRelationship);
+ 			  List relationships = asmRelMap.get(ipe);
+ 			  if (ipe.getName().equals("MyBar.aj")) {
+ 				  assertEquals("expected MyBar.aj to have one relationships but found "
+ 						  + relationships.size(),1,relationships.size());	
+ 				  Relationship rel = (Relationship)relationships.get(0);
+ 				  assertEquals("expected relationship to be 'advises' but was " 
+ 						  + rel.getName(), "advises", rel.getName());
+ 				  List targets = rel.getTargets();
+ 				  assertEquals("expected one target but found " + targets.size(),1,targets.size());
+ 				  IProgramElement link = top.findElementForHandle((String)targets.get(0));
+ 				  assertEquals("expected target 'method-call(void foo.MyFoo.main())' but target " + link.getName(),
+ 						  "method-call(void foo.MyFoo.main())",link.getName());
+ 				  String fileName = link.getSourceLocation().getSourceFile().toString();
+ 				  assertTrue("expected 'main' to be in class MyFoo.java but found it " +
+ 				  		"in " + fileName,fileName.indexOf("MyFoo.java") != -1);
+ 			  } else if (ipe.getName().equals("method-call(void foo.MyFoo.main())")) {
+ 				  String fileName = ipe.getSourceLocation().getSourceFile().toString();
+ 				  assertTrue("expected 'method-call(void foo.MyFoo.main())' to be in " +
+ 				  		"class MyFoo.java but found it in"
+ 				  		+ fileName,fileName.indexOf("MyFoo.java") != -1);
+ 				  assertEquals("expected 'method-call(void foo.MyFoo.main())' " +
+ 				  		"to have one relationships but found "
+ 						  + relationships.size(),1,relationships.size());	
+ 				  Relationship rel = (Relationship)relationships.get(0);
+ 				  assertEquals("expected relationship to be 'advised by' but was " 
+ 						  + rel.getName(), "advised by", rel.getName());
+ 				  List targets = rel.getTargets();
+ 				  assertEquals("expected one target but found " + targets.size(),1,targets.size());
+ 				  IProgramElement link = top.findElementForHandle((String)targets.get(0));
+ 				  assertEquals("expected target 'MyBar.aj' but target " + link.getName(),
+ 						  "MyBar.aj",link.getName());
+ 				  
+ 			  } else {
+ 				  fail("unexpected element " + ipe.getName() + " in the relationship map");
+ 			  }
+ 		  }
+ 	  } finally {
+ 		  World.createInjarHierarchy = true;
+ 	  }
+   }
+ 
+   // if not filling in the model for classes contained in jar files then
+   // want to ensure that the relationship map is correct and has nodes
+   // which can be used in AJDT - ensure no NPE occurs for the end of
+   // the relationship with inpath
+   public void testNoNPEWithInpathWhenNotFillingInModel_pr141730() {
+ 	  World.createInjarHierarchy = false;
+ 	  try {
+ 		  runTest("ensure inpath injar relationships are correct when not filling in model");
+ 		  // the aspect used for this test has advice, declare parents, deow,
+ 		  // and declare @type, @constructor, @field and @method. We only expect
+ 		  // there to be relationships in the map for declare parents and declare @type
+ 		  // (provided the model isn't being filled in) because the logic in the other
+ 		  // addXXXRelationship methods use AspectJElementHierarchy.findElementForType().
+ 		  // This method which returns null because there is no such ipe. The relationship is
+ 		  // therefore not added to the model. Adding declare @type and declare parents
+ 		  // uses AspectJElementHierarchy.findElementForHandle() which returns the file
+ 		  // node ipe if it can't find one for the given handle. Therefore the relationships
+ 		  // are added against the file node. Before change to using ipe's to create handles
+ 		  // we also had the deow relationship, however, now we don't because this also
+ 		  // uses findElementForType to find the targetNode which in the inpath case is null.
+ 		  
+ 		  // just check that the number of entries is what we expect:
+ 		  // We expect 3 (the declare @type and declare parents statements plus the filenode)
+ 		  IRelationshipMap relMap = AsmManager.getDefault().getRelationshipMap();
+ 		  assertEquals("expected 3 entries in the relationship map but found " 
+ 				  + relMap.getEntries().size(), 3, relMap.getEntries().size());
+ 	  } finally {
+ 		  World.createInjarHierarchy = true;
+ 	  }
+   }
+   
+   public void testPCDInClassAppearsInModel_pr148027() {
+ 	  // only want to test that its there if we're creating the uses pointcut
+ 	  // relationship. This should be addressed by pr148027
+ 	  if (!AsmHierarchyBuilder.shouldAddUsesPointcut) return;
+ 	  World.createInjarHierarchy = false;
+ 	  try {
+ 		  runTest("ensure pcd declare in class appears in model");
+ 		  IHierarchy top = AsmManager.getDefault().getHierarchy();
+ 		  IProgramElement pcd = top.findElementForLabel(top.getRoot(),IProgramElement.Kind.POINTCUT,"pointcutInClass()");
+ 		  IRelationshipMap relMap = AsmManager.getDefault().getRelationshipMap();
+ 		  List relationships = relMap.get(pcd);
+ 		  assertNotNull("expected relationships for pointcut " + pcd.toLinkLabelString()
+ 				  + " but didn't", relationships);
+ 		  
+ 		  pcd = top.findElementForLabel(top.getRoot(),IProgramElement.Kind.POINTCUT,"pointcutInAspect()");
+ 		  relationships = relMap.get(pcd);
+ 		  assertNotNull("expected relationships for pointcut " + pcd.toLinkLabelString()
+ 				  + " but didn't", relationships);
+ 	  } finally {
+ 		  World.createInjarHierarchy = true;
+ 	  }
+   }
+   
+ //  public void testFunkyGenericErrorWithITDs_pr126355_2() { 
+ //	  runTest("bizarre generic error with itds - 2");
+ //	  // public class Pair<F,S> affected by pertarget aspect
+ //	  GenericsTests.verifyClassSignature(ajc,"Pair","<F:Ljava/lang/Object;S:Ljava/lang/Object;>Ljava/lang/Object;LIdempotentCache$ajcMightHaveAspect;;");
+ //  }
+ 	
+ 	public void testNoAspects(){
+ //		setSystemProperty(WeavingAdaptor.WEAVING_ADAPTOR_VERBOSE,"true");
+ 		runTest("Ensure no weaving without included aspects");
+ 	}
+ 
+ 	public void testWeaveinfoMessages (){
+ 		runTest("weaveinfo messages with include and exclude");
+ 	}
+ 
+   // tests that can't be included for some reason
+ 
+   // Not valid whilst the ajc compiler forces debug on (ignores -g:none) - it will be green but is invalid, trust me
+   // public void testLongWindedMessages_pr129408() { runTest("long winded ataj messages");}
+ 
+   // ---------------- helper methods ---------------
+   
+ 	private void checkParametersForIPE(String ipeLabel, IProgramElement.Kind kind, String expectedParm, boolean getHandles) {
+ 		IHierarchy top = AsmManager.getDefault().getHierarchy();
+ 		IProgramElement ipe = top.findElementForLabel(top.getRoot(),kind,ipeLabel);
+ 	    assertNotNull("Couldn't find '" + ipeLabel + "' element in the tree",ipe);
+ 	    List l = new ArrayList();
+ 	    if (getHandles) {
+ 	    	l = ipe.getParameterSignatures();
+ 	    } else {
+ 	    	l = ipe.getParameterTypes();
+ 	    }
+ 	    boolean eq = CharOperation.equals(((char[])l.get(0)),expectedParm.toCharArray());
+ 	    assertTrue("expected parameter to be '" + expectedParm + "' but found '" +
+ 	      		new String(((char[])l.get(0))) + "'",eq);
+ 	}
+   
+ 	private void checkSignatureOfIPE(String ipeLabel, IProgramElement.Kind kind) {
+ 		checkSignatureOfIPE(ipeLabel,kind,ipeLabel);
+ 	}
+ 	
+ 	private void checkSignatureOfIPE(String ipeLabel, IProgramElement.Kind kind, String expectedSig) {
+ 		IHierarchy top = AsmManager.getDefault().getHierarchy();
+ 		IProgramElement ipe = top.findElementForLabel(
+ 				  top.getRoot(),kind,ipeLabel);
+ 	    assertNotNull("Couldn't find '" + ipeLabel + "' element in the tree",ipe);
+       	assertEquals("expected signature to be '"+ expectedSig + "' but was " +
+ 				  ipe.toSignatureString(true),expectedSig,ipe.toSignatureString(true));
+ 		
+ 	}
+ 	
+   /////////////////////////////////////////
+   public static Test suite() {
+     return XMLBasedAjcTestCase.loadSuite(Ajc152Tests.class);
+   }
+ 
+   protected File getSpecFile() {
+     return new File("../tests/src/org/aspectj/systemtest/ajc152/ajc152.xml");
+   }
+ 
+   
+ }

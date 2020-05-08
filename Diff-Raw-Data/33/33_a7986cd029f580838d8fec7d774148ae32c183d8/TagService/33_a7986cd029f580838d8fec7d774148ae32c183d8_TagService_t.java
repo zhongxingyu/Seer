@@ -1,0 +1,502 @@
+ /**
+  * Copyright (c) 2012 Todoroo Inc
+  *
+  * See the file "LICENSE" for the full license governing this code.
+  */
+ package com.todoroo.astrid.tags;
+ 
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.Comparator;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.LinkedHashSet;
+ 
+ import android.content.Context;
+ import android.content.Intent;
+ import android.text.TextUtils;
+ import android.widget.Toast;
+ 
+ import com.timsu.astrid.R;
+ import com.todoroo.andlib.data.Property.CountProperty;
+ import com.todoroo.andlib.data.Property.LongProperty;
+ import com.todoroo.andlib.data.Property.StringProperty;
+ import com.todoroo.andlib.data.TodorooCursor;
+ import com.todoroo.andlib.service.Autowired;
+ import com.todoroo.andlib.service.DependencyInjectionService;
+ import com.todoroo.andlib.sql.Criterion;
+ import com.todoroo.andlib.sql.Field;
+ import com.todoroo.andlib.sql.Functions;
+ import com.todoroo.andlib.sql.Join;
+ import com.todoroo.andlib.sql.Order;
+ import com.todoroo.andlib.sql.Query;
+ import com.todoroo.andlib.sql.QueryTemplate;
+ import com.todoroo.andlib.utility.DateUtilities;
+ import com.todoroo.astrid.actfm.TagViewFragment;
+ import com.todoroo.astrid.api.AstridApiConstants;
+ import com.todoroo.astrid.core.PluginServices;
+ import com.todoroo.astrid.dao.MetadataDao;
+ import com.todoroo.astrid.dao.MetadataDao.MetadataCriteria;
+ import com.todoroo.astrid.dao.TaskDao.TaskCriteria;
+ import com.todoroo.astrid.data.Metadata;
+ import com.todoroo.astrid.data.TagData;
+ import com.todoroo.astrid.data.Task;
+ import com.todoroo.astrid.data.TaskApiDao;
+ import com.todoroo.astrid.service.MetadataService;
+ import com.todoroo.astrid.service.TagDataService;
+ import com.todoroo.astrid.service.TaskService;
+ import com.todoroo.astrid.utility.Flags;
+ 
+ /**
+  * Provides operations for working with tags
+  *
+  * @author Tim Su <tim@todoroo.com>
+  *
+  */
+ @SuppressWarnings("nls")
+ public final class TagService {
+ 
+     public static final String TOKEN_TAG_SQL = "tagSql"; //$NON-NLS-1$
+     public static final String SHOW_ACTIVE_TASKS = "show_main_task_view"; //$NON-NLS-1$
+ 
+     // --- public constants
+ 
+     /** Metadata key for tag data */
+     public static final String KEY = "tags-tag";
+ 
+     /** Property for reading tag values */
+     public static final StringProperty TAG = Metadata.VALUE1;
+ 
+     /** Property for astrid.com remote id */
+     public static final LongProperty REMOTE_ID = new LongProperty(Metadata.TABLE, Metadata.VALUE2.name);
+ 
+     // --- singleton
+ 
+     private static TagService instance = null;
+ 
+     private static int[] default_tag_images = new int[] {
+         R.drawable.default_list_0,
+         R.drawable.default_list_1,
+         R.drawable.default_list_2,
+         R.drawable.default_list_3
+     };
+ 
+     public static synchronized TagService getInstance() {
+         if(instance == null)
+             instance = new TagService();
+         return instance;
+     }
+ 
+     // --- implementation details
+ 
+     @Autowired MetadataDao metadataDao;
+ 
+     @Autowired TaskService taskService;
+ 
+     @Autowired TagDataService tagDataService;
+ 
+     public TagService() {
+         DependencyInjectionService.getInstance().inject(this);
+     }
+ 
+     /**
+      * Property for retrieving count of aggregated rows
+      */
+     private static final CountProperty COUNT = new CountProperty();
+     public static final Order GROUPED_TAGS_BY_ALPHA = Order.asc(Functions.upper(TAG));
+     public static final Order GROUPED_TAGS_BY_SIZE = Order.desc(COUNT);
+ 
+     /**
+      * Helper class for returning a tag/task count pair
+      *
+      * @author Tim Su <tim@todoroo.com>
+      *
+      */
+     public static final class Tag {
+         public String tag;
+         public int count;
+         public long remoteId;
+         public String image;
+         public long userId;
+         public long memberCount;
+ 
+         public Tag(String tag, int count, long remoteId) {
+             this.tag = tag;
+             this.count = count;
+             this.remoteId = remoteId;
+         }
+ 
+         public Tag(TagData tagData) {
+             tag = tagData.getValue(TagData.NAME);
+             count = tagData.getValue(TagData.TASK_COUNT);
+             remoteId = tagData.getValue(TagData.REMOTE_ID);
+             image = tagData.getValue(TagData.PICTURE);
+             userId = tagData.getValue(TagData.USER_ID);
+             memberCount = tagData.getValue(TagData.MEMBER_COUNT);
+         }
+ 
+         @Override
+         public String toString() {
+             return tag;
+         }
+ 
+         /**
+          * Return SQL selector query for getting tasks with a given tag
+          *
+          * @param tag
+          * @return
+          */
+         public QueryTemplate queryTemplate(Criterion criterion) {
+             return new QueryTemplate().join(Join.inner(Metadata.TABLE.as("mtags"),
+                     Criterion.and(Task.ID.eq(Field.field("mtags." + Metadata.TASK.name)),
+                             Field.field("mtags." + Metadata.KEY.name).eq(KEY),
+                             Field.field("mtags." + TAG.name).eqCaseInsensitive(tag)))).where(criterion);
+         }
+ 
+ 
+         /**
+          * Return SQL selector query for getting tasks with a given tagData
+          *
+          * @param tagData
+          * @return
+          */
+         public static QueryTemplate queryTemplate(Criterion criterion, TagData tagData) {
+             return new QueryTemplate().join(Join.inner(Metadata.TABLE,
+                     Task.ID.eq(Metadata.TASK))).where(tagEqIgnoreCase(tagData.getValue(TagData.NAME), criterion));
+         }
+ 
+     }
+ 
+     public static Criterion memberOfTagData(long tagDataRemoteId) {
+         return Task.ID.in(Query.select(Metadata.TASK).from(Metadata.TABLE).where(
+                 Criterion.and(Metadata.KEY.eq(KEY), REMOTE_ID.eq(tagDataRemoteId))));
+     }
+ 
+     public static Criterion tagEq(String tag, Criterion additionalCriterion) {
+         return Criterion.and(
+                 MetadataCriteria.withKey(KEY), TAG.eq(tag),
+                 additionalCriterion);
+     }
+ 
+     public static Criterion tagEqIgnoreCase(String tag, Criterion additionalCriterion) {
+         return Criterion.and(
+                 MetadataCriteria.withKey(KEY), TAG.eqCaseInsensitive(tag),
+                 additionalCriterion);
+     }
+ 
+    public QueryTemplate untaggedTemplate() {
+        String[] emergentTags = getEmergentTags();
+
+         return new QueryTemplate().where(Criterion.and(
+                Criterion.not(Task.ID.in(Query.select(Metadata.TASK).from(Metadata.TABLE).where(Criterion.and(MetadataCriteria.withKey(KEY), Criterion.not(TAG.in(emergentTags)))))),
+                 TaskCriteria.isActive(),
+                 TaskApiDao.TaskCriteria.ownedByMe(),
+                 TaskCriteria.isVisible()));
+     }
+ 
+     /**
+      * Return all tags ordered by given clause
+      *
+      * @param order ordering
+      * @param activeStatus criterion for specifying completed or uncompleted
+      * @return empty array if no tags, otherwise array
+      */
+     public Tag[] getGroupedTags(Order order, Criterion activeStatus, boolean includeEmergent) {
+         Criterion criterion;
+         if (includeEmergent)
+             criterion = Criterion.and(activeStatus, MetadataCriteria.withKey(KEY));
+         else
+             criterion = Criterion.and(activeStatus, MetadataCriteria.withKey(KEY), Criterion.not(TAG.in(getEmergentTags())));
+         Query query = Query.select(TAG, REMOTE_ID, COUNT).
+             join(Join.inner(Task.TABLE, Metadata.TASK.eq(Task.ID))).
+             where(criterion).
+             orderBy(order).groupBy(TAG);
+         TodorooCursor<Metadata> cursor = metadataDao.query(query);
+         try {
+             Tag[] array = new Tag[cursor.getCount()];
+             for (int i = 0; i < array.length; i++) {
+                 cursor.moveToNext();
+                 array[i] = new Tag(cursor.get(TAG), cursor.get(COUNT), cursor.get(REMOTE_ID));
+             }
+             return array;
+         } finally {
+             cursor.close();
+         }
+     }
+ 
+    public String[] getEmergentTags() {
+         TodorooCursor<TagData> emergent = tagDataService.query(Query.select(TagData.NAME)
+                 .where(Functions.bitwiseAnd(TagData.FLAGS, TagData.FLAG_EMERGENT).gt(0)));
+         try {
+             String[] tags = new String[emergent.getCount()];
+             TagData data = new TagData();
+             for (int i = 0; i < emergent.getCount(); i++) {
+                 emergent.moveToPosition(i);
+                 data.readFromCursor(emergent);
+                 tags[i] = data.getValue(TagData.NAME);
+             }
+             return tags;
+         } finally {
+             emergent.close();
+         }
+     }
+ 
+     /**
+      * Return tags on the given task
+      *
+      * @param taskId
+      * @return cursor. PLEASE CLOSE THE CURSOR!
+      */
+     public TodorooCursor<Metadata> getTags(long taskId, boolean includeEmergent) {
+         Criterion criterion;
+         if (includeEmergent)
+             criterion = Criterion.and(MetadataCriteria.withKey(KEY),
+                     MetadataCriteria.byTask(taskId));
+         else
+             criterion = Criterion.and(MetadataCriteria.withKey(KEY),
+                     MetadataCriteria.byTask(taskId), Criterion.not(TAG.in(getEmergentTags())));
+         Query query = Query.select(TAG, REMOTE_ID).where(criterion).orderBy(Order.asc(Functions.upper(TAG)));
+         return metadataDao.query(query);
+     }
+ 
+     /**
+      * Return tags as a comma-separated list of strings
+      *
+      * @param taskId
+      * @return empty string if no tags, otherwise string
+      */
+     public String getTagsAsString(long taskId, boolean includeEmergent) {
+         return getTagsAsString(taskId, ", ", includeEmergent);
+     }
+ 
+     /**
+      * Return tags as a list of strings separated by given separator
+      *
+      * @param taskId
+      * @return empty string if no tags, otherwise string
+      */
+     protected String getTagsAsString(long taskId, String separator, boolean includeEmergent) {
+         StringBuilder tagBuilder = new StringBuilder();
+         TodorooCursor<Metadata> tags = getTags(taskId, includeEmergent);
+         try {
+             int length = tags.getCount();
+             Metadata metadata = new Metadata();
+             for (int i = 0; i < length; i++) {
+                 tags.moveToNext();
+                 metadata.readFromCursor(tags);
+                 tagBuilder.append(metadata.getValue(TAG));
+                 if (i < length - 1)
+                     tagBuilder.append(separator);
+             }
+         } finally {
+             tags.close();
+         }
+         return tagBuilder.toString();
+     }
+ 
+     public boolean deleteOrLeaveTag(Context context, String tag, String sql) {
+         int deleted = deleteTagMetadata(tag);
+         TagData tagData = PluginServices.getTagDataService().getTag(tag, TagData.ID, TagData.DELETION_DATE, TagData.MEMBER_COUNT, TagData.USER_ID);
+         boolean shared = false;
+         if(tagData != null) {
+             tagData.setValue(TagData.DELETION_DATE, DateUtilities.now());
+             PluginServices.getTagDataService().save(tagData);
+             shared = tagData.getValue(TagData.MEMBER_COUNT) > 0 && tagData.getValue(TagData.USER_ID) != 0; // Was I a list member and NOT owner?
+         }
+         Toast.makeText(context, context.getString(shared ? R.string.TEA_tags_left : R.string.TEA_tags_deleted, tag, deleted),
+                 Toast.LENGTH_SHORT).show();
+ 
+         Intent tagDeleted = new Intent(AstridApiConstants.BROADCAST_EVENT_TAG_DELETED);
+         tagDeleted.putExtra(TagViewFragment.EXTRA_TAG_NAME, tag);
+         tagDeleted.putExtra(TOKEN_TAG_SQL, sql);
+         context.sendBroadcast(tagDeleted);
+         return true;
+     }
+ 
+     /**
+      * Return all tags (including metadata tags and TagData tags) in an array list
+      * @return
+      */
+     public ArrayList<Tag> getTagList() {
+         HashMap<String, Tag> tags = new HashMap<String, Tag>();
+ 
+         Tag[] tagsByAlpha = getGroupedTags(TagService.GROUPED_TAGS_BY_ALPHA,
+                 TaskCriteria.activeAndVisible(), false);
+         for(Tag tag : tagsByAlpha)
+             if(!TextUtils.isEmpty(tag.tag))
+                 tags.put(tag.tag, tag);
+ 
+         TodorooCursor<TagData> cursor = tagDataService.query(Query.select(TagData.PROPERTIES));
+         try {
+             TagData tagData = new TagData();
+             for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                 tagData.readFromCursor(cursor);
+                 String tagName = tagData.getValue(TagData.NAME).trim();
+                 Tag tag = new Tag(tagData);
+                 if(tagData.getValue(TagData.DELETION_DATE) > 0 || tagData.getFlag(TagData.FLAGS, TagData.FLAG_EMERGENT) || tagData.getFlag(TagData.FLAGS, TagData.FLAG_FEATURED)) {
+                     tags.remove(tagName);
+                     continue;
+                 }
+                 if(TextUtils.isEmpty(tag.tag))
+                     continue;
+                 tags.put(tagName, tag);
+             }
+         } finally {
+             cursor.close();
+         }
+         ArrayList<Tag> tagList = new ArrayList<Tag>(tags.values());
+         Collections.sort(tagList,
+                 new Comparator<Tag>() {
+             @Override
+             public int compare(Tag object1, Tag object2) {
+                 return object1.tag.compareToIgnoreCase(object2.tag);
+             }
+         });
+         return tagList;
+     }
+ 
+     public ArrayList<Tag> getFeaturedLists() {
+         HashMap<String, Tag> tags = new HashMap<String, Tag>();
+ 
+         TodorooCursor<TagData> cursor = tagDataService.query(Query.select(TagData.PROPERTIES)
+                 .where(Functions.bitwiseAnd(TagData.FLAGS, TagData.FLAG_FEATURED).gt(0)));
+         try {
+             TagData tagData = new TagData();
+             for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                 tagData.readFromCursor(cursor);
+                 if (tagData.getValue(TagData.DELETION_DATE) > 0)
+                     continue;
+                 String tagName = tagData.getValue(TagData.NAME).trim();
+                 Tag tag = new Tag(tagData);
+                 if(TextUtils.isEmpty(tag.tag))
+                     continue;
+                 tags.put(tagName, tag);
+             }
+         } finally {
+             cursor.close();
+         }
+         ArrayList<Tag> tagList = new ArrayList<Tag>(tags.values());
+         Collections.sort(tagList,
+                 new Comparator<Tag>() {
+             @Override
+             public int compare(Tag object1, Tag object2) {
+                 return object1.tag.compareToIgnoreCase(object2.tag);
+             }
+         });
+         return tagList;
+     }
+ 
+     /**
+      * Save the given array of tags into the database
+      * @param taskId
+      * @param tags
+      */
+     public boolean synchronizeTags(long taskId, LinkedHashSet<String> tags) {
+         MetadataService service = PluginServices.getMetadataService();
+ 
+         HashSet<String> addedTags = new HashSet<String>();
+         ArrayList<Metadata> metadata = new ArrayList<Metadata>();
+         for(String tag : tags) {
+             String tagWithCase = getTagWithCase(tag); // Find if any tag exists that matches with case ignore
+             if (addedTags.contains(tagWithCase)) // Prevent two identical tags from being added twice (e.g. don't add "Tag, tag" as "tag, tag")
+                 continue;
+             addedTags.add(tagWithCase);
+             Metadata item = new Metadata();
+             item.setValue(Metadata.KEY, KEY);
+             item.setValue(TAG, tagWithCase);
+             TagData tagData = tagDataService.getTag(tagWithCase, TagData.REMOTE_ID);
+             if(tagData != null)
+                 item.setValue(REMOTE_ID, tagData.getValue(TagData.REMOTE_ID));
+ 
+             metadata.add(item);
+         }
+ 
+         return service.synchronizeMetadata(taskId, metadata, Metadata.KEY.eq(KEY));
+     }
+ 
+     /**
+      * If a tag already exists in the database that case insensitively matches the
+      * given tag, return that. Otherwise, return the argument
+      * @param tag
+      * @return
+      */
+     public String getTagWithCase(String tag) {
+         MetadataService service = PluginServices.getMetadataService();
+         String tagWithCase = tag;
+         TodorooCursor<Metadata> tagMetadata = service.query(Query.select(TAG).where(TagService.tagEqIgnoreCase(tag, Criterion.all)).limit(1));
+         try {
+             if (tagMetadata.getCount() > 0) {
+                 tagMetadata.moveToFirst();
+                 Metadata tagMatch = new Metadata(tagMetadata);
+                 tagWithCase = tagMatch.getValue(TagService.TAG);
+             } else {
+                 TodorooCursor<TagData> tagData = tagDataService.query(Query.select(TagData.NAME).where(TagData.NAME.eqCaseInsensitive(tag)));
+                 try {
+                     if (tagData.getCount() > 0) {
+                         tagData.moveToFirst();
+                         tagWithCase = new TagData(tagData).getValue(TagData.NAME);
+                     }
+                 } finally {
+                     tagData.close();
+                 }
+             }
+         } finally {
+             tagMetadata.close();
+         }
+         return tagWithCase;
+     }
+ 
+     public int deleteTagMetadata(String tag) {
+         invalidateTaskCache(tag);
+         return PluginServices.getMetadataService().deleteWhere(tagEqIgnoreCase(tag, Criterion.all));
+     }
+ 
+     public int rename(String oldTag, String newTag) {
+         return renameHelper(oldTag, newTag, false);
+     }
+ 
+     public int renameCaseSensitive(String oldTag, String newTag) { // Need this for tag case migration process
+         return renameHelper(oldTag, newTag, true);
+     }
+ 
+     private int renameHelper(String oldTag, String newTag, boolean caseSensitive) {
+      // First remove newTag from all tasks that have both oldTag and newTag.
+         MetadataService metadataService = PluginServices.getMetadataService();
+         metadataService.deleteWhere(
+                 Criterion.and(
+                         Metadata.VALUE1.eq(newTag),
+                         Metadata.TASK.in(rowsWithTag(oldTag, Metadata.TASK))));
+ 
+         // Then rename all instances of oldTag to newTag.
+         Metadata metadata = new Metadata();
+         metadata.setValue(TAG, newTag);
+         int ret;
+         if (caseSensitive)
+             ret = metadataService.update(tagEq(oldTag, Criterion.all), metadata);
+         else
+             ret = metadataService.update(tagEqIgnoreCase(oldTag, Criterion.all), metadata);
+         invalidateTaskCache(newTag);
+         return ret;
+     }
+ 
+ 
+     private Query rowsWithTag(String tag, Field... projections) {
+         return Query.select(projections).from(Metadata.TABLE).where(Metadata.VALUE1.eq(tag));
+     }
+ 
+     private void invalidateTaskCache(String tag) {
+         taskService.clearDetails(Task.ID.in(rowsWithTag(tag, Task.ID)));
+         Flags.set(Flags.REFRESH);
+     }
+ 
+     public static int getDefaultImageIDForTag(long remoteID) {
+         if (remoteID <= 0) {
+             int random = (int)(Math.random()*4);
+             return default_tag_images[random];
+         }
+         return default_tag_images[((int)remoteID)%4];
+     }
+     public static int getDefaultImageIDForTag(String title) {
+         return getDefaultImageIDForTag(Math.abs(title.hashCode()));
+     }
+ }

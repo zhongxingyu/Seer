@@ -1,0 +1,103 @@
+ /*******************************************************************************
+  * Copyright (c) 2012 Wind River Systems, Inc. and others. All rights reserved.
+  * This program and the accompanying materials are made available under the terms
+  * of the Eclipse Public License v1.0 which accompanies this distribution, and is
+  * available at http://www.eclipse.org/legal/epl-v10.html
+  *
+  * Contributors:
+  * Wind River Systems - initial API and implementation
+  *******************************************************************************/
+ package org.eclipse.tcf.te.launch.ui.editor;
+ 
+ import org.eclipse.core.runtime.Assert;
+ import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
+ import org.eclipse.swt.graphics.Image;
+ import org.eclipse.swt.widgets.Composite;
+ import org.eclipse.tcf.te.launch.ui.tabs.AbstractFormsLaunchConfigurationTab;
+ import org.eclipse.tcf.te.ui.forms.CustomFormToolkit;
+ import org.eclipse.tcf.te.ui.views.editor.pages.AbstractCustomFormToolkitEditorPage;
+ 
+ /**
+  * Abstract editor page implementation serving as container for a launch tab.
+  */
+ public abstract class AbstractLaunchTabContainerEditorPage extends AbstractCustomFormToolkitEditorPage {
+ 	// Reference to the launch configuration tab
+ 	private final AbstractLaunchConfigurationTab launchTab;
+ 
+ 	/**
+ 	 * Constructor.
+ 	 */
+ 	public AbstractLaunchTabContainerEditorPage() {
+ 		super();
+ 
+ 		// Create the launch configuration tab instance
+ 		launchTab = createLaunchConfigurationTab();
+ 		Assert.isNotNull(launchTab);
+ 	}
+ 
+ 	/**
+ 	 * Creates a new instance of the launch configuration tab to associate.
+ 	 *
+ 	 * @return The new launch configuration tab instance.
+ 	 */
+ 	protected abstract AbstractLaunchConfigurationTab createLaunchConfigurationTab();
+ 
+ 	/**
+ 	 * Returns the associated launch configuration tab.
+ 	 *
+ 	 * @return The launch configuration tab or <code>null</code>.
+ 	 */
+ 	protected final AbstractLaunchConfigurationTab getLaunchConfigurationTab() {
+ 		return launchTab;
+ 	}
+ 
+ 	/* (non-Javadoc)
+ 	 * @see org.eclipse.tcf.te.ui.views.editor.pages.AbstractCustomFormToolkitEditorPage#dispose()
+ 	 */
+ 	@Override
+ 	public void dispose() {
+ 		launchTab.dispose();
+ 	    super.dispose();
+ 	}
+ 
+ 	/* (non-Javadoc)
+ 	 * @see org.eclipse.tcf.te.ui.views.editor.pages.AbstractCustomFormToolkitEditorPage#getContextHelpId()
+ 	 */
+ 	@Override
+ 	protected String getContextHelpId() {
+ 	    return launchTab.getHelpContextId();
+ 	}
+ 
+ 	/* (non-Javadoc)
+ 	 * @see org.eclipse.tcf.te.ui.views.editor.pages.AbstractCustomFormToolkitEditorPage#getFormTitle()
+ 	 */
+ 	@Override
+     protected String getFormTitle() {
+ 		return launchTab.getName();
+ 	}
+ 
+ 	/* (non-Javadoc)
+ 	 * @see org.eclipse.tcf.te.ui.views.editor.pages.AbstractCustomFormToolkitEditorPage#getFormImage()
+ 	 */
+ 	@Override
+ 	protected Image getFormImage() {
+ 	    return launchTab.getImage();
+ 	}
+ 
+ 	/* (non-Javadoc)
+ 	 * @see org.eclipse.tcf.te.ui.views.editor.pages.AbstractCustomFormToolkitEditorPage#doCreateFormContent(org.eclipse.swt.widgets.Composite, org.eclipse.tcf.te.ui.forms.CustomFormToolkit)
+ 	 */
+ 	@Override
+ 	protected void doCreateFormContent(Composite parent, CustomFormToolkit toolkit) {
+ 		Assert.isNotNull(parent);
+ 		Assert.isNotNull(toolkit);
+ 
+ 		// Create the launch tab content
+ 		if (launchTab instanceof AbstractFormsLaunchConfigurationTab) {
+ 			((AbstractFormsLaunchConfigurationTab)launchTab).createFormContent(getManagedForm());
+ 		} else {
+ 			launchTab.createControl(parent);
+ 		}
+ 	}
+ 
+ }

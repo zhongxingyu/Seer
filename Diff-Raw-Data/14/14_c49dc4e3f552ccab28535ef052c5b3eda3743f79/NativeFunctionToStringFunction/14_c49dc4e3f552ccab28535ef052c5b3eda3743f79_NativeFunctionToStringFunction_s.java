@@ -1,0 +1,84 @@
+ /*
+  * Copyright (c) 2002-2014 Gargoyle Software Inc.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ package com.gargoylesoftware.htmlunit.javascript;
+ 
+ import static com.gargoylesoftware.htmlunit.BrowserVersionFeatures.JS_NATIVE_FUNCTION_TOSTRING_COMPACT;
+ import static com.gargoylesoftware.htmlunit.BrowserVersionFeatures.JS_NATIVE_FUNCTION_TOSTRING_NEW_LINE;
+ import net.sourceforge.htmlunit.corejs.javascript.Context;
+ import net.sourceforge.htmlunit.corejs.javascript.Function;
+import net.sourceforge.htmlunit.corejs.javascript.IdFunctionObject;
+ import net.sourceforge.htmlunit.corejs.javascript.Scriptable;
+ import net.sourceforge.htmlunit.corejs.javascript.ScriptableObject;
+ 
+ import com.gargoylesoftware.htmlunit.BrowserVersion;
+ 
+ /**
+  * Replacement (in fact a wrapper) for Rhino's native toString function on Function prototype
+  * allowing to produce the desired formatting.
+  * @version $Revision$
+  * @author Marc Guillemot
+  */
+ class NativeFunctionToStringFunction extends FunctionWrapper {
+     private enum Format { FF, IE, CHROME };
+     private final Format format_;
+ 
+     NativeFunctionToStringFunction(final Function wrapped, final Format format) {
+         super(wrapped);
+         format_ = format;
+     }
+ 
+     /**
+      * {@inheritDoc}
+      */
+     @Override
+     public Object call(final Context cx, final Scriptable scope, final Scriptable thisObj, final Object[] args) {
+         final String s = (String) super.call(cx, scope, thisObj, args);
+ 
+        if (thisObj instanceof IdFunctionObject && s.contains("() { [native code for ")) {
+            final String functionName = ((IdFunctionObject) thisObj).getFunctionName();
+             switch (format_) {
+                 case IE:
+                     return "\nfunction " + functionName + "() {\n    [native code]\n}\n";
+                 case CHROME:
+                     return "function " + functionName + "() { [native code] }";
+                 default:
+                     return "function " + functionName + "() {\n    [native code]\n}";
+             }
+         }
+         return s.trim();
+     }
+ 
+     /**
+      * Install the wrapper in place of the native toString function on Function's prototype.
+      * @param window the scope
+      * @param browserVersion the simulated browser
+      */
+     static void installFix(final Scriptable window, final BrowserVersion browserVersion) {
+         final ScriptableObject fnPrototype = (ScriptableObject) ScriptableObject.getClassPrototype(window, "Function");
+         final Function originalToString = (Function) ScriptableObject.getProperty(fnPrototype, "toString");
+ 
+         final Function newToString;
+         if (browserVersion.hasFeature(JS_NATIVE_FUNCTION_TOSTRING_NEW_LINE)) {
+             newToString = new NativeFunctionToStringFunction(originalToString, Format.IE);
+         }
+         else if (browserVersion.hasFeature(JS_NATIVE_FUNCTION_TOSTRING_COMPACT)) {
+             newToString = new NativeFunctionToStringFunction(originalToString, Format.CHROME);
+         }
+         else {
+             newToString = new NativeFunctionToStringFunction(originalToString, Format.FF);
+         }
+         ScriptableObject.putProperty(fnPrototype, "toString", newToString);
+     }
+ }

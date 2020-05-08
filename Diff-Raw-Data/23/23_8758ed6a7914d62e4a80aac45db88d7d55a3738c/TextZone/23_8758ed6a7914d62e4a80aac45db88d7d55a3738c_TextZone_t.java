@@ -1,0 +1,235 @@
+ package vialab.SMT;
+ 
+ import processing.core.PFont;
+ import processing.event.KeyEvent;
+ 
+ /**
+  * TextZone displays text which is selectable by touch. Each word is
+  * independently highlighted when touched. The highlighting is toggled 
+  * whenever a TouchDown occurs on the word
+  */
+ public class TextZone extends Zone {
+ 
+ 	private class WordZone extends Zone {
+ 
+ 		public String word;
+ 		private boolean selected = false;
+ 
+ 		@SuppressWarnings("unused")
+ 		public WordZone(WordZone original) {
+ 			super(original.x, original.y, original.width, original.height);
+ 			this.word = original.word;
+ 			this.setDirect(true);
+ 			this.selected = original.selected;
+ 		}
+ 
+ 		public WordZone(int x, int y, int width, int height) {
+ 			super(x, y, width, height);
+ 			this.word = "";
+ 			TextZone.this.add(this);
+ 			this.setDirect(true);
+ 		}
+ 
+ 		@Override
+ 		public void touchMovedImpl(Touch touch) {
+ 			if (touch.getLastPoint() != null && !word.matches("\\s*") && selectable) {
+ 				if (touch.getLastPoint().x < touch.x) {
+ 					// moving right, so highlight/unblur by setting selected to
+ 					// true
+ 					selected = true;
+ 				}
+ 				else if (touch.getLastPoint().x > touch.x) {
+ 					// moving left, so unhighlight/blur by setting selected to
+ 					// false
+ 					selected = false;
+ 				}
+ 			}
+ 		} 
+ 
+ 		@Override
+ 		public void drawImpl() {
+ 			textFont(font);
+ 			textSize(fontSize);
+ 			fill(255);
+ 			if (blur) {
+ 				textFont(sFont);
+ 				if (selected) {
+ 					textFont(font);
+ 				}
+ 				textSize(fontSize);
+ 				if (width > 0) {
+ 					noStroke();
+ 					rect(0, 0, width, height);
+ 				}
+ 				fill(0);
+ 				text(this.word, 0, 0, width, height);
+ 			}
+ 			else {
+ 				if (selected) {
+ 					fill(0, 0, 255, 127);
+ 				}
+ 				if (width > 0) {
+ 					noStroke();
+ 					rect(0, 0, width, height);
+ 				}
+ 				fill(0);
+ 				text(this.word, 0, 0, width, height);
+ 			}
+ 		}
+ 
+ 	}
+ 
+ 	private boolean selectable = false;
+ 
+ 	private WordZone currentWordZone;
+ 
+ 	private PFont font;
+ 
+ 	private PFont sFont;
+ 
+ 	private boolean blur = false;
+ 
+ 	private boolean keysFromApplet = false;
+ 
+ 	private float fontSize = 16;
+ 
+ 	boolean warnDraw() {
+ 		return false;
+ 	}
+ 
+ 	boolean warnTouch() {
+ 		return false;
+ 	}
+ 
+     
+ 	public TextZone(TextZone original) {
+ 		super(original.name, original.x, original.y, original.width, original.height);
+ 		this.currentWordZone = (WordZone) original.currentWordZone.clone();
+ 		this.blur = original.blur;
+ 		this.selectable = original.selectable;
+ 		this.keysFromApplet = original.keysFromApplet;
+ 		if (this.keysFromApplet) {
+ 			applet.registerMethod("keyEvent", this);
+ 		}
+ 		this.fontSize = original.fontSize;
+ 		if (this.fontSize != 16) {
+ 			this.font = applet.createFont("Lucida Sans", fontSize);
+ 		}
+ 	}
+ 
+ 	public TextZone(int x, int y, int width, int height, String inputText, boolean selectable,
+ 			boolean blur, boolean keysRecievedFromApplet) {
+ 		this(null, x, y, width, height, inputText, selectable, blur, keysRecievedFromApplet, 16);
+ 	}
+ 	
+ 	public TextZone(String name, int x, int y, int width, int height, float fontSize) {
+ 		this(name, x, y, width, height, null, false, false, false, fontSize);
+ 	}
+ 	
+ 	public TextZone(String name, int x, int y, int width, int height, String inputText,
+ 			boolean selectable, boolean blur, boolean keysRecievedFromApplet, float fontSize) {
+ 		this(name, x, y, width, height, inputText, selectable, blur, keysRecievedFromApplet, fontSize, null);
+ 	}
+ 
+     /**
+ 	 * @param name    - String: The name of the zone
+      * @param x       - int: X-coordinate of the upper left corner of the zone
+ 	 * @param y       - int: Y-coordinate of the upper left corner of the zone
+ 	 * @param width   - int: Width of the zone
+ 	 * @param height  - int: Height of the zone
+      * @param inputText  - String: The text that will be displayed in the Text Zone
+      * @param selectable  - boolean:
+      * @param blur  - boolean:
+      * @param keysRecievedFromApplet  - boolean:
+      * @param fontSize  - float: Sets the size of the font used to display the text in this zone
+      * @param font  - PFont: Sets the font used to display the text in this zone
+      *
+      */
+ 	public TextZone(String name, int x, int y, int width, int height, String inputText,
+ 			boolean selectable, boolean blur, boolean keysRecievedFromApplet, float fontSize, PFont font) {
+ 		super(name, x, y, width, height);
+ 		this.currentWordZone = new WordZone(5, 5, 0, 20);
+ 		this.keysFromApplet = keysRecievedFromApplet;
+ 		if (keysRecievedFromApplet) {
+ 			applet.registerMethod("keyEvent", this);
+ 		}
+ 		this.selectable = selectable;
+ 		this.blur = blur;
+ 		this.fontSize = fontSize;
+ 		this.font = font;
+ 		if(this.font == null){
+ 			this.font = applet.createFont("Lucida Sans", fontSize);
+ 		}
+ 		sFont = applet.createFont("Lucida Sans", 3.0f);
+ 
+ 		if (inputText != null) {
+ 			for (char c : inputText.toCharArray()) {
+ 				this.addChar(c);
+ 			}
+ 		}
+ 	}
+ 
+ 	public TextZone(int x, int y, int width, int height) {
+ 		this(null, x, y, width, height, false);
+ 	}
+ 
+ 	public TextZone(int x, int y, int width, int height, boolean keysRecievedFromApplet) {
+ 		this(null, x, y, width, height, keysRecievedFromApplet);
+ 	}
+ 
+ 	public TextZone(String name, int x, int y, int width, int height) {
+ 		this(name, x, y, width, height, false);
+ 	}
+ 
+ 	public TextZone(String name, int x, int y, int width, int height, boolean keysRecievedFromApplet) {
+ 		this(name, x, y, width, height, null, false, false, keysRecievedFromApplet, 16f);
+ 	}
+ 
+ 	@Override
+ 	public void drawImpl() {
+ 		fill(255);
+ 		rect(0, 0, width, height);
+ 	}
+ 
+ 	public void addChar(char c) {
+ 		if (c == ' ') {
+ 			this.currentWordZone = new WordZone(currentWordZone.x + currentWordZone.width,
+ 					currentWordZone.y, 0, (int) (fontSize * (20.0 / 16.0)));
+ 			currentWordZone.word += " ";
+ 		}
+ 		else if (c == '\t') {
+ 			this.currentWordZone = new WordZone(currentWordZone.x + currentWordZone.width,
+ 					currentWordZone.y, 0, (int) (fontSize * (20.0 / 16.0)));
+ 			currentWordZone.word += "    ";
+ 		}
+ 		else if (c == '\n') {
+ 			this.currentWordZone = new WordZone(5, currentWordZone.y
+ 					+ (int) (fontSize * (20.0 / 16.0)), 0, (int) (fontSize * (20.0 / 16.0)));
+ 		}
+ 		else {
+ 			if (currentWordZone.word.trim().equals("")) {
+ 				currentWordZone = new WordZone(currentWordZone.x + currentWordZone.width,
+ 						currentWordZone.y, 0, (int) (fontSize * (20.0 / 16.0)));
+ 			}
+ 			if (currentWordZone.x + currentWordZone.width + fontSize > width
+ 					&& currentWordZone.x != 0) {
+ 				this.currentWordZone.setData(0, currentWordZone.y
+ 						+ (int) (fontSize * (20.0 / 16.0)), 0, (int) (fontSize * (20.0 / 16.0)));
+ 			}
+ 			if (currentWordZone.x + currentWordZone.width + fontSize <= width) {
+ 				this.currentWordZone.word += c;
+ 			}
+ 		}
+ 		pushStyle();
+		textFont(font);
+ 		textSize(fontSize);
+ 		currentWordZone.width = (int) Math.ceil(textWidth(currentWordZone.word));
+ 		popStyle();
+ 	}
+ 
+ 	@Override
+ 	public void keyTyped(KeyEvent e) {
+ 		this.addChar(e.getKey());
+ 		super.keyTyped(e);
+ 	}
+ }

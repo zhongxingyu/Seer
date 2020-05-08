@@ -1,0 +1,234 @@
+ /*
+  * Copyright (C) 2011 Near Infinity Corporation
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.nearinfinity.blur.thrift;
+ 
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_INDEXMANAGER_SEARCH_THREAD_COUNT;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_MAX_CLAUSE_COUNT;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_BIND_ADDRESS;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_BIND_PORT;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_BLOCKCACHE_DIRECT_MEMORY_ALLOCATION;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_BLOCKCACHE_SLAB_COUNT;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_CACHE_MAX_QUERYCACHE_ELEMENTS;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_CACHE_MAX_TIMETOLIVE;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_FILTER_CACHE_CLASS;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_HOSTNAME;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_OPENER_THREAD_COUNT;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_SHARD_SERVER_THRIFT_THREAD_COUNT;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_ZOOKEEPER_CONNECTION;
+ import static com.nearinfinity.blur.utils.BlurConstants.BLUR_ZOOKEEPER_SYSTEM_TIME_TOLERANCE;
+ import static com.nearinfinity.blur.utils.BlurConstants.CRAZY;
+ import static com.nearinfinity.blur.utils.BlurUtil.quietClose;
+ 
+ import java.io.IOException;
+ import java.lang.reflect.InvocationHandler;
+ import java.lang.reflect.Method;
+ import java.lang.reflect.Proxy;
+ import java.util.Random;
+ import java.util.concurrent.TimeUnit;
+ 
+ import org.apache.hadoop.conf.Configuration;
+ import org.apache.thrift.transport.TTransportException;
+ import org.apache.zookeeper.KeeperException;
+ import org.apache.zookeeper.ZooKeeper;
+ 
+ import com.nearinfinity.blur.BlurConfiguration;
+ import com.nearinfinity.blur.concurrent.SimpleUncaughtExceptionHandler;
+ import com.nearinfinity.blur.concurrent.ThreadWatcher;
+ import com.nearinfinity.blur.log.Log;
+ import com.nearinfinity.blur.log.LogFactory;
+ import com.nearinfinity.blur.manager.BlurFilterCache;
+ import com.nearinfinity.blur.manager.BlurQueryChecker;
+ import com.nearinfinity.blur.manager.DefaultBlurFilterCache;
+ import com.nearinfinity.blur.manager.IndexManager;
+ import com.nearinfinity.blur.manager.clusterstatus.ZookeeperClusterStatus;
+ import com.nearinfinity.blur.manager.indexserver.BlurServerShutDown;
+ import com.nearinfinity.blur.manager.indexserver.DistributedIndexServer;
+ import com.nearinfinity.blur.manager.indexserver.BlurServerShutDown.BlurShutdown;
+ import com.nearinfinity.blur.manager.writer.BlurIndexCommiter;
+ import com.nearinfinity.blur.manager.writer.BlurIndexRefresher;
+ import com.nearinfinity.blur.metrics.BlurMetrics;
+ import com.nearinfinity.blur.store.blockcache.BlockCache;
+ import com.nearinfinity.blur.store.blockcache.BlockDirectory;
+ import com.nearinfinity.blur.store.blockcache.BlockDirectoryCache;
+ import com.nearinfinity.blur.thrift.generated.BlurException;
+ import com.nearinfinity.blur.thrift.generated.Blur.Iface;
+ import com.nearinfinity.blur.zookeeper.ZkUtils;
+ 
+ public class ThriftBlurShardServer extends ThriftServer {
+ 
+   private static final Log LOG = LogFactory.getLog(ThriftBlurShardServer.class);
+ 
+   public static void main(String[] args) throws TTransportException, IOException, KeeperException, InterruptedException, BlurException {
+     int shardServerIndex = getShardServerIndex(args);
+     LOG.info("Setting up Shard Server");
+     
+     Thread.setDefaultUncaughtExceptionHandler(new SimpleUncaughtExceptionHandler());
+     BlurConfiguration configuration = new BlurConfiguration();
+     // setup block cache
+     // 134,217,728 is the bank size, therefore there are 16,384 block
+     // in a bank when using a block of 8,192
+     int numberOfBlocksPerBank = 16384;
+     int blockSize = BlockDirectory.BLOCK_SIZE;
+     int bankCount = configuration.getInt(BLUR_SHARD_BLOCKCACHE_SLAB_COUNT, 1);
+     Configuration config = new Configuration();
+     BlurMetrics blurMetrics = new BlurMetrics(config);
+     boolean directAllocation = configuration.getBoolean(BLUR_SHARD_BLOCKCACHE_DIRECT_MEMORY_ALLOCATION,true);
+     
+     int slabSize = numberOfBlocksPerBank * blockSize;
+     LOG.info("Number of slabs of block cache [{0}] with direct memory allocation set to [{1}]",bankCount,directAllocation);
+     LOG.info("Block cache target memory usage, slab size of [{0}] will allocate [{1}] slabs and use ~[{2}] bytes",slabSize,bankCount,((long) bankCount * (long) slabSize));
+     
+     BlockCache blockCache = new BlockCache(bankCount, numberOfBlocksPerBank, blockSize, blurMetrics, directAllocation);
+     BlockDirectoryCache cache = new BlockDirectoryCache(blockCache, blurMetrics);
+     
+     String bindAddress = configuration.get(BLUR_SHARD_BIND_ADDRESS);
+     int bindPort = configuration.getInt(BLUR_SHARD_BIND_PORT,-1);
+     bindPort += shardServerIndex;
+     
+     LOG.info("Shard Server using index [{0}] bind address [{1}]",shardServerIndex,bindAddress + ":" + bindPort);
+ 
+     String nodeNameHostName = getNodeName(configuration, BLUR_SHARD_HOSTNAME);
+     String nodeName = nodeNameHostName + ":" + bindPort;
+     String zkConnectionStr = isEmpty(configuration.get(BLUR_ZOOKEEPER_CONNECTION), BLUR_ZOOKEEPER_CONNECTION);
+ 
+     BlurQueryChecker queryChecker = new BlurQueryChecker(configuration);
+ 
+     boolean crazyMode = false;
+     if (args.length == 1 && args[0].equals(CRAZY)) {
+       crazyMode = true;
+     }
+ 
+     final ZooKeeper zooKeeper = ZkUtils.newZooKeeper(zkConnectionStr);
+     ZookeeperSystemTime.checkSystemTime(zooKeeper, configuration.getLong(BLUR_ZOOKEEPER_SYSTEM_TIME_TOLERANCE, 3000));
+ 
+     final ZookeeperClusterStatus clusterStatus = new ZookeeperClusterStatus(zooKeeper);
+ 
+     final BlurIndexRefresher refresher = new BlurIndexRefresher();
+     refresher.init();
+ 
+     final BlurIndexCommiter commiter = new BlurIndexCommiter();
+     commiter.init();
+ 
+     final ThreadWatcher threadWatcher = new ThreadWatcher();
+     threadWatcher.init();
+     
+     BlurFilterCache filterCache = getFilterCache(configuration);
+     
+     final DistributedIndexServer indexServer = new DistributedIndexServer();
+     indexServer.setBlurMetrics(blurMetrics);
+     indexServer.setCache(cache);
+     indexServer.setClusterStatus(clusterStatus);
+     indexServer.setCommiter(commiter);
+     indexServer.setConfiguration(config);
+     indexServer.setNodeName(nodeName);
+     indexServer.setRefresher(refresher);
+     indexServer.setShardOpenerThreadCount(configuration.getInt(BLUR_SHARD_OPENER_THREAD_COUNT, 16));
+     indexServer.setZookeeper(zooKeeper);
+     indexServer.setThreadWatcher(threadWatcher);
+     indexServer.setFilterCache(filterCache);
+     indexServer.init();
+ 
+     final IndexManager indexManager = new IndexManager();
+     indexManager.setIndexServer(indexServer);
+     indexManager.setMaxClauseCount(configuration.getInt(BLUR_MAX_CLAUSE_COUNT, 1024));
+     indexManager.setThreadCount(configuration.getInt(BLUR_INDEXMANAGER_SEARCH_THREAD_COUNT, 32));
+     indexManager.setBlurMetrics(blurMetrics);
+     indexManager.setThreadWatcher(threadWatcher);
+     indexManager.setFilterCache(filterCache);
+     indexManager.init();
+     
+     final BlurShardServer shardServer = new BlurShardServer();
+     shardServer.setIndexServer(indexServer);
+     shardServer.setIndexManager(indexManager);
+     shardServer.setZookeeper(zooKeeper);
+     shardServer.setClusterStatus(clusterStatus);
+     shardServer.setMaxQueryCacheElements(configuration.getInt(BLUR_SHARD_CACHE_MAX_QUERYCACHE_ELEMENTS, 128));
+     shardServer.setMaxTimeToLive(configuration.getLong(BLUR_SHARD_CACHE_MAX_TIMETOLIVE, TimeUnit.MINUTES.toMillis(1)));
+     shardServer.setQueryChecker(queryChecker);
+     shardServer.setThreadWatcher(threadWatcher);
+     shardServer.init();
+ 
+     int threadCount = configuration.getInt(BLUR_SHARD_SERVER_THRIFT_THREAD_COUNT, 32);
+ 
+     final ThriftBlurShardServer server = new ThriftBlurShardServer();
+     server.setNodeName(nodeName);
+     server.setBindAddress(bindAddress);
+     server.setBindPort(bindPort);
+     server.setThreadCount(threadCount);
+     server.setThreadWatcher(threadWatcher);
+     if (crazyMode) {
+       System.err.println("Crazy mode!!!!!");
+       server.setIface(crazyMode(shardServer));
+     } else {
+       server.setIface(shardServer);
+     }
+     server.setConfiguration(configuration);
+     
+     // This will shutdown the server when the correct path is set in zk
+     new BlurServerShutDown().register(new BlurShutdown() {
+       @Override
+       public void shutdown() {
+         quietClose(commiter, refresher, server, shardServer, indexManager, indexServer, threadWatcher);
+         System.exit(0);
+       }
+     }, zooKeeper);
+     server.start();
+   }
+ 
+   private static int getShardServerIndex(String[] args) {
+     for (int i = 0; i < args.length; i++) {
+       if ("-s".equals(args[i])) {
+         if (i + 1 < args.length) {
+           return Integer.parseInt(args[i+1]);
+         }
+       }
+     }
+     return 0;
+   }
+ 
+   private static BlurFilterCache getFilterCache(BlurConfiguration configuration) {
+     String _blurFilterCacheClass = configuration.get(BLUR_SHARD_FILTER_CACHE_CLASS);
+     if (_blurFilterCacheClass != null) {
+       try {
+         Class<?> clazz = Class.forName(_blurFilterCacheClass);
+         return (BlurFilterCache) clazz.newInstance();
+       } catch (Exception e) {
+         throw new RuntimeException(e);
+       }
+     }
+     return new DefaultBlurFilterCache();
+   }
+ 
+   public static Iface crazyMode(final Iface iface) {
+     return (Iface) Proxy.newProxyInstance(Iface.class.getClassLoader(), new Class[] { Iface.class }, new InvocationHandler() {
+       private Random random = new Random();
+       private long strikeTime = System.currentTimeMillis() + 100;
+ 
+       @Override
+       public synchronized Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+         long now = System.currentTimeMillis();
+         if (strikeTime < now) {
+           strikeTime = now + random.nextInt(2000);
+           System.err.println("Crazy Monkey Strikes!!! Next strike [" + strikeTime + "]");
+           throw new RuntimeException("Crazy Monkey Strikes!!!");
+         }
+         return method.invoke(iface, args);
+       }
+     });
+   }
+ 
+ }

@@ -1,0 +1,1423 @@
+ package water;
+ 
+ import java.io.*;
+ import java.net.*;
+ import java.nio.ByteBuffer;
+ import java.nio.channels.DatagramChannel;
+ import java.util.*;
+ 
+ import jsr166y.*;
+ import water.exec.Function;
+ import water.nbhm.NonBlockingHashMap;
+ import water.parser.ParseDataset;
+ import water.persist.*;
+ import water.util.*;
+ import water.util.Log.Tag.Sys;
+ 
+ import com.amazonaws.auth.PropertiesCredentials;
+ import com.google.common.base.Objects;
+ import com.google.common.io.Closeables;
+ 
+ /**
+ * Start point for creating or joining an <code>H2O</code> Cloud.
+ *
+ * @author <a href="mailto:cliffc@0xdata.com"></a>
+ * @version 1.0
+ */
+ public final class H2O {
+   static boolean _hdfsActive = false;
+ 
+   public static final String VERSION = "0.3";
+ 
+   // User name for this Cloud
+   public static String NAME;
+ 
+   // The default port for finding a Cloud
+   public static final int DEFAULT_PORT = 54321;
+   public static int UDP_PORT; // Fast/small UDP transfers
+   public static int API_PORT; // RequestServer and the new API HTTP port
+ 
+   // The multicast discovery port
+   static MulticastSocket  CLOUD_MULTICAST_SOCKET;
+   static NetworkInterface CLOUD_MULTICAST_IF;
+   static InetAddress      CLOUD_MULTICAST_GROUP;
+   static int              CLOUD_MULTICAST_PORT ;
+   // Default NIO Datagram channel
+   static DatagramChannel  CLOUD_DGRAM;
+ 
+   // Myself, as a Node in the Cloud
+   public static H2ONode SELF = null;
+   public static InetAddress SELF_ADDRESS;
+ 
+   public static final String DEFAULT_ICE_ROOT = "/tmp";
+   public static URI ICE_ROOT;
+ 
+   // Initial arguments
+   public static String[] ARGS;
+ 
+   public static final PrintStream OUT = System.out;
+   public static final PrintStream ERR = System.err;
+   public static final int NUMCPUS = Runtime.getRuntime().availableProcessors();
+ 
+   // Convenience error
+   public static final RuntimeException unimpl() { return new RuntimeException("unimplemented"); }
+   public static final RuntimeException fail() { return new RuntimeException("do not call"); }
+ 
+   // Central /dev/null for ignored exceptions
+   public static final void ignore(Throwable e)             { ignore(e,"[h2o] Problem ignored: "); }
+   public static final void ignore(Throwable e, String msg) { ignore(e, msg, true); }
+   public static final void ignore(Throwable e, String msg, boolean printException) { Log.debug(Sys.WATER, msg + (printException? e.toString() : "")); }
+ 
+   // --------------------------------------------------------------------------
+   // The Current Cloud. A list of all the Nodes in the Cloud. Changes if we
+   // decide to change Clouds via atomic Cloud update.
+   static public volatile H2O CLOUD = new H2O(new H2ONode[0],0,0);
+ 
+   // ---
+   // A dense array indexing all Cloud members. Fast reversal from "member#" to
+   // Node.  No holes.  Cloud size is _members.length.
+   public final H2ONode[] _memary;
+   public final int _hash;
+ 
+   // A dense integer identifier that rolls over rarely. Rollover limits the
+   // number of simultaneous nested Clouds we are operating on in-parallel.
+   // Really capped to 1 byte, under the assumption we won't have 256 nested
+   // Clouds. Capped at 1 byte so it can be part of an atomically-assigned
+   // 'long' holding info specific to this Cloud.
+   public final char _idx; // no unsigned byte, so unsigned char instead
+ 
+   // Is nnn larger than old (counting for wrap around)? Gets confused if we
+   // start seeing a mix of more than 128 unique clouds at the same time. Used
+   // to tell the order of Clouds appearing.
+   static public boolean larger( int nnn, int old ) {
+     assert (0 <= nnn && nnn <= 255);
+     assert (0 <= old && old <= 255);
+     return ((nnn-old)&0xFF) < 64;
+   }
+ 
+   // Static list of acceptable Cloud members
+   static HashSet<H2ONode> STATIC_H2OS = null;
+ 
+   // Reverse cloud index to a cloud; limit of 256 old clouds.
+   static private final H2O[] CLOUDS = new H2O[256];
+ 
+   // Enables debug features like more logging and multiple instances per JVM
+   public static final boolean DEBUG = System.getProperty("h2o.debug") != null;
+ 
+   // Construct a new H2O Cloud from the member list
+   public H2O( H2ONode[] h2os, int hash, int idx ) {
+     _memary = h2os;             // Need to clone?
+     Arrays.sort(_memary);       // ... sorted!
+     _hash = hash;               // And record hash for cloud rollover
+     _idx = (char)(idx&0x0ff);   // Roll-over at 256
+   }
+ 
+   // One-shot atomic setting of the next Cloud, with an empty K/V store.
+   // Called single-threaded from Paxos. Constructs the new H2O Cloud from a
+   // member list.
+   void set_next_Cloud( H2ONode[] h2os, int hash ) {
+     synchronized(this) {
+       int idx = _idx+1; // Unique 1-byte Cloud index
+       if( idx == 256 ) idx=1; // wrap, avoiding zero
+       CLOUDS[idx] = CLOUD = new H2O(h2os,hash,idx);
+     }
+     Paxos.print("Announcing new Cloud Membership: ",_memary);
+   }
+ 
+   // Check if the cloud id matches with one of the old clouds
+   static boolean isIDFromPrevCloud(H2ONode h2o) {
+     if ( h2o == null ) return false;
+     HeartBeat hb = h2o._heartbeat;
+     int hash = hb._cloud_hash;
+     for( int i=0; i < 256; i++ )
+       if( CLOUDS[i] != null && hash == CLOUDS[i]._hash )
+         return true;
+     return false;
+   }
+ 
+   public final int size() { return _memary.length; }
+   public final H2ONode leader() { return _memary[0]; }
+ 
+   public static void waitForCloudSize(int x) {
+     waitForCloudSize(x, 10000);
+   }
+ 
+   public static void waitForCloudSize(int x, long ms) {
+     long start = System.currentTimeMillis();
+     while( System.currentTimeMillis() - start < ms ) {
+       if( CLOUD.size() >= x )
+         break;
+       try { Thread.sleep(100); } catch( InterruptedException ie ) { }
+     }
+     assert H2O.CLOUD.size() >= x : "Cloud size of " + x;
+   }
+ 
+   // *Desired* distribution function on keys & replication factor. Replica #0
+   // is the master, replica #1, 2, 3, etc represent additional desired
+   // replication nodes. Note that this function is just the distribution
+   // function - it does not DO any replication, nor does it dictate any policy
+   // on how fast replication occurs. Returns -1 if the desired replica
+   // is nonsense, e.g. asking for replica #3 in a 2-Node system.
+   public int D( Key key, int repl ) {
+     if( repl >= size() ) return -1;
+     // Distribution of Fluid Vectors is a special case.
+     // Fluid Vectors are grouped into vector groups, each of which must have the same distribution of chunks
+     // so that MRTask2 run over group of vectors will keep data-locality.
+     // The fluid vecs from the same group share the same key pattern + each has 4 bytes identifying particular vector in the group.
+     // Since we need the same chunks end up on the smae node in the group, we need to skip the 4 bytes containing vec# from the hash.
+     // Apart from that, we keep previous mode of operation, so that ByteVec would have first 64MB distributed around cloud randomly and then go round-robin
+     // in 64MB chunks.
+     if(key._kb[0] == Key.DVEC || key._kb[0] == Key.VEC){
+       long idx = 0;
+       long hash = 0;
+       if(key._kb[0] == Key.DVEC){
+         long cSz = 1 << (26 - ValueArray.LOG_CHK);
+         idx = (UDP.get4(key._kb, 4));
+         if(idx > cSz){ // chunk after 64MB boundary -> go round robin according to chunk# / (64MB/chunksz)
+           idx = idx >>> (26 - ValueArray.LOG_CHK);
+           // skip all the size bytes including chunk# from the hash
+           hash = Key.hash(key._kb, 10, key._kb.length);
+         } else // we're in the first 64MB region, just skip the vec# bytes but keep the chunk# bytes in the hash
+           hash = Key.hash(key._kb, 6, key._kb.length);
+       } else // we want vec headers from the same group to be homed on the same node, so skip the differentiating bytes
+         hash = Key.hash(key._kb, 10, key._kb.length);
+       return  (int)((idx + 0x7FFFFFFF&hash + repl) % size());
+     }
+     // See if this is a specifically homed DVEC Key (has shorter encoding).
+     byte[] kb = key._kb;
+     if( kb[0] == Key.DVEC && kb[1] != -1 ) {
+       throw H2O.unimpl();
+       // return kb[1]; // home is just node index byte
+     }
+ 
+     // See if this is a specifically homed Key
+     if( !key.user_allowed() && repl < kb[1] ) { // Asking for a replica# from the homed list?
+       assert kb[0] != Key.DVEC;
+       H2ONode h2o=null, h2otmp = new H2ONode(); // Fill in the fields from the Key
+       AutoBuffer ab = new AutoBuffer(kb,2);
+       for( int i=0; i<=repl; i++ )
+         h2o = h2otmp.read(ab);  // Read util we get the specified H2O
+       // Reverse the home to the index
+       int idx = nidx(h2o);
+       if( idx >= 0 ) return idx;
+       // Else homed to a node which is no longer in the cloud!
+       // Fall back to the normal home mode
+     }
+ 
+     // Easy Cheesy Stupid:
+     return ((key._hash+repl)&0x7FFFFFFF) % size();
+   }
+ 
+   // Find the node index for this H2ONode, or a negative number on a miss
+   public int nidx( H2ONode h2o ) { return Arrays.binarySearch(_memary,h2o); }
+   public boolean contains( H2ONode h2o ) { return nidx(h2o) >= 0; }
+   @Override public String toString() {
+     return Arrays.toString(_memary);
+   }
+ 
+   private static InetAddress findInetAddressForSelf() throws Error {
+     // Get a list of all valid IPs on this machine.  Typically 1 on Mac or
+     // Windows, but could be many on Linux or if a hypervisor is present.
+     ArrayList<InetAddress> ips = new ArrayList<InetAddress>();
+     try {
+       Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+       while( nis.hasMoreElements() ) {
+         NetworkInterface ni = nis.nextElement();
+         Enumeration<InetAddress> ias = ni.getInetAddresses();
+         while( ias.hasMoreElements() ) {
+           ips.add(ias.nextElement());
+         }
+       }
+     } catch( SocketException e ) { Log.err(e); }
+ 
+     InetAddress local = null;   // My final choice
+ 
+     // Check for an "-ip xxxx" option and accept a valid user choice; required
+     // if there are multiple valid IP addresses.
+     InetAddress arg = null;
+     if (OPT_ARGS.ip != null) {
+       try{
+         arg = InetAddress.getByName(OPT_ARGS.ip);
+       } catch( UnknownHostException e ) {
+         Log.err(e);
+         System.exit(-1);
+       }
+       if( !(arg instanceof Inet4Address) ) {
+         Log.warn("Only IP4 addresses allowed.");
+         System.exit(-1);
+       }
+       if( !ips.contains(arg) ) {
+         Log.warn("IP address not found on this machine");
+         System.exit(-1);
+       }
+       local = arg;
+     } else {
+       // No user-specified IP address.  Attempt auto-discovery.  Roll through
+       // all the network choices on looking for a single Inet4.
+       ArrayList<InetAddress> validIps = new ArrayList();
+       for( InetAddress ip : ips ) {
+         // make sure the given IP address can be found here
+         if( ip instanceof Inet4Address &&
+             !ip.isLoopbackAddress() &&
+             !ip.isLinkLocalAddress() ) {
+           validIps.add(ip);
+         }
+       }
+       if( validIps.size() == 1 ) {
+         local = validIps.get(0);
+       } else {
+         local = guessInetAddress(validIps);
+       }
+     }
+ 
+     // The above fails with no network connection, in that case go for a truly
+     // local host.
+     if( local == null ) {
+       try {
+         Log.warn("Failed to determine IP, falling back to localhost.");
+         // set default ip address to be 127.0.0.1 /localhost
+         local = InetAddress.getByName("127.0.0.1");
+       } catch( UnknownHostException e ) {
+         throw  Log.errRTExcept(e);
+       }
+     }
+     return local;
+   }
+ 
+   private static InetAddress guessInetAddress(List<InetAddress> ips) {
+     String m = "Multiple local IPs detected:\n";
+     for(InetAddress ip : ips) m+="  " + ip;
+     m+="\nAttempting to determine correct address...\n";
+     Socket s = null;
+     try {
+       // using google's DNS server as an external IP to find
+       s = new Socket("8.8.8.8", 53);
+       m+="Using " + s.getLocalAddress() + "\n";
+       return s.getLocalAddress();
+     } catch( java.net.SocketException se ) {
+       return null;           // No network at all?  (Laptop w/wifi turned off?)
+     } catch( Throwable t ) {
+       Log.err(t);
+       return null;
+     } finally {
+       Log.warn(m);
+       Utils.close(s);
+     }
+   }
+ 
+   // --------------------------------------------------------------------------
+   // The (local) set of Key/Value mappings.
+   static final NonBlockingHashMap<Key,Value> STORE = new NonBlockingHashMap<Key, Value>();
+ 
+   // Dummy shared volatile for ordering games
+   static public volatile int VOLATILE;
+ 
+   // PutIfMatch
+   // - Atomically update the STORE, returning the old Value on success
+   // - Kick the persistence engine as needed
+   // - Return existing Value on fail, no change.
+   //
+   // Keys are interned here: I always keep the existing Key, if any. The
+   // existing Key is blind jammed into the Value prior to atomically inserting
+   // it into the STORE and interning.
+   //
+   // Because of the blind jam, there is a narrow unusual race where the Key
+   // might exist but be stale (deleted, mapped to a TOMBSTONE), a fresh put()
+   // can find it and jam it into the Value, then the Key can be deleted
+   // completely (e.g. via an invalidate), the table can resize flushing the
+   // stale Key, an unrelated weak-put can re-insert a matching Key (but as a
+   // new Java object), and delete it, and then the original thread can do a
+   // successful put_if_later over the missing Key and blow the invariant that a
+   // stored Value always points to the physically equal Key that maps to it
+   // from the STORE. If this happens, some of replication management bits in
+   // the Key will be set in the wrong Key copy... leading to extra rounds of
+   // replication.
+ 
+   public static final Value putIfMatch( Key key, Value val, Value old ) {
+     assert val==null || val._key.equals(key); // Keys matched
+     if( old != null && val != null ) // Have an old value?
+       key = val._key = old._key; // Use prior key in val
+ 
+     // Insert into the K/V store
+     Value res = STORE.putIfMatchUnlocked(key,val,old);
+     assert chk_equals_key(res, old);
+     if( res != old ) return res; // Return the failure cause
+     assert chk_equals_key(res, old, val);
+     // Persistence-tickle.
+     // If the K/V mapping is going away, remove the old guy.
+     // If the K/V mapping is changing, let the store cleaner just overwrite.
+     // If the K/V mapping is new, let the store cleaner just create
+     if( old != null && val == null ) old.removeIce(); // Remove the old guy
+     if( val != null ) dirty_store(); // Start storing the new guy
+     return old; // Return success
+   }
+ 
+   // assert that all of val, old & res that are not-null all agree on key.
+   private static final boolean chk_equals_key( Value... vs ) {
+     Key k = null;
+     for( Value v : vs ) {
+       if( v != null ) {
+         assert k == null || k == v._key;
+         k = v._key;
+       }
+     }
+     return true;
+   }
+ 
+   // Raw put; no marking the memory as out-of-sync with disk. Used to import
+   // initial keys from local storage, or to intern keys.
+   public static final Value putIfAbsent_raw( Key key, Value val ) {
+     assert val.isSameKey(key);
+     Value res = STORE.putIfMatchUnlocked(key,val,null);
+     assert res == null;
+     return res;
+   }
+ 
+   // Get the value from the store
+   public static Value get( Key key ) {
+     Value v = STORE.get(key);
+     // Lazily manifest array chunks, if the backing file exists.
+     if( v == null ) {
+       v = Value.lazyArrayChunk(key);
+       if( v == null ) return null;
+       // Insert the manifested value, as-if it existed all along
+       Value res = putIfMatch(key,v,null);
+       if( res != null ) v = res; // This happens racily, so take any prior result
+     }
+     if( v != null ) v.touch();
+     return v;
+   }
+ 
+   public static Value raw_get( Key key ) { return STORE.get(key); }
+   public static Key getk( Key key ) { return STORE.getk(key); }
+   public static Set<Key> keySet( ) { return STORE.keySet(); }
+   public static Collection<Value> values( ) { return STORE.values(); }
+   public static int store_size() { return STORE.size(); }
+ 
+ 
+   // --------------------------------------------------------------------------
+   // The worker pools - F/J pools with different priorities.
+ 
+   // These priorities are carefully ordered and asserted for... modify with
+   // care.  The real problem here is that we can get into cyclic deadlock
+   // unless we spawn a thread of priority "X+1" in order to allow progress
+   // on a queue which might be flooded with a large number of "<=X" tasks.
+   //
+   // Example of deadlock: suppose TaskPutKey and the Invalidate ran at the same
+   // priority on a 2-node cluster.  Both nodes flood their own queues with
+   // writes to unique keys, which require invalidates to run on the other node.
+   // Suppose the flooding depth exceeds the thread-limit (e.g. 99); then each
+   // node might have all 99 worker threads blocked in TaskPutKey, awaiting
+   // remote invalidates - but the other nodes' threads are also all blocked
+   // awaiting invalidates!
+   //
+   // We fix this by being willing to always spawn a thread working on jobs at
+   // priority X+1, and guaranteeing there are no jobs above MAX_PRIORITY -
+   // i.e., jobs running at MAX_PRIORITY cannot block, and when those jobs are
+   // done, the next lower level jobs get unblocked, etc.
+   public static final byte        MAX_PRIORITY = Byte.MAX_VALUE-1;
+   public static final byte    ACK_ACK_PRIORITY = MAX_PRIORITY-0;
+   public static final byte        ACK_PRIORITY = MAX_PRIORITY-1;
+   public static final byte   DESERIAL_PRIORITY = MAX_PRIORITY-2;
+   public static final byte INVALIDATE_PRIORITY = MAX_PRIORITY-2;
+   public static final byte    ARY_KEY_PRIORITY = MAX_PRIORITY-2;
+   public static final byte    GET_KEY_PRIORITY = MAX_PRIORITY-3;
+   public static final byte    PUT_KEY_PRIORITY = MAX_PRIORITY-4;
+   public static final byte     ATOMIC_PRIORITY = MAX_PRIORITY-5;
+   public static final byte        GUI_PRIORITY = MAX_PRIORITY-6;
+   public static final byte     MIN_HI_PRIORITY = MAX_PRIORITY-6;
+   public static final byte        MIN_PRIORITY = 0;
+ 
+   // F/J threads that remember the priority of the last task they started
+   // working on.
+   static class FJWThr extends ForkJoinWorkerThread {
+     public int _priority;
+     FJWThr(ForkJoinPool pool) {
+       super(pool);
+       setPriority( ((ForkJoinPool2)pool)._priority == Thread.MIN_PRIORITY
+                    ? Thread.NORM_PRIORITY-1
+                    : Thread. MAX_PRIORITY-1 );
+     }
+   }
+   // Factory for F/J threads, with cap's that vary with priority.
+   static class FJWThrFact implements ForkJoinPool.ForkJoinWorkerThreadFactory {
+     private final int _cap;
+     FJWThrFact( int cap ) { _cap = cap; }
+     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+       return pool.getPoolSize() <= _cap ? new FJWThr(pool) : null;
+     }
+   }
+ 
+   // A standard FJ Pool, with an expected priority level.
+   private static class ForkJoinPool2 extends ForkJoinPool {
+     public final int _priority;
+     ForkJoinPool2(int p, int cap) { super(NUMCPUS,new FJWThrFact(cap),null,p!=MIN_PRIORITY); _priority = p; }
+     public H2OCountedCompleter poll() { return (H2OCountedCompleter)pollSubmission(); }
+   }
+ 
+   // Normal-priority work is generally directly-requested user ops.
+   private static final ForkJoinPool2 FJP_NORM = new ForkJoinPool2(MIN_PRIORITY,99);
+   // Hi-priority work, sorted into individual queues per-priority.
+   // Capped at a small number of threads per pool.
+   private static final ForkJoinPool2 FJPS[] = new ForkJoinPool2[MAX_PRIORITY+1];
+   static {
+     // Only need 1 thread for the AckAck work, as it cannot block
+     FJPS[ACK_ACK_PRIORITY] = new ForkJoinPool2(ACK_ACK_PRIORITY,1);
+     for( int i=MIN_HI_PRIORITY+1; i<MAX_PRIORITY; i++ )
+       FJPS[i] = new ForkJoinPool2(i,NUMCPUS); // All CPUs, but no more for blocking purposes
+     FJPS[GUI_PRIORITY] = new ForkJoinPool2(GUI_PRIORITY,2);
+     FJPS[0] = FJP_NORM;
+   }
+ 
+   // Easy peeks at the low FJ queue
+   public static int getLoQueue (     ) { return FJP_NORM.getQueuedSubmissionCount();}
+   public static int loQPoolSize(     ) { return FJP_NORM.getPoolSize();             }
+   public static int getHiQueue (int i) { return FJPS[i+MIN_HI_PRIORITY].getQueuedSubmissionCount();}
+   public static int hiQPoolSize(int i) { return FJPS[i+MIN_HI_PRIORITY].getPoolSize();             }
+ 
+   // Submit to the correct priority queue
+   public static void submitTask( H2OCountedCompleter task ) {
+     int priority = task.priority();
+     assert MIN_PRIORITY <= priority && priority <= MAX_PRIORITY;
+     FJPS[priority].submit(task);
+   }
+ 
+   // Simple wrapper over F/J CountedCompleter to support priority queues.  F/J
+   // queues are simple unordered (and extremely light weight) queues.  However,
+   // we frequently need priorities to avoid deadlock and to promote efficient
+   // throughput (e.g. failure to respond quickly to TaskGetKey can block an
+   // entire node for lack of some small piece of data).  So each attempt to do
+   // lower-priority F/J work starts with an attempt to work & drain the
+   // higher-priority queues.
+   public static abstract class H2OCountedCompleter extends CountedCompleter {
+     // Once per F/J task, drain the high priority queue before doing any low
+     // priority work.
+     @Override public final void compute() {
+       FJWThr t = (FJWThr)Thread.currentThread();
+       int pp = ((ForkJoinPool2)t.getPool())._priority;
+       assert  priority() == pp; // Job went to the correct queue?
+       assert t._priority <= pp; // Thread attempting the job is only a low-priority?
+       // Drain the high priority queues before the normal F/J queue
+       try {
+         for( int p = MAX_PRIORITY; p > pp; p-- ) {
+           if( FJPS[p] == null ) break;
+           H2OCountedCompleter h2o = FJPS[p].poll();
+           if( h2o != null ) {     // Got a hi-priority job?
+             t._priority = p;      // Set & do it now!
+             Thread.currentThread().setPriority(Thread.MAX_PRIORITY-1);
+             h2o.compute2();       // Do it ahead of normal F/J work
+             p++;                  // Check again the same queue
+           }
+         }
+       } finally {
+         t._priority = pp;
+         if( pp == MIN_PRIORITY ) Thread.currentThread().setPriority(Thread.NORM_PRIORITY-1);
+       }
+       // Now run the task as planned
+       compute2();
+     }
+     // Do the actually intended work
+     public abstract void compute2();
+     // In order to prevent deadlock, threads that block waiting for a reply
+     // from a remote node, need the remote task to run at a higher priority
+     // than themselves.  This field tracks the required priority.
+     public byte priority() { return MIN_PRIORITY; }
+     // Do not silently ignore uncaught exceptions!
+     public boolean onExceptionalCompletion( Throwable ex, CountedCompleter caller ) {
+       ex.printStackTrace();
+       return true;
+     }
+   }
+ 
+ 
+   // --------------------------------------------------------------------------
+   public static OptArgs OPT_ARGS = new OptArgs();
+   public static class OptArgs extends Arguments.Opt {
+     public String name; // set_cloud_name_and_mcast()
+     public String flatfile; // set_cloud_name_and_mcast()
+     public int port; // set_cloud_name_and_mcast()
+     public String ip; // Named IP4/IP6 address instead of the default
+     public String ice_root; // ice root directory
+     public String hdfs; // HDFS backend
+     public String hdfs_version; // version of the filesystem
+     public String hdfs_config; // configuration file of the HDFS
+     public String aws_credentials; // properties file for aws credentials
+     public String keepice; // Do not delete ice on startup
+     public String soft = null; // soft launch for demos
+     public String random_udp_drop = null; // test only, randomly drop udp incoming
+     public int pparse_limit = Integer.MAX_VALUE;
+     public String no_requests_log = null; // disable logging of Web requests
+     public String h = null;
+     public String help = null;
+   }
+ 
+   public static void printHelp() {
+     String s =
+     "Start an H2O node.\n" +
+     "\n" +
+     "Usage:  java [-Xmx<size>] -jar h2o.jar [options]\n" +
+     "        (Note that every option has a default and is optional.)\n" +
+     "\n" +
+     "    -name <h2oCloudName>\n" +
+     "          Cloud name used for Multicast discovery.\n" +
+     "          Nodes with the same cloud name will form an H2O cloud\n" +
+     "          (also known as an H2O cluster).\n" +
+     "          (Not to be used with -flatfile.)\n" +
+     "\n" +
+     "    -flatfile <flatFileName>\n" +
+     "          Configuration file explicitly listing H2O cloud node members.\n" +
+     "          (Not to be used with -name.)\n" +
+     "\n" +
+     "    -ip <ipAddressOfNode>\n" +
+     "          IP address of this node.\n" +
+     "\n" +
+     "    -port <port>\n" +
+     "          Port number for this node (note: port+1 is also used).\n" +
+     "          (The default port is " + DEFAULT_PORT + ".)\n" +
+     "\n" +
+    "    -ice_root <fileSystemPath>" +
+    "          The directory where H2O spills temporary data to disk." +
+     "          (The default is '" + DEFAULT_ICE_ROOT + "'.)\n" +
+     "\n" +
+     "    -h | -help\n" +
+     "          Print this help.\n" +
+     "\n" +
+     "Cloud formation behavior:\n" +
+     "\n" +
+     "    New H2O nodes join together to form a cloud at startup time.\n" +
+     "    Once a cloud is given work to perform, it locks out new members.\n" +
+     "    from joining.\n" +
+     "\n" +
+     "Examples:\n" +
+     "\n" +
+     "    Start an H2O node with 4GB of memory and a default cloud name:\n" +
+     "        java -Xmx4g -jar h2o.jar\n" +
+     "\n" +
+     "    Start an H2O node with 6GB of memory and a specify the cloud name:\n" +
+     "        java -Xmx6g -jar h2o.jar -name MyCloud\n" +
+     "\n" +
+     "    Start an H2O cloud with three 2GB nodes and a default cloud name:\n" +
+     "        java -Xmx2g -jar h2o.jar\n" +
+     "        java -Xmx2g -jar h2o.jar\n" +
+     "        java -Xmx2g -jar h2o.jar\n" +
+     "\n";
+ 
+     System.out.print(s);
+   }
+ 
+   public static boolean IS_SYSTEM_RUNNING = false;
+ 
+   // Start up an H2O Node and join any local Cloud
+   public static void main( String[] args ) {
+     // To support launching from JUnit, JUnit expects to call main() repeatedly.
+     // We need exactly 1 call to main to startup all the local services.
+     if (IS_SYSTEM_RUNNING) return;
+     IS_SYSTEM_RUNNING = true;
+ 
+     // Parse args
+     Arguments arguments = new Arguments(args);
+     arguments.extract(OPT_ARGS);
+     ARGS = arguments.toStringArray();
+ 
+     if ((OPT_ARGS.h != null) || (OPT_ARGS.help != null)) {
+       printHelp();
+       System.exit (0);
+     }
+ 
+     ParseDataset.PLIMIT = OPT_ARGS.pparse_limit;
+ 
+     // Get ice path before loading Log or Persist class
+     String ice = DEFAULT_ICE_ROOT;
+     if( OPT_ARGS.ice_root != null ) ice = OPT_ARGS.ice_root.replace("\\", "/");
+     try {
+       ICE_ROOT = new URI(ice);
+     } catch(URISyntaxException ex) {
+       throw new RuntimeException("Invalid ice_root: " + ice + ", " + ex.getMessage());
+     }
+     Log.info ("ICE root: '" + ICE_ROOT + "'");
+ 
+     SELF_ADDRESS = findInetAddressForSelf();
+ 
+     //if (OPT_ARGS.rshell.equals("false"))
+     Log.wrap(); // Logging does not wrap when the rshell is on.
+ 
+     // Start the local node
+     startLocalNode();
+     // Load up from disk and initialize the persistence layer
+     initializePersistence();
+     // Start network services, including heartbeats & Paxos
+     startNetworkServices();   // start server services
+     startApiIpPortWatchdog(); // Check if the API port becomes unreachable
+ 
+     initializeExpressionEvaluation(); // starts the expression evaluation system
+ 
+     startupFinalize(); // finalizes the startup & tests (if any)
+   }
+ 
+   private static void initializeExpressionEvaluation() {
+     Function.initializeCommonFunctions();
+   }
+ 
+   // Default location of the AWS credentials file
+   private static final String DEFAULT_CREDENTIALS_LOCATION = "AwsCredentials.properties";
+   public static PropertiesCredentials getAWSCredentials() throws IOException {
+     File credentials = new File(Objects.firstNonNull(OPT_ARGS.aws_credentials, DEFAULT_CREDENTIALS_LOCATION));
+     return new PropertiesCredentials(credentials);
+   }
+ 
+   /** Starts the local k-v store.
+ * Initializes the local k-v store, local node and the local cloud with itself
+ * as the only member.
+ *
+ * @param args Command line arguments
+ * @return Unprocessed command line arguments for further processing.
+ */
+   private static void startLocalNode() {
+     // Figure self out; this is surprisingly hard
+     initializeNetworkSockets();
+     // Do not forget to put SELF into the static configuration (to simulate
+     // proper multicast behavior)
+     if( STATIC_H2OS != null && !STATIC_H2OS.contains(SELF)) {
+       Log.warn("Flatfile configuration does not include self: " + SELF+ " but contains " + STATIC_H2OS);
+       STATIC_H2OS.add(SELF);
+     }
+ 
+     Log.info ("H2O cloud name: '" + NAME + "'");
+ 
+     Log.info("(v"+VERSION+") '"+NAME+"' on " + SELF+(OPT_ARGS.flatfile==null
+         ? (", discovery address "+CLOUD_MULTICAST_GROUP+":"+CLOUD_MULTICAST_PORT)
+             : ", static configuration based on -flatfile "+OPT_ARGS.flatfile));
+ 
+     // Create the starter Cloud with 1 member
+     SELF._heartbeat._jar_md5 = Boot._init._jarHash;
+     Paxos.doHeartbeat(SELF);
+     assert SELF._heartbeat._cloud_hash != 0;
+   }
+ 
+   /** Initializes the network services of the local node.
+ *
+ * Starts the worker threads, receiver threads, heartbeats and all other
+ * network related services.
+ */
+   private static void startNetworkServices() {
+     // We've rebooted the JVM recently. Tell other Nodes they can ignore task
+     // prior tasks by us. Do this before we receive any packets
+     UDPRebooted.T.reboot.broadcast();
+ 
+     // Start the UDPReceiverThread, to listen for requests from other Cloud
+     // Nodes. There should be only 1 of these, and it never shuts down.
+     // Started first, so we can start parsing UDP packets
+     new UDPReceiverThread().start();
+ 
+     // Start the MultiReceiverThread, to listen for multi-cast requests from
+     // other Cloud Nodes. There should be only 1 of these, and it never shuts
+     // down. Started soon, so we can start parsing multicast UDP packets
+     new MultiReceiverThread().start();
+ 
+     // Start the Persistent meta-data cleaner thread, which updates the K/V
+     // mappings periodically to disk. There should be only 1 of these, and it
+     // never shuts down.  Needs to start BEFORE the HeartBeatThread to build
+     // an initial histogram state.
+     new Cleaner().start();
+ 
+     // Start the heartbeat thread, to publish the Clouds' existence to other
+     // Clouds. This will typically trigger a round of Paxos voting so we can
+     // join an existing Cloud.
+     new HeartBeatThread().start();
+ 
+     // Start a UDP timeout worker thread. This guy only handles requests for
+     // which we have not recieved a timely response and probably need to
+     // arrange for a re-send to cover a dropped UDP packet.
+     new UDPTimeOutThread().start();
+     new H2ONode.AckAckTimeOutThread().start();
+ 
+     // Start the TCPReceiverThread, to listen for TCP requests from other Cloud
+     // Nodes. There should be only 1 of these, and it never shuts down.
+     new TCPReceiverThread().start();
+     // Start the Nano HTTP server thread
+     water.api.RequestServer.start();
+   }
+ 
+   /** Initializes a watchdog thread to make sure the API IP:Port is reachable.
+    *
+    * The IP and port are meant to be accessible from outside this
+    * host, much less inside.  The real reason behind this check is the
+    * one-node cloud case where people move their laptop around and
+    * DHCP assigns them a new IP address.
+    */
+   private static void startApiIpPortWatchdog() {
+     new ApiIpPortWatchdogThread().start();
+   }
+ 
+   // Used to update the Throwable detailMessage field.
+   private static java.lang.reflect.Field DETAILMESSAGE;
+   public static <T extends Throwable> T setDetailMessage( T t, String s ) {
+     try { if( DETAILMESSAGE != null )  DETAILMESSAGE.set(t,s); } 
+     catch( IllegalAccessException iae) {}
+     return t;
+   }
+ 
+ 
+   /** Finalizes the node startup.
+    *
+    * Displays the startup message and runs the tests (if applicable).
+    */
+   private static void startupFinalize() {
+     // Allow Throwable detailMessage's to be updated on the fly.  Ugly, ugly,
+     // but I want to add info without rethrowing/rebuilding whole exceptions.
+     try { 
+       DETAILMESSAGE = Throwable.class.getDeclaredField("detailMessage");
+       DETAILMESSAGE.setAccessible(true);
+     } catch( NoSuchFieldException nsfe ) { }
+     
+     // Sleep a bit so all my other threads can 'catch up'
+     try { Thread.sleep(1000); } catch( InterruptedException e ) { }
+   }
+ 
+   public static DatagramChannel _udpSocket;
+   public static ServerSocket _apiSocket;
+ 
+ 
+   // Parse arguments and set cloud name in any case. Strip out "-name NAME"
+   // and "-flatfile <filename>". Ignore the rest. Set multi-cast port as a hash
+   // function of the name. Parse node ip addresses from the filename.
+   static void initializeNetworkSockets( ) {
+     // Assign initial ports
+     API_PORT = OPT_ARGS.port != 0 ? OPT_ARGS.port : DEFAULT_PORT;
+ 
+     while (true) {
+       UDP_PORT = API_PORT+1;
+       try {
+         // kbn. seems like we need to set SO_REUSEADDR before binding?
+         // http://www.javadocexamples.com/java/net/java.net.ServerSocket.html#setReuseAddress:boolean
+         // When a TCP connection is closed the connection may remain in a timeout state
+         // for a period of time after the connection is closed (typically known as the
+         // TIME_WAIT state or 2MSL wait state). For applications using a well known socket address
+         // or port it may not be possible to bind a socket to the required SocketAddress
+         // if there is a connection in the timeout state involving the socket address or port.
+         // Enabling SO_REUSEADDR prior to binding the socket using bind(SocketAddress)
+         // allows the socket to be bound even though a previous connection is in a timeout state.
+         // cnc: this is busted on windows.  Back to the old code.
+         _apiSocket = new ServerSocket(API_PORT);
+         _udpSocket = DatagramChannel.open();
+         _udpSocket.socket().setReuseAddress(true);
+         _udpSocket.socket().bind(new InetSocketAddress(SELF_ADDRESS, UDP_PORT));
+         break;
+       } catch (IOException e) {
+         try { if( _apiSocket != null ) _apiSocket.close(); } catch( IOException ohwell ) { Log.err(ohwell); }
+         Closeables.closeQuietly(_udpSocket);
+         _apiSocket = null;
+         _udpSocket = null;
+         if( OPT_ARGS.port != 0 )
+           Log.die("On " + SELF_ADDRESS +
+               " some of the required ports " + (OPT_ARGS.port+0) +
+               ", " + (OPT_ARGS.port+1) +
+               " are not available, change -port PORT and try again.");
+       }
+       API_PORT += 2;
+     }
+     SELF = H2ONode.self(SELF_ADDRESS);
+     Log.info("Internal communication uses port: ",UDP_PORT,"\nListening for HTTP and REST traffic on  http:/",SELF_ADDRESS,":"+_apiSocket.getLocalPort()+"/");
+ 
+     NAME = OPT_ARGS.name==null? System.getProperty("user.name") : OPT_ARGS.name;
+     // Read a flatfile of allowed nodes
+     STATIC_H2OS = parseFlatFile(OPT_ARGS.flatfile);
+ 
+     // Multi-cast ports are in the range E1.00.00.00 to EF.FF.FF.FF
+     int hash = NAME.hashCode()&0x7fffffff;
+     int port = (hash % (0xF0000000-0xE1000000))+0xE1000000;
+     byte[] ip = new byte[4];
+     for( int i=0; i<4; i++ )
+       ip[i] = (byte)(port>>>((3-i)<<3));
+     try {
+       CLOUD_MULTICAST_GROUP = InetAddress.getByAddress(ip);
+     } catch( UnknownHostException e ) { throw  Log.errRTExcept(e); }
+     CLOUD_MULTICAST_PORT = (port>>>16);
+   }
+ 
+   // Multicast send-and-close.  Very similar to udp_send, except to the
+   // multicast port (or all the individuals we can find, if multicast is
+   // disabled).
+   static void multicast( ByteBuffer bb ) {
+     if( H2O.STATIC_H2OS == null ) {
+       byte[] buf = new byte[bb.remaining()];
+       bb.get(buf);
+ 
+       synchronized( H2O.class ) { // Sync'd so single-thread socket create/destroy
+         assert H2O.CLOUD_MULTICAST_IF != null;
+         try {
+           if( CLOUD_MULTICAST_SOCKET == null ) {
+             CLOUD_MULTICAST_SOCKET = new MulticastSocket();
+             // Allow multicast traffic to go across subnets
+             CLOUD_MULTICAST_SOCKET.setTimeToLive(2);
+             CLOUD_MULTICAST_SOCKET.setNetworkInterface(H2O.CLOUD_MULTICAST_IF);
+           }
+           // Make and send a packet from the buffer
+           CLOUD_MULTICAST_SOCKET.send(new DatagramPacket(buf, buf.length, CLOUD_MULTICAST_GROUP,CLOUD_MULTICAST_PORT));
+         } catch( Exception e ) {  // On any error from anybody, close all sockets & re-open
+           // and if not a soft launch (hibernate mode)
+           if(H2O.OPT_ARGS.soft == null)
+             Log.err("Multicast Error ",e);
+             if( CLOUD_MULTICAST_SOCKET != null )
+               try { CLOUD_MULTICAST_SOCKET.close(); }
+               catch( Exception e2 ) { Log.err("Got",e2); }
+               finally { CLOUD_MULTICAST_SOCKET = null; }
+           }
+       }
+     } else {                    // Multicast Simulation
+       // The multicast simulation is little bit tricky. To achieve union of all
+       // specified nodes' flatfiles (via option -flatfile), the simulated
+       // multicast has to send packets not only to nodes listed in the node's
+       // flatfile (H2O.STATIC_H2OS), but also to all cloud members (they do not
+       // need to be specified in THIS node's flatfile but can be part of cloud
+       // due to another node's flatfile).
+       //
+       // Furthermore, the packet have to be send also to Paxos proposed members
+       // to achieve correct functionality of Paxos.  Typical situation is when
+       // this node receives a Paxos heartbeat packet from a node which is not
+       // listed in the node's flatfile -- it means that this node is listed in
+       // another node's flatfile (and wants to create a cloud).  Hence, to
+       // allow cloud creation, this node has to reply.
+       //
+       // Typical example is:
+       //    node A: flatfile (B)
+       //    node B: flatfile (C), i.e., A -> (B), B-> (C), C -> (A)
+       //    node C: flatfile (A)
+       //    Cloud configuration: (A, B, C)
+       //
+ 
+       // Hideous O(n) algorithm for broadcast - avoid the memory allocation in
+       // this method (since it is heavily used)
+       HashSet<H2ONode> nodes = (HashSet<H2ONode>)H2O.STATIC_H2OS.clone();
+       nodes.addAll(Paxos.PROPOSED.values());
+       bb.mark();
+       for( H2ONode h2o : nodes ) {
+         bb.reset();
+         try {
+           H2O.CLOUD_DGRAM.send(bb, h2o._key);
+         } catch( IOException e ) {
+           Log.err("Multicast Error to "+h2o, e);
+         }
+       }
+     }
+   }
+ 
+ 
+   /**
+    * Read a set of Nodes from a file. Format is:
+    *
+    * name/ip_address:port
+    * - name is unused and optional
+    * - port is optional
+    * - leading '#' indicates a comment
+    *
+    * For example:
+    *
+    * 10.10.65.105:54322
+    * # disabled for testing
+    * # 10.10.65.106
+    * /10.10.65.107
+    * # run two nodes on 108
+    * 10.10.65.108:54322
+    * 10.10.65.108:54325
+    */
+   private static HashSet<H2ONode> parseFlatFile( String fname ) {
+     if( fname == null ) return null;
+     File f = new File(fname);
+     if( !f.exists() ) return null; // No flat file
+     HashSet<H2ONode> h2os = new HashSet<H2ONode>();
+     List<FlatFileEntry> list = parseFlatFile(f);
+     for(FlatFileEntry entry : list)
+       h2os.add(H2ONode.intern(entry.inet, entry.port+1));// use the UDP port here
+     return h2os;
+   }
+   public static class FlatFileEntry {
+     public InetAddress inet;
+     public int port;
+   }
+   public static List<FlatFileEntry> parseFlatFile( File f ) {
+     List<FlatFileEntry> list = new ArrayList<FlatFileEntry>();
+     BufferedReader br = null;
+     int port = DEFAULT_PORT;
+     try {
+       br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+       String strLine = null;
+       while( (strLine = br.readLine()) != null) {
+         strLine = strLine.trim();
+         // be user friendly and skip comments and empty lines
+         if (strLine.startsWith("#") || strLine.isEmpty()) continue;
+ 
+         String ip = null, portStr = null;
+         int slashIdx = strLine.indexOf('/');
+         int colonIdx = strLine.indexOf(':');
+         if( slashIdx == -1 && colonIdx == -1 ) {
+           ip = strLine;
+         } else if( slashIdx == -1 ) {
+           ip = strLine.substring(0, colonIdx);
+           portStr = strLine.substring(colonIdx+1);
+         } else if( colonIdx == -1 ) {
+           ip = strLine.substring(slashIdx+1);
+         } else if( slashIdx > colonIdx ) {
+           Log.die("Invalid format, must be name/ip[:port], not '"+strLine+"'");
+         } else {
+           ip = strLine.substring(slashIdx+1, colonIdx);
+           portStr = strLine.substring(colonIdx+1);
+         }
+ 
+         InetAddress inet = InetAddress.getByName(ip);
+         if( !(inet instanceof Inet4Address) )
+           Log.die("Only IP4 addresses allowed: given " + ip);
+         if( portStr!=null && !portStr.equals("") ) {
+           try {
+             port = Integer.decode(portStr);
+           } catch( NumberFormatException nfe ) {
+             Log.die("Invalid port #: "+portStr);
+           }
+         }
+         FlatFileEntry entry = new FlatFileEntry();
+         entry.inet = inet;
+         entry.port = port;
+         list.add(entry);
+       }
+     } catch( Exception e ) { Log.die(e.toString()); }
+     finally { Closeables.closeQuietly(br); }
+     return list;
+   }
+ 
+   static void initializePersistence() {
+     HdfsLoader.loadJars();
+     if( OPT_ARGS.aws_credentials != null ) {
+       try {
+         PersistS3.getClient();
+       } catch( IllegalArgumentException e ) { Log.err(e); }
+     }
+     Persist.initialize();
+   }
+ 
+ 
+   // Cleaner ---------------------------------------------------------------
+ 
+   // msec time at which the STORE was dirtied.
+   // Long.MAX_VALUE if clean.
+   static private volatile long _dirty; // When was store dirtied
+ 
+   static void dirty_store() { dirty_store(System.currentTimeMillis()); }
+   static void dirty_store( long x ) {
+     // Keep earliest dirty time seen
+     if( x < _dirty ) _dirty = x;
+   }
+ 
+   // Periodically write user keys to disk
+   public static class Cleaner extends Thread {
+     // Desired cache level. Set by the MemoryManager asynchronously.
+     static public volatile long DESIRED;
+     // Histogram used by the Cleaner
+     private final Histo _myHisto;
+ 
+     boolean _diskFull = false;
+ 
+     public Cleaner() {
+       super("MemCleaner");
+       setDaemon(true);
+       setPriority(MAX_PRIORITY-2);
+       _dirty = Long.MAX_VALUE;  // Set to clean-store
+       _myHisto = new Histo();   // Build/allocate a first histogram
+       _myHisto.compute(0);      // Compute lousy histogram; find eldest
+       H = _myHisto;             // Force to be the most recent
+       _myHisto.histo(true);     // Force a recompute with a good eldest
+       MemoryManager.set_goals("init",false);
+     }
+ 
+     static boolean lazyPersist(){ // free disk > our DRAM?
+       return H2O.SELF._heartbeat.get_free_disk() > MemoryManager.MEM_MAX;
+     }
+     static boolean isDiskFull(){ // free disk space < 5K?
+       long space = Persist.getIce().getUsableSpace();
+       return space != Persist.UNKNOWN && space < (5 << 10);
+     }
+ 
+     public void run() {
+       boolean diskFull = false;
+       while (true) {
+         // Sweep the K/V store, writing out Values (cleaning) and free'ing
+         // - Clean all "old" values (lazily, optimistically)
+         // - Clean and free old values if above the desired cache level
+         // Do not let optimistic cleaning get in the way of emergency cleaning.
+ 
+         // Get a recent histogram, computing one as needed
+         Histo h = _myHisto.histo(false);
+         long now = System.currentTimeMillis();
+         long dirty = _dirty; // When things first got dirtied
+ 
+         // Start cleaning if: "dirty" was set a "long" time ago, or we beyond
+         // the desired cache levels. Inverse: go back to sleep if the cache
+         // is below desired levels & nothing has been dirty awhile.
+         if( h._cached < DESIRED && // Cache is low and
+             (now-dirty < 5000) ) { // not dirty a long time
+           // Block asleep, waking every 5 secs to check for stuff, or when poked
+           Boot.block_store_cleaner();
+           continue; // Awoke; loop back and re-check histogram.
+         }
+ 
+         now = System.currentTimeMillis();
+         _dirty = Long.MAX_VALUE; // Reset, since we are going write stuff out
+         MemoryManager.set_goals("preclean",false);
+ 
+         // The age beyond which we need to toss out things to hit the desired
+         // caching levels. If forced, be exact (toss out the minimal amount).
+         // If lazy, store-to-disk things down to 1/2 the desired cache level
+         // and anything older than 5 secs.
+         boolean force = (h._cached >= DESIRED); // Forced to clean
+         if(force && diskFull)
+           diskFull = isDiskFull();
+         long clean_to_age = h.clean_to(force ? DESIRED : (DESIRED>>1));
+         // If not forced cleaning, expand the cleaning age to allows Values
+         // more than 5sec old
+         if( !force ) clean_to_age = Math.max(clean_to_age,now-5000);
+ 
+         // No logging in the MemManager under memory pressure.  :-(
+         // No logging if under memory pressure: can deadlock the cleaner thread
+         if( Log.flag(Sys.CLEAN) ) {
+           String s = h+" DESIRED="+(DESIRED>>20)+"M dirtysince="+(now-dirty)+" force="+force+" clean2age="+(now-clean_to_age);
+           if( MemoryManager.canAlloc() ) Log.debug(Sys.CLEAN ,s);
+           else                           Log.unwrap(System.err,s);
+         }
+         long cleaned = 0;
+         long freed = 0;
+ 
+         // For faster K/V store walking get the NBHM raw backing array,
+         // and walk it directly.
+         Object[] kvs = STORE.raw_array();
+ 
+         // Start the walk at slot 2, because slots 0,1 hold meta-data
+         for( int i=2; i<kvs.length; i += 2 ) {
+           // In the raw backing array, Keys and Values alternate in slots
+           Object ok = kvs[i+0], ov = kvs[i+1];
+           if( !(ok instanceof Key  ) ) continue; // Ignore tombstones and Primes and null's
+           Key key = (Key )ok;
+           if( !(ov instanceof Value) ) continue; // Ignore tombstones and Primes and null's
+           Value val = (Value)ov;
+           byte[] m = val.rawMem();
+           Object p = val.rawPOJO();
+           if( m == null && p == null ) continue; // Nothing to throw out
+ 
+           // ValueArrays covering large files in global filesystems such as NFS
+           // or HDFS are only made on import (right now), and not reconstructed
+           // by inspection of the Key or filesystem.... so we cannot toss them
+           // out because they will not be reconstructed merely by loading the Value.
+           if( val.isArray() &&
+               (val._persist & Value.BACKEND_MASK)!=Value.ICE ) {
+             // But can toss out a byte-array if already deserialized
+             // (no need for both forms).
+             if( m != null && p != null ) { val.freeMem(); freed += val._max; }
+             continue; // Cannot throw out
+           }
+ 
+           // Ignore things younger than the required age.  In particular, do
+           // not spill-to-disk all dirty things we find.
+           long touched = val._lastAccessedTime;
+           if( touched > clean_to_age ) {
+             // But can toss out a byte-array if already deserialized & on disk
+             // (no need for both forms).
+             if( val.isPersisted() &&
+                 m != null && p != null ) { val.freeMem(); freed += val._max; }
+             dirty_store(touched); // But may write it out later
+             continue;
+           }
+ 
+           // Should I write this value out to disk?
+           // Should I further force it from memory?
+           if(!val.isPersisted() && !diskFull && (force || (lazyPersist() && lazy_clean(key)))) {
+             try {
+               val.storePersist(); // Write to disk
+               if( m == null ) m = val.rawMem();
+               if( m != null ) cleaned += m.length;
+             } catch(IOException e) {
+               if( isDiskFull() )
+                 Log.warn(Sys.CLEAN,"Disk full! Disabling swapping to disk." + (force?" Memory low! Please free some space in " + Persist.getIce().getPath() + "!":""));
+               else
+                 Log.warn(Sys.CLEAN,"Disk swapping failed! " + e.getMessage());
+               // Something is wrong so mark disk as full anyways so we do not
+               // attempt to write again.  (will retry next run when memory is low)
+               diskFull = true;
+             }
+           }
+           // And, under pressure, free all
+           if( force && val.isPersisted() ) {
+             val.freeMem ();  if( m != null ) freed += val._max;  m = null;
+             val.freePOJO();  if( p != null ) freed += val._max;  p = null;
+           }
+           // If we have both forms, toss the byte[] form - can be had by
+           // serializing again.
+           if( m != null && p != null ) {
+             val.freeMem();
+             freed += val._max;
+           }
+         }
+ 
+         h = _myHisto.histo(true); // Force a new histogram
+         MemoryManager.set_goals("postclean",false);
+         // No logging if under memory pressure: can deadlock the cleaner thread
+         if( Log.flag(Sys.CLEAN) ) {
+           String s = h+" cleaned="+(cleaned>>20)+"M, freed="+(freed>>20)+"M, DESIRED="+(DESIRED>>20)+"M";
+           if( MemoryManager.canAlloc() ) Log.debug(Sys.CLEAN ,s);
+           else                           Log.unwrap(System.err,s);
+         }
+       }
+     }
+ 
+     // Rules on when to write & free a Key, when not under memory pressure.
+     boolean lazy_clean( Key key ) {
+       // Only arraylets are worth tossing out even lazily.
+       if( key._kb[0] != Key.ARRAYLET_CHUNK ) // Not arraylet?
+         return false; // Not enough savings to write it with mem-pressure to force us
+       // If this is a chunk of a system-defined array, then assume it has
+       // short lifetime, and we do not want to spin the disk writing it
+       // unless we're under memory pressure.
+       Key arykey = ValueArray.getArrayKey(key);
+       return arykey.user_allowed(); // Write user keys but not system keys
+     }
+ 
+     // Current best histogram
+     static private volatile Histo H;
+ 
+     // Histogram class
+     public static class Histo {
+       final long[] _hs = new long[128];
+       long _oldest; // Time of the oldest K/V discovered this pass
+       long _eldest; // Time of the eldest K/V found in some prior pass
+       long _hStep; // Histogram step: (now-eldest)/histogram.length
+       long _cached; // Total alive data in the histogram
+       long _when; // When was this histogram computed
+       Value _vold; // For assertions: record the oldest Value
+       boolean _clean; // Was "clean" K/V when built?
+ 
+       // Return the current best histogram
+       static Histo best_histo() { return H; }
+ 
+       // Return the current best histogram, recomputing in-place if it is
+       // getting stale. Synchronized so the same histogram can be called into
+       // here and will be only computed into one-at-a-time.
+       synchronized Histo histo( boolean force ) {
+         final Histo h = H; // Grab current best histogram
+         if( !force && System.currentTimeMillis() < h._when+100 )
+           return h; // It is recent; use it
+         if( h._clean && _dirty==Long.MAX_VALUE )
+           return h; // No change to the K/V store, so no point
+         compute(h._oldest); // Use last oldest value for computing the next histogram in-place
+         return (H = this);      // Record current best histogram & return it
+       }
+ 
+       // Compute a histogram
+       public void compute( long eldest ) {
+         Arrays.fill(_hs, 0);
+         _when = System.currentTimeMillis();
+         _eldest = eldest; // Eldest seen in some prior pass
+         _hStep = Math.max(1,(_when-eldest)/_hs.length);
+         boolean clean = _dirty==Long.MAX_VALUE;
+         // Compute the hard way
+         Object[] kvs = STORE.raw_array();
+         long cached = 0; // Total K/V cached in ram
+         long oldest = Long.MAX_VALUE; // K/V with the longest time since being touched
+         Value vold = null;
+         // Start the walk at slot 2, because slots 0,1 hold meta-data
+         for( int i=2; i<kvs.length; i += 2 ) {
+           // In the raw backing array, Keys and Values alternate in slots
+           Object ok = kvs[i+0], ov = kvs[i+1];
+           if( !(ok instanceof Key  ) ) continue; // Ignore tombstones and Primes and null's
+           if( !(ov instanceof Value) ) continue; // Ignore tombstones and Primes and null's
+           Value val = (Value)ov;
+           int len = 0;
+           if( val.rawMem () != null ) len += val._max;
+           if( val.rawPOJO() != null ) len += val._max;
+           if( len == 0 ) continue;
+           cached += len; // Accumulate total amount of cached keys
+ 
+           if( val.isArray() &&
+               (val._persist & Value.BACKEND_MASK)!=Value.ICE )
+             continue; // Cannot throw out (so not in histogram buckets)
+ 
+           if( val._lastAccessedTime < oldest ) { // Found an older Value?
+             vold = val; // Record oldest Value seen
+             oldest = val._lastAccessedTime;
+           }
+           // Compute histogram bucket
+           int idx = (int)((val._lastAccessedTime - eldest)/_hStep);
+           if( idx < 0 ) idx = 0;
+           else if( idx >= _hs.length ) idx = _hs.length-1;
+           _hs[idx] += len;      // Bump histogram bucket
+         }
+         _cached = cached; // Total cached; NOTE: larger than sum of histogram buckets
+         _oldest = oldest; // Oldest seen in this pass
+         _vold = vold;
+         _clean = clean && _dirty==Long.MAX_VALUE; // Looks like a clean K/V the whole time?
+       }
+ 
+       // Compute the time (in msec) for which we need to throw out things
+       // to throw out enough things to hit the desired cached memory level.
+       long clean_to( long desired ) {
+         if( _cached < desired ) return Long.MAX_VALUE; // Already there; nothing to remove
+         long age = _eldest; // Age of bucket zero
+         long s = 0; // Total amount toss out
+         for( long t : _hs ) { // For all buckets...
+           s += t; // Raise amount tossed out
+           age += _hStep; // Raise age beyond which you need to go
+           if( _cached - s < desired ) break;
+         }
+         return age;
+       }
+ 
+       // Pretty print
+       public String toString() {
+         long x = _eldest;
+         long now = System.currentTimeMillis();
+         return "H("+(_cached>>20)+"M, "+x+"ms < +"+(_oldest-x)+"ms <...{"+_hStep+"ms}...< +"+(_hStep*128)+"ms < +"+(now-x)+")";
+       }
+     }
+   }
+ 
+   // API IP Port Watchdog ---------------------------------------------------------------
+ 
+   // Monitor API IP:Port for availability.
+   //
+   // This thread is only a watchdog.  You can comment this thread out
+   // so it does not run without affecting any service functionality.
+   public static class ApiIpPortWatchdogThread extends Thread {
+     final private String threadName = "ApiPortWatchdog";
+ 
+     private volatile boolean gracefulShutdownInitiated;         // Thread-safe.
+ 
+     // Failure-tracking.
+     private int consecutiveFailures;
+     private long failureStartTimestampMillis;
+ 
+     // Timing things that can be tuned if needed.
+     final private int maxFailureSeconds = 180;
+     final private int maxConsecutiveFailures = 6;
+     final private int checkIntervalSeconds = 10;
+     final private int timeoutSeconds = 30;
+     final private int millisPerSecond = 1000;
+     final private int timeoutMillis = timeoutSeconds * millisPerSecond;
+     final private int sleepMillis = checkIntervalSeconds * millisPerSecond;
+ 
+     // Constructor.
+     public ApiIpPortWatchdogThread() {
+       super("ApiWatch");        // Only 9 characters get printed in the log.
+       setDaemon(true);
+       setPriority(MAX_PRIORITY-2);
+       reset();
+       gracefulShutdownInitiated = false;
+     }
+ 
+     // Exit this watchdog thread.
+     public void shutdown() {
+       Log.debug (threadName + ": Graceful shutdown requested");
+       gracefulShutdownInitiated = true;
+     }
+ 
+     // Sleep method.
+     private void mySleep(int millis) {
+       try {
+         Thread.sleep (sleepMillis);
+       }
+       catch (Exception _)
+         {}
+     }
+ 
+     // Print some help for the user if a failure occurs.
+     private void printPossibleCauses() {
+       Log.info(threadName + ": A possible cause is DHCP (e.g. changing WiFi networks)");
+       Log.info(threadName + ": A possible cause is your laptop going to sleep (if running on a laptop)");
+       Log.info(threadName + ": A possible cause is the network interface going down");
+       Log.info(threadName + ": A possible cause is this host being overloaded");
+     }
+ 
+     // Reset the failure counting when a successful check() occurs.
+     private void reset() {
+       consecutiveFailures = 0;
+       failureStartTimestampMillis = 0;
+     }
+ 
+     // Count the impact of one failure.
+     private void failed() {
+       printPossibleCauses();
+       if (consecutiveFailures == 0) {
+         failureStartTimestampMillis = System.currentTimeMillis();
+       }
+       consecutiveFailures++;
+     }
+ 
+     // Check if enough failures have occurred or time has passed to
+     // shut down this node.
+     private void testForFailureShutdown() {
+       if (consecutiveFailures >= maxConsecutiveFailures) {
+         Log.err(threadName + ": Too many failures (>= " + maxConsecutiveFailures + "), H2O node shutting down");
+         System.exit(1);
+       }
+ 
+       if (consecutiveFailures > 0) {
+         final long now = System.currentTimeMillis();
+         final long deltaMillis = now - failureStartTimestampMillis;
+         final long thresholdMillis = (maxFailureSeconds * millisPerSecond);
+         if (deltaMillis > thresholdMillis) {
+           Log.err(threadName + ": Failure time threshold exceeded (>= " +
+                   thresholdMillis +
+                   " ms), H2O node shutting down");
+           System.exit(1);
+         }
+       }
+     }
+ 
+     // Do the watchdog check.
+     private void check() {
+       final Socket s = new Socket();
+       final InetSocketAddress apiIpPort = new InetSocketAddress(H2O.SELF_ADDRESS, H2O.API_PORT);
+ 
+       try {
+         s.connect (apiIpPort, timeoutMillis);
+         reset();
+       }
+       catch (SocketTimeoutException e) {
+         if (gracefulShutdownInitiated) { return; }
+         Log.err(threadName + ": Timed out trying to connect to REST API IP and Port (" +
+                 H2O.SELF_ADDRESS + ":" + H2O.API_PORT + ", " + timeoutMillis + " ms)");
+         failed();
+       }
+       catch (IOException e) {
+         if (gracefulShutdownInitiated) { return; }
+         Log.err(threadName + ": Failed to connect to REST API IP and Port (" +
+                 H2O.SELF_ADDRESS + ":" + H2O.API_PORT + ")");
+         Log.err(threadName + ": " + e.getMessage());
+         failed();
+       }
+       catch (Exception e) {
+         if (gracefulShutdownInitiated) { return; }
+         Log.err(threadName + ": Failed unexpectedly trying to connect to REST API IP and Port (" +
+                 H2O.SELF_ADDRESS + ":" + H2O.API_PORT + ")",
+                 e);
+         failed();
+       }
+       finally {
+         if (gracefulShutdownInitiated) { return; }
+         testForFailureShutdown();
+         try { s.close(); } catch (Exception _) {}
+       }
+     }
+ 
+     // Class main thread.
+     public void run() {
+       Log.debug (threadName + ": Thread run() started");
+       reset();
+ 
+       while (true) {
+         mySleep (sleepMillis);
+         check();
+         if (gracefulShutdownInitiated) {
+           break;
+         }
+       }
+ 
+       Log.debug (threadName + ": Thread run() exited");
+     }
+   }
+ }

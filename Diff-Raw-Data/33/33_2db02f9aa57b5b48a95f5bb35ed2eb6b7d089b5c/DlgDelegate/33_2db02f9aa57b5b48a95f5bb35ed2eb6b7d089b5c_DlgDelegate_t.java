@@ -1,0 +1,456 @@
+ /* -*- compile-command: "cd ../../../../../; ant debug install"; -*- */
+ /*
+  * Copyright 2009 - 2012 by Eric House (xwords@eehouse.org).  All
+  * rights reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+  * published by the Free Software Foundation; either version 2 of the
+  * License, or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful, but
+  * WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  */
+ 
+ package org.eehouse.android.xw4;
+ 
+ import android.app.Activity;
+ import android.app.AlertDialog;
+ import android.app.Dialog;
+ import android.app.ProgressDialog;
+ import android.content.DialogInterface;
+ import android.content.Intent;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.view.View;
+ import android.widget.TextView;
+ import android.widget.Toast;
+ 
+ import junit.framework.Assert;
+ 
+ import org.eehouse.android.xw4.jni.CommonPrefs;
+ 
+ 
+ public class DlgDelegate {
+ 
+     public static final int DIALOG_ABOUT = 1;
+     public static final int DIALOG_OKONLY = 2;
+     public static final int DIALOG_NOTAGAIN = 3;
+     public static final int CONFIRM_THEN = 4;
+     public static final int TEXT_OR_HTML_THEN = 5;
+     public static final int DLG_DICTGONE = 6;
+     public static final int DIALOG_LAST = DLG_DICTGONE;
+ 
+     public static final int SMS_BTN = AlertDialog.BUTTON_POSITIVE;
+     public static final int EMAIL_BTN = AlertDialog.BUTTON_NEGATIVE;
+     public static final int DISMISS_BUTTON = 0;
+     public static final int SKIP_CALLBACK = -1;
+ 
+     private static final String MSG = "msg";
+     private static final String CALLBACK = "callback";
+     private static final String PREFSKEY = "prefskey";
+     private static final String POSBUTTON = "posbutton";
+     private static final String WORDS = "words";
+     private static final String LANG = "lang";
+     private static final String FORCELIST = "forcelist";
+ 
+     // Cache a couple of callback implementations that never change:
+     private DialogInterface.OnClickListener m_cbkOnClickLstnr = null;
+     private DialogInterface.OnDismissListener m_cbkOnDismissLstnr = null;
+ 
+     public interface DlgClickNotify {
+         void dlgButtonClicked( int id, int button );
+     }
+ 
+     private int m_posButton;
+     private int m_cbckID = 0;   // if this can be set twice I have a
+                                 // problem.  See asserts below.
+     private String m_msg;
+     private int m_prefsKey;
+     private Activity m_activity;
+     private DlgClickNotify m_clickCallback;
+     private String m_dictName = null;
+     private ProgressDialog m_progress;
+     private Handler m_handler;
+ 
+     public DlgDelegate( Activity activity, DlgClickNotify callback,
+                         Bundle bundle ) 
+     {
+         m_activity = activity;
+         m_clickCallback = callback;
+         m_handler = new Handler();
+ 
+         if ( null != bundle ) {
+             m_msg = bundle.getString( MSG );
+             m_cbckID = bundle.getInt( CALLBACK );
+             m_posButton = bundle.getInt( POSBUTTON );
+             m_prefsKey = bundle.getInt( PREFSKEY );
+         }
+     }
+ 
+     public void onSaveInstanceState( Bundle outState ) 
+     {
+         outState.putString( MSG, m_msg );
+         outState.putInt( CALLBACK, m_cbckID );
+         outState.putInt( POSBUTTON, m_posButton );
+         outState.putInt( PREFSKEY, m_prefsKey );
+     }
+     
+     public Dialog onCreateDialog( int id )
+     {
+         Dialog dialog = null;
+         switch( id ) {
+         case DIALOG_ABOUT:
+             dialog = createAboutDialog();
+             break;
+         case DIALOG_OKONLY:
+             dialog = createOKDialog();
+             break;
+         case DIALOG_NOTAGAIN:
+             dialog = createNotAgainDialog();
+             break;
+         case CONFIRM_THEN:
+             dialog = createConfirmThenDialog();
+             break;
+         case TEXT_OR_HTML_THEN:
+             dialog = createHtmlThenDialog();
+             break;
+         case DLG_DICTGONE:
+             dialog = createDictGoneDialog();
+             break;
+         }
+         return dialog;
+     }
+ 
+     public void onPrepareDialog( int id, Dialog dialog )
+     {
+         AlertDialog ad = (AlertDialog)dialog;
+         DialogInterface.OnClickListener lstnr;
+ 
+         switch( id ) {
+         case DIALOG_ABOUT:
+             break;
+         case DIALOG_NOTAGAIN:
+             // Don't think onclick listeners need to be reset.  They
+             // reference instance vars that are changed each time
+             // showNotAgainDlgThen() is called
+             // FALLTHRU
+         case DIALOG_OKONLY:
+             ad.setMessage( m_msg );
+             break;
+         case CONFIRM_THEN:
+             ad.getButton(AlertDialog.BUTTON_POSITIVE).
+                 setText( m_activity.getString( m_posButton ) );
+             ad.setMessage( m_msg );
+             break;
+         }
+     }
+ 
+     public void showOKOnlyDialog( String msg, int callbackID )
+     {
+         m_msg = msg;
+         if ( 0 != callbackID ) {
+             Assert.assertTrue( 0 == m_cbckID );
+             m_cbckID = callbackID;
+         }
+         m_activity.showDialog( DIALOG_OKONLY );
+     }
+ 
+     public void showOKOnlyDialog( int msgID )
+     {
+         showOKOnlyDialog( m_activity.getString( msgID ), 0 );
+     }
+ 
+     public void showDictGoneFinish()
+     {
+         m_activity.showDialog( DLG_DICTGONE );
+     }
+ 
+     public void showAboutDialog()
+     {
+         m_activity.showDialog( DIALOG_ABOUT );
+     }
+ 
+     public void showNotAgainDlgThen( int msgID, int prefsKey,
+                                      int callbackID )
+     {
+         boolean set = CommonPrefs.getPrefsBoolean( m_activity, prefsKey, false );
+         if ( set || 0 != m_cbckID ) {
+             // If it's set, do the action without bothering with the
+             // dialog
+             if ( SKIP_CALLBACK != callbackID ) {
+                 m_clickCallback.dlgButtonClicked( callbackID, 
+                                                   AlertDialog.BUTTON_POSITIVE );
+             }
+         } else {
+             m_msg = m_activity.getString( msgID );
+             Assert.assertTrue( 0 != callbackID );
+             Assert.assertTrue( 0 == m_cbckID ); // fired
+             m_cbckID = callbackID;
+             m_prefsKey = prefsKey;
+             m_activity.showDialog( DIALOG_NOTAGAIN );
+         }
+     }
+ 
+     public void showNotAgainDlgThen( int msgID, int prefsKey )
+     {
+         showNotAgainDlgThen( msgID, prefsKey, SKIP_CALLBACK );
+     }
+ 
+     public void showConfirmThen( String msg, int callbackID )
+     {
+         showConfirmThen( msg, R.string.button_ok, callbackID );
+     }
+ 
+     public void showConfirmThen( String msg, int posButton, int callbackID )
+     {
+         m_msg = msg;
+         m_posButton = posButton;
+         Assert.assertTrue( 0 != callbackID );
+         Assert.assertTrue( 0 == m_cbckID );
+         m_cbckID = callbackID;
+         m_activity.showDialog( CONFIRM_THEN );
+     }
+ 
+     public void showEmailOrSMSThen( int callbackID )
+     {
+         Assert.assertTrue( 0 != callbackID );
+         Assert.assertTrue( 0 == m_cbckID );
+         m_cbckID = callbackID;
+         m_activity.showDialog( TEXT_OR_HTML_THEN );
+     }
+ 
+     public void doSyncMenuitem()
+     {
+         if ( null == DBUtils.getRelayIDs( m_activity, false ) ) {
+             showOKOnlyDialog( R.string.no_games_to_refresh );
+         } else {
+             RelayReceiver.RestartTimer( m_activity, true );
+             Toast.makeText( m_activity, 
+                             m_activity.getString( R.string.msgs_progress ),
+                             Toast.LENGTH_LONG ).show();
+         }
+     }
+ 
+     public void launchLookup( String[] words, int lang, boolean forceList )
+     {
+         Intent intent = new Intent( m_activity, LookupActivity.class );
+         intent.putExtra( LookupActivity.WORDS, words );
+         intent.putExtra( LookupActivity.LANG, lang );
+ 
+         m_activity.startActivity( intent );
+     }
+ 
+     public void startProgress( int id )
+     {
+         String msg = m_activity.getString( id );
+         m_progress = ProgressDialog.show( m_activity, msg, null, true, true );
+     }
+ 
+     public void stopProgress()
+     {
+         if ( null != m_progress ) {
+             m_progress.cancel();
+             m_progress = null;
+         }
+     }
+ 
+     public boolean post( Runnable runnable )
+     {
+         m_handler.post( runnable );
+         return true;
+     }
+ 
+     public void eventOccurred( MultiService.MultiEvent event, final Object ... args )
+     {
+         String msg = null;
+         boolean asToast = true;
+         switch( event ) {
+         case BAD_PROTO:
+             msg = Utils.format( m_activity, R.string.bt_bad_protof,
+                                        (String)args[0] );
+             break;
+         case MESSAGE_RESEND:
+             msg = Utils.format( m_activity, R.string.bt_resendf,
+                                 (String)args[0], (Long)args[1], (Integer)args[2] );
+             break;
+         case MESSAGE_FAILOUT:
+             msg = Utils.format( m_activity, R.string.bt_failf, 
+                                 (String)args[0] );
+             asToast = false;
+             break;
+         default:
+             DbgUtils.logf( "eventOccurred: unhandled event %s", event.toString() );
+         }
+ 
+         if ( null != msg ) {
+             final String fmsg = msg;
+             final boolean asDlg = !asToast;
+             post( new Runnable() {
+                     public void run() {
+                         if ( asDlg ) {
+                             showOKOnlyDialog( fmsg, 0 );
+                         } else {
+                             DbgUtils.showf( m_activity, fmsg );
+                         }
+                     }
+                 } );
+         }
+     }
+ 
+     private Dialog createAboutDialog()
+     {
+         final View view = Utils.inflate( m_activity, R.layout.about_dlg );
+         TextView vers = (TextView)view.findViewById( R.id.version_string );
+         vers.setText( String.format( m_activity.getString(R.string.about_versf), 
+                                      m_activity.getString(R.string.app_version),
+                                      GitVersion.VERS ) );
+ 
+         TextView xlator = (TextView)view.findViewById( R.id.about_xlator );
+         String str = m_activity.getString( R.string.xlator );
+         if ( str.length() > 0 ) {
+             xlator.setText( str );
+         } else {
+             xlator.setVisibility( View.GONE );
+         }
+ 
+         return new AlertDialog.Builder( m_activity )
+             .setIcon( R.drawable.icon48x48 )
+             .setTitle( R.string.app_name )
+             .setView( view )
+             .setPositiveButton( R.string.changes_button,
+                                 new DialogInterface.OnClickListener() {
+                                     @Override
+                                     public void onClick( DialogInterface dlg, 
+                                                          int which )
+                                     {
+                                         FirstRunDialog.show( m_activity );
+                                     }
+                                 } )
+             .create();
+     }
+ 
+     private Dialog createOKDialog()
+     {
+         Dialog dialog = new AlertDialog.Builder( m_activity )
+             .setTitle( R.string.info_title )
+             .setMessage( m_msg )
+             .setPositiveButton( R.string.button_ok, null )
+             .create();
+         if ( 0 != m_cbckID ) {
+             dialog = setCallbackDismissListener( dialog );
+         }
+         return dialog;
+     }
+ 
+     private Dialog createNotAgainDialog()
+     {
+         DialogInterface.OnClickListener lstnr_p = mkCallbackClickListener();
+ 
+         DialogInterface.OnClickListener lstnr_n = 
+             new DialogInterface.OnClickListener() {
+                 public void onClick( DialogInterface dlg, int item ) {
+                     CommonPrefs.setPrefsBoolean( m_activity, m_prefsKey,
+                                                  true );
+                     if ( SKIP_CALLBACK != m_cbckID ) {
+                         m_clickCallback.
+                             dlgButtonClicked( m_cbckID, 
+                                               AlertDialog.BUTTON_POSITIVE );
+                     }
+                 }
+             };
+ 
+         Dialog dialog = new AlertDialog.Builder( m_activity )
+             .setTitle( R.string.newbie_title )
+             .setMessage( m_msg )
+             .setPositiveButton( R.string.button_ok, lstnr_p )
+             .setNegativeButton( R.string.button_notagain, lstnr_n )
+             .create();
+ 
+         return setCallbackDismissListener( dialog );
+     } // createNotAgainDialog
+ 
+     private Dialog createConfirmThenDialog()
+     {
+         DialogInterface.OnClickListener lstnr = mkCallbackClickListener();
+ 
+         Dialog dialog = new AlertDialog.Builder( m_activity )
+             .setTitle( R.string.query_title )
+             .setMessage( "" )
+             .setPositiveButton( R.string.button_ok, lstnr )
+             .setNegativeButton( R.string.button_cancel, lstnr )
+             .create();
+         
+         return setCallbackDismissListener( dialog );
+     }
+ 
+     private Dialog createHtmlThenDialog()
+     {
+         DialogInterface.OnClickListener lstnr = mkCallbackClickListener();
+         Dialog dialog = new AlertDialog.Builder( m_activity )
+             .setTitle( R.string.query_title )
+             .setMessage( R.string.sms_or_email )
+             .setPositiveButton( R.string.button_text, lstnr )
+             .setNegativeButton( R.string.button_html, lstnr )
+             .create();
+ 
+         return setCallbackDismissListener( dialog );
+     }
+ 
+     private Dialog createDictGoneDialog()
+     {
+         Dialog dialog = new AlertDialog.Builder( m_activity )
+             .setTitle( R.string.no_dict_title )
+             .setMessage( R.string.no_dict_finish )
+             .setPositiveButton( R.string.button_close_game, null )
+             .create();
+ 
+         dialog.setOnDismissListener( new DialogInterface.OnDismissListener() {
+                 public void onDismiss( DialogInterface di ) {
+                     m_activity.finish();
+                 }
+             } );
+ 
+         return dialog;
+     }
+ 
+     private DialogInterface.OnClickListener mkCallbackClickListener()
+     {
+         if ( null == m_cbkOnClickLstnr ) {
+             m_cbkOnClickLstnr = new DialogInterface.OnClickListener() {
+                     public void onClick( DialogInterface dlg, int button ) {
+                         if ( SKIP_CALLBACK != m_cbckID ) {
+                             m_clickCallback.dlgButtonClicked( m_cbckID, 
+                                                               button );
+                         }
+                     }
+                 };
+         }
+         return m_cbkOnClickLstnr;
+     }
+ 
+     private Dialog setCallbackDismissListener( Dialog dialog )
+     {
+         if ( null == m_cbkOnDismissLstnr ) {
+             m_cbkOnDismissLstnr = new DialogInterface.OnDismissListener() {
+                     public void onDismiss( DialogInterface di ) {
+                        int cbckID = m_cbckID;
+                        m_cbckID = 0;
+                        if ( SKIP_CALLBACK != cbckID ) {
+                            m_clickCallback.dlgButtonClicked( cbckID, 
+                                                               DISMISS_BUTTON );
+                         }
+                     }
+                 };
+         }
+         dialog.setOnDismissListener( m_cbkOnDismissLstnr );
+         return dialog;
+     }
+ 
+ }

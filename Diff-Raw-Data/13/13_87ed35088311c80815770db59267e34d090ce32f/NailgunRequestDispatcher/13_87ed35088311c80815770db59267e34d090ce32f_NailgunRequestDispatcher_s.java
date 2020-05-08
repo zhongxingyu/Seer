@@ -1,0 +1,71 @@
+ /**
+  * Helios, OpenSource Monitoring
+  * Brought to you by the Helios Development Group
+  *
+  * Copyright 2007, Helios Development Group and individual contributors
+  * as indicated by the @author tags. See the copyright.txt file in the
+  * distribution for a full listing of individual contributors.
+  *
+  * This is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation; either version 2.1 of
+  * the License, or (at your option) any later version.
+  *
+  * This software is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this software; if not, write to the Free
+  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  * 02110-1301 USA, or see the FSF site: http://www.fsf.org. 
+  *
+  */
+ package org.helios.nailgun.codecs;
+ 
+ import org.helios.nailgun.NailgunRequest;
+import org.helios.nailgun.handler.server.LocalRequestRelay;
+ import org.jboss.netty.channel.ChannelHandlerContext;
+ import org.jboss.netty.channel.MessageEvent;
+ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+ import org.jboss.netty.logging.InternalLogger;
+ import org.jboss.netty.logging.InternalLoggerFactory;
+ 
+ /**
+  * <p>Title: NailgunRequestDispatcher</p>
+  * <p>Description: The top channel handler in the netty pipeline that receives a fully decoded {@link NailgunRequest} 
+  * and executes the request against the determined target.</p> 
+  * <p>Targets for directing nailgun requests ae driven by registered handlers that are routed to according to:<ul>
+  * 	<li>The command name</li>
+  * 	<li>Optionally, on the arguments to the command</li>
+  * </ul>Futher filtering can be done by the handlers based on:<ul>
+  * 
+  * </ul>
+  * <p>Company: Helios Development Group LLC</p>
+  * @author Whitehead (nwhitehead AT heliosdev DOT org)
+  * <p><code>org.helios.nailgun.codecs.NailgunRequestDispatcher</code></p>
+  */
+ 
+ public class NailgunRequestDispatcher extends SimpleChannelUpstreamHandler {
+ 	/** The internal logger */
+ 	protected final InternalLogger log = InternalLoggerFactory.getInstance(getClass());
+ 
+ 	
+ 	/**
+ 	 * Processes a {@link NailgunRequest}.
+ 	 * The passed {@link MessageEvent} is assumed to contain the {@link NailgunRequest}. 
+ 	 * {@inheritDoc}
+ 	 * @see org.jboss.netty.channel.SimpleChannelUpstreamHandler#messageReceived(org.jboss.netty.channel.ChannelHandlerContext, org.jboss.netty.channel.MessageEvent)
+ 	 */
+ 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+ 		System.out.println("[" + Thread.currentThread().toString() + "] Processing NailgunRequest:\n" + e.getMessage());
+ 		Object message = e.getMessage();
+ 		if(message==null || !(message instanceof NailgunRequest)) {
+ 			log.warn("RequestDispatcher received invalid message [" + message + "]");
+ 		}
+ 		NailgunRequest request = (NailgunRequest)message;
+		long key = LocalRequestRelay.getInstance().put(request);
+ 	}
+ 	
+ }

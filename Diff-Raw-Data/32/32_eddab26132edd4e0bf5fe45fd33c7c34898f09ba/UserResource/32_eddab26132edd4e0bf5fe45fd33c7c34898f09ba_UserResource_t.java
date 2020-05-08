@@ -1,0 +1,74 @@
+ /**
+  * Copyright (c) 2009 Red Hat, Inc.
+  *
+  * This software is licensed to you under the GNU General Public License,
+  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+  * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+  * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+  * along with this software; if not, see
+  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+  *
+  * Red Hat trademarks are not licensed under GPLv2. No permission is
+  * granted to use or replicate Red Hat trademarks that are incorporated
+  * in this software or its documentation.
+  */
+ package org.fedoraproject.candlepin.resource;
+ 
+ import java.util.LinkedList;
+ import java.util.List;
+ 
+ import javax.ws.rs.GET;
+ import javax.ws.rs.Path;
+ import javax.ws.rs.PathParam;
+ import javax.ws.rs.Produces;
+ import javax.ws.rs.core.Context;
+ import javax.ws.rs.core.MediaType;
+ 
+ import org.fedoraproject.candlepin.auth.Principal;
+ import org.fedoraproject.candlepin.auth.Role;
+ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+ import org.fedoraproject.candlepin.model.Owner;
+ import org.fedoraproject.candlepin.model.User;
+ import org.fedoraproject.candlepin.service.UserServiceAdapter;
+ import org.xnap.commons.i18n.I18n;
+ 
+ import com.google.inject.Inject;
+ 
+ /**
+  * UserResource
+  */
+ @Path("/users")
+ public class UserResource {
+   
+     private UserServiceAdapter userService;
+     private I18n i18n;
+     
+     @Inject
+     public UserResource(UserServiceAdapter userService, I18n i18n) {
+         this.userService = userService;
+         this.i18n = i18n;
+     }
+     
+     @GET
+     @AllowRoles(roles = { Role.OWNER_ADMIN })
+     @Path("/{username}")
+     @Produces(MediaType.APPLICATION_JSON)
+     public User getUserInfo(@PathParam("username") String username) {        
+         return userService.findByLogin(username);
+     }
+ 
+     @GET
+     @AllowRoles(roles = { Role.SUPER_ADMIN, Role.OWNER_ADMIN }, verifyUser = "username")
+     @Path("/{username}/owners")
+     @Produces(MediaType.APPLICATION_JSON)
+     public List<Owner> listUsersOwners(@PathParam("username") String username,
+         @Context Principal principal) {
+ 
+         // TODO: update once multi-owner relationship is in place
+         User user = userService.findByLogin(username);
+         List<Owner> owners = new LinkedList<Owner>();
+         owners.add(user.getOwner());
+         return owners;
+     }
+ 
+ }

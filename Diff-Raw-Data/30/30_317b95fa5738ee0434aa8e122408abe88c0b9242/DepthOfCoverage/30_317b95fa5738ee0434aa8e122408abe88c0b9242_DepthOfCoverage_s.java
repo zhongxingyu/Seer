@@ -1,0 +1,42 @@
+ package org.broadinstitute.sting.gatk.walkers.annotator;
+ 
+ import org.broadinstitute.sting.gatk.contexts.AlignmentContext;
+ import org.broadinstitute.sting.gatk.contexts.ReferenceContext;
+ import org.broadinstitute.sting.gatk.refdata.RefMetaDataTracker;
+ import org.broadinstitute.sting.gatk.walkers.annotator.interfaces.AnnotatorCompatibleWalker;
+ import org.broadinstitute.sting.gatk.walkers.annotator.interfaces.InfoFieldAnnotation;
+ import org.broadinstitute.sting.gatk.walkers.annotator.interfaces.StandardAnnotation;
+ import org.broadinstitute.sting.utils.codecs.vcf.VCFConstants;
+ import org.broadinstitute.sting.utils.codecs.vcf.VCFHeaderLineType;
+ import org.broadinstitute.sting.utils.codecs.vcf.VCFInfoHeaderLine;
+ import org.broadinstitute.sting.utils.variantcontext.VariantContext;
+ 
+ import java.util.Arrays;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
+ /**
+  * Total (unfiltered) depth over all samples.
+  *
+ * Affected by downsampling (-dcov) though, so the max value one can obtain for N samples with -dcov D
+ * is N * D
+  */
+ public class DepthOfCoverage extends InfoFieldAnnotation implements StandardAnnotation {
+ 
+     public Map<String, Object> annotate(RefMetaDataTracker tracker, AnnotatorCompatibleWalker walker, ReferenceContext ref, Map<String, AlignmentContext> stratifiedContexts, VariantContext vc) {
+         if ( stratifiedContexts.size() == 0 )
+             return null;
+ 
+         int depth = 0;
+         for ( Map.Entry<String, AlignmentContext> sample : stratifiedContexts.entrySet() )
+             depth += sample.getValue().size();
+         Map<String, Object> map = new HashMap<String, Object>();
+         map.put(getKeyNames().get(0), String.format("%d", depth));
+         return map;
+     }
+ 
+     public List<String> getKeyNames() { return Arrays.asList(VCFConstants.DEPTH_KEY); }
+ 
+     public List<VCFInfoHeaderLine> getDescriptions() { return Arrays.asList(new VCFInfoHeaderLine(getKeyNames().get(0), 1, VCFHeaderLineType.Integer, "Filtered Depth")); }
+ }

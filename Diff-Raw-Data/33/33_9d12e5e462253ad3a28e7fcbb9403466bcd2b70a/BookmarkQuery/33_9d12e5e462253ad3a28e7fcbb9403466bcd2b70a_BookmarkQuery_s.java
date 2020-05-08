@@ -1,0 +1,111 @@
+ /*
+  * Copyright 2009-2010 Carsten Hufe devproof.org
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License")
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  * 
+  *   http://www.apache.org/licenses/LICENSE-2.0
+  *   
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations under the License.
+  */
+ package org.devproof.portal.module.bookmark.query;
+ 
+ import org.apache.commons.lang.StringUtils;
+ import org.apache.wicket.PageParameters;
+ import org.devproof.portal.core.app.PortalSession;
+ import org.devproof.portal.core.module.common.annotation.BeanJoin;
+ import org.devproof.portal.core.module.common.annotation.BeanQuery;
+ import org.devproof.portal.core.module.common.query.SearchQuery;
+ import org.devproof.portal.core.module.common.util.PortalUtil;
+ import org.devproof.portal.core.module.role.entity.RoleEntity;
+ import org.devproof.portal.core.module.tag.TagConstants;
+ 
+ /**
+  * @author Carsten Hufe
+  */
+ @BeanJoin("left join e.allRights ar left join e.tags t")
+ public class BookmarkQuery implements SearchQuery {
+ 	private static final long serialVersionUID = 1L;
+ 	private static final String SEARCH_PARAM = "search";
+ 	private static final String BROKEN_PARAM = "broken";
+ 	private static final String ID_PARAM = "id";
+ 	private Integer id;
+ 	private RoleEntity role;
+ 	private String tagname;
+ 	private String allTextFields;
+ 	private Boolean broken;
+ 
+ 	public BookmarkQuery() {
+ 		id = PortalUtil.getParameterAsInteger(ID_PARAM);
+ 		allTextFields = PortalUtil.getParameterAsString(SEARCH_PARAM);
+ 		tagname = PortalUtil.getParameterAsString(TagConstants.TAG_PARAM);
+ 		broken = PortalUtil.getParameterAsBoolean(BROKEN_PARAM);
+ 	}
+ 
+ 	@BeanQuery("e.id = ?")
+ 	public Integer getId() {
+ 		return id;
+ 	}
+ 
+ 	public void setId(Integer id) {
+ 		this.id = id;
+ 	}
+ 
+ 	@BeanQuery("ar in(select rt from RoleEntity r join r.rights rt where r = ? and rt.right like 'bookmark.view%')")
+ 	public RoleEntity getRole() {
+ 		if (role == null) {
+ 			PortalSession session = PortalSession.get();
+ 			if (!session.hasRight("bookmark.view")) {
+ 				role = session.getRole();
+ 			}
+ 		}
+ 		return role;
+ 	}
+ 
+ 	@BeanQuery("t.tagname = ?")
+ 	public String getTagname() {
+ 		return tagname;
+ 	}
+ 
+ 	public void setTagname(String tagname) {
+ 		this.tagname = tagname;
+ 	}
+ 
+ 	@BeanQuery("(e.title like '%'||?||'%' or e.description like '%'||?||'%')")
+ 	public String getAllTextFields() {
+ 		return allTextFields;
+ 	}
+ 
+ 	public void setAllTextFields(String allTextFields) {
+ 		this.allTextFields = allTextFields;
+ 	}
+ 
+ 	@BeanQuery("e.broken = ?")
+ 	public Boolean getBroken() {
+ 		return broken;
+ 	}
+ 
+ 	public void setBroken(Boolean broken) {
+ 		this.broken = broken;
+ 	}
+ 
+ 	@Override
+ 	public PageParameters getPageParameters() {
+ 		PageParameters params = new PageParameters();
+ 		if (StringUtils.isNotBlank(allTextFields)) {
+ 			params.put(SEARCH_PARAM, allTextFields);
+ 		}
+ 		if (StringUtils.isNotBlank(tagname)) {
+ 			params.put(TagConstants.TAG_PARAM, tagname);
+ 		}
+ 		if (broken != null) {
+ 			params.put(BROKEN_PARAM, broken);
+ 		}
+ 		return params;
+ 	}
+ }

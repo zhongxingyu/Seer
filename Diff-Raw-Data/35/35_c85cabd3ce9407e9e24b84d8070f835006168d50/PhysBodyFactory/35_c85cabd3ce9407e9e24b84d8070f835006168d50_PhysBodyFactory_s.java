@@ -1,0 +1,77 @@
+ package com.dat255_group3.utils;
+ 
+ 
+ import com.badlogic.gdx.math.Vector2;
+ import com.badlogic.gdx.physics.box2d.Body;
+ import com.badlogic.gdx.physics.box2d.BodyDef;
+ import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+ import com.badlogic.gdx.physics.box2d.FixtureDef;
+ import com.badlogic.gdx.physics.box2d.PolygonShape;
+ import com.badlogic.gdx.physics.box2d.World;
+ /**
+  * A class containing methods to create physical bodies in an physics-world
+  * @author Group 3
+  *
+  */
+ public class PhysBodyFactory {
+ 
+ 	/**
+ 	 * Creates a body for a movable character in the physical world. 
+ 	 * @param physWorld , The physical world in which the character should exist and be created
+ 	 * @param pos , the center position of the character body (pixels)
+	 * @param size , with and height the body (meter)
+ 	 * @return The physical body of the character that exists in the physWorld with a set density, friction and restitution 
+ 	 */
+ 	public static Body createCharacter(World physWorld, Vector2 pos, Vector2 size) {
+ 		PolygonShape shape;
+ 		FixtureDef fixtureDef = new FixtureDef();
+ 		BodyDef bodyDef = new BodyDef();
+ 		Body body = null;
+ 
+ 
+ 		shape = new PolygonShape();
+ 		shape.setAsBox(size.x/2, size.y/2);
+ 
+ 		fixtureDef.shape = shape;
+ 		fixtureDef.density = 1f;
+ 		fixtureDef.friction = 0.5f;
+ 		fixtureDef.restitution = 0f;
+ 
+ 		bodyDef.type = BodyType.DynamicBody;
+ 		bodyDef.fixedRotation = true;
+		bodyDef.position.set(CoordinateConverter.pixelToMeter(pos));
+ 
+ 		body = physWorld.createBody(bodyDef);
+ 		body.createFixture(fixtureDef);
+ 
+ 		return body;
+ 	}
+ 	
+ 	/**
+ 	 * Creates a solid ground that is not affected by gravity or other forces
+ 	 * @param pos , the center position of the ground (pixels)
+	 * @param size , with and height of the ground (meter)
+ 	 * @param friction , the friction (0f-1f) of the ground surface
+ 	 * @param restitution , restitution of the ground surface
+ 	 * @param physWorld , the physical world in which the solid ground is created and exists
+ 	 * @return The body whit the physical properties sent in by the parameters
+ 	 */
+	public static Body addSolidGround(final Vector2 pos, final Vector2 size, final float friction, final float restitution, World physWorld) {
+ 		PolygonShape polygonShape = new PolygonShape();
+ 		polygonShape.setAsBox(size.x, size.y);
+ 		FixtureDef fixtureDef = new FixtureDef();
+ 		fixtureDef.shape = polygonShape;
+ 		fixtureDef.friction = friction;
+ 		fixtureDef.density = 1f;
+ 		fixtureDef.restitution = restitution;
+ 
+ 		BodyDef bodyDef = new BodyDef();
+		bodyDef.position.set(CoordinateConverter.pixelToMeter(pos));
+ 		bodyDef.type = BodyType.StaticBody;
+ 		bodyDef.fixedRotation = true;
+ 
+ 		Body body = physWorld.createBody(bodyDef);
+ 		body.createFixture(fixtureDef);
+ 		return body;
+ 	}
+ }

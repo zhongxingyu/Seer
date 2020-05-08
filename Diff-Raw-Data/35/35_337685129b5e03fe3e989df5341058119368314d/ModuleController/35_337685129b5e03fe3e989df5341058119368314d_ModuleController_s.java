@@ -1,0 +1,124 @@
+ package fi.pyramus.rest.controller;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Set;
+ 
+ import javax.ejb.Stateless;
+ import javax.enterprise.context.Dependent;
+ import javax.inject.Inject;
+ 
+ import fi.pyramus.dao.base.TagDAO;
+ import fi.pyramus.dao.courses.CourseDAO;
+ import fi.pyramus.dao.modules.ModuleDAO;
+ import fi.pyramus.dao.projects.ProjectModuleDAO;
+ import fi.pyramus.domainmodel.base.CourseBaseVariable;
+ import fi.pyramus.domainmodel.base.EducationalTimeUnit;
+ import fi.pyramus.domainmodel.base.Subject;
+ import fi.pyramus.domainmodel.base.Tag;
+ import fi.pyramus.domainmodel.courses.Course;
+ import fi.pyramus.domainmodel.modules.Module;
+ import fi.pyramus.domainmodel.modules.ModuleComponent;
+ import fi.pyramus.domainmodel.projects.Project;
+ import fi.pyramus.domainmodel.projects.ProjectModule;
+ import fi.pyramus.domainmodel.users.User;
+ 
+ @Dependent
+ @Stateless
+ public class ModuleController {
+   @Inject
+   private ModuleDAO moduleDAO;
+   @Inject
+   private ProjectModuleDAO projectModuleDAO;
+   @Inject
+   private TagDAO tagDAO;
+   @Inject
+   private CourseDAO courseDAO;
+ 
+   public Module createModule(String name, Subject subject, Integer courseNumber, Double moduleLength, EducationalTimeUnit moduleLengthTimeUnit,
+       String description, Long maxParticipantCount, User user) {
+     Module module = moduleDAO.create(name, subject, courseNumber, moduleLength, moduleLengthTimeUnit, description, maxParticipantCount, user);
+     return module;
+   }
+   
+   public Tag createModuleTag(Module module, String text) {
+     Tag tag = tagDAO.findByText(text);
+     if(tag == null) {
+       tag = tagDAO.create(text);
+     }
+     module.addTag(tag);
+     return tag;
+   }
+ 
+   public List<Module> findModules() {
+     List<Module> modules = moduleDAO.listAll();
+     return modules;
+   }
+ 
+   public List<Module> findUnarchivedModules() {
+     List<Module> modules = moduleDAO.listUnarchived();
+     return modules;
+   }
+ 
+   public Module findModuleById(Long id) {
+     Module module = moduleDAO.findById(id);
+     return module;
+   }
+   
+   public List<ModuleComponent> findComponents(Module module) {
+     List<ModuleComponent> components = module.getModuleComponents();
+     return components;
+   }
+   
+   public List<Course> findCourses(Module module) {
+    List<Course> courses = courseDAO.listAll();
+    List<Course> moduleCourses = new ArrayList<Course>();
+    for (Course course : courses) {
+      if (course.getModule().equals(module)) {
+        moduleCourses.add(course);
+      }
+    }
+     return courses;
+   }
+   
+   public List<Project> findProjects(Module module) {
+     List<Project> projects = new ArrayList<Project>();
+     List<ProjectModule> projectModules = projectModuleDAO.listAll();
+     for (ProjectModule projectModule : projectModules) {
+       if(projectModule.getModule().equals(module)) {
+         projects.add(projectModule.getProject());
+       }
+     }
+     return projects;
+   }
+   
+   public List<CourseBaseVariable> findVariables(Module module) {
+     List<CourseBaseVariable> variables = module.getVariables();
+     return variables;
+   }
+   
+   public Set<Tag> findModuleTags(Module module) {
+     Set<Tag> tags = module.getTags();
+     return tags;
+   }
+ 
+   public Module updateModule(Module module, String name, Subject subject, Integer courseNumber, Double length, EducationalTimeUnit lengthTimeUnit,
+       String description, Long maxParticipantCount, User user) {
+     Module moduleUpdated = moduleDAO.update(module, name, subject, courseNumber, length, lengthTimeUnit, description, maxParticipantCount, user);
+     return moduleUpdated;
+   }
+ 
+   public Module archiveModule(Module module, User user) {
+     moduleDAO.archive(module, user);
+     return module;
+   }
+ 
+   public Module unarchiveModule(Module module, User user) {
+     moduleDAO.unarchive(module, user);
+     return module;
+   }
+   
+   public void removeTag(Module module, Tag tag) {
+     module.removeTag(tag);
+   }
+ }

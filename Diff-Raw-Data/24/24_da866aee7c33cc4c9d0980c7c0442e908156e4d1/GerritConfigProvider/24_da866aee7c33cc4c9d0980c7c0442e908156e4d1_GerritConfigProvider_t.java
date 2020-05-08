@@ -1,0 +1,127 @@
+ // Copyright (C) 2009 The Android Open Source Project
+ //
+ // Licensed under the Apache License, Version 2.0 (the "License");
+ // you may not use this file except in compliance with the License.
+ // You may obtain a copy of the License at
+ //
+ // http://www.apache.org/licenses/LICENSE-2.0
+ //
+ // Unless required by applicable law or agreed to in writing, software
+ // distributed under the License is distributed on an "AS IS" BASIS,
+ // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
+ package com.google.gerrit.httpd;
+ 
+ import com.google.gerrit.common.data.ApprovalTypes;
+ import com.google.gerrit.common.data.GerritConfig;
+ import com.google.gerrit.common.data.GitwebLink;
+ import com.google.gerrit.reviewdb.Account;
+ import com.google.gerrit.reviewdb.Project;
+ import com.google.gerrit.server.account.Realm;
+ import com.google.gerrit.server.config.AuthConfig;
+ import com.google.gerrit.server.config.GerritServerConfig;
+ import com.google.gerrit.server.config.WildProjectName;
+ import com.google.gerrit.server.contact.ContactStore;
+ import com.google.gerrit.server.mail.EmailSender;
+ import com.google.gerrit.server.ssh.SshInfo;
+ import com.google.gwtexpui.safehtml.client.RegexFindReplace;
+ import com.google.inject.Inject;
+ import com.google.inject.Provider;
+ 
+ import org.eclipse.jgit.lib.Config;
+ 
+ import java.util.ArrayList;
+ import java.util.HashSet;
+import java.util.List;
+ import java.util.Set;
+ 
+ class GerritConfigProvider implements Provider<GerritConfig> {
+   private final Realm realm;
+   private final Config cfg;
+   private final AuthConfig authConfig;
+   private final GitWebConfig gitWebConfig;
+   private final Project.NameKey wildProject;
+   private final SshInfo sshInfo;
+   private final ApprovalTypes approvalTypes;
+ 
+   private EmailSender emailSender;
+   private final ContactStore contactStore;
+ 
+   @Inject
+   GerritConfigProvider(final Realm r, @GerritServerConfig final Config gsc,
+       final AuthConfig ac, final GitWebConfig gwc,
+       @WildProjectName final Project.NameKey wp, final SshInfo si,
+       final ApprovalTypes at, final ContactStore cs) {
+     realm = r;
+     cfg = gsc;
+     authConfig = ac;
+     gitWebConfig = gwc;
+     sshInfo = si;
+     wildProject = wp;
+     approvalTypes = at;
+     contactStore = cs;
+   }
+ 
+   @Inject(optional = true)
+   void setEmailSender(final EmailSender d) {
+     emailSender = d;
+   }
+ 
+   private GerritConfig create() {
+     final GerritConfig config = new GerritConfig();
+     switch (authConfig.getAuthType()) {
+       case LDAP:
+         config.setRegisterUrl(cfg.getString("auth", null, "registerurl"));
+         break;
+     }
+     config.setUseContributorAgreements(cfg.getBoolean("auth",
+         "contributoragreements", false));
+     config.setGitDaemonUrl(cfg.getString("gerrit", null, "canonicalgiturl"));
+     config.setUseRepoDownload(cfg.getBoolean("repo", null,
+         "showdownloadcommand", false));
+     config.setUseContactInfo(contactStore != null && contactStore.isEnabled());
+     config.setAuthType(authConfig.getAuthType());
+     config.setWildProject(wildProject);
+     config.setApprovalTypes(approvalTypes);
+ 
+     final Set<Account.FieldName> fields = new HashSet<Account.FieldName>();
+     for (final Account.FieldName n : Account.FieldName.values()) {
+       if (realm.allowsEdit(n)) {
+         fields.add(n);
+       }
+     }
+     if (emailSender != null && emailSender.isEnabled()) {
+       fields.add(Account.FieldName.REGISTER_NEW_EMAIL);
+     }
+     config.setEditableAccountFields(fields);
+ 
+     if (gitWebConfig.getUrl() != null) {
+       config.setGitwebLink(new GitwebLink(gitWebConfig.getUrl()));
+     }
+ 
+     if (sshInfo != null && !sshInfo.getHostKeys().isEmpty()) {
+       config.setSshdAddress(sshInfo.getHostKeys().get(0).getHost());
+     }
+ 
+    List<RegexFindReplace> links = new ArrayList<RegexFindReplace>();
+    for (String name : cfg.getSubsections("commentlink")) {
+      String match = cfg.getString("commentlink", name, "match");
+      String link = cfg.getString("commentlink", name, "link");
+      String html = cfg.getString("commentlink", name, "html");
+      if (html == null || html.isEmpty()) {
+        html = "<a href=\"" + link + "\">$&</a>";
+      }
+      links.add(new RegexFindReplace(match, html));
+     }
+    config.setCommentLinks(links);
+ 
+     return config;
+   }
+ 
+   @Override
+   public GerritConfig get() {
+     return create();
+   }
+ }

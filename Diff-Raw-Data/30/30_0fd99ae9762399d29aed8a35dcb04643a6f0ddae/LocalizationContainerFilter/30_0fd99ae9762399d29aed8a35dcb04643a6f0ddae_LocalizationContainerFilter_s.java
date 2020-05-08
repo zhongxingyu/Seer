@@ -1,0 +1,76 @@
+ package org.mayocat.localization;
+ 
+ import java.net.URI;
+ import java.util.List;
+ import java.util.Locale;
+ 
+ import javax.ws.rs.core.UriBuilder;
+ 
+ import org.mayocat.application.AbstractService;
+ import org.mayocat.configuration.general.GeneralSettings;
+ import org.mayocat.context.WebContext;
+ import org.mayocat.util.Utils;
+ 
+ import com.google.common.base.Objects;
+ import com.google.common.collect.ImmutableList;
+ import com.sun.jersey.spi.container.ContainerRequest;
+ import com.sun.jersey.spi.container.ContainerRequestFilter;
+ 
+ /**
+  * @version $Id$
+  */
+ public class LocalizationContainerFilter implements ContainerRequestFilter
+ {
+     @Override
+     public ContainerRequest filter(ContainerRequest containerRequest)
+     {
+         if (isStaticPath(containerRequest.getRequestUri().getPath())) {
+             return containerRequest;
+         }
+ 
+         WebContext context = Utils.getComponent(WebContext.class);
+ 
+         if (context.getTenant() == null) {
+             return containerRequest;
+         }
+ 
+         boolean localeSet = false;
+         GeneralSettings settings = context.getSettings(GeneralSettings.class);
+         URI requestURI = containerRequest.getRequestUri();
+ 
+         List<Locale> alternativeLocales = Objects.firstNonNull(
+                 settings.getLocales().getOtherLocales().getValue(), ImmutableList.<Locale>of());
+ 
+         if (!alternativeLocales.isEmpty()) {
+             for (Locale locale : alternativeLocales) {
+                if (requestURI.getPath().startsWith("/" + locale.toLanguageTag())) {
+                     UriBuilder builder = UriBuilder.fromUri(requestURI);
+                     builder.replacePath(requestURI.getPath().substring(locale.toString().length() + 1));
+                     containerRequest.setUris(containerRequest.getBaseUri(), builder.build());
+ 
+                     context.setLocale(locale);
+                     context.setAlternativeLocale(true);
+                     localeSet = true;
+                     break;
+                 }
+             }
+         }
+ 
+         if (!localeSet) {
+             context.setLocale(settings.getLocales().getMainLocale().getValue());
+             context.setAlternativeLocale(false);
+         }
+ 
+         return containerRequest;
+     }
+ 
+     private boolean isStaticPath(String path)
+     {
+         for (String staticPath : AbstractService.getStaticPaths()) {
+             if (path.startsWith(staticPath)) {
+                 return true;
+             }
+         }
+         return false;
+     }
+ }

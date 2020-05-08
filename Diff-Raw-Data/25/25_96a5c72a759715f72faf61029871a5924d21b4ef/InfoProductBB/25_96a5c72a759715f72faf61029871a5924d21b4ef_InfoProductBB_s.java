@@ -1,0 +1,67 @@
+ package dit126.group4.group4shop_app.view;
+ 
+import dit126.group4.group4shop.core.IGroup4Shop;
+ import dit126.group4.group4shop.core.IProductCatalogue;
+ import dit126.group4.group4shop.core.Product;
+import dit126.group4.group4shop_app.client.Group4Shop;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+ import javax.enterprise.context.RequestScoped;
+ import javax.inject.Named;
+ /**
+  *
+  * @author David
+  */
+ @Named("infoProduct")
+ @RequestScoped
+ public class InfoProductBB {
+     
+     
+     private Long id;
+     
+     private String name;
+     private String price;
+     private String category;
+     private String description;
+    private IGroup4Shop shop = Group4Shop.getInstance();
+     
+     public void setSelected(String id) {
+         Logger.getAnonymousLogger().log(Level.INFO, "setSelected id={0}", id);
+         Product p = shop.getProductCatalogue().find(Long.valueOf(id));
+         Logger.getAnonymousLogger().log(Level.INFO, "setSelected p={0}", p);
+         this.id = p.getId();
+         this.name = p.getName();
+         this.price = String.valueOf(p.getPrice());
+         this.category = p.getCategory();
+         this.description = p.getDescription();
+     }
+     
+       public String actOnSelected() {
+       return "banan";
+       }
+     
+     protected IProductCatalogue getProductCatalogue() {
+         return shop.getProductCatalogue();
+     }
+     
+     public Long getId() {
+         return id;
+     }
+     
+     public String getName() {
+         return name;
+     }
+     
+     public String getPrice() {
+         return price;
+     }
+     
+     public String getCategory() {
+         return category;
+     }
+     
+     public String getDescription() {
+         return description;
+     }
+     
+ }

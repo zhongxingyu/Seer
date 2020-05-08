@@ -1,0 +1,33 @@
+ package hudson.plugins.sctmexecutor;
+ 
+ import java.rmi.RemoteException;
+ 
+ import com.borland.scc.sccsystem.SystemService;
+ 
+ class SessionHandler implements ISessionHandler {
+   private long sessionId = -1;
+   private SystemService service;
+   private String pwd;
+   private String user;
+   
+  public SessionHandler(SystemService service) {
+     this.service = service;
+   }
+     
+   @Override
+   public synchronized long getSessionId(long oldSessionId) throws RemoteException {
+     if (oldSessionId == this.sessionId) {
+       this.sessionId = service.logonUser(this.user, this.pwd);
+     }
+     return this.sessionId;
+   }
+
+  void setPwd(String pwd) {
+    this.pwd = pwd;
+  }
+
+  void setUser(String user) {
+    this.user = user;
+  }
+
+ }

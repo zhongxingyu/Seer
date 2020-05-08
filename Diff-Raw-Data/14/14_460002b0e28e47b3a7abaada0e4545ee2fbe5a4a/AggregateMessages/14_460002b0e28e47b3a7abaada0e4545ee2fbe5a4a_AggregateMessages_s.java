@@ -1,0 +1,74 @@
+ package com.example.tracker;
+ 
+ import Client.TestClient;
+ 
+ public class AggregateMessages {
+ 	
+ 	public static StringBuffer messages = null;
+ 	public static int count = 0;
+ 	public static int packageCount = 0;
+ 	public static final int max = 200;
+ 	public static final int maxPerPackage = 20;
+ 	
+ 	public static synchronized void addMessages(String message, boolean isEnd) {
+ 		/**Check corner case */
+ 		
+ 		if(isEnd) {
+ 			messages.append("END" + '\n');
+ 			String[] messages = new String[2];
+ 			messages[0] = TrackerService.deviceID;
+ 			messages[1] = AggregateMessages.getMessages();
+ 			TestClient client = new TestClient("209.129.244.6", messages);
+ 			cleanMessages();
+ 			return;		
+ 		}
+ 		
+ 		if(message == null || message.length() == 0) {
+ 			return;
+ 		}
+ 		
+		if(messages == null) {
+			messages = new StringBuffer();
+		}
+		
+ 		if(count < max) {
+ 			messages.append(message + '\n');
+ 			count++;
+ 			packageCount++;
+ 		}
+ 		
+ 		if(packageCount > maxPerPackage) {
+ 			String[] messages = new String[2];
+ 			messages[0] = TrackerService.deviceID;
+ 			messages[1] = AggregateMessages.getMessages();
+ 			TestClient client = new TestClient("209.129.244.6", messages);
+ 			cleanMessagesNoTouchCount();
+ 			return;			
+ 		}
+ 		
+ 		return;
+ 	}
+ 	
+ 	public static synchronized void setMessages(String newMessages) {
+ 		messages = new StringBuffer(newMessages);
+ 	}
+ 	
+ 	public static synchronized String getMessages() {
+		return messages.toString();
+ 	}
+ 	
+ 	public static synchronized void cleanMessages() {
+ 		messages = null;
+ 		count = 0;
+ 		packageCount = 0;
+ 	}
+ 	
+ 	public static synchronized void cleanMessagesNoTouchCount() {
+ 		messages = null;
+ 		packageCount = 0;
+ 	}
+ 	
+ 	public static synchronized void clearPackageCount() {
+ 		packageCount = 0;
+ 	}
+ }

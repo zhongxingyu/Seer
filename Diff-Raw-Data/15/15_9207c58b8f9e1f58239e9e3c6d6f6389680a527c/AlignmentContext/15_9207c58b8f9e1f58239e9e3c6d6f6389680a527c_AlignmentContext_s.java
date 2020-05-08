@@ -1,0 +1,207 @@
+ /*
+  * Copyright (c) 2009 The Broad Institute
+  *
+  * Permission is hereby granted, free of charge, to any person
+  * obtaining a copy of this software and associated documentation
+  * files (the "Software"), to deal in the Software without
+  * restriction, including without limitation the rights to use,
+  * copy, modify, merge, publish, distribute, sublicense, and/or sell
+  * copies of the Software, and to permit persons to whom the
+  * Software is furnished to do so, subject to the following
+  * conditions:
+  *
+  * The above copyright notice and this permission notice shall be
+  * included in all copies or substantial portions of the Software.
+  *
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+  * OTHER DEALINGS IN THE SOFTWARE.
+  */
+ 
+ package org.broadinstitute.sting.gatk.contexts;
+ 
+ import net.sf.samtools.SAMRecord;
+ import org.broadinstitute.sting.utils.GenomeLoc;
+ import org.broadinstitute.sting.utils.StingException;
+ import org.broadinstitute.sting.utils.pileup.ReadBackedPileup;
+ import org.broadinstitute.sting.utils.pileup.ReadBackedExtendedEventPileup;
+     import org.broadinstitute.sting.utils.pileup.ReadBackedPileupImpl;
+ import org.broadinstitute.sting.gatk.iterators.LocusOverflowTracker;
+ 
+ import java.util.*;
+ 
+ /**
+  * Useful class for forwarding on locusContext data from this iterator
+  * 
+  * Created by IntelliJ IDEA.
+  * User: mdepristo
+  * Date: Feb 22, 2009
+  * Time: 3:01:34 PM
+  * To change this template use File | Settings | File Templates.
+  */
+ public class AlignmentContext {
+     protected GenomeLoc loc = null;
+     protected ReadBackedPileup basePileup = null;
+     private LocusOverflowTracker tracker;
+ 
+     /**
+      * The number of bases we've skipped over in the reference since the last map invocation.
+      * Only filled in by RodTraversals right now.  By default, nothing is being skipped, so skippedBases == 0.
+      */
+     private long skippedBases = 0;
+ 
+     /**
+      * Default constructor for AlignmentContext object
+      * since private objects are already set to null we
+      * don't need to do anything
+      */
+     public AlignmentContext() { /*   private objects already set to null    */  }
+ 
+     /**
+      * Create a new AlignmentContext object
+      *
+      * @param loc
+      * @param reads
+      * @param offsets
+      */
+     @Deprecated
+     public AlignmentContext(GenomeLoc loc, List<SAMRecord> reads, List<Integer> offsets) {
+         this(loc, reads, offsets, 0);
+     }
+ 
+     @Deprecated
+     public AlignmentContext(GenomeLoc loc, List<SAMRecord> reads, List<Integer> offsets, long skippedBases ) {
+         if ( loc == null ) throw new StingException("BUG: GenomeLoc in Alignment context is null");
+         if ( skippedBases < 0 ) throw new StingException("BUG: skippedBases is -1 in Alignment context");
+ 
+         this.loc = loc;
+         this.basePileup = new ReadBackedPileupImpl(loc, reads, offsets);
+         this.skippedBases = skippedBases;
+     }
+ 
+     public AlignmentContext(GenomeLoc loc, ReadBackedPileup basePileup) {
+         this(loc, basePileup, 0);
+     }
+ 
+     public AlignmentContext(GenomeLoc loc, ReadBackedPileup basePileup, long skippedBases ) {
+         if ( loc == null ) throw new StingException("BUG: GenomeLoc in Alignment context is null");
+         if ( basePileup == null ) throw new StingException("BUG: ReadBackedPileup in Alignment context is null");
+         if ( skippedBases < 0 ) throw new StingException("BUG: skippedBases is -1 in Alignment context");
+ 
+         this.loc = loc;
+         this.basePileup = basePileup;
+         this.skippedBases = skippedBases;
+     }
+ 
+     /** Returns base pileup over the current genomic location. Deprectated. Use getBasePileup() to make your intentions
+      * clear.
+      * @return
+      */
+     @Deprecated
+     public ReadBackedPileup getPileup() { return basePileup; }
+ 
+     /** Returns base pileup over the current genomic location. May return null if this context keeps only
+      * extended event (indel) pileup.
+      * @return
+      */
+    public ReadBackedPileup getBasePileup() { return basePileup; }
+ 
+     /** Returns extended event (indel) pileup over the current genomic location. May return null if this context keeps
+      * only base pileup.
+      * @return
+      */
+     public ReadBackedExtendedEventPileup getExtendedEventPileup() {
+         if(!hasExtendedEventPileup())
+             throw new StingException("No extended event pileup is present.");
+         return (ReadBackedExtendedEventPileup)basePileup; 
+     }
+ 
+     /**
+      * Returns true if this alignment context keeps base pileup over the current genomic location.
+      * TODO: Syntax of AlignmentContext uses hasBasePileup() / hasExtendedEventPileup() as an enumeration mechanism.  Change this to a more sensible interface.
+      * @return
+      */
+     public boolean hasBasePileup() { return !(basePileup instanceof ReadBackedExtendedEventPileup); }
+ 
+     /** Returns true if this alignment context keeps extended event (indel) pileup over the current genomic location.
+      *
+      * @return
+      */
+     public boolean hasExtendedEventPileup() { return basePileup instanceof ReadBackedExtendedEventPileup; }
+ 
+     /**
+      * get all of the reads within this context
+      * 
+      * @return
+      */
+     @Deprecated
+     //todo: unsafe and tailored for current usage only; both pileups can be null or worse, bot can be not null in theory
+     public List<SAMRecord> getReads() { return ( basePileup.getReads() ); }
+ 
+     /**
+      * Are there any reads associated with this locus?
+      *
+      * @return
+      */
+     public boolean hasReads() {
+         return basePileup != null && basePileup.size() > 0 ;
+     }
+ 
+     /**
+      * How many reads cover this locus?
+      * @return
+      */
+     public int size() {
+         return basePileup.size();
+     }
+ 
+     /**
+      * get a list of the equivalent positions within in the reads at Pos
+      *
+      * @return
+      */
+     @Deprecated
+     public List<Integer> getOffsets() {
+         return basePileup.getOffsets();
+     }
+ 
+     public String getContig() { return getLocation().getContig(); }
+     public long getPosition() { return getLocation().getStart(); }
+     public GenomeLoc getLocation() { return loc; }
+ 
+     public void downsampleToCoverage(int coverage) {
+         basePileup = basePileup.getDownsampledPileup(coverage);
+     }
+ 
+     /**
+      * Returns the number of bases we've skipped over in the reference since the last map invocation.
+      * Only filled in by RodTraversals right now.  A value of 0 indicates that no bases were skipped.
+      *
+      * @return the number of skipped bases
+      */
+     public long getSkippedBases() {
+         return skippedBases;
+     }
+ 
+     /**
+      * a method for injecting the current locus overflow tracker into the alignment context.
+      * @param state
+      */
+     public void setLocusOverflowTracker(LocusOverflowTracker state) {
+         this.tracker = state;
+     }
+ 
+     /**
+      * have we exceeded the maximum pileup at the current locus?
+      * @return true if we have, false otherwise
+      */
+     public boolean hasExceededMaxPileup() {
+         if (this.tracker == null) return false;
+         return this.tracker.inDroppedRegion(getLocation());
+     }
+ }

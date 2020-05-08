@@ -1,0 +1,128 @@
+ /**
+  *
+  */
+ package org.carrot2.clustering.synthetic;
+ 
+ import static org.junit.Assert.assertArrayEquals;
+ import static org.junit.Assert.assertEquals;
+ import static org.carrot2.util.reflect.ObjectEquivalenceHelper.wrap;
+ 
+ import java.util.*;
+ 
+ import org.carrot2.core.Cluster;
+ import org.carrot2.core.Document;
+ import org.carrot2.core.test.ClusteringAlgorithmTestBase;
+ import org.junit.Test;
+ 
+ import com.google.common.collect.Lists;
+ 
+ /**
+  * Test cases for the {@link ByUrlClusteringAlgorithm}.
+  */
+ public class ByUrlClusteringAlgorithmTest extends
+     ClusteringAlgorithmTestBase<ByUrlClusteringAlgorithm>
+ {
+     @Override
+     public Class<ByUrlClusteringAlgorithm> getComponentClass()
+     {
+         return ByUrlClusteringAlgorithm.class;
+     }
+ 
+     @Test
+     public void testUrlParsing()
+     {
+         final Collection<Document> docs = DocumentWithUrlsFactory.INSTANCE
+             .generate(new String []
+             {
+                 "cos.pl", "http://cos.pl/cos", "cos.pl/cos", "http://", null
+             });
+ 
+         final ByUrlClusteringAlgorithm instance = new ByUrlClusteringAlgorithm();
+ 
+         final String [][] actualUrlParts = instance.buildUrlParts(docs
+             .toArray(new Document [docs.size()]));
+         final String [][] expectedUrlParts = new String [] []
+         {
+             {
+                 "pl", "cos"
+             },
+             {
+                 "pl", "cos"
+             },
+             {
+                 "pl", "cos"
+             }, null, null
+         };
+ 
+         assertArrayEquals("Url parts equality", expectedUrlParts, actualUrlParts);
+     }
+ 
+     @Test
+     public void testOneUrl()
+     {
+         final List<Document> docs = DocumentWithUrlsFactory.INSTANCE
+             .generate(new String []
+             {
+                 "cos.pl", "http://cos.pl/cos", "cos.pl/cos"
+             });
+ 
+         final List<Cluster> expectedFacets = Lists.newArrayList(new Cluster("cos.pl",
+             docs.get(0), docs.get(1), docs.get(2)));
+ 
+         final ArrayList<Cluster> actual = Lists.newArrayList(cluster(docs).getClusters());
+         assertEquals(wrap(expectedFacets), wrap(actual));
+     }
+ 
+     @Test
+     public void testStopPartsStripping()
+     {
+         final List<Document> docs = DocumentWithUrlsFactory.INSTANCE
+             .generate(new String []
+             {
+                 "www.cos.pl", "http://cos.pl/cos", "cos.pl/cos"
+             });
+ 
+         final List<Cluster> expectedFacets = Lists.newArrayList(new Cluster("cos.pl",
+             docs.get(0), docs.get(1), docs.get(2)));
+ 
+        assertEquals(wrap(expectedFacets), wrap(Lists.newArrayList(cluster(docs)
+            .getClusters())));
+     }
+ 
+     @Test
+     public void testOneUrlWithTwoSuburls()
+     {
+         final List<Document> docs = DocumentWithUrlsFactory.INSTANCE
+             .generate(new String []
+             {
+                 "mail.cos.pl", "http://cos.pl/cos", "cos.pl/cos", "mail.cos.pl"
+             });
+ 
+         final List<Cluster> expectedFacets = Lists.newArrayList();
+         final Cluster facet11 = new Cluster("mail.cos.pl", docs.get(0), docs.get(3));
+         final Cluster facet12 = new Cluster("Other Sites", docs.get(1), docs.get(2))
+             .setAttribute(Cluster.OTHER_TOPICS, Boolean.TRUE);
+         final Cluster facet1 = new Cluster("cos.pl").addSubclusters(facet11, facet12);
+         expectedFacets.add(facet1);
+ 
+        assertEquals(wrap(expectedFacets), wrap(Lists.newArrayList(cluster(docs)
+            .getClusters())));
+     }
+ 
+     @Test
+     public void testSorting()
+     {
+         final List<Document> docs = DocumentWithUrlsFactory.INSTANCE
+             .generate(new String []
+             {
+                 "cos.pl", "http://cos.pl/cos", "cos.com/cos", "cos.com", "cos.pl"
+             });
+ 
+         final List<Cluster> expectedFacets = Lists.newArrayList(new Cluster("cos.pl",
+             docs.get(0), docs.get(1), docs.get(4)), new Cluster("cos.com", docs.get(2),
+             docs.get(3)));
+ 
+        assertEquals(wrap(expectedFacets), wrap(Lists.newArrayList(cluster(docs)
+            .getClusters())));
+     }
+ }

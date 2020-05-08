@@ -1,0 +1,109 @@
+ package com.nardoz.restopengov.utils;
+ 
+ import au.com.bytecode.opencsv.CSVReader;
+ import com.google.gson.Gson;
+ import com.nardoz.restopengov.Crawler;
+ import com.nardoz.restopengov.models.MetadataResource;
+ 
+ import java.io.BufferedReader;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.InputStreamReader;
+ import java.net.URL;
+ import java.util.HashMap;
+ import java.util.Map;
+ import java.util.TreeMap;
+import java.util.regex.Pattern;
+ 
+ public class CSVDatasetReader implements IDatasetReader {
+ 
+     private MetadataResource resource;
+     private IDatasetReaderResult callback;
+     private Gson gson = new Gson();
+ 
+     public CSVDatasetReader(MetadataResource resource) {
+         this(resource, new DatasetReaderResult());
+     }
+ 
+     public CSVDatasetReader(MetadataResource resource, IDatasetReaderResult callback) {
+         this.resource = resource;
+         this.callback = callback;
+     }
+ 
+     public IDatasetReaderResult read() throws Exception {
+ 
+         URL url = new URL(resource.url.replace("https", "http"));
+         InputStream stream = url.openStream();
+ 
+         return read(stream);
+     }
+ 
+     public IDatasetReaderResult read(InputStream stream) throws Exception {
+ 
+         BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+ 
+         CSVReader reader = new CSVReader(br, detectSeparator(br));
+ 
+         String[] keys = reader.readNext();
+         String[] nextLine;
+ 
+         Integer id = 0;
+ 
+         callback.onStart();
+ 
+         while ((nextLine = reader.readNext()) != null) {
+             callback.add(id.toString(), buildJson(keys, nextLine));
+             id++;
+         }
+ 
+         callback.onEnd();
+ 
+         reader.close();
+         stream.close();
+ 
+         return callback;
+     }
+ 
+     private char detectSeparator(BufferedReader br) {
+ 
+         char separator = ',';
+ 
+         try {
+             String line = br.readLine();
+            Crawler.logger.debug(line);
+ 
+             // Quick & dirty
+             TreeMap tm = new TreeMap();
+ 
+            tm.put(line.split(Pattern.quote(",")).length, ",");
+            tm.put(line.split(Pattern.quote(";")).length, ";");
+            tm.put(line.split(Pattern.quote("\t")).length, "\\t");
+            tm.put(line.split(Pattern.quote("|")).length, "|");
+ 
+             separator = tm.lastEntry().getValue().toString().charAt(0);
+ 
+         } catch (IOException e) {
+             e.printStackTrace();
+         }
+ 
+         Crawler.logger.debug("Detected separator: " + separator);
+ 
+         return separator;
+     }
+ 
+     public String buildJson(String[] keys, String[] dataLine) throws Exception {
+ 
+         if(keys.length != dataLine.length) {
+             throw new Exception("There are not as much columns for the keys as for the rows");
+         }
+ 
+         Map<String, String> result = new HashMap<String, String>();
+ 
+         for (int i = 0; i < dataLine.length; i++) {
+             result.put(keys[i], dataLine[i]);
+         }
+ 
+         return gson.toJson(result);
+     }
+ 
+ }

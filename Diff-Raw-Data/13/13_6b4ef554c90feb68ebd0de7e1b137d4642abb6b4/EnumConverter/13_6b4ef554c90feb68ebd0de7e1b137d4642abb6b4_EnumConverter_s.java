@@ -1,0 +1,86 @@
+ /***
+  *
+  * Copyright (c) 2009 Caelum - www.caelum.com.br/opensource
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions
+  * are met:
+  * 1. Redistributions of source code must retain the above copyright
+  *    notice, this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright
+  *    notice, this list of conditions and the following disclaimer in the
+  *    documentation and/or other materials provided with the distribution.
+  * 3. Neither the name of the copyright holders nor the names of its
+  *    contributors may be used to endorse or promote products derived from
+  *    this software without specific prior written permission.
+  *
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+  * THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ package br.com.caelum.vraptor.converter;
+ 
+ import java.text.MessageFormat;
+ import java.util.List;
+ import java.util.ResourceBundle;
+ 
+ import br.com.caelum.vraptor.Convert;
+ import br.com.caelum.vraptor.Converter;
+ import br.com.caelum.vraptor.ioc.ApplicationScoped;
+ import br.com.caelum.vraptor.validator.ValidationMessage;
+ 
+ /**
+  * Accepts either the ordinal value or name. Null and empty strings are treated
+  * as null.
+  * 
+  * @author Guilherme Silveira
+  */
+ @Convert(Enum.class)
+ @ApplicationScoped
+ public class EnumConverter implements Converter<Enum> {
+ 
+     public Enum convert(String value, Class type, List<ValidationMessage> errors, ResourceBundle bundle) {
+         if (value == null || value.equals("")) {
+             return null;
+         }
+         Class<? extends Enum> enumType = type;
+         if (Character.isDigit(value.charAt(0))) {
+             return resolveByOrdinal(value, enumType, errors, bundle);
+         } else {
+             return resolveByName(value, enumType, errors, bundle);
+         }
+     }
+ 
+     private Enum resolveByName(String value, Class<? extends Enum> enumType, List<ValidationMessage> errors, ResourceBundle bundle) {
+         try {
+             return Enum.valueOf(enumType, value);
+         } catch (IllegalArgumentException e) {
+ 			errors.add(new ValidationMessage(MessageFormat.format(bundle.getString("is_not_a_valid_enum_value"), value), ""));
+ 			return null;
+         }
+     }
+ 
+     private Enum resolveByOrdinal(String value, Class<? extends Enum> enumType, List<ValidationMessage> errors, ResourceBundle bundle) {
+         try {
+             int ordinal = Integer.parseInt(value);
+             if (ordinal >= enumType.getEnumConstants().length) {
+                throw new IllegalArgumentException("Invalid enumeration value '" + value + "' for type "
+                        + enumType.getName() + " value " + value);
+             }
+             return enumType.getEnumConstants()[ordinal];
+         } catch (NumberFormatException e) {
+ 			errors.add(new ValidationMessage(MessageFormat.format(bundle.getString("is_not_a_valid_enum_value"), value), ""));
+ 			return null;
+         }
+     }
+ 
+ }

@@ -1,0 +1,32 @@
+ package com.twu28.biblioteca;
+ import java.util.*;
+ import java.io.*;
+ public class Biblioteca {
+    private String firstMsg = "Welcome";
+    private String[] menuOptions = {"Menu1","Menu2","Menu 3"};
+     private static String menuSelect;
+
+public void Biblio(){
+
+     System.out.println(firstMsg);
+     System.out.println("Please Select from the following Menu Options");
+     for (String item : menuOptions){
+         System.out.print(item + " ");
+     }
+     System.out.println("Please enter your selection");
+     Scanner scan = new Scanner(System.in);
+     menuSelect = scan.nextLine();
+ 
+ }
+    public  String getMessage() {
+         return firstMsg;
+     }
+ 
+    public  int getNumberOfOptions() {
+         return menuOptions.length;
+     }
+ 
+    public  Object getMenuSelect() {
+         return menuSelect;  //To change body of created methods use File | Settings | File Templates.
+     }
+ }
