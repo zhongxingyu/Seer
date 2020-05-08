@@ -9,7 +9,7 @@ This repository contains the code and data set for our approach to structurally 
 - [Training-Data](./Training-Data) contains the data set used for training CRF models. 
 - [Transform-Extraction](./Transform-Extraction) contains the code for extracting repair transforms on AST nodes from raw patch diffs and code for analyzing the characteristics of input nodes (to establish observation-based feature functions).
 - [Diff-Raw-Data](./Diff-Raw-Data) contains the raw patch diffs from which we extract training and test data sets, and the whole patch diffs are distributed in 35 folders. 
-- [Seq2Seq-Prediction](./Seq2Seq-Prediction) contains the data and scripts used to build the baseline based on the Seq2Seq translation model, and the Seq2Seq baseline is built on top of OpenNMT and the scripts are run on HPC2N (https://hal.inria.fr/hal-02091516/document). 
+- [Seq2Seq-Prediction](./Seq2Seq-Prediction) contains the data and scripts used to build the baseline based on the Seq2Seq translation model, and the Seq2Seq baseline is built on top of OpenNMT and the scripts are run on HPC2N (https://www.hpc2n.umu.se/). 
 
 ## Notes about training and test data sets
 
