@@ -1,0 +1,303 @@
+ //
+// $Id: GameObject.java,v 1.18 2004/03/06 11:29:19 mdb Exp $
+ 
+ package com.threerings.parlor.game;
+ 
+ import com.samskivert.util.ListUtil;
+ import com.samskivert.util.StringUtil;
+ import com.threerings.util.Name;
+ 
+ import com.threerings.crowd.data.PlaceObject;
+ 
+ /**
+  * A game object hosts the shared data associated with a game played by
+  * one or more players. The game object extends the place object so that
+  * the game can act as a place where players actually go when playing the
+  * game. Only very basic information is maintained in the base game
+  * object. It serves as the base for a hierarchy of game object
+  * derivatives that handle basic gameplay for a suite of different game
+  * types (ie. turn based games, party games, board games, card games,
+  * etc.).
+  */
+ public class GameObject extends PlaceObject
+ {
+     /** The field name of the <code>gameService</code> field. */
+     public static final String GAME_SERVICE = "gameService";
+ 
+     /** The field name of the <code>state</code> field. */
+     public static final String STATE = "state";
+ 
+     /** The field name of the <code>isRated</code> field. */
+     public static final String IS_RATED = "isRated";
+ 
+     /** The field name of the <code>players</code> field. */
+     public static final String PLAYERS = "players";
+ 
+     /** The field name of the <code>winners</code> field. */
+     public static final String WINNERS = "winners";
+ 
+     /** The field name of the <code>roundId</code> field. */
+     public static final String ROUND_ID = "roundId";
+ 
+     /** The field name of the <code>creator</code> field. */
+     public static final String CREATOR = "creator";
+ 
+     /** A game state constant indicating that the game has not yet started
+      * and is still awaiting the arrival of all of the players. */
+     public static final int AWAITING_PLAYERS = 0;
+ 
+     /** A game state constant indicating that the game is in play. */
+     public static final int IN_PLAY = 1;
+ 
+     /** A game state constant indicating that the game ended normally. */
+     public static final int GAME_OVER = 2;
+ 
+     /** A game state constant indicating that the game was cancelled. */
+     public static final int CANCELLED = 3;
+ 
+     /** Provides general game invocation services. */
+     public GameMarshaller gameService;
+ 
+     /** The game state, one of {@link #AWAITING_PLAYERS}, {@link #IN_PLAY},
+      * {@link #GAME_OVER}, or {@link #CANCELLED}. */
+     public int state;
+ 
+     /** Indicates whether or not this game is rated. */
+     public boolean isRated;
+ 
+     /** The usernames of the players involved in this game. */
+     public Name[] players;
+ 
+     /** Whether each player in the game is a winner, or <code>null</code>
+      * if the game is not yet over. */
+     public boolean[] winners;
+ 
+     /** The unique round identifier for the current round. */
+     public int roundId;
+ 
+     /** The player index of the creating player if this is a party game. */
+     public int creator;
+ 
+     /**
+      * Returns the number of players in the game.
+      */
+     public int getPlayerCount ()
+     {
+         int count = 0;
+         int size = players.length;
+         for (int ii = 0; ii < size; ii++) {
+             if (players[ii] != null) {
+                 count++;
+             }
+         }
+         return count;
+     }
+ 
+     /**
+      * Returns the player index of the given user in the game, or 
+      * <code>-1</code> if the player is not involved in the game.
+      */
+     public int getPlayerIndex (Name username)
+     {
+         int size = (players == null) ? 0 : players.length;
+         for (int ii = 0; ii < size; ii++) {
+             if (players[ii] != null && players[ii].equals(username)) {
+                 return ii;
+             }
+         }
+         return -1;
+     }
+ 
+     /**
+      * Returns whether the game is in play.  A game that is not in play
+      * could either be awaiting players, ended, or cancelled.
+      */
+     public boolean isInPlay ()
+     {
+         return (state == IN_PLAY);
+     }
+ 
+     /**
+      * Returns whether the given player index in the game is occupied.
+      */
+     public boolean isOccupiedPlayer (int pidx)
+     {
+         return (players[pidx] != null);
+     }
+ 
+     /**
+      * Returns whether the given player index is a winner, or false if the
+      * winners are not yet assigned.
+      */
+     public boolean isWinner (int pidx)
+     {
+         return (winners == null) ? false : winners[pidx];
+     }
+ 
+     /**
+      * Returns the number of winners for this game, or <code>0</code> if
+      * the winners array is not populated, e.g., the game is not yet over.
+      */
+     public int getWinnerCount ()
+     {
+         int count = 0;
+         int size = (winners == null) ? 0 : winners.length;
+         for (int ii = 0; ii < size; ii++) {
+             if (winners[ii]) {
+                 count++;
+             }
+         }
+         return count;
+     }
+ 
+     /**
+      * Returns the winner index of the first winning player for this game,
+      * or <code>-1</code> if there are no winners or the winners array is
+      * not yet assigned.  This is only likely to be useful for games that
+      * are known to have a single winner.
+      */
+     public int getWinnerIndex ()
+     {
+         int size = (winners == null) ? 0 : winners.length;
+         for (int ii = 0; ii < size; ii++) {
+             if (winners[ii]) {
+                 return ii;
+             }
+         }
+         return -1;
+     }
+ 
+     // documentation inherited
+     protected void which (StringBuffer buf)
+     {
+         super.which(buf);
+         StringUtil.toString(buf, players);
+         buf.append(":").append(state);
+     }
+ 
+     /**
+      * Requests that the <code>gameService</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setGameService (GameMarshaller gameService)
+     {
+         requestAttributeChange(GAME_SERVICE, gameService);
+         this.gameService = gameService;
+     }
+ 
+     /**
+      * Requests that the <code>state</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setState (int state)
+     {
+         requestAttributeChange(STATE, new Integer(state));
+         this.state = state;
+     }
+ 
+     /**
+      * Requests that the <code>isRated</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setIsRated (boolean isRated)
+     {
+         requestAttributeChange(IS_RATED, new Boolean(isRated));
+         this.isRated = isRated;
+     }
+ 
+     /**
+      * Requests that the <code>players</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setPlayers (Name[] players)
+     {
+         requestAttributeChange(PLAYERS, players);
+         this.players = players;
+     }
+ 
+     /**
+      * Requests that the <code>index</code>th element of
+      * <code>players</code> field be set to the specified value. The local
+      * value will be updated immediately and an event will be propagated
+      * through the system to notify all listeners that the attribute did
+      * change. Proxied copies of this object (on clients) will apply the
+      * value change when they received the attribute changed notification.
+      */
+     public void setPlayersAt (Name value, int index)
+     {
+         requestElementUpdate(PLAYERS, value, index);
+         this.players[index] = value;
+     }
+ 
+     /**
+      * Requests that the <code>winners</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setWinners (boolean[] winners)
+     {
+         requestAttributeChange(WINNERS, winners);
+         this.winners = winners;
+     }
+ 
+     /**
+      * Requests that the <code>index</code>th element of
+      * <code>winners</code> field be set to the specified value. The local
+      * value will be updated immediately and an event will be propagated
+      * through the system to notify all listeners that the attribute did
+      * change. Proxied copies of this object (on clients) will apply the
+      * value change when they received the attribute changed notification.
+      */
+     public void setWinnersAt (boolean value, int index)
+     {
+         requestElementUpdate(WINNERS, new Boolean(value), index);
+         this.winners[index] = value;
+     }
+ 
+     /**
+      * Requests that the <code>roundId</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setRoundId (int roundId)
+     {
+         requestAttributeChange(ROUND_ID, new Integer(roundId));
+         this.roundId = roundId;
+     }
+ 
+     /**
+      * Requests that the <code>creator</code> field be set to the specified
+      * value. The local value will be updated immediately and an event
+      * will be propagated through the system to notify all listeners that
+      * the attribute did change. Proxied copies of this object (on
+      * clients) will apply the value change when they received the
+      * attribute changed notification.
+      */
+     public void setCreator (int creator)
+     {
+         requestAttributeChange(CREATOR, new Integer(creator));
+         this.creator = creator;
+     }
+ }

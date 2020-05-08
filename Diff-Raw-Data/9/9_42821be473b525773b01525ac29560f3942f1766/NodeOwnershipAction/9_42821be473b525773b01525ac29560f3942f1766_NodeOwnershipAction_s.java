@@ -1,0 +1,87 @@
+ /*
+  * The MIT License
+  *
+  * Copyright 2013 Oleg Nenashev <nenashev@synopsys.com>, Synopsys Inc.
+  *
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal
+  * in the Software without restriction, including without limitation the rights
+  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  * copies of the Software, and to permit persons to whom the Software is
+  * furnished to do so, subject to the following conditions:
+  *
+  * The above copyright notice and this permission notice shall be included in
+  * all copies or substantial portions of the Software.
+  *
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  * THE SOFTWARE.
+  */
+ package com.synopsys.arc.jenkins.plugins.ownership.nodes;
+ 
+ import com.synopsys.arc.jenkins.plugins.ownership.IOwnershipHelper;
+ import com.synopsys.arc.jenkins.plugins.ownership.ItemOwnershipAction;
+ import com.synopsys.arc.jenkins.plugins.ownership.OwnershipDescription;
+ import com.synopsys.arc.jenkins.plugins.ownership.OwnershipPlugin;
+ import com.synopsys.arc.jenkins.plugins.ownership.jobs.JobOwnerHelper;
+ import hudson.model.Computer;
+ import hudson.model.Descriptor;
+ import hudson.model.Hudson;
+ import hudson.security.Permission;
+ import java.io.IOException;
+ import java.io.UnsupportedEncodingException;
+ import javax.servlet.ServletException;
+ import net.sf.json.JSONObject;
+ import org.kohsuke.stapler.StaplerRequest;
+ import org.kohsuke.stapler.StaplerResponse;
+ 
+ /**
+  * Node ownership action.
+  * @author Oleg Nenashev <nenashev@synopsys.com>, Synopsys Inc.
+  * @since 0.2
+  */
+ public class NodeOwnershipAction extends ItemOwnershipAction<Computer> {
+     
+     public NodeOwnershipAction(Computer owner) {
+         super(owner);
+     }
+ 
+     @Override
+     public boolean actionIsAvailable() {
+         return getDescribedItem().hasPermission(OwnershipPlugin.MANAGE_SLAVES_OWNERSHIP);
+     }   
+ 
+     @Override
+     public Permission getOwnerPermission() {
+         return OwnershipPlugin.MANAGE_SLAVES_OWNERSHIP;
+     }
+ 
+     @Override
+     public Permission getProjectSpecificPermission() {
+         return OwnershipPlugin.MANAGE_SLAVES_OWNERSHIP;
+     }
+ 
+     @Override
+     public IOwnershipHelper<Computer> helper() {
+         return ComputerOwnerHelper.Instance;
+     }
+ 
+     @Override
+     public OwnershipDescription getOwnership() {
+         return helper().getOwnershipDescription(getDescribedItem());
+     }
+     
+     public void doOwnersSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, UnsupportedEncodingException, ServletException, Descriptor.FormException {
+        Hudson.getInstance().checkPermission(OwnershipPlugin.MANAGE_SLAVES_OWNERSHIP);
+         
+         JSONObject jsonOwnership = (JSONObject) req.getSubmittedForm().getJSONObject("owners");
+         OwnershipDescription descr = OwnershipDescription.Parse(jsonOwnership);
+         ComputerOwnerHelper.setOwnership(getDescribedItem(), descr);
+         
+         rsp.sendRedirect(".");
+     }
+ }

@@ -1,0 +1,233 @@
+ /*
+  * Copyright 1997-2006 Sun Microsystems, Inc.  All Rights Reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License version 2 only, as
+  * published by the Free Software Foundation.  
+  *
+  * This code is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+  * version 2 for more details (a copy is included in the LICENSE file that
+  * accompanied this code).
+  *
+  * You should have received a copy of the GNU General Public License version
+  * 2 along with this work; if not, write to the Free Software Foundation,
+  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+  * CA 95054 USA or visit www.sun.com if you need additional information or
+  * have any questions.
+  */
+ 
+ package com.sun.tools.javafxdoc;
+ 
+ import com.sun.javadoc.*;
+ 
+ import com.sun.tools.javac.code.Flags;
+ import com.sun.tools.javac.code.Symbol;
+ import com.sun.tools.javac.code.Symbol.ClassSymbol;
+ 
+ import com.sun.tools.javafx.tree.JFXTree;
+ 
+ import com.sun.tools.javac.util.Position;
+ 
+ import com.sun.tools.javafx.code.JavafxFlags;
+ import java.lang.reflect.Modifier;
+ import java.text.CollationKey;
+ 
+ /**
+  * Represents a java program element: class, interface, field,
+  * constructor, or method.
+  * This is an abstract class dealing with information common to
+  * these elements.
+  *
+  * @see MemberDocImpl
+  * @see ClassDocImpl
+  *
+  * @author Robert Field
+  * @author Neal Gafter (rewrite)
+  * @author Scott Seligman (generics, enums, annotations)
+  */
+ public abstract class ProgramElementDocImpl
+         extends DocImpl implements ProgramElementDoc {
+ 
+     // For source position information.
+     JFXTree tree = null;
+     Position.LineMap lineMap = null;
+ 
+ 
+     // Cache for getModifiers().
+     private int modifiers = -1;
+ 
+     protected ProgramElementDocImpl(DocEnv env, Symbol sym,
+                                     String doc, JFXTree tree, Position.LineMap lineMap) {
+         super(env, doc);
+         this.tree = tree;
+         this.lineMap = lineMap;
+     }
+ 
+     void setTree(JFXTree tree) {
+         this.tree = tree;
+     }
+ 
+     /**
+      * Subclasses override to identify the containing class
+      */
+     protected abstract ClassSymbol getContainingClass();
+ 
+     /**
+      * Returns the flags in terms of javac's flags
+      */
+     abstract protected long getFlags();
+ 
+     /**
+      * Returns the modifier flags in terms of java.lang.reflect.Modifier.
+      */
+     protected int getModifiers() {
+         if (modifiers == -1) {
+             modifiers = DocEnv.translateModifiers(getFlags());
+         }
+         return modifiers;
+     }
+ 
+     /**
+      * Get the containing class of this program element.
+      *
+      * @return a ClassDocImpl for this element's containing class.
+      * If this is a class with no outer class, return null.
+      */
+     public ClassDoc containingClass() {
+         if (getContainingClass() == null) {
+             return null;
+         }
+         return env.getClassDoc(getContainingClass());
+     }
+ 
+     /**
+      * Return the package that this member is contained in.
+      * Return "" if in unnamed package.
+      */
+     public PackageDoc containingPackage() {
+         return env.getPackageDoc(getContainingClass().packge());
+     }
+ 
+     /**
+      * Get the modifier specifier integer.
+      *
+      * @see java.lang.reflect.Modifier
+      */
+     public int modifierSpecifier() {
+         int modifiers = getModifiers();
+         if (isMethod() && containingClass().isInterface())
+             // Remove the implicit abstract modifier.
+             return modifiers & ~Modifier.ABSTRACT;
+         return modifiers;
+     }
+ 
+     /**
+      * Get modifiers string.
+      * <pre>
+      * Example, for:
+      *   public abstract int foo() { ... }
+      * modifiers() would return:
+      *   'public abstract'
+      * </pre>
+      * Annotations are not included.
+      */
+     public String modifiers() {
+         long flags = getFlags();
+         if (isAnnotationTypeElement() ||
+                 (isMethod() && containingClass().isInterface())) {
+             // Remove the implicit abstract modifier.
+             flags &= ~Modifier.ABSTRACT;
+         }
+ 	StringBuffer sb = new StringBuffer();
+ 
+	if ((flags  & JavafxFlags.PUBLIC_INIT) != 0)	sb.append("public-init ");
+	if ((flags  & JavafxFlags.PUBLIC_READ) != 0)	sb.append("public-read ");
+ 	if ((flags  & Flags.PUBLIC) != 0)	sb.append("public ");
+ 	if ((flags  & Flags.PROTECTED) != 0)	sb.append("protected ");
+ 	if ((flags  & (Flags.PUBLIC | Flags.PROTECTED | JavafxFlags.SCRIPT_PRIVATE)) == 0)	sb.append("package ");
+	if ((flags  & JavafxFlags.BOUND) != 0)	sb.append("bound ");
+ 	if ((flags  & Flags.ABSTRACT) != 0)	sb.append("abstract ");
+ 
+ 	int len = sb.length();
+ 	if (len > 0)	/* trim trailing space */
+ 	    return sb.toString().substring(0, len-1);
+ 	return "";
+     }
+ 
+     /**
+      * Get the annotations of this program element.
+      * Return an empty array if there are none.
+      */
+     public AnnotationDesc[] annotations() {
+         return new AnnotationDesc[0];
+     }
+ 
+     /**
+      * Return true if this program element is public
+      */
+     public boolean isPublic() {
+         int modifiers = getModifiers();
+         return Modifier.isPublic(modifiers);
+     }
+ 
+     /**
+      * Return true if this program element is protected
+      */
+     public boolean isProtected() {
+         int modifiers = getModifiers();
+         return Modifier.isProtected(modifiers);
+     }
+ 
+     /**
+      * Return true if this program element is private
+      */
+     public boolean isPrivate() {
+         int modifiers = getModifiers();
+         return Modifier.isPrivate(modifiers);
+     }
+ 
+     /**
+      * Returns true if this program element is script-private
+      */
+     public boolean isScriptPrivate() {
+         return (getFlags() & JavafxFlags.SCRIPT_PRIVATE) != 0;
+     }
+ 
+     /**
+      * Return true if this program element is package private
+      */
+     public boolean isPackagePrivate() {
+         return !(isPublic() || isScriptPrivate() || isPrivate() || isProtected());
+     }
+ 
+     /**
+      * Return true if this program element is static
+      */
+     public boolean isStatic() {
+         int modifiers = getModifiers();
+         return Modifier.isStatic(modifiers);
+     }
+ 
+     /**
+      * Return true if this program element is final
+      */
+     public boolean isFinal() {
+         int modifiers = getModifiers();
+         return Modifier.isFinal(modifiers);
+     }
+ 
+     /**
+      * Generate a key for sorting.
+      */
+     CollationKey generateKey() {
+         String k = name();
+         // System.out.println("COLLATION KEY FOR " + this + " is \"" + k + "\"");
+         return env.doclocale.collator.getCollationKey(k);
+     }
+ 
+ }

@@ -1,0 +1,672 @@
+ package com.laytonsmith.core.events.drivers;
+ 
+ import com.laytonsmith.PureUtilities.StringUtils;
+ import com.laytonsmith.PureUtilities.Version;
+ import com.laytonsmith.abstraction.MCEnchantment;
+ import com.laytonsmith.abstraction.MCHumanEntity;
+ import com.laytonsmith.abstraction.MCInventory;
+ import com.laytonsmith.abstraction.MCItemStack;
+ import com.laytonsmith.abstraction.StaticLayer;
+ import com.laytonsmith.abstraction.blocks.MCBlock;
+ import com.laytonsmith.abstraction.bukkit.events.MCPrepareItemCraftEvent;
+ import com.laytonsmith.abstraction.enums.MCClickType;
+ import com.laytonsmith.abstraction.enums.MCDragType;
+ import com.laytonsmith.abstraction.enums.MCInventoryAction;
+ import com.laytonsmith.abstraction.enums.MCSlotType;
+ import com.laytonsmith.abstraction.events.MCEnchantItemEvent;
+ import com.laytonsmith.abstraction.events.MCInventoryClickEvent;
+ import com.laytonsmith.abstraction.events.MCInventoryCloseEvent;
+ import com.laytonsmith.abstraction.events.MCInventoryDragEvent;
+ import com.laytonsmith.abstraction.events.MCInventoryOpenEvent;
+ import com.laytonsmith.abstraction.events.MCItemHeldEvent;
+ import com.laytonsmith.annotations.api;
+ import com.laytonsmith.core.CHVersion;
+ import com.laytonsmith.core.ObjectGenerator;
+ import com.laytonsmith.core.Static;
+ import com.laytonsmith.core.constructs.*;
+ import com.laytonsmith.core.events.AbstractEvent;
+ import com.laytonsmith.core.events.BindableEvent;
+ import com.laytonsmith.core.events.Driver;
+ import com.laytonsmith.core.events.Prefilters;
+ import com.laytonsmith.core.events.Prefilters.PrefilterType;
+ import com.laytonsmith.core.exceptions.ConfigRuntimeException;
+ import com.laytonsmith.core.exceptions.EventException;
+ import com.laytonsmith.core.exceptions.PrefilterNonMatchException;
+ import com.laytonsmith.core.functions.Exceptions.ExceptionType;
+ 
+ import java.util.Map;
+ 
+ /**
+  *
+  * @author jb_aero
+  */
+ public class InventoryEvents {
+ 	public static String docs() {
+ 		return "Contains events related to inventory.";
+ 	}
+ 
+ 	@api
+ 	public static class inventory_click extends AbstractEvent {
+ 
+ 		public String getName() {
+ 			return "inventory_click";
+ 		}
+ 
+ 		public String docs() {
+ 			return "{slottype: <macro> The type of slot being clicked, can be "
+ 					+ StringUtils.Join(MCSlotType.values(), ", ", ", or ")
+ 					+ " | clicktype: <macro> One of " + StringUtils.Join(MCClickType.values(), ", ", ", or ")
+ 					+ " | action: <macro> One of " + StringUtils.Join(MCInventoryAction.values(), ", ", ", or ")
+ 					+ " | slotitem: <item match> }"
+ 					+ " Fired when a player clicks a slot in any inventory. "
+ 					+ " {player: The player who clicked | viewers: everyone looking in this inventory"
+ 					+ " | leftclick: true/false if this was a left click | keyboardclick: true/false if a key was pressed"
+ 					+ " | rightclick: true/false if this was a right click | shiftclick: true/false if shift was being held"
+ 					+ " | creativeclick: true/false if this action could only be performed in creative mode"
+ 					+ " | slot: the number of the slot | rawslot: the number of the slot in whole inventory window | slottype"
+ 					+ " | slotitem | inventorytype | inventorysize: number of slots in opened inventory | cursoritem"
+ 					+ " | inventory: all the items in the (top) inventory | clicktype | action}"
+ 					+ " {slotitem: the item currently in the clicked slot | cursoritem: the item on the cursor}"
+ 					+ " {}";
+ 		}
+ 
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent event)
+ 				throws PrefilterNonMatchException {
+ 			if (event instanceof MCInventoryClickEvent) {
+ 				MCInventoryClickEvent e = (MCInventoryClickEvent) event;
+ 
+ 				Prefilters.match(prefilter, "player", e.getWhoClicked().getName(), PrefilterType.MACRO);
+ 				Prefilters.match(prefilter, "clicktype", e.getClickType().name(), PrefilterType.MACRO);
+ 				Prefilters.match(prefilter, "slottype", e.getSlotType().name(), PrefilterType.MACRO);
+ 				Prefilters.match(prefilter, "slotitem", Static.ParseItemNotation(e.getCurrentItem()), PrefilterType.ITEM_MATCH);
+ 
+ 				return true;
+ 			}
+ 			return false;
+ 		}
+ 
+ 		public BindableEvent convert(CArray manualObject) {
+ 			throw new ConfigRuntimeException("Unsupported Operation", ExceptionType.BindException, Target.UNKNOWN);
+ 		}
+ 
+ 		public Map<String, Construct> evaluate(BindableEvent event) throws EventException {
+ 			if (event instanceof MCInventoryClickEvent) {
+ 				MCInventoryClickEvent e = (MCInventoryClickEvent) event;
+ 				Map<String, Construct> map = evaluate_helper(event);
+ 
+ 				map.put("player", new CString(e.getWhoClicked().getName(), Target.UNKNOWN));
+ 				CArray viewers = new CArray(Target.UNKNOWN);
+ 				for (MCHumanEntity viewer : e.getViewers()) {
+ 					viewers.push(new CString(viewer.getName(), Target.UNKNOWN));
+ 				}
+ 				map.put("viewers", viewers);
+ 				
+ 				map.put("action", new CString(e.getAction().name(), Target.UNKNOWN));
+ 				map.put("clicktype", new CString(e.getClickType().name(), Target.UNKNOWN));
+ 
+ 				map.put("leftclick", new CBoolean(e.isLeftClick(), Target.UNKNOWN));
+ 				map.put("rightclick", new CBoolean(e.isRightClick(), Target.UNKNOWN));
+ 				map.put("shiftclick", new CBoolean(e.isShiftClick(), Target.UNKNOWN));
+ 				map.put("creativeclick", new CBoolean(e.isCreativeClick(), Target.UNKNOWN));
+ 				map.put("keyboardclick", new CBoolean(e.isKeyboardClick(), Target.UNKNOWN));
+ 				map.put("cursoritem", ObjectGenerator.GetGenerator().item(e.getCursor(), Target.UNKNOWN));
+ 
+ 				map.put("slot", new CInt(e.getSlot(), Target.UNKNOWN));
+ 				map.put("rawslot", new CInt(e.getRawSlot(), Target.UNKNOWN));
+ 				map.put("slottype", new CString(e.getSlotType().name(), Target.UNKNOWN));
+ 				map.put("slotitem", ObjectGenerator.GetGenerator().item(e.getCurrentItem(), Target.UNKNOWN));
+ 
+ 				CArray items = CArray.GetAssociativeArray(Target.UNKNOWN);
+ 				MCInventory inv = e.getInventory();
+ 				for (int i = 0; i < inv.getSize(); i++) {
+ 					items.set(i, ObjectGenerator.GetGenerator().item(inv.getItem(i), Target.UNKNOWN), Target.UNKNOWN);
+ 				}
+ 				map.put("inventory", items);
+ 				map.put("inventorytype", new CString(inv.getType().name(), Target.UNKNOWN));
+ 				map.put("inventorysize", new CInt(inv.getSize(), Target.UNKNOWN));
+ 
+ 				return map;
+ 			} else {
+ 				throw new EventException("Cannot convert e to MCInventoryClickEvent");
+ 			}
+ 		}
+ 
+ 		public Driver driver() {
+ 			return Driver.INVENTORY_CLICK;
+ 		}
+ 
+ 		public boolean modifyEvent(String key, Construct value, BindableEvent event) {
+ 			if (event instanceof MCInventoryClickEvent) {
+ 				MCInventoryClickEvent e = (MCInventoryClickEvent) event;
+ 
+ 				if (key.equalsIgnoreCase("slotitem")) {
+ 					e.setCurrentItem(ObjectGenerator.GetGenerator().item(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 				if (key.equalsIgnoreCase("cursoritem")) {
+ 					e.setCursor(ObjectGenerator.GetGenerator().item(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 			}
+ 			return false;
+ 		}
+ 
+ 		@Override
+ 		public void cancel(BindableEvent o, boolean state) {
+ 			MCInventoryClickEvent ic = ((MCInventoryClickEvent)o);
+             ic.setCancelled(state);
+ 			StaticLayer.GetServer().getPlayer(ic.getWhoClicked().getName()).updateInventory();
+ 		}
+ 
+ 		public CHVersion since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 
+ 	}
+ 
+ 	@api
+ 	public static class inventory_drag extends AbstractEvent {
+ 
+ 		public String getName() {
+ 			return "inventory_drag";
+ 		}
+ 
+ 		public String docs() {
+ 			return "{world: <string match> World name | type: <macro> Can be " + StringUtils.Join(MCDragType.values(), ", ", ", or ")
+ 					+ " | cursoritem: <item match> item in hand, before event starts}"
+ 					+ "Fired when a player clicks (by left or right mouse button) a slot in inventory and drag mouse across slots. "
+ 					+ "{player: The player who clicked | newcursoritem: item on cursor, after event | oldcursoritem: item on cursor,"
+ 					+ " before event | slots: used slots | rawslots: used slots, as the numbers of the slots in whole inventory window"
+ 					+ " | newitems: array of items which are dropped in selected slots | inventorytype | inventorysize: number of slots in"
+ 					+ " opened inventory} {cursoritem: the item on the cursor, after event} "
+ 					+ "{} ";
+ 		}
+ 
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent event)
+ 				throws PrefilterNonMatchException {
+ 			if (event instanceof MCInventoryDragEvent) {
+ 				MCInventoryDragEvent e = (MCInventoryDragEvent) event;
+ 
+ 				Prefilters.match(prefilter, "world", e.getWhoClicked().getWorld().getName(), PrefilterType.MACRO);
+ 				Prefilters.match(prefilter, "type", e.getType().name(), PrefilterType.MACRO);
+ 				Prefilters.match(prefilter, "cursoritem", Static.ParseItemNotation(e.getOldCursor()), PrefilterType.ITEM_MATCH);
+ 
+ 				return true;
+ 			}
+ 			return false;
+ 		}
+ 
+ 		public BindableEvent convert(CArray manualObject) {
+ 			return null;
+ 		}
+ 
+ 		public Map<String, Construct> evaluate(BindableEvent event)
+ 				throws EventException {
+ 			if (event instanceof MCInventoryDragEvent) {
+ 				MCInventoryDragEvent e = (MCInventoryDragEvent) event;
+ 				Map<String, Construct> map = evaluate_helper(event);
+ 
+ 				map.put("player", new CString(e.getWhoClicked().getName(), Target.UNKNOWN));
+ 				map.put("newcursoritem", ObjectGenerator.GetGenerator().item(e.getCursor(), Target.UNKNOWN));
+ 				map.put("oldcursoritem", ObjectGenerator.GetGenerator().item(e.getOldCursor(), Target.UNKNOWN));
+ 
+ 				CArray slots = new CArray(Target.UNKNOWN);
+ 				for (Integer slot : e.getInventorySlots()) {
+ 					slots.push(new CInt(slot.intValue(), Target.UNKNOWN));
+ 				}
+ 				map.put("slots", slots);
+ 
+ 				CArray rawSlots = new CArray(Target.UNKNOWN);
+ 				for (Integer slot : e.getRawSlots()) {
+ 					rawSlots.push(new CInt(slot.intValue(), Target.UNKNOWN));
+ 				}
+ 				map.put("rawslots", rawSlots);
+ 
+ 				CArray newItems = CArray.GetAssociativeArray(Target.UNKNOWN);
+ 				for (Map.Entry<Integer, MCItemStack> ni : e.getNewItems().entrySet()) {
+ 					Integer key = ni.getKey();
+ 					MCItemStack value = ni.getValue();
+ 					newItems.set(key.intValue(), ObjectGenerator.GetGenerator().item(value, Target.UNKNOWN), Target.UNKNOWN);
+ 				}
+ 				map.put("newitems", newItems);
+ 
+ 				CArray items = CArray.GetAssociativeArray(Target.UNKNOWN);
+ 				MCInventory inv = e.getInventory();
+ 				for (int i = 0; i < inv.getSize(); i++) {
+ 					items.set(i, ObjectGenerator.GetGenerator().item(inv.getItem(i), Target.UNKNOWN), Target.UNKNOWN);
+ 				}
+ 				map.put("inventory", items);
+ 				map.put("inventorytype", new CString(inv.getType().name(), Target.UNKNOWN));
+ 				map.put("inventorysize", new CInt(inv.getSize(), Target.UNKNOWN));
+ 
+ 				map.put("type", new CString(e.getType().name(), Target.UNKNOWN));
+ 
+ 				return map;
+ 			} else {
+ 				throw new EventException("Cannot convert e to MCInventoryDragEvent");
+ 			}
+ 		}
+ 
+ 		public Driver driver() {
+ 			return Driver.INVENTORY_DRAG;
+ 		}
+ 
+ 		public boolean modifyEvent(String key, Construct value,
+ 				BindableEvent event) {
+ 			if (event instanceof MCInventoryDragEvent) {
+ 				MCInventoryDragEvent e = (MCInventoryDragEvent) event;
+ 
+ 				if (key.equalsIgnoreCase("cursoritem")) {
+ 					e.setCursor(ObjectGenerator.GetGenerator().item(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 			}
+ 			return false;
+ 		}
+ 
+ 		@Override
+ 		public void cancel(BindableEvent o, boolean state) {
+ 			MCInventoryDragEvent id = ((MCInventoryDragEvent)o);
+             id.setCancelled(state);
+ 			StaticLayer.GetServer().getPlayer(id.getWhoClicked().getName()).updateInventory();
+ 		}
+ 
+ 		public CHVersion since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 
+ 	}
+ 
+ 	@api
+ 	public static class inventory_open extends AbstractEvent {
+ 
+ 		public String getName() {
+ 			return "inventory_open";
+ 		}
+ 
+ 		public String docs() {
+ 			return "{} "
+ 					+ "Fired when a player opens an inventory. "
+ 					+ "{player: The player | " /*"{player: The player who clicked | viewers: everyone looking in this inventory | "*/
+ 					+ "inventory: the inventory items in this inventory | "
+ 					+ "inventorytype: type of inventory} "
+ 					+ "{} "
+ 					+ "{} ";
+ 		}
+ 
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent event)
+ 				throws PrefilterNonMatchException {
+ 			return true;
+ 		}
+ 
+ 		public BindableEvent convert(CArray manualObject) {
+ 			return null;
+ 		}
+ 
+ 		public Map<String, Construct> evaluate(BindableEvent event)
+ 				throws EventException {
+ 			if (event instanceof MCInventoryOpenEvent) {
+ 				MCInventoryOpenEvent e = (MCInventoryOpenEvent) event;
+ 				Map<String, Construct> map = evaluate_helper(event);
+ 
+ 				map.put("player", new CString(e.getPlayer().getName(), Target.UNKNOWN));
+ 
+ 				CArray items = CArray.GetAssociativeArray(Target.UNKNOWN);
+ 				MCInventory inv = e.getInventory();
+ 
+ 				for (int i = 0; i < inv.getSize(); i++) {
+ 					Construct c = ObjectGenerator.GetGenerator().item(inv.getItem(i), Target.UNKNOWN);
+ 					items.set(i, c, Target.UNKNOWN);
+ 				}
+ 
+ 				map.put("inventory", items);
+ 
+ 				map.put("inventorytype", new CString(e.getInventory().getType().name(), Target.UNKNOWN));
+ 
+ 				return map;
+ 			} else {
+ 				throw new EventException("Cannot convert e to MCInventoryOpenEvent");
+ 			}
+ 		}
+ 
+ 		public Driver driver() {
+ 			return Driver.INVENTORY_OPEN;
+ 		}
+ 
+ 		public boolean modifyEvent(String key, Construct value,
+ 				BindableEvent event) {
+ 			return false;
+ 		}
+ 
+ 		public CHVersion since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 
+ 	}
+ 
+ 	@api
+ 	public static class inventory_close extends AbstractEvent {
+ 
+ 		public String getName() {
+ 			return "inventory_close";
+ 		}
+ 
+ 		public String docs() {
+ 			return "{} "
+ 					+ "Fired when a player closes an inventory. "
+ 					+ "{player: The player | " /*"{player: The player who clicked | viewers: everyone looking in this inventory | "*/
+ 					+ "inventory: the inventory items in this inventory | "
+ 					+ "inventorytype: type of inventory} "
+ 					+ "{} "
+ 					+ "{} ";
+ 		}
+ 
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent event)
+ 				throws PrefilterNonMatchException {
+ 			return true;
+ 		}
+ 
+ 		public BindableEvent convert(CArray manualObject) {
+ 			return null;
+ 		}
+ 
+ 		public Map<String, Construct> evaluate(BindableEvent event)
+ 				throws EventException {
+ 			if (event instanceof MCInventoryCloseEvent) {
+ 				MCInventoryCloseEvent e = (MCInventoryCloseEvent) event;
+ 				Map<String, Construct> map = evaluate_helper(event);
+ 
+ 				map.put("player", new CString(e.getPlayer().getName(), Target.UNKNOWN));
+ 
+ 				CArray items = CArray.GetAssociativeArray(Target.UNKNOWN);
+ 				MCInventory inv = e.getInventory();
+ 
+ 				for (int i = 0; i < inv.getSize(); i++) {
+ 					Construct c = ObjectGenerator.GetGenerator().item(inv.getItem(i), Target.UNKNOWN);
+ 					items.set(i, c, Target.UNKNOWN);
+ 				}
+ 
+ 				map.put("inventory", items);
+ 
+ 				map.put("inventorytype", new CString(e.getInventory().getType().name(), Target.UNKNOWN));
+ 
+ 				return map;
+ 			} else {
+ 				throw new EventException("Cannot convert e to MCInventoryCloseEvent");
+ 			}
+ 		}
+ 
+ 		public Driver driver() {
+ 			return Driver.INVENTORY_CLOSE;
+ 		}
+ 
+ 		public boolean modifyEvent(String key, Construct value,
+ 				BindableEvent event) {
+ 			return false;
+ 		}
+ 
+ 		public CHVersion since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 
+ 	}
+ 	
+ 	@api
+ 	public static class item_enchant extends AbstractEvent {
+ 
+ 		public String getName() {
+ 			return "item_enchant";
+ 		}
+ 
+ 		public String docs() {
+ 			return "{} "
+ 					+ "Fired when a player enchants an item. "
+ 					+ "{player: The player that enchanted the item | "
+					+ "item: The item to be enchanted | "
+ 					+ "inventorytype: type of inventory | "
+ 					+ "levels: The amount of levels the player used | "
+ 					+ "enchants: Array of added enchantments | "
+ 					+ "location: Location of the used enchantment table | "
+					+ "option: The enchantment option the player clicked}"
+ 					+ "{levels: The amount of levels to use | "
+					+ "item: The item to be enchanted | "
+ 					+ "enchants: The enchants to add to the item}"
+					+ "{}";
+ 		}
+ 
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent e) throws PrefilterNonMatchException {
+ 			return true;
+ 		}
+ 
+ 		public BindableEvent convert(CArray manualObject) {
+ 			return null;
+ 		}
+ 
+ 		public Map<String, Construct> evaluate(BindableEvent event) throws EventException {
+ 			if (event instanceof MCEnchantItemEvent) {
+ 				MCEnchantItemEvent e = (MCEnchantItemEvent) event;
+ 				Map<String, Construct> map = evaluate_helper(event);
+ 
+ 				map.put("player", new CString(e.GetEnchanter().getName(), Target.UNKNOWN));
+ 				map.put("item", ObjectGenerator.GetGenerator().item(e.getItem(), Target.UNKNOWN));
+ 				map.put("inventorytype", new CString(e.getInventory().getType().name(), Target.UNKNOWN));
+ 				map.put("levels", new CInt(e.getExpLevelCost(), Target.UNKNOWN));
+ 				map.put("enchants", ObjectGenerator.GetGenerator().enchants(e.getEnchantsToAdd(), Target.UNKNOWN));
+ 				
+ 				CArray loc = ObjectGenerator.GetGenerator().location(e.getEnchantBlock().getLocation());
+ 					
+ 				loc.remove(new CString("yaw", Target.UNKNOWN));
+ 				loc.remove(new CString("pitch", Target.UNKNOWN));
+ 				loc.remove(new CString("4", Target.UNKNOWN));
+ 				loc.remove(new CString("5", Target.UNKNOWN));
+ 
+ 				map.put("location", loc);
+ 				
+ 				map.put("option", new CInt(e.whichButton(), Target.UNKNOWN));
+ 
+ 				return map;
+ 			} else {
+ 				throw new EventException("Cannot convert e to MCEnchantItemEvent");
+ 			}
+ 		}
+ 
+ 		public Driver driver() {
+ 			return Driver.ITEM_ENCHANT;
+ 		}
+ 
+ 		public boolean modifyEvent(String key, Construct value, BindableEvent event) {
+ 			if (event instanceof MCEnchantItemEvent) {
+ 				MCEnchantItemEvent e = (MCEnchantItemEvent) event;
+ 
+ 				if (key.equalsIgnoreCase("levels")) {
+ 					e.setExpLevelCost(Static.getInt32(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 				
+ 				if (key.equalsIgnoreCase("item")) {
+ 					e.setItem(ObjectGenerator.GetGenerator().item(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 				
+ 				if (key.equalsIgnoreCase("enchants")) {
+ 					e.setEnchantsToAdd((ObjectGenerator.GetGenerator().enchants((CArray) value, Target.UNKNOWN)));
+ 					return true;
+ 				}
+ 			}
+ 			return false;
+ 		}
+ 
+ 		public Version since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 	}
+ 	
+ 	@api
+ 	public static class item_held extends AbstractEvent {
+ 
+ 		@Override
+ 		public String getName() {
+ 			return "item_held";
+ 		}
+ 
+ 		@Override
+ 		public String docs() {
+ 			return "{}"
+ 					+ " Fires when a player changes which quickbar slot they have selected."
+ 					+ " {player | to | from: the slot the player is switching from}"
+ 					+ " {to: the slot that the player is switching to}"
+ 					+ " {}";
+ 		}
+ 
+ 		@Override
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent event) throws PrefilterNonMatchException {
+ 			if (event instanceof MCItemHeldEvent) {
+ 				return true;
+ 			}
+ 			return false;
+ 		}
+ 
+ 		@Override
+ 		public BindableEvent convert(CArray manualObject) {
+ 			throw ConfigRuntimeException.CreateUncatchableException("Unsupported operation.", Target.UNKNOWN);
+ 		}
+ 
+ 		@Override
+ 		public Map<String, Construct> evaluate(BindableEvent event) throws EventException {
+ 			if (event instanceof MCItemHeldEvent) {
+ 				MCItemHeldEvent e = (MCItemHeldEvent) event;
+ 				Map<String, Construct> ret = evaluate_helper(e);
+ 				ret.put("to", new CInt(e.getNewSlot(), Target.UNKNOWN));
+ 				ret.put("from", new CInt(e.getPreviousSlot(), Target.UNKNOWN));
+ 				return ret;
+ 			} else {
+ 				throw new EventException("Event received was not an MCItemHeldEvent");
+ 			}
+ 		}
+ 
+ 		@Override
+ 		public Driver driver() {
+ 			return Driver.ITEM_HELD;
+ 		}
+ 
+ 		@Override
+ 		public boolean modifyEvent(String key, Construct value, BindableEvent event) {
+ 			if (event instanceof MCItemHeldEvent) {
+ 				MCItemHeldEvent e = (MCItemHeldEvent) event;
+ 				if ("to".equals(key)) {
+ 					e.getPlayer().getInventory().setHeldItemSlot(Static.getInt32(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 			}
+ 			return false;
+ 		}
+ 
+ 		@Override
+ 		public Version since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 	}
+ 	
+ 	@api
+ 	public static class item_pre_craft extends AbstractEvent {
+ 
+ 		@Override
+ 		public String getName() {
+ 			return "item_pre_craft";
+ 		}
+ 
+ 		@Override
+ 		public String docs() {
+ 			return "{}"
+ 					+ " Fires when a recipe is formed in a crafting matrix, but the result has not yet been clicked."
+ 					+ " {viewers: all humanentities viewing the screen this event takes place in | matrix | result"
+ 					+ " | isRepair: true if this event was triggered by a repair operation (different than normal crafting)"
+ 					+ " | recipe: information about the formed recipe, or null if there is not one}"
+ 					+ " {}"/*" {matrix: the slots that make up the crafting grid | result: the result slot of crafting}"*/
+ 					+ " {}";
+ 		}
+ 
+ 		@Override
+ 		public boolean matches(Map<String, Construct> prefilter, BindableEvent event) throws PrefilterNonMatchException {
+ 			if (event instanceof MCPrepareItemCraftEvent) {
+ 				return true;
+ 			}
+ 			return false;
+ 		}
+ 
+ 		@Override
+ 		public BindableEvent convert(CArray manualObject) {
+ 			throw ConfigRuntimeException.CreateUncatchableException("Unsupported operation.", Target.UNKNOWN);
+ 		}
+ 
+ 		@Override
+ 		public Map<String, Construct> evaluate(BindableEvent event) throws EventException {
+ 			if (event instanceof MCPrepareItemCraftEvent) {
+ 				MCPrepareItemCraftEvent e = (MCPrepareItemCraftEvent) event;
+ 				Map<String, Construct> ret = evaluate_helper(e);
+ 				Target t = Target.UNKNOWN;
+ 				CArray viewers = new CArray(t);
+ 				for (MCHumanEntity v : e.getViewers()) {
+ 					viewers.push(new CString(v.getName(), t));
+ 				}
+ 				ret.put("viewers", viewers);
+ 				ret.put("recipe", ObjectGenerator.GetGenerator().recipe(e.getRecipe(), t));
+ 				ret.put("isRepair", new CBoolean(e.isRepair(), t));
+ 				CArray matrix = CArray.GetAssociativeArray(t);
+ 				MCItemStack[] mi = e.getInventory().getMatrix();
+ 				for (int i=0; i<mi.length; i++) {
+ 					matrix.set(i, ObjectGenerator.GetGenerator().item(mi[i], t), t);
+ 				}
+ 				ret.put("matrix", matrix);
+ 				ret.put("result", ObjectGenerator.GetGenerator().item(e.getInventory().getResult(), t));
+ 				return ret;
+ 			} else {
+ 				throw new EventException("Event received was not an MCPrepareItemCraftEvent.");
+ 			}
+ 		}
+ 
+ 		@Override
+ 		public Driver driver() {
+ 			return Driver.ITEM_PRE_CRAFT;
+ 		}
+ 
+ 		@Override
+ 		public boolean modifyEvent(String key, Construct value, BindableEvent event) {
+ 			/*if (event instanceof MCPrepareItemCraftEvent) {
+ 				MCPrepareItemCraftEvent e = (MCPrepareItemCraftEvent) event;
+ 				if ("result".equals(key)) {
+ 					e.getInventory().setResult(ObjectGenerator.GetGenerator().item(value, Target.UNKNOWN));
+ 					return true;
+ 				}
+ 				if ("matrix".equals(key)) {
+ 					if (value instanceof CArray) {
+ 						CArray va = (CArray) value;
+ 						MCItemStack[] old = e.getInventory().getMatrix();
+ 						MCItemStack[] repl = new MCItemStack[old.length];
+ 						for (int i=0; i<repl.length; i++) {
+ 							if (va.containsKey(i)) {
+ 								repl[i] = ObjectGenerator.GetGenerator().item(va, Target.UNKNOWN);
+ 							}
+ 						}
+ 						e.getInventory().setMatrix(repl);
+ 						return true;
+ 					} else if (value instanceof CNull) {
+ 						MCItemStack[] old = e.getInventory().getMatrix();
+ 						MCItemStack[] repl = new MCItemStack[old.length];
+ 						e.getInventory().setMatrix(repl);
+ 						return true;
+ 					} else {
+ 						throw new ConfigRuntimeException("Expected an array but recieved " + value,
+ 								ExceptionType.CastException, Target.UNKNOWN);
+ 					}
+ 				}
+ 			} */
+ 			return false;
+ 		}
+ 		
+ 		@Override
+ 		public Version since() {
+ 			return CHVersion.V3_3_1;
+ 		}
+ 	}
+ }

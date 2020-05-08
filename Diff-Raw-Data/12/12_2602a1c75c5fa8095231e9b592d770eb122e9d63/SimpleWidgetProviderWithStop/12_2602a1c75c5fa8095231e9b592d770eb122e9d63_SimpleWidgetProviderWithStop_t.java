@@ -1,0 +1,65 @@
+ /*
+  * Copyright (C) 2010-2014 The MPDroid Project
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.namelessdev.mpdroid.widgets;
+ 
+ import android.app.PendingIntent;
+ import android.appwidget.AppWidgetManager;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.widget.RemoteViews;
+ 
+ import com.namelessdev.mpdroid.R;
+ 
+ public class SimpleWidgetProviderWithStop extends SimpleWidgetProvider {
+     protected String TAG = "MPDroidSimpleWidgetProviderWithStop";
+ 
+     /**
+     * Link up various button actions using {@link PendingIntent}.
+      */
+     @Override
+     protected void linkButtons(Context context, RemoteViews views) {
+         Intent intent;
+         PendingIntent pendingIntent;
+ 
+         super.linkButtons(context, views);
+ 
+         // stop button
+         intent = new Intent(context, WidgetHelperService.class);
+         intent.setAction(WidgetHelperService.CMD_STOP);
+         pendingIntent = PendingIntent.getService(context, 0, intent, 0);
+         views.setOnClickPendingIntent(R.id.control_stop, pendingIntent);
+     }
+ 
+     @Override
+     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+         final RemoteViews views = new RemoteViews(context.getPackageName(),
+                 R.layout.widget_simple_with_stop);
+ 
+         super.onUpdate(views, context, appWidgetManager, appWidgetIds);
+     }
+ 
+     /**
+      * Update all active widget instances by pushing changes
+      */
+     @Override
+     protected void performUpdate(WidgetHelperService service, int[] appWidgetIds) {
+         final RemoteViews views = new RemoteViews(service.getPackageName(),
+                 R.layout.widget_simple_with_stop);
+ 
+         super.performUpdate(views, service, appWidgetIds);
+     }
+ }

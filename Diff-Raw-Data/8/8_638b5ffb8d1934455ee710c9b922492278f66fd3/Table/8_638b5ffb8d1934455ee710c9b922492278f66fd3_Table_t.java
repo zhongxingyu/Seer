@@ -1,0 +1,2646 @@
+ /* 
+ @ITMillApache2LicenseForJavaFiles@
+  */
+ 
+ package com.itmill.toolkit.ui;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.Iterator;
+ import java.util.LinkedHashSet;
+ import java.util.LinkedList;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.StringTokenizer;
+ 
+ import com.itmill.toolkit.data.Container;
+ import com.itmill.toolkit.data.Item;
+ import com.itmill.toolkit.data.Property;
+ import com.itmill.toolkit.data.util.ContainerOrderedWrapper;
+ import com.itmill.toolkit.data.util.IndexedContainer;
+ import com.itmill.toolkit.event.Action;
+ import com.itmill.toolkit.terminal.KeyMapper;
+ import com.itmill.toolkit.terminal.PaintException;
+ import com.itmill.toolkit.terminal.PaintTarget;
+ import com.itmill.toolkit.terminal.Resource;
+ 
+ /**
+  * <code>TableComponent</code> is used for representing data or components in
+  * pageable and selectable table.
+  * 
+  * @author IT Mill Ltd.
+  * @version
+  * @VERSION@
+  * @since 3.0
+  */
+ public class Table extends AbstractSelect implements Action.Container,
+         Container.Ordered, Container.Sortable {
+ 
+     private static final int CELL_KEY = 0;
+ 
+     private static final int CELL_HEADER = 1;
+ 
+     private static final int CELL_ICON = 2;
+ 
+     private static final int CELL_ITEMID = 3;
+ 
+     private static final int CELL_FIRSTCOL = 4;
+ 
+     /**
+      * Left column alignment. <b>This is the default behaviour. </b>
+      */
+     public static final String ALIGN_LEFT = "b";
+ 
+     /**
+      * Center column alignment.
+      */
+     public static final String ALIGN_CENTER = "c";
+ 
+     /**
+      * Right column alignment.
+      */
+     public static final String ALIGN_RIGHT = "e";
+ 
+     /**
+      * Column header mode: Column headers are hidden. <b>This is the default
+      * behavior. </b>
+      */
+     public static final int COLUMN_HEADER_MODE_HIDDEN = -1;
+ 
+     /**
+      * Column header mode: Property ID:s are used as column headers.
+      */
+     public static final int COLUMN_HEADER_MODE_ID = 0;
+ 
+     /**
+      * Column header mode: Column headers are explicitly specified with
+      * <code>setColumnHeaders</code>.
+      */
+     public static final int COLUMN_HEADER_MODE_EXPLICIT = 1;
+ 
+     /**
+      * Column header mode: Column headers are explicitly specified with
+      * <code>setColumnHeaders</code>
+      */
+     public static final int COLUMN_HEADER_MODE_EXPLICIT_DEFAULTS_ID = 2;
+ 
+     /**
+      * Row caption mode: The row headers are hidden. <b>This is the default
+      * mode. </b>
+      */
+     public static final int ROW_HEADER_MODE_HIDDEN = -1;
+ 
+     /**
+      * Row caption mode: Items Id-objects toString is used as row caption.
+      */
+     public static final int ROW_HEADER_MODE_ID = AbstractSelect.ITEM_CAPTION_MODE_ID;
+ 
+     /**
+      * Row caption mode: Item-objects toString is used as row caption.
+      */
+     public static final int ROW_HEADER_MODE_ITEM = AbstractSelect.ITEM_CAPTION_MODE_ITEM;
+ 
+     /**
+      * Row caption mode: Index of the item is used as item caption. The index
+      * mode can only be used with the containers implementing Container.Indexed
+      * interface.
+      */
+     public static final int ROW_HEADER_MODE_INDEX = AbstractSelect.ITEM_CAPTION_MODE_INDEX;
+ 
+     /**
+      * Row caption mode: Item captions are explicitly specified.
+      */
+     public static final int ROW_HEADER_MODE_EXPLICIT = AbstractSelect.ITEM_CAPTION_MODE_EXPLICIT;
+ 
+     /**
+      * Row caption mode: Item captions are read from property specified with
+      * <code>setItemCaptionPropertyId</code>.
+      */
+     public static final int ROW_HEADER_MODE_PROPERTY = AbstractSelect.ITEM_CAPTION_MODE_PROPERTY;
+ 
+     /**
+      * Row caption mode: Only icons are shown, the captions are hidden.
+      */
+     public static final int ROW_HEADER_MODE_ICON_ONLY = AbstractSelect.ITEM_CAPTION_MODE_ICON_ONLY;
+ 
+     /**
+      * Row caption mode: Item captions are explicitly specified, but if the
+      * caption is missing, the item id objects <code>toString()</code> is used
+      * instead.
+      */
+     public static final int ROW_HEADER_MODE_EXPLICIT_DEFAULTS_ID = AbstractSelect.ITEM_CAPTION_MODE_EXPLICIT_DEFAULTS_ID;
+ 
+     /* Private table extensions to Select *********************************** */
+ 
+     /**
+      * True if column collapsing is allowed.
+      */
+     private boolean columnCollapsingAllowed = false;
+ 
+     /**
+      * True if reordering of columns is allowed on the client side.
+      */
+     private boolean columnReorderingAllowed = false;
+ 
+     /**
+      * Keymapper for column ids.
+      */
+     private final KeyMapper columnIdMap = new KeyMapper();
+ 
+     /**
+      * Holds visible column propertyIds - in order.
+      */
+     private LinkedList visibleColumns = new LinkedList();
+ 
+     /**
+      * Holds propertyIds of currently collapsed columns.
+      */
+     private final HashSet collapsedColumns = new HashSet();
+ 
+     /**
+      * Holds headers for visible columns (by propertyId).
+      */
+     private final HashMap columnHeaders = new HashMap();
+ 
+     /**
+      * Holds icons for visible columns (by propertyId).
+      */
+     private final HashMap columnIcons = new HashMap();
+ 
+     /**
+      * Holds alignments for visible columns (by propertyId).
+      */
+     private HashMap columnAlignments = new HashMap();
+ 
+     /**
+      * Holds column widths in pixels for visible columns (by propertyId).
+      */
+     private final HashMap columnWidths = new HashMap();
+ 
+     /**
+      * Holds value of property pageLength. 0 disables paging.
+      */
+     private int pageLength = 15;
+ 
+     /**
+      * Id the first item on the current page.
+      */
+     private Object currentPageFirstItemId = null;
+ 
+     /**
+      * Index of the first item on the current page.
+      */
+     private int currentPageFirstItemIndex = 0;
+ 
+     /**
+      * Holds value of property selectable.
+      */
+     private boolean selectable = false;
+ 
+     /**
+      * Holds value of property columnHeaderMode.
+      */
+     private int columnHeaderMode = COLUMN_HEADER_MODE_EXPLICIT_DEFAULTS_ID;
+ 
+     /**
+      * True iff the row captions are hidden.
+      */
+     private boolean rowCaptionsAreHidden = true;
+ 
+     /**
+      * Page contents buffer used in buffered mode.
+      */
+     private Object[][] pageBuffer = null;
+ 
+     /**
+      * List of properties listened - the list is kept to release the listeners
+      * later.
+      */
+     private LinkedList listenedProperties = null;
+ 
+     /**
+      * List of visible components - the is used for needsRepaint calculation.
+      */
+     private LinkedList visibleComponents = null;
+ 
+     /**
+      * List of action handlers.
+      */
+     private LinkedList actionHandlers = null;
+ 
+     /**
+      * Action mapper.
+      */
+     private KeyMapper actionMapper = null;
+ 
+     /**
+      * Table cell editor factory.
+      */
+     private FieldFactory fieldFactory = new BaseFieldFactory();
+ 
+     /**
+      * Is table editable.
+      */
+     private boolean editable = false;
+ 
+     /**
+      * Current sorting direction.
+      */
+     private boolean sortAscending = true;
+ 
+     /**
+      * Currently table is sorted on this propertyId.
+      */
+     private Object sortContainerPropertyId = null;
+ 
+     /**
+      * Is table sorting disabled alltogether; even if some of the properties
+      * would be sortable.
+      */
+     private boolean sortDisabled = false;
+ 
+     /**
+      * Number of rows explicitly requested by the client to be painted on next
+      * paint. This is -1 if no request by the client is made. Painting the
+      * component will automatically reset this to -1.
+      */
+     private int reqRowsToPaint = -1;
+ 
+     /**
+      * Index of the first rows explicitly requested by the client to be painted.
+      * This is -1 if no request by the client is made. Painting the component
+      * will automatically reset this to -1.
+      */
+     private int reqFirstRowToPaint = -1;
+ 
+     private int firstToBeRenderedInClient = -1;
+ 
+     private int lastToBeRenderedInClient = -1;
+ 
+     private boolean isContentRefreshesEnabled = true;
+ 
+     private int pageBufferFirstIndex;
+ 
+     /* Table constructors *************************************************** */
+ 
+     /**
+      * Creates a new empty table.
+      */
+     public Table() {
+         setRowHeaderMode(ROW_HEADER_MODE_HIDDEN);
+     }
+ 
+     /**
+      * Creates a new empty table with caption.
+      * 
+      * @param caption
+      */
+     public Table(String caption) {
+         this();
+         setCaption(caption);
+     }
+ 
+     /**
+      * Creates a new table with caption and connect it to a Container.
+      * 
+      * @param caption
+      * @param dataSource
+      */
+     public Table(String caption, Container dataSource) {
+         this();
+         setCaption(caption);
+         setContainerDataSource(dataSource);
+     }
+ 
+     /* Table functionality ************************************************** */
+ 
+     /**
+      * Gets the array of visible column property id:s.
+      * 
+      * <p>
+      * The columns are show in the order of their appearance in this array.
+      * </p>
+      * 
+      * @return the Value of property availableColumns.
+      */
+     public Object[] getVisibleColumns() {
+         if (visibleColumns == null) {
+             return null;
+         }
+         return visibleColumns.toArray();
+     }
+ 
+     /**
+      * Sets the array of visible column property id:s.
+      * 
+      * <p>
+      * The columns are show in the order of their appearance in this array.
+      * </p>
+      * 
+      * @param visibleColumns
+      *                the Array of shown property id:s.
+      */
+     public void setVisibleColumns(Object[] visibleColumns) {
+ 
+         // Visible columns must exist
+         if (visibleColumns == null) {
+             throw new NullPointerException(
+                     "Can not set visible columns to null value");
+         }
+ 
+         // Checks that the new visible columns contains no nulls and properties
+         // exist
+         final Collection properties = getContainerPropertyIds();
+         for (int i = 0; i < visibleColumns.length; i++) {
+             if (visibleColumns[i] == null) {
+                 throw new NullPointerException("Properties must be non-nulls");
+             } else if (!properties.contains(visibleColumns[i])) {
+                 throw new IllegalArgumentException(
+                         "Properties must exist in the Container, missing property: "
+                                 + visibleColumns[i]);
+             }
+         }
+ 
+         // If this is called befor the constructor is finished, it might be
+         // uninitialized
+         final LinkedList newVC = new LinkedList();
+         for (int i = 0; i < visibleColumns.length; i++) {
+             newVC.add(visibleColumns[i]);
+         }
+ 
+         // Removes alignments, icons and headers from hidden columns
+         if (this.visibleColumns != null) {
+             for (final Iterator i = this.visibleColumns.iterator(); i.hasNext();) {
+                 final Object col = i.next();
+                 if (!newVC.contains(col)) {
+                     setColumnHeader(col, null);
+                     setColumnAlignment(col, null);
+                     setColumnIcon(col, null);
+                 }
+             }
+         }
+ 
+         this.visibleColumns = newVC;
+ 
+         // Assures visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Gets the headers of the columns.
+      * 
+      * <p>
+      * The headers match the property id:s given my the set visible column
+      * headers. The table must be set in either
+      * <code>ROW_HEADER_MODE_EXPLICIT</code> or
+      * <code>ROW_HEADER_MODE_EXPLICIT_DEFAULTS_ID</code> mode to show the
+      * headers. In the defaults mode any nulls in the headers array are replaced
+      * with id.toString() outputs when rendering.
+      * </p>
+      * 
+      * @return the Array of column headers.
+      */
+     public String[] getColumnHeaders() {
+         if (columnHeaders == null) {
+             return null;
+         }
+         final String[] headers = new String[visibleColumns.size()];
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext(); i++) {
+             headers[i] = (String) columnHeaders.get(it.next());
+         }
+         return headers;
+     }
+ 
+     /**
+      * Sets the headers of the columns.
+      * 
+      * <p>
+      * The headers match the property id:s given my the set visible column
+      * headers. The table must be set in either
+      * <code>ROW_HEADER_MODE_EXPLICIT</code> or
+      * <code>ROW_HEADER_MODE_EXPLICIT_DEFAULTS_ID</code> mode to show the
+      * headers. In the defaults mode any nulls in the headers array are replaced
+      * with id.toString() outputs when rendering.
+      * </p>
+      * 
+      * @param columnHeaders
+      *                the Array of column headers that match the
+      *                <code>getVisibleColumns</code> method.
+      */
+     public void setColumnHeaders(String[] columnHeaders) {
+ 
+         if (columnHeaders.length != visibleColumns.size()) {
+             throw new IllegalArgumentException(
+                     "The length of the headers array must match the number of visible columns");
+         }
+ 
+         this.columnHeaders.clear();
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext()
+                 && i < columnHeaders.length; i++) {
+             this.columnHeaders.put(it.next(), columnHeaders[i]);
+         }
+ 
+         // Assures the visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Gets the icons of the columns.
+      * 
+      * <p>
+      * The icons in headers match the property id:s given my the set visible
+      * column headers. The table must be set in either
+      * <code>ROW_HEADER_MODE_EXPLICIT</code> or
+      * <code>ROW_HEADER_MODE_EXPLICIT_DEFAULTS_ID</code> mode to show the
+      * headers with icons.
+      * </p>
+      * 
+      * @return the Array of icons that match the <code>getVisibleColumns</code>.
+      */
+     public Resource[] getColumnIcons() {
+         if (columnIcons == null) {
+             return null;
+         }
+         final Resource[] icons = new Resource[visibleColumns.size()];
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext(); i++) {
+             icons[i] = (Resource) columnIcons.get(it.next());
+         }
+ 
+         return icons;
+     }
+ 
+     /**
+      * Sets the icons of the columns.
+      * 
+      * <p>
+      * The icons in headers match the property id:s given my the set visible
+      * column headers. The table must be set in either
+      * <code>ROW_HEADER_MODE_EXPLICIT</code> or
+      * <code>ROW_HEADER_MODE_EXPLICIT_DEFAULTS_ID</code> mode to show the
+      * headers with icons.
+      * </p>
+      * 
+      * @param columnIcons
+      *                the Array of icons that match the
+      *                <code>getVisibleColumns</code>.
+      */
+     public void setColumnIcons(Resource[] columnIcons) {
+ 
+         if (columnIcons.length != visibleColumns.size()) {
+             throw new IllegalArgumentException(
+                     "The length of the icons array must match the number of visible columns");
+         }
+ 
+         this.columnIcons.clear();
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext()
+                 && i < columnIcons.length; i++) {
+             this.columnIcons.put(it.next(), columnIcons[i]);
+         }
+ 
+         // Assure visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Gets the array of column alignments.
+      * 
+      * <p>
+      * The items in the array must match the properties identified by
+      * <code>getVisibleColumns()</code>. The possible values for the
+      * alignments include:
+      * <ul>
+      * <li><code>ALIGN_LEFT</code>: Left alignment</li>
+      * <li><code>ALIGN_CENTER</code>: Centered</li>
+      * <li><code>ALIGN_RIGHT</code>: Right alignment</li>
+      * </ul>
+      * The alignments default to <code>ALIGN_LEFT</code>: any null values are
+      * rendered as align lefts.
+      * </p>
+      * 
+      * @return the Column alignments array.
+      */
+     public String[] getColumnAlignments() {
+         if (columnAlignments == null) {
+             return null;
+         }
+         final String[] alignments = new String[visibleColumns.size()];
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext(); i++) {
+             alignments[i++] = getColumnAlignment(it.next());
+         }
+ 
+         return alignments;
+     }
+ 
+     /**
+      * Sets the column alignments.
+      * 
+      * <p>
+      * The items in the array must match the properties identified by
+      * <code>getVisibleColumns()</code>. The possible values for the
+      * alignments include:
+      * <ul>
+      * <li><code>ALIGN_LEFT</code>: Left alignment</li>
+      * <li><code>ALIGN_CENTER</code>: Centered</li>
+      * <li><code>ALIGN_RIGHT</code>: Right alignment</li>
+      * </ul>
+      * The alignments default to <code>ALIGN_LEFT</code>
+      * </p>
+      * 
+      * @param columnAlignments
+      *                the Column alignments array.
+      */
+     public void setColumnAlignments(String[] columnAlignments) {
+ 
+         if (columnAlignments.length != visibleColumns.size()) {
+             throw new IllegalArgumentException(
+                     "The length of the alignments array must match the number of visible columns");
+         }
+ 
+         // Checks all alignments
+         for (int i = 0; i < columnAlignments.length; i++) {
+             final String a = columnAlignments[i];
+             if (a != null && !a.equals(ALIGN_LEFT) && !a.equals(ALIGN_CENTER)
+                     && !a.equals(ALIGN_RIGHT)) {
+                 throw new IllegalArgumentException("Column " + i
+                         + " aligment '" + a + "' is invalid");
+             }
+         }
+ 
+         // Resets the alignments
+         final HashMap newCA = new HashMap();
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext()
+                 && i < columnAlignments.length; i++) {
+             newCA.put(it.next(), columnAlignments[i]);
+         }
+         this.columnAlignments = newCA;
+ 
+         // Assures the visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Sets columns width (in pixels). Theme may not necessary respect very
+      * small or very big values. Setting width to -1 (default) means that theme
+      * will make decision of width.
+      * 
+      * @param columnId
+      *                colunmns property id
+      * @param width
+      *                width to be reserved for colunmns content
+      * @since 4.0.3
+      */
+     public void setColumnWidth(Object columnId, int width) {
+         columnWidths.put(columnId, new Integer(width));
+     }
+ 
+     /**
+      * Gets the width of column
+      * 
+      * @param propertyId
+      * @return width of colun or -1 when value not set
+      */
+     public int getColumnWidth(Object propertyId) {
+         final Integer value = (Integer) columnWidths.get(propertyId);
+         if (value == null) {
+             return -1;
+         }
+         return value.intValue();
+     }
+ 
+     /**
+      * Gets the page length.
+      * 
+      * <p>
+      * Setting page length 0 disables paging.
+      * </p>
+      * 
+      * @return the Length of one page.
+      */
+     public int getPageLength() {
+         return pageLength;
+     }
+ 
+     /**
+      * Sets the page length.
+      * 
+      * <p>
+      * Setting page length 0 disables paging. The page length defaults to 15.
+      * </p>
+      * 
+      * @param pageLength
+      *                the Length of one page.
+      */
+     public void setPageLength(int pageLength) {
+         if (pageLength >= 0 && this.pageLength != pageLength) {
+             this.pageLength = pageLength;
+             // "scroll" to first row
+             setCurrentPageFirstItemIndex(0);
+             // Assures the visual refresh
+             resetPageBuffer();
+             refreshRenderedCells();
+         }
+     }
+ 
+     /**
+      * Getter for property currentPageFirstItem.
+      * 
+      * @return the Value of property currentPageFirstItem.
+      */
+     public Object getCurrentPageFirstItemId() {
+ 
+         // Priorise index over id if indexes are supported
+         if (items instanceof Container.Indexed) {
+             final int index = getCurrentPageFirstItemIndex();
+             Object id = null;
+             if (index >= 0 && index < size()) {
+                 id = ((Container.Indexed) items).getIdByIndex(index);
+             }
+             if (id != null && !id.equals(currentPageFirstItemId)) {
+                 currentPageFirstItemId = id;
+             }
+         }
+ 
+         // If there is no item id at all, use the first one
+         if (currentPageFirstItemId == null) {
+             currentPageFirstItemId = ((Container.Ordered) items).firstItemId();
+         }
+ 
+         return currentPageFirstItemId;
+     }
+ 
+     /**
+      * Setter for property currentPageFirstItemId.
+      * 
+      * @param currentPageFirstItemId
+      *                the New value of property currentPageFirstItemId.
+      */
+     public void setCurrentPageFirstItemId(Object currentPageFirstItemId) {
+ 
+         // Gets the corresponding index
+         int index = -1;
+         try {
+             index = ((Container.Indexed) items)
+                     .indexOfId(currentPageFirstItemId);
+         } catch (final ClassCastException e) {
+ 
+             // If the table item container does not have index, we have to
+             // calculates the index by hand
+             Object id = ((Container.Ordered) items).firstItemId();
+             while (id != null && !id.equals(currentPageFirstItemId)) {
+                 index++;
+                 id = ((Container.Ordered) items).nextItemId(id);
+             }
+             if (id == null) {
+                 index = -1;
+             }
+         }
+ 
+         // If the search for item index was successfull
+         if (index >= 0) {
+             this.currentPageFirstItemId = currentPageFirstItemId;
+             currentPageFirstItemIndex = index;
+         }
+ 
+         // Assures the visual refresh
+         refreshRenderedCells();
+ 
+     }
+ 
+     /**
+      * Gets the icon Resource for the specified column.
+      * 
+      * @param propertyId
+      *                the propertyId indentifying the column.
+      * @return the icon for the specified column; null if the column has no icon
+      *         set, or if the column is not visible.
+      */
+     public Resource getColumnIcon(Object propertyId) {
+         return (Resource) columnIcons.get(propertyId);
+     }
+ 
+     /**
+      * Sets the icon Resource for the specified column.
+      * <p>
+      * Throws IllegalArgumentException if the specified column is not visible.
+      * </p>
+      * 
+      * @param propertyId
+      *                the propertyId identifying the column.
+      * @param icon
+      *                the icon Resource to set.
+      */
+     public void setColumnIcon(Object propertyId, Resource icon) {
+ 
+         if (icon == null) {
+             columnIcons.remove(propertyId);
+         } else {
+             columnIcons.put(propertyId, icon);
+         }
+ 
+         // Assures the visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Gets the header for the specified column.
+      * 
+      * @param propertyId
+      *                the propertyId indentifying the column.
+      * @return the header for the specifed column if it has one.
+      */
+     public String getColumnHeader(Object propertyId) {
+         if (getColumnHeaderMode() == COLUMN_HEADER_MODE_HIDDEN) {
+             return null;
+         }
+ 
+         String header = (String) columnHeaders.get(propertyId);
+         if ((header == null && getColumnHeaderMode() == COLUMN_HEADER_MODE_EXPLICIT_DEFAULTS_ID)
+                 || getColumnHeaderMode() == COLUMN_HEADER_MODE_ID) {
+             header = propertyId.toString();
+         }
+ 
+         return header;
+     }
+ 
+     /**
+      * Sets the column header for the specified column;
+      * 
+      * @param propertyId
+      *                the propertyId indentifying the column.
+      * @param header
+      *                the header to set.
+      */
+     public void setColumnHeader(Object propertyId, String header) {
+ 
+         if (header == null) {
+             columnHeaders.remove(propertyId);
+             return;
+         }
+         columnHeaders.put(propertyId, header);
+ 
+         // Assures the visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Gets the specified column's alignment.
+      * 
+      * @param propertyId
+      *                the propertyID identifying the column.
+      * @return the specified column's alignment if it as one; null otherwise.
+      */
+     public String getColumnAlignment(Object propertyId) {
+         final String a = (String) columnAlignments.get(propertyId);
+         return a == null ? ALIGN_LEFT : a;
+     }
+ 
+     /**
+      * Sets the specified column's alignment.
+      * 
+      * <p>
+      * Throws IllegalArgumentException if the alignment is not one of the
+      * following: ALIGN_LEFT, ALIGN_CENTER or ALIGN_RIGHT
+      * </p>
+      * 
+      * @param propertyId
+      *                the propertyID identifying the column.
+      * @param alignment
+      *                the desired alignment.
+      */
+     public void setColumnAlignment(Object propertyId, String alignment) {
+ 
+         // Checks for valid alignments
+         if (alignment != null && !alignment.equals(ALIGN_LEFT)
+                 && !alignment.equals(ALIGN_CENTER)
+                 && !alignment.equals(ALIGN_RIGHT)) {
+             throw new IllegalArgumentException("Column alignment '" + alignment
+                     + "' is not supported.");
+         }
+ 
+         if (alignment == null || alignment.equals(ALIGN_LEFT)) {
+             columnAlignments.remove(propertyId);
+             return;
+         }
+ 
+         columnAlignments.put(propertyId, alignment);
+ 
+         // Assures the visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Checks if the specified column is collapsed.
+      * 
+      * @param propertyId
+      *                the propertyID identifying the column.
+      * @return true if the column is collapsed; false otherwise;
+      */
+     public boolean isColumnCollapsed(Object propertyId) {
+         return collapsedColumns != null
+                 && collapsedColumns.contains(propertyId);
+     }
+ 
+     /**
+      * Sets whether the specified column is collapsed or not.
+      * 
+      * 
+      * @param propertyId
+      *                the propertyID identifying the column.
+      * @param collapsed
+      *                the desired collapsedness.
+      * @throws IllegalAccessException
+      */
+     public void setColumnCollapsed(Object propertyId, boolean collapsed)
+             throws IllegalAccessException {
+         if (!isColumnCollapsingAllowed()) {
+             throw new IllegalAccessException("Column collapsing not allowed!");
+         }
+ 
+         if (collapsed) {
+             collapsedColumns.add(propertyId);
+         } else {
+             collapsedColumns.remove(propertyId);
+         }
+ 
+         // Assures the visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Checks if column collapsing is allowed.
+      * 
+      * @return true if columns can be collapsed; false otherwise.
+      */
+     public boolean isColumnCollapsingAllowed() {
+         return columnCollapsingAllowed;
+     }
+ 
+     /**
+      * Sets whether column collapsing is allowed or not.
+      * 
+      * @param collapsingAllowed
+      *                specifies whether column collapsing is allowed.
+      */
+     public void setColumnCollapsingAllowed(boolean collapsingAllowed) {
+         columnCollapsingAllowed = collapsingAllowed;
+ 
+         if (!collapsingAllowed) {
+             collapsedColumns.clear();
+         }
+ 
+         // Assures the visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Checks if column reordering is allowed.
+      * 
+      * @return true if columns can be reordered; false otherwise.
+      */
+     public boolean isColumnReorderingAllowed() {
+         return columnReorderingAllowed;
+     }
+ 
+     /**
+      * Sets whether column reordering is allowed or not.
+      * 
+      * @param reorderingAllowed
+      *                specifies whether column reordering is allowed.
+      */
+     public void setColumnReorderingAllowed(boolean reorderingAllowed) {
+         columnReorderingAllowed = reorderingAllowed;
+ 
+         // Assures the visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /*
+      * Arranges visible columns according to given columnOrder. Silently ignores
+      * colimnId:s that are not visible columns, and keeps the internal order of
+      * visible columns left out of the ordering (trailing). Silently does
+      * nothing if columnReordering is not allowed.
+      */
+     private void setColumnOrder(Object[] columnOrder) {
+         if (columnOrder == null || !isColumnReorderingAllowed()) {
+             return;
+         }
+         final LinkedList newOrder = new LinkedList();
+         for (int i = 0; i < columnOrder.length; i++) {
+             if (columnOrder[i] != null
+                     && visibleColumns.contains(columnOrder[i])) {
+                 visibleColumns.remove(columnOrder[i]);
+                 newOrder.add(columnOrder[i]);
+             }
+         }
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext();) {
+             final Object columnId = it.next();
+             if (!newOrder.contains(columnId)) {
+                 newOrder.add(columnId);
+             }
+         }
+         visibleColumns = newOrder;
+ 
+         // Assure visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Getter for property currentPageFirstItem.
+      * 
+      * @return the Value of property currentPageFirstItem.
+      */
+     public int getCurrentPageFirstItemIndex() {
+         return currentPageFirstItemIndex;
+     }
+ 
+     /**
+      * Setter for property currentPageFirstItem.
+      * 
+      * @param newIndex
+      *                the New value of property currentPageFirstItem.
+      */
+     public void setCurrentPageFirstItemIndex(int newIndex) {
+ 
+         // Ensures that the new value is valid
+         if (newIndex >= size()) {
+             newIndex = size() - pageLength;
+         }
+         if (newIndex < 0) {
+             newIndex = 0;
+         }
+ 
+         // Refresh first item id
+         if (items instanceof Container.Indexed) {
+             try {
+                 currentPageFirstItemId = ((Container.Indexed) items)
+                         .getIdByIndex(newIndex);
+             } catch (final IndexOutOfBoundsException e) {
+                 currentPageFirstItemId = null;
+             }
+             currentPageFirstItemIndex = newIndex;
+         } else {
+ 
+             // For containers not supporting indexes, we must iterate the
+             // container forwards / backwards
+             // next available item forward or backward
+ 
+             currentPageFirstItemId = ((Container.Ordered) items).firstItemId();
+ 
+             // Go forwards in the middle of the list (respect borders)
+             while (currentPageFirstItemIndex < newIndex
+                     && !((Container.Ordered) items)
+                             .isLastId(currentPageFirstItemId)) {
+                 currentPageFirstItemIndex++;
+                 currentPageFirstItemId = ((Container.Ordered) items)
+                         .nextItemId(currentPageFirstItemId);
+             }
+ 
+             // If we did hit the border
+             if (((Container.Ordered) items).isLastId(currentPageFirstItemId)) {
+                 currentPageFirstItemIndex = size() - 1;
+             }
+ 
+             // Go backwards in the middle of the list (respect borders)
+             while (currentPageFirstItemIndex > newIndex
+                     && !((Container.Ordered) items)
+                             .isFirstId(currentPageFirstItemId)) {
+                 currentPageFirstItemIndex--;
+                 currentPageFirstItemId = ((Container.Ordered) items)
+                         .prevItemId(currentPageFirstItemId);
+             }
+ 
+             // If we did hit the border
+             if (((Container.Ordered) items).isFirstId(currentPageFirstItemId)) {
+                 currentPageFirstItemIndex = 0;
+             }
+ 
+             // Go forwards once more
+             while (currentPageFirstItemIndex < newIndex
+                     && !((Container.Ordered) items)
+                             .isLastId(currentPageFirstItemId)) {
+                 currentPageFirstItemIndex++;
+                 currentPageFirstItemId = ((Container.Ordered) items)
+                         .nextItemId(currentPageFirstItemId);
+             }
+ 
+             // If for some reason we do hit border again, override
+             // the user index request
+             if (((Container.Ordered) items).isLastId(currentPageFirstItemId)) {
+                 newIndex = currentPageFirstItemIndex = size() - 1;
+             }
+         }
+     }
+ 
+     /**
+      * Getter for property pageBuffering.
+      * 
+      * @deprecated functionality is not needed in ajax rendering model
+      * 
+      * @return the Value of property pageBuffering.
+      */
+     public boolean isPageBufferingEnabled() {
+         return true;
+     }
+ 
+     /**
+      * Setter for property pageBuffering.
+      * 
+      * @deprecated functionality is not needed in ajax rendering model
+      * 
+      * @param pageBuffering
+      *                the New value of property pageBuffering.
+      */
+     public void setPageBufferingEnabled(boolean pageBuffering) {
+ 
+     }
+ 
+     /**
+      * Getter for property selectable.
+      * 
+      * <p>
+      * The table is not selectable by default.
+      * </p>
+      * 
+      * @return the Value of property selectable.
+      */
+     public boolean isSelectable() {
+         return selectable;
+     }
+ 
+     /**
+      * Setter for property selectable.
+      * 
+      * <p>
+      * The table is not selectable by default.
+      * </p>
+      * 
+      * @param selectable
+      *                the New value of property selectable.
+      */
+     public void setSelectable(boolean selectable) {
+         if (this.selectable != selectable) {
+             this.selectable = selectable;
+             requestRepaint();
+         }
+     }
+ 
+     /**
+      * Getter for property columnHeaderMode.
+      * 
+      * @return the Value of property columnHeaderMode.
+      */
+     public int getColumnHeaderMode() {
+         return columnHeaderMode;
+     }
+ 
+     /**
+      * Setter for property columnHeaderMode.
+      * 
+      * @param columnHeaderMode
+      *                the New value of property columnHeaderMode.
+      */
+     public void setColumnHeaderMode(int columnHeaderMode) {
+         if (columnHeaderMode >= COLUMN_HEADER_MODE_HIDDEN
+                 && columnHeaderMode <= COLUMN_HEADER_MODE_EXPLICIT_DEFAULTS_ID) {
+             this.columnHeaderMode = columnHeaderMode;
+         }
+ 
+         // Assures the visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Refreshes rendered rows
+      */
+     private void refreshRenderedCells() {
+         if (getParent() == null) {
+             return;
+         }
+ 
+         if (isContentRefreshesEnabled) {
+ 
+             LinkedList oldListenedProperties = listenedProperties;
+             LinkedList oldVisibleComponents = visibleComponents;
+ 
+             // initialize the listener collections
+             listenedProperties = new LinkedList();
+             visibleComponents = new LinkedList();
+ 
+             // Collects the basic facts about the table page
+             final Object[] colids = getVisibleColumns();
+             final int cols = colids.length;
+             final int pagelen = getPageLength();
+             int firstIndex = getCurrentPageFirstItemIndex();
+             int rows = size();
+             if (rows > 0 && firstIndex >= 0) {
+                 rows -= firstIndex;
+             }
+             if (pagelen > 0 && pagelen < rows) {
+                 rows = pagelen;
+             }
+ 
+             // If "to be painted next" variables are set, use them
+             if (lastToBeRenderedInClient - firstToBeRenderedInClient > 0) {
+                 rows = lastToBeRenderedInClient - firstToBeRenderedInClient + 1;
+             }
+             Object id;
+             if (firstToBeRenderedInClient >= 0) {
+                 if (firstToBeRenderedInClient < size()) {
+                     firstIndex = firstToBeRenderedInClient;
+                 } else {
+                     firstIndex = size() - 1;
+                 }
+             } else {
+                 // initial load
+                 firstToBeRenderedInClient = firstIndex;
+             }
+             if (size() > 0) {
+                 if (rows + firstIndex > size()) {
+                     rows = size() - firstIndex;
+                 }
+             } else {
+                 rows = 0;
+             }
+ 
+             Object[][] cells = new Object[cols + CELL_FIRSTCOL][rows];
+             if (rows == 0) {
+                 pageBuffer = cells;
+                 return;
+             }
+ 
+             // Gets the first item id
+             if (items instanceof Container.Indexed) {
+                 id = ((Container.Indexed) items).getIdByIndex(firstIndex);
+             } else {
+                 id = ((Container.Ordered) items).firstItemId();
+                 for (int i = 0; i < firstIndex; i++) {
+                     id = ((Container.Ordered) items).nextItemId(id);
+                 }
+             }
+ 
+             final int headmode = getRowHeaderMode();
+             final boolean[] iscomponent = new boolean[cols];
+             for (int i = 0; i < cols; i++) {
+                 iscomponent[i] = Component.class
+                         .isAssignableFrom(getType(colids[i]));
+             }
+             int firstIndexNotInCache;
+             if (pageBuffer != null && pageBuffer[CELL_ITEMID].length > 0) {
+                 firstIndexNotInCache = pageBufferFirstIndex
+                         + pageBuffer[CELL_ITEMID].length;
+             } else {
+                 firstIndexNotInCache = -1;
+             }
+ 
+             // Creates the page contents
+             int filledRows = 0;
+             for (int i = 0; i < rows && id != null; i++) {
+                 cells[CELL_ITEMID][i] = id;
+                 cells[CELL_KEY][i] = itemIdMapper.key(id);
+                 if (headmode != ROW_HEADER_MODE_HIDDEN) {
+                     switch (headmode) {
+                     case ROW_HEADER_MODE_INDEX:
+                         cells[CELL_HEADER][i] = String.valueOf(i + firstIndex
+                                 + 1);
+                         break;
+                     default:
+                         cells[CELL_HEADER][i] = getItemCaption(id);
+                     }
+                     cells[CELL_ICON][i] = getItemIcon(id);
+                 }
+ 
+                 if (cols > 0) {
+                     for (int j = 0; j < cols; j++) {
+                         final Property p = getContainerProperty(id, colids[j]);
+                         Object value = null;
+                         // check in current pageBuffer already has row
+                         int index = firstIndex + i;
+                         if (p != null) {
+                             if (p instanceof Property.ValueChangeNotifier) {
+                                 if (oldListenedProperties == null
+                                         || !oldListenedProperties.contains(p)) {
+                                     ((Property.ValueChangeNotifier) p)
+                                             .addListener(this);
+                                 }
+                                 listenedProperties.add(p);
+                             }
+                             if (index < firstIndexNotInCache
+                                     && index >= pageBufferFirstIndex) {
+                                 // we have data already in our cache,
+                                 // recycle it instead of fetching it via
+                                 // getValue/getPropertyValue
+                                 int indexInOldBuffer = index
+                                         - pageBufferFirstIndex;
+                                 value = pageBuffer[CELL_FIRSTCOL + j][indexInOldBuffer];
+                             } else {
+ 
+                                 if (iscomponent[j]) {
+                                     value = p.getValue();
+                                 } else if (p != null) {
+                                     value = getPropertyValue(id, colids[j], p);
+                                 } else {
+                                     value = getPropertyValue(id, colids[j],
+                                             null);
+                                 }
+                             }
+                         } else {
+                             value = "";
+                         }
+ 
+                         if (value instanceof Component) {
+                             if (oldVisibleComponents == null
+                                     || !oldVisibleComponents.contains(value)) {
+                                 ((Component) value).setParent(this);
+                             }
+                             visibleComponents.add(value);
+                         }
+                         cells[CELL_FIRSTCOL + j][i] = value;
+                     }
+                 }
+ 
+                 id = ((Container.Ordered) items).nextItemId(id);
+ 
+                 filledRows++;
+             }
+ 
+             // Assures that all the rows of the cell-buffer are valid
+             if (filledRows != cells[0].length) {
+                 final Object[][] temp = new Object[cells.length][filledRows];
+                 for (int i = 0; i < cells.length; i++) {
+                     for (int j = 0; j < filledRows; j++) {
+                         temp[i][j] = cells[i][j];
+                     }
+                 }
+                 cells = temp;
+             }
+ 
+             pageBufferFirstIndex = firstIndex;
+ 
+             // Saves the results to internal buffer
+             pageBuffer = cells;
+ 
+             if (oldVisibleComponents != null) {
+                 for (final Iterator i = oldVisibleComponents.iterator(); i
+                         .hasNext();) {
+                     Component c = (Component) i.next();
+                     if (!visibleComponents.contains(c)) {
+                         c.setParent(null);
+                     }
+                 }
+             }
+ 
+             if (oldListenedProperties != null) {
+                 for (final Iterator i = oldListenedProperties.iterator(); i
+                         .hasNext();) {
+                     Property.ValueChangeNotifier o = (ValueChangeNotifier) i
+                             .next();
+                     if (!listenedProperties.contains(o)) {
+                         o.removeListener(this);
+                     }
+                 }
+             }
+ 
+             requestRepaint();
+         }
+ 
+     }
+ 
+     /**
+      * Refreshes the current page contents.
+      * 
+      * @deprecated should not need to be used
+      */
+     public void refreshCurrentPage() {
+ 
+     }
+ 
+     /**
+      * Sets the row header mode.
+      * <p>
+      * The mode can be one of the following ones:
+      * <ul>
+      * <li><code>ROW_HEADER_MODE_HIDDEN</code>: The row captions are hidden.
+      * </li>
+      * <li><code>ROW_HEADER_MODE_ID</code>: Items Id-objects
+      * <code>toString()</code> is used as row caption.
+      * <li><code>ROW_HEADER_MODE_ITEM</code>: Item-objects
+      * <code>toString()</code> is used as row caption.
+      * <li><code>ROW_HEADER_MODE_PROPERTY</code>: Property set with
+      * <code>setItemCaptionPropertyId()</code> is used as row header.
+      * <li><code>ROW_HEADER_MODE_EXPLICIT_DEFAULTS_ID</code>: Items
+      * Id-objects <code>toString()</code> is used as row header. If caption is
+      * explicitly specified, it overrides the id-caption.
+      * <li><code>ROW_HEADER_MODE_EXPLICIT</code>: The row headers must be
+      * explicitly specified.</li>
+      * <li><code>ROW_HEADER_MODE_INDEX</code>: The index of the item is used
+      * as row caption. The index mode can only be used with the containers
+      * implementing <code>Container.Indexed</code> interface.</li>
+      * </ul>
+      * The default value is <code>ROW_HEADER_MODE_HIDDEN</code>
+      * </p>
+      * 
+      * @param mode
+      *                the One of the modes listed above.
+      */
+     public void setRowHeaderMode(int mode) {
+         if (ROW_HEADER_MODE_HIDDEN == mode) {
+             rowCaptionsAreHidden = true;
+         } else {
+             rowCaptionsAreHidden = false;
+             setItemCaptionMode(mode);
+         }
+ 
+         // Assure visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Gets the row header mode.
+      * 
+      * @return the Row header mode.
+      * @see #setRowHeaderMode(int)
+      */
+     public int getRowHeaderMode() {
+         return rowCaptionsAreHidden ? ROW_HEADER_MODE_HIDDEN
+                 : getItemCaptionMode();
+     }
+ 
+     /**
+      * Adds the new row to table and fill the visible cells with given values.
+      * 
+      * @param cells
+      *                the Object array that is used for filling the visible
+      *                cells new row. The types must be settable to visible
+      *                column property types.
+      * @param itemId
+      *                the Id the new row. If null, a new id is automatically
+      *                assigned. If given, the table cant already have a item
+      *                with given id.
+      * @return Returns item id for the new row. Returns null if operation fails.
+      */
+     public Object addItem(Object[] cells, Object itemId)
+             throws UnsupportedOperationException {
+ 
+         final Object[] cols = getVisibleColumns();
+ 
+         // Checks that a correct number of cells are given
+         if (cells.length != cols.length) {
+             return null;
+         }
+ 
+         // Creates new item
+         Item item;
+         if (itemId == null) {
+             itemId = items.addItem();
+             if (itemId == null) {
+                 return null;
+             }
+             item = items.getItem(itemId);
+         } else {
+             item = items.addItem(itemId);
+         }
+         if (item == null) {
+             return null;
+         }
+ 
+         // Fills the item properties
+         for (int i = 0; i < cols.length; i++) {
+             item.getItemProperty(cols[i]).setValue(cells[i]);
+         }
+ 
+         return itemId;
+     }
+ 
+     /* Overriding select behavior ******************************************** */
+ 
+     public void setValue(Object newValue) throws ReadOnlyException,
+             ConversionException {
+         // external selection change, need to truncate pageBuffer
+         resetPageBuffer();
+         refreshRenderedCells();
+         super.setValue(newValue);
+     }
+ 
+     /**
+      * Sets the Container that serves as the data source of the viewer.
+      * 
+     * As a side-effect Table's value (selection) is set to null due old
+     * selection not necessary exists in new Container.
+     * 
+      * @see com.itmill.toolkit.data.Container.Viewer#setContainerDataSource(Container)
+      */
+     public void setContainerDataSource(Container newDataSource) {
+ 
+         if (newDataSource == null) {
+             newDataSource = new IndexedContainer();
+         }
+ 
+         // Assures that the data source is ordered by making unordered
+         // containers ordered by wrapping them
+         if (newDataSource instanceof Container.Ordered) {
+             super.setContainerDataSource(newDataSource);
+         } else {
+             super.setContainerDataSource(new ContainerOrderedWrapper(
+                     newDataSource));
+         }
+ 
+         // Resets page position
+         currentPageFirstItemId = null;
+         currentPageFirstItemIndex = 0;
+ 
+         // Resets column properties
+         if (collapsedColumns != null) {
+             collapsedColumns.clear();
+         }
+         setVisibleColumns(getContainerPropertyIds().toArray());
+ 
+        // null value as we may not be sure that currently selected identifier
+        // exits in new ds
+        setValue(null);
+
+         // Assure visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /* Component basics ***************************************************** */
+ 
+     /**
+      * Invoked when the value of a variable has changed.
+      * 
+      * @see com.itmill.toolkit.ui.Select#changeVariables(java.lang.Object,
+      *      java.util.Map)
+      */
+     public void changeVariables(Object source, Map variables) {
+ 
+         boolean clientNeedsContentRefresh = false;
+ 
+         disableContentRefreshing();
+ 
+         if (!isSelectable() && variables.containsKey("selected")) {
+             // Not-selectable is a special case, AbstractSelect does not support
+             // TODO could be optimized.
+             variables = new HashMap(variables);
+             variables.remove("selected");
+         }
+ 
+         super.changeVariables(source, variables);
+ 
+         // Page start index
+         if (variables.containsKey("firstvisible")) {
+             final Integer value = (Integer) variables.get("firstvisible");
+             if (value != null) {
+                 setCurrentPageFirstItemIndex(value.intValue());
+             }
+         }
+ 
+         // Sets requested firstrow and rows for the next paint
+         if (variables.containsKey("reqfirstrow")
+                 || variables.containsKey("reqrows")) {
+ 
+             try {
+                 firstToBeRenderedInClient = ((Integer) variables
+                         .get("firstToBeRendered")).intValue();
+                 lastToBeRenderedInClient = ((Integer) variables
+                         .get("lastToBeRendered")).intValue();
+             } catch (Exception e) {
+                 e.printStackTrace();
+             }
+ 
+             Integer value = (Integer) variables.get("reqfirstrow");
+             if (value != null) {
+                 reqFirstRowToPaint = value.intValue();
+             }
+             value = (Integer) variables.get("reqrows");
+             if (value != null) {
+                 reqRowsToPaint = value.intValue();
+                 // sanity check
+                 if (reqFirstRowToPaint + reqRowsToPaint > size()) {
+                     reqRowsToPaint = size() - reqFirstRowToPaint;
+                 }
+             }
+             clientNeedsContentRefresh = true;
+         }
+ 
+         // Actions
+         if (variables.containsKey("action")) {
+             final StringTokenizer st = new StringTokenizer((String) variables
+                     .get("action"), ",");
+             if (st.countTokens() == 2) {
+                 final Object itemId = itemIdMapper.get(st.nextToken());
+                 final Action action = (Action) actionMapper.get(st.nextToken());
+                 if (action != null && containsId(itemId)
+                         && actionHandlers != null) {
+                     for (final Iterator i = actionHandlers.iterator(); i
+                             .hasNext();) {
+                         ((Action.Handler) i.next()).handleAction(action, this,
+                                 itemId);
+                     }
+                 }
+             }
+         }
+ 
+         if (!sortDisabled) {
+             // Sorting
+             boolean doSort = false;
+             if (variables.containsKey("sortcolumn")) {
+                 final String colId = (String) variables.get("sortcolumn");
+                 if (colId != null && !"".equals(colId) && !"null".equals(colId)) {
+                     final Object id = columnIdMap.get(colId);
+                     setSortContainerPropertyId(id, false);
+                     doSort = true;
+                 }
+             }
+             if (variables.containsKey("sortascending")) {
+                 final boolean state = ((Boolean) variables.get("sortascending"))
+                         .booleanValue();
+                 if (state != sortAscending) {
+                     setSortAscending(state, false);
+                     doSort = true;
+                 }
+             }
+             if (doSort) {
+                 this.sort();
+                 resetPageBuffer();
+             }
+         }
+ 
+         // Dynamic column hide/show and order
+         // Update visible columns
+         if (isColumnCollapsingAllowed()) {
+             if (variables.containsKey("collapsedcolumns")) {
+                 try {
+                     final Object[] ids = (Object[]) variables
+                             .get("collapsedcolumns");
+                     for (final Iterator it = visibleColumns.iterator(); it
+                             .hasNext();) {
+                         setColumnCollapsed(it.next(), false);
+                     }
+                     for (int i = 0; i < ids.length; i++) {
+                         setColumnCollapsed(columnIdMap.get(ids[i].toString()),
+                                 true);
+                     }
+                 } catch (final Exception ignored) {
+                 }
+                 clientNeedsContentRefresh = true;
+             }
+         }
+         if (isColumnReorderingAllowed()) {
+             if (variables.containsKey("columnorder")) {
+                 try {
+                     final Object[] ids = (Object[]) variables
+                             .get("columnorder");
+                     for (int i = 0; i < ids.length; i++) {
+                         ids[i] = columnIdMap.get(ids[i].toString());
+                     }
+                     setColumnOrder(ids);
+                 } catch (final Exception ignored) {
+                 }
+                 clientNeedsContentRefresh = true;
+             }
+         }
+ 
+         enableContentRefreshing(clientNeedsContentRefresh);
+     }
+ 
+     /**
+      * Go to mode where content updates are not done. This is due we want to
+      * bypass expensive content for some reason (like when we know we may have
+      * other content changes on their way).
+      * 
+      */
+     protected void disableContentRefreshing() {
+         isContentRefreshesEnabled = false;
+     }
+ 
+     /**
+      * Go to mode where content content refreshing has effect.
+      * 
+      * @param refreshContent
+      *                true if content refresh needs to be done
+      */
+     protected void enableContentRefreshing(boolean refreshContent) {
+         isContentRefreshesEnabled = true;
+         if (refreshContent) {
+             refreshRenderedCells();
+         }
+     }
+ 
+     /**
+      * Paints the content of this component.
+      * 
+      * @param target
+      *                the Paint target.
+      * @throws PaintException
+      *                 if the paint operation failed.
+      */
+     public void paintContent(PaintTarget target) throws PaintException {
+ 
+         // The tab ordering number
+         if (getTabIndex() > 0) {
+             target.addAttribute("tabindex", getTabIndex());
+         }
+ 
+         // Initialize temps
+         final Object[] colids = getVisibleColumns();
+         final int cols = colids.length;
+         final int first = getCurrentPageFirstItemIndex();
+         int total = size();
+         final int pagelen = getPageLength();
+         final int colHeadMode = getColumnHeaderMode();
+         final boolean colheads = colHeadMode != COLUMN_HEADER_MODE_HIDDEN;
+         final boolean rowheads = getRowHeaderMode() != ROW_HEADER_MODE_HIDDEN;
+         final Object[][] cells = getVisibleCells();
+         final boolean iseditable = isEditable();
+         int rows;
+         if (reqRowsToPaint >= 0) {
+             rows = reqRowsToPaint;
+         } else {
+             rows = cells[0].length;
+         }
+ 
+         if (!isNullSelectionAllowed() && getNullSelectionItemId() != null
+                 && containsId(getNullSelectionItemId())) {
+             total--;
+             rows--;
+         }
+ 
+         // selection support
+         String[] selectedKeys;
+         if (isMultiSelect()) {
+             selectedKeys = new String[((Set) getValue()).size()];
+         } else {
+             selectedKeys = new String[(getValue() == null
+                     && getNullSelectionItemId() == null ? 0 : 1)];
+         }
+         int keyIndex = 0;
+ 
+         // Table attributes
+         if (isSelectable()) {
+             target.addAttribute("selectmode", (isMultiSelect() ? "multi"
+                     : "single"));
+         } else {
+             target.addAttribute("selectmode", "none");
+         }
+         target.addAttribute("cols", cols);
+         target.addAttribute("rows", rows);
+ 
+         target.addAttribute("firstrow",
+                 (reqFirstRowToPaint >= 0 ? reqFirstRowToPaint
+                         : firstToBeRenderedInClient));
+         target.addAttribute("totalrows", total);
+         if (pagelen != 0) {
+             target.addAttribute("pagelength", pagelen);
+         }
+         if (colheads) {
+             target.addAttribute("colheaders", true);
+         }
+         if (rowheads) {
+             target.addAttribute("rowheaders", true);
+         }
+ 
+         // Visible column order
+         final Collection sortables = getSortableContainerPropertyIds();
+         final ArrayList visibleColOrder = new ArrayList();
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext();) {
+             final Object columnId = it.next();
+             if (!isColumnCollapsed(columnId)) {
+                 visibleColOrder.add(columnIdMap.key(columnId));
+             }
+         }
+         target.addAttribute("vcolorder", visibleColOrder.toArray());
+ 
+         // Rows
+         final Set actionSet = new LinkedHashSet();
+         final boolean selectable = isSelectable();
+         final boolean[] iscomponent = new boolean[visibleColumns.size()];
+         int iscomponentIndex = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext()
+                 && iscomponentIndex < iscomponent.length;) {
+             final Object columnId = it.next();
+             final Class colType = getType(columnId);
+             iscomponent[iscomponentIndex++] = colType != null
+                     && Component.class.isAssignableFrom(colType);
+         }
+         target.startTag("rows");
+         // cells array contains all that are supposed to be visible on client,
+         // but we'll start from the one requested by client
+         int start = 0;
+         if (reqFirstRowToPaint != -1 && firstToBeRenderedInClient != -1) {
+             start = reqFirstRowToPaint - firstToBeRenderedInClient;
+         }
+         int end = cells[0].length;
+         if (reqRowsToPaint != -1) {
+             end = start + reqRowsToPaint;
+         }
+         // sanity check
+         if (lastToBeRenderedInClient != -1 && lastToBeRenderedInClient < end) {
+             end = lastToBeRenderedInClient + 1;
+         }
+         if (start > cells[CELL_ITEMID].length || start < 0) {
+             start = 0;
+         }
+ 
+         for (int i = start; i < end; i++) {
+             final Object itemId = cells[CELL_ITEMID][i];
+ 
+             if (!isNullSelectionAllowed() && getNullSelectionItemId() != null
+                     && itemId == getNullSelectionItemId()) {
+                 // Remove null selection item if null selection is not allowed
+                 continue;
+             }
+ 
+             target.startTag("tr");
+ 
+             // tr attributes
+             if (rowheads) {
+                 if (cells[CELL_ICON][i] != null) {
+                     target.addAttribute("icon", (Resource) cells[CELL_ICON][i]);
+                 }
+                 if (cells[CELL_HEADER][i] != null) {
+                     target.addAttribute("caption",
+                             (String) cells[CELL_HEADER][i]);
+                 }
+             }
+             target.addAttribute("key", Integer.parseInt(cells[CELL_KEY][i]
+                     .toString()));
+             if (actionHandlers != null || isSelectable()) {
+                 if (isSelected(itemId) && keyIndex < selectedKeys.length) {
+                     target.addAttribute("selected", true);
+                     selectedKeys[keyIndex++] = (String) cells[CELL_KEY][i];
+                 }
+             }
+ 
+             // Actions
+             if (actionHandlers != null) {
+                 final ArrayList keys = new ArrayList();
+                 for (final Iterator ahi = actionHandlers.iterator(); ahi
+                         .hasNext();) {
+                     final Action[] aa = ((Action.Handler) ahi.next())
+                             .getActions(itemId, this);
+                     if (aa != null) {
+                         for (int ai = 0; ai < aa.length; ai++) {
+                             final String key = actionMapper.key(aa[ai]);
+                             actionSet.add(aa[ai]);
+                             keys.add(key);
+                         }
+                     }
+                 }
+                 target.addAttribute("al", keys.toArray());
+             }
+ 
+             // cells
+             int currentColumn = 0;
+             for (final Iterator it = visibleColumns.iterator(); it.hasNext(); currentColumn++) {
+                 final Object columnId = it.next();
+                 if (columnId == null || isColumnCollapsed(columnId)) {
+                     continue;
+                 }
+                 if ((iscomponent[currentColumn] || iseditable)
+                         && Component.class.isInstance(cells[CELL_FIRSTCOL
+                                 + currentColumn][i])) {
+                     final Component c = (Component) cells[CELL_FIRSTCOL
+                             + currentColumn][i];
+                     if (c == null) {
+                         target.addText("");
+                     } else {
+                         /*
+                          * FIXME ensuring that table never gets "cached" child
+                          * paints by calling requestRepaint for child component
+                          * IScrollTable currently can's survive those.
+                          */
+                         c.requestRepaint();
+                         c.paint(target);
+                     }
+                 } else {
+                     target
+                             .addText((String) cells[CELL_FIRSTCOL
+                                     + currentColumn][i]);
+                 }
+             }
+ 
+             target.endTag("tr");
+         }
+         target.endTag("rows");
+ 
+         // The select variable is only enabled if selectable
+         if (selectable) {
+             target.addVariable(this, "selected", selectedKeys);
+         }
+ 
+         // The cursors are only shown on pageable table
+         if (first != 0 || getPageLength() > 0) {
+             target.addVariable(this, "firstvisible", first);
+         }
+ 
+         // Sorting
+         if (getContainerDataSource() instanceof Container.Sortable) {
+             target.addVariable(this, "sortcolumn", columnIdMap
+                     .key(sortContainerPropertyId));
+             target.addVariable(this, "sortascending", sortAscending);
+         }
+ 
+         // Resets and paints "to be painted next" variables. Also reset
+         // pageBuffer
+         reqFirstRowToPaint = -1;
+         reqRowsToPaint = -1;
+         target.addVariable(this, "reqrows", reqRowsToPaint);
+         target.addVariable(this, "reqfirstrow", reqFirstRowToPaint);
+ 
+         // Actions
+         if (!actionSet.isEmpty()) {
+             target.addVariable(this, "action", "");
+             target.startTag("actions");
+             for (final Iterator it = actionSet.iterator(); it.hasNext();) {
+                 final Action a = (Action) it.next();
+                 target.startTag("action");
+                 if (a.getCaption() != null) {
+                     target.addAttribute("caption", a.getCaption());
+                 }
+                 if (a.getIcon() != null) {
+                     target.addAttribute("icon", a.getIcon());
+                 }
+                 target.addAttribute("key", actionMapper.key(a));
+                 target.endTag("action");
+             }
+             target.endTag("actions");
+         }
+         if (columnReorderingAllowed) {
+             final String[] colorder = new String[visibleColumns.size()];
+             int i = 0;
+             for (final Iterator it = visibleColumns.iterator(); it.hasNext()
+                     && i < colorder.length;) {
+                 colorder[i++] = columnIdMap.key(it.next());
+             }
+             target.addVariable(this, "columnorder", colorder);
+         }
+         // Available columns
+         if (columnCollapsingAllowed) {
+             final HashSet ccs = new HashSet();
+             for (final Iterator i = visibleColumns.iterator(); i.hasNext();) {
+                 final Object o = i.next();
+                 if (isColumnCollapsed(o)) {
+                     ccs.add(o);
+                 }
+             }
+             final String[] collapsedkeys = new String[ccs.size()];
+             int nextColumn = 0;
+             for (final Iterator it = visibleColumns.iterator(); it.hasNext()
+                     && nextColumn < collapsedkeys.length;) {
+                 final Object columnId = it.next();
+                 if (isColumnCollapsed(columnId)) {
+                     collapsedkeys[nextColumn++] = columnIdMap.key(columnId);
+                 }
+             }
+             target.addVariable(this, "collapsedcolumns", collapsedkeys);
+         }
+         target.startTag("visiblecolumns");
+         int i = 0;
+         for (final Iterator it = visibleColumns.iterator(); it.hasNext(); i++) {
+             final Object columnId = it.next();
+             if (columnId != null) {
+                 target.startTag("column");
+                 target.addAttribute("cid", columnIdMap.key(columnId));
+                 final String head = getColumnHeader(columnId);
+                 target.addAttribute("caption", (head != null ? head : ""));
+                 if (isColumnCollapsed(columnId)) {
+                     target.addAttribute("collapsed", true);
+                 }
+                 if (colheads) {
+                     if (getColumnIcon(columnId) != null) {
+                         target.addAttribute("icon", getColumnIcon(columnId));
+                     }
+                     if (sortables.contains(columnId)) {
+                         target.addAttribute("sortable", true);
+                     }
+                 }
+                 if (!ALIGN_LEFT.equals(getColumnAlignment(columnId))) {
+                     target.addAttribute("align", getColumnAlignment(columnId));
+                 }
+                 if (getColumnWidth(columnId) > -1) {
+                     target.addAttribute("width", String
+                             .valueOf(getColumnWidth(columnId)));
+                 }
+ 
+                 target.endTag("column");
+             }
+         }
+         target.endTag("visiblecolumns");
+     }
+ 
+     /**
+      * Gets the UIDL tag corresponding to component.
+      * 
+      * @return the UIDL tag as string.
+      */
+     public String getTag() {
+         return "table";
+     }
+ 
+     /**
+      * Gets the cached visible table contents.
+      * 
+      * @return the cached visible table contents.
+      */
+     private Object[][] getVisibleCells() {
+         if (pageBuffer == null) {
+             refreshRenderedCells();
+         }
+         return pageBuffer;
+     }
+ 
+     /**
+      * Gets the value of property.
+      * 
+      * By default if the table is editable the fieldFactory is used to create
+      * editors for table cells. Otherwise formatPropertyValue is used to format
+      * the value representation.
+      * 
+      * @param rowId
+      *                the Id of the row (same as item Id).
+      * @param colId
+      *                the Id of the column.
+      * @param property
+      *                the Property to be presented.
+      * @return Object Either formatted value or Component for field.
+      * @see #setFieldFactory(FieldFactory)
+      */
+     protected Object getPropertyValue(Object rowId, Object colId,
+             Property property) {
+         if (isEditable() && fieldFactory != null) {
+             final Field f = fieldFactory.createField(getContainerDataSource(),
+                     rowId, colId, this);
+             if (f != null) {
+                 f.setPropertyDataSource(property);
+                 return f;
+             }
+         }
+ 
+         return formatPropertyValue(rowId, colId, property);
+     }
+ 
+     /**
+      * Formats table cell property values. By default the property.toString()
+      * and return a empty string for null properties.
+      * 
+      * @param rowId
+      *                the Id of the row (same as item Id).
+      * @param colId
+      *                the Id of the column.
+      * @param property
+      *                the Property to be formatted.
+      * @return the String representation of property and its value.
+      * @since 3.1
+      */
+     protected String formatPropertyValue(Object rowId, Object colId,
+             Property property) {
+         if (property == null) {
+             return "";
+         }
+         return property.toString();
+     }
+ 
+     /* Action container *************************************************** */
+ 
+     /**
+      * Registers a new action handler for this container
+      * 
+      * @see com.itmill.toolkit.event.Action.Container#addActionHandler(Action.Handler)
+      */
+     public void addActionHandler(Action.Handler actionHandler) {
+ 
+         if (actionHandler != null) {
+ 
+             if (actionHandlers == null) {
+                 actionHandlers = new LinkedList();
+                 actionMapper = new KeyMapper();
+             }
+ 
+             if (!actionHandlers.contains(actionHandler)) {
+                 actionHandlers.add(actionHandler);
+                 requestRepaint();
+             }
+ 
+         }
+     }
+ 
+     /**
+      * Removes a previously registered action handler for the contents of this
+      * container.
+      * 
+      * @see com.itmill.toolkit.event.Action.Container#removeActionHandler(Action.Handler)
+      */
+     public void removeActionHandler(Action.Handler actionHandler) {
+ 
+         if (actionHandlers != null && actionHandlers.contains(actionHandler)) {
+ 
+             actionHandlers.remove(actionHandler);
+ 
+             if (actionHandlers.isEmpty()) {
+                 actionHandlers = null;
+                 actionMapper = null;
+             }
+ 
+             requestRepaint();
+         }
+     }
+ 
+     /* Property value change listening support **************************** */
+ 
+     /**
+      * Notifies this listener that the Property's value has changed.
+      * 
+      * Also listens changes in rendered items to refresh content area.
+      * 
+      * @see com.itmill.toolkit.data.Property.ValueChangeListener#valueChange(Property.ValueChangeEvent)
+      */
+     public void valueChange(Property.ValueChangeEvent event) {
+         if (event.getProperty() == this) {
+             super.valueChange(event);
+         } else {
+             resetPageBuffer();
+             refreshRenderedCells();
+         }
+         requestRepaint();
+     }
+ 
+     private void resetPageBuffer() {
+         firstToBeRenderedInClient = -1;
+         lastToBeRenderedInClient = -1;
+         reqFirstRowToPaint = -1;
+         reqRowsToPaint = -1;
+         pageBuffer = null;
+     }
+ 
+     /**
+      * Notifies the component that it is connected to an application.
+      * 
+      * @see com.itmill.toolkit.ui.Component#attach()
+      */
+     public void attach() {
+         super.attach();
+ 
+         refreshRenderedCells();
+ 
+         if (visibleComponents != null) {
+             for (final Iterator i = visibleComponents.iterator(); i.hasNext();) {
+                 ((Component) i.next()).attach();
+             }
+         }
+     }
+ 
+     /**
+      * Notifies the component that it is detached from the application
+      * 
+      * @see com.itmill.toolkit.ui.Component#detach()
+      */
+     public void detach() {
+         super.detach();
+ 
+         if (visibleComponents != null) {
+             for (final Iterator i = visibleComponents.iterator(); i.hasNext();) {
+                 ((Component) i.next()).detach();
+             }
+         }
+     }
+ 
+     /**
+      * Removes all Items from the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container#removeAllItems()
+      */
+     public boolean removeAllItems() {
+         currentPageFirstItemId = null;
+         currentPageFirstItemIndex = 0;
+         return super.removeAllItems();
+     }
+ 
+     /**
+      * Removes the Item identified by <code>ItemId</code> from the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container#removeItem(Object)
+      */
+     public boolean removeItem(Object itemId) {
+         final Object nextItemId = ((Container.Ordered) items)
+                 .nextItemId(itemId);
+         final boolean ret = super.removeItem(itemId);
+         if (ret && (itemId != null) && (itemId.equals(currentPageFirstItemId))) {
+             currentPageFirstItemId = nextItemId;
+         }
+         return ret;
+     }
+ 
+     /**
+      * Removes a Property specified by the given Property ID from the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container#removeContainerProperty(Object)
+      */
+     public boolean removeContainerProperty(Object propertyId)
+             throws UnsupportedOperationException {
+ 
+         // If a visible property is removed, remove the corresponding column
+         visibleColumns.remove(propertyId);
+         columnAlignments.remove(propertyId);
+         columnIcons.remove(propertyId);
+         columnHeaders.remove(propertyId);
+ 
+         return super.removeContainerProperty(propertyId);
+     }
+ 
+     /**
+      * Adds a new property to the table and show it as a visible column.
+      * 
+      * @param propertyId
+      *                the Id of the proprty.
+      * @param type
+      *                the class of the property.
+      * @param defaultValue
+      *                the default value given for all existing items.
+      * @see com.itmill.toolkit.data.Container#addContainerProperty(Object,
+      *      Class, Object)
+      */
+     public boolean addContainerProperty(Object propertyId, Class type,
+             Object defaultValue) throws UnsupportedOperationException {
+ 
+         boolean visibleColAdded = false;
+         if (!visibleColumns.contains(propertyId)) {
+             visibleColumns.add(propertyId);
+             visibleColAdded = true;
+         }
+ 
+         if (!super.addContainerProperty(propertyId, type, defaultValue)) {
+             if (visibleColAdded) {
+                 visibleColumns.remove(propertyId);
+             }
+             return false;
+         }
+         return true;
+     }
+ 
+     /**
+      * Adds a new property to the table and show it as a visible column.
+      * 
+      * @param propertyId
+      *                the Id of the proprty
+      * @param type
+      *                the class of the property
+      * @param defaultValue
+      *                the default value given for all existing items
+      * @param columnHeader
+      *                the Explicit header of the column. If explicit header is
+      *                not needed, this should be set null.
+      * @param columnIcon
+      *                the Icon of the column. If icon is not needed, this should
+      *                be set null.
+      * @param columnAlignment
+      *                the Alignment of the column. Null implies align left.
+      * @throws UnsupportedOperationException
+      *                 if the operation is not supported.
+      * @see com.itmill.toolkit.data.Container#addContainerProperty(Object,
+      *      Class, Object)
+      */
+     public boolean addContainerProperty(Object propertyId, Class type,
+             Object defaultValue, String columnHeader, Resource columnIcon,
+             String columnAlignment) throws UnsupportedOperationException {
+         if (!this.addContainerProperty(propertyId, type, defaultValue)) {
+             return false;
+         }
+         setColumnAlignment(propertyId, columnAlignment);
+         setColumnHeader(propertyId, columnHeader);
+         setColumnIcon(propertyId, columnIcon);
+         return true;
+     }
+ 
+     /**
+      * Returns the list of items on the current page
+      * 
+      * @see com.itmill.toolkit.ui.Select#getVisibleItemIds()
+      */
+     public Collection getVisibleItemIds() {
+ 
+         final LinkedList visible = new LinkedList();
+ 
+         final Object[][] cells = getVisibleCells();
+         for (int i = 0; i < cells[CELL_ITEMID].length; i++) {
+             visible.add(cells[CELL_ITEMID][i]);
+         }
+ 
+         return visible;
+     }
+ 
+     /**
+      * Container datasource item set change. Table must flush its buffers on
+      * change.
+      * 
+      * @see com.itmill.toolkit.data.Container.ItemSetChangeListener#containerItemSetChange(com.itmill.toolkit.data.Container.ItemSetChangeEvent)
+      */
+     public void containerItemSetChange(Container.ItemSetChangeEvent event) {
+         super.containerItemSetChange(event);
+         if (event instanceof IndexedContainer.ItemSetChangeEvent) {
+             IndexedContainer.ItemSetChangeEvent evt = (IndexedContainer.ItemSetChangeEvent) event;
+             if (evt.getAddedItemIndex() != -1
+                     && firstToBeRenderedInClient <= evt.getAddedItemIndex()
+                     && lastToBeRenderedInClient >= evt.getAddedItemIndex()) {
+                 return;
+             }
+         }
+         // ensure that page still has first item in page
+         setCurrentPageFirstItemIndex(getCurrentPageFirstItemIndex());
+ 
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Container datasource property set change. Table must flush its buffers on
+      * change.
+      * 
+      * @see com.itmill.toolkit.data.Container.PropertySetChangeListener#containerPropertySetChange(com.itmill.toolkit.data.Container.PropertySetChangeEvent)
+      */
+     public void containerPropertySetChange(
+             Container.PropertySetChangeEvent event) {
+         super.containerPropertySetChange(event);
+ 
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Adding new items is not supported.
+      * 
+      * @throws UnsupportedOperationException
+      *                 if set to true.
+      * @see com.itmill.toolkit.ui.Select#setNewItemsAllowed(boolean)
+      */
+     public void setNewItemsAllowed(boolean allowNewOptions)
+             throws UnsupportedOperationException {
+         if (allowNewOptions) {
+             throw new UnsupportedOperationException();
+         }
+     }
+ 
+     /**
+      * Focusing to this component is not supported.
+      * 
+      * @throws UnsupportedOperationException
+      *                 if invoked.
+      * @see com.itmill.toolkit.ui.AbstractField#focus()
+      */
+     public void focus() throws UnsupportedOperationException {
+         throw new UnsupportedOperationException();
+     }
+ 
+     /**
+      * Gets the ID of the Item following the Item that corresponds to itemId.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#nextItemId(java.lang.Object)
+      */
+     public Object nextItemId(Object itemId) {
+         return ((Container.Ordered) items).nextItemId(itemId);
+     }
+ 
+     /**
+      * Gets the ID of the Item preceding the Item that corresponds to the
+      * itemId.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#prevItemId(java.lang.Object)
+      */
+     public Object prevItemId(Object itemId) {
+         return ((Container.Ordered) items).prevItemId(itemId);
+     }
+ 
+     /**
+      * Gets the ID of the first Item in the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#firstItemId()
+      */
+     public Object firstItemId() {
+         return ((Container.Ordered) items).firstItemId();
+     }
+ 
+     /**
+      * Gets the ID of the last Item in the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#lastItemId()
+      */
+     public Object lastItemId() {
+         return ((Container.Ordered) items).lastItemId();
+     }
+ 
+     /**
+      * Tests if the Item corresponding to the given Item ID is the first Item in
+      * the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#isFirstId(java.lang.Object)
+      */
+     public boolean isFirstId(Object itemId) {
+         return ((Container.Ordered) items).isFirstId(itemId);
+     }
+ 
+     /**
+      * Tests if the Item corresponding to the given Item ID is the last Item in
+      * the Container.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#isLastId(java.lang.Object)
+      */
+     public boolean isLastId(Object itemId) {
+         return ((Container.Ordered) items).isLastId(itemId);
+     }
+ 
+     /**
+      * Adds new item after the given item.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#addItemAfter(java.lang.Object)
+      */
+     public Object addItemAfter(Object previousItemId)
+             throws UnsupportedOperationException {
+         return ((Container.Ordered) items).addItemAfter(previousItemId);
+     }
+ 
+     /**
+      * Adds new item after the given item.
+      * 
+      * @see com.itmill.toolkit.data.Container.Ordered#addItemAfter(java.lang.Object,
+      *      java.lang.Object)
+      */
+     public Item addItemAfter(Object previousItemId, Object newItemId)
+             throws UnsupportedOperationException {
+         return ((Container.Ordered) items).addItemAfter(previousItemId,
+                 newItemId);
+     }
+ 
+     /**
+      * Gets the FieldFactory that is used to create editor for table cells.
+      * 
+      * The FieldFactory is only used if the Table is editable.
+      * 
+      * @return FieldFactory used to create the Field instances.
+      * @see #isEditable
+      */
+     public FieldFactory getFieldFactory() {
+         return fieldFactory;
+     }
+ 
+     /**
+      * Sets the FieldFactory that is used to create editor for table cells.
+      * 
+      * The FieldFactory is only used if the Table is editable. By default the
+      * BaseFieldFactory is used.
+      * 
+      * @param fieldFactory
+      *                the field factory to set.
+      * @see #isEditable
+      * @see BaseFieldFactory
+      * 
+      */
+     public void setFieldFactory(FieldFactory fieldFactory) {
+         this.fieldFactory = fieldFactory;
+ 
+         // Assure visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Is table editable.
+      * 
+      * If table is editable a editor of type Field is created for each table
+      * cell. The assigned FieldFactory is used to create the instances.
+      * 
+      * To provide custom editors for table cells create a class implementins the
+      * FieldFactory interface, and assign it to table, and set the editable
+      * property to true.
+      * 
+      * @return true if table is editable, false oterwise.
+      * @see Field
+      * @see FieldFactory
+      * 
+      */
+     public boolean isEditable() {
+         return editable;
+     }
+ 
+     /**
+      * Sets the editable property.
+      * 
+      * If table is editable a editor of type Field is created for each table
+      * cell. The assigned FieldFactory is used to create the instances.
+      * 
+      * To provide custom editors for table cells create a class implementins the
+      * FieldFactory interface, and assign it to table, and set the editable
+      * property to true.
+      * 
+      * @param editable
+      *                true if table should be editable by user.
+      * @see Field
+      * @see FieldFactory
+      * 
+      */
+     public void setEditable(boolean editable) {
+         this.editable = editable;
+ 
+         // Assure visual refresh
+         resetPageBuffer();
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Sorts the table.
+      * 
+      * @throws UnsupportedOperationException
+      *                 if the container data source does not implement
+      *                 Container.Sortable
+      * @see com.itmill.toolkit.data.Container.Sortable#sort(java.lang.Object[],
+      *      boolean[])
+      * 
+      */
+     public void sort(Object[] propertyId, boolean[] ascending)
+             throws UnsupportedOperationException {
+         final Container c = getContainerDataSource();
+         if (c instanceof Container.Sortable) {
+             final int pageIndex = getCurrentPageFirstItemIndex();
+             ((Container.Sortable) c).sort(propertyId, ascending);
+             setCurrentPageFirstItemIndex(pageIndex);
+             resetPageBuffer();
+             refreshRenderedCells();
+ 
+         } else if (c != null) {
+             throw new UnsupportedOperationException(
+                     "Underlying Data does not allow sorting");
+         }
+     }
+ 
+     /**
+      * Sorts the table by currently selected sorting column.
+      * 
+      * @throws UnsupportedOperationException
+      *                 if the container data source does not implement
+      *                 Container.Sortable
+      */
+     public void sort() {
+         if (getSortContainerPropertyId() == null) {
+             return;
+         }
+         sort(new Object[] { sortContainerPropertyId },
+                 new boolean[] { sortAscending });
+     }
+ 
+     /**
+      * Gets the container property IDs, which can be used to sort the item.
+      * 
+      * @see com.itmill.toolkit.data.Container.Sortable#getSortableContainerPropertyIds()
+      */
+     public Collection getSortableContainerPropertyIds() {
+         final Container c = getContainerDataSource();
+         if (c instanceof Container.Sortable && !isSortDisabled()) {
+             return ((Container.Sortable) c).getSortableContainerPropertyIds();
+         } else {
+             return new LinkedList();
+         }
+     }
+ 
+     /**
+      * Gets the currently sorted column property ID.
+      * 
+      * @return the Container property id of the currently sorted column.
+      */
+     public Object getSortContainerPropertyId() {
+         return sortContainerPropertyId;
+     }
+ 
+     /**
+      * Sets the currently sorted column property id.
+      * 
+      * @param propertyId
+      *                the Container property id of the currently sorted column.
+      */
+     public void setSortContainerPropertyId(Object propertyId) {
+         setSortContainerPropertyId(propertyId, true);
+     }
+ 
+     /**
+      * Internal method to set currently sorted column property id. With doSort
+      * flag actual sorting may be bypassed.
+      * 
+      * @param propertyId
+      * @param doSort
+      */
+     private void setSortContainerPropertyId(Object propertyId, boolean doSort) {
+         if ((sortContainerPropertyId != null && !sortContainerPropertyId
+                 .equals(propertyId))
+                 || (sortContainerPropertyId == null && propertyId != null)) {
+             sortContainerPropertyId = propertyId;
+ 
+             if (doSort) {
+                 sort();
+                 // Assures the visual refresh
+                 refreshRenderedCells();
+             }
+         }
+     }
+ 
+     /**
+      * Is the table currently sorted in ascending order.
+      * 
+      * @return <code>true</code> if ascending, <code>false</code> if
+      *         descending.
+      */
+     public boolean isSortAscending() {
+         return sortAscending;
+     }
+ 
+     /**
+      * Sets the table in ascending order.
+      * 
+      * @param ascending
+      *                <code>true</code> if ascending, <code>false</code> if
+      *                descending.
+      */
+     public void setSortAscending(boolean ascending) {
+         setSortAscending(ascending, true);
+     }
+ 
+     /**
+      * Internal method to set sort ascending. With doSort flag actual sort can
+      * be bypassed.
+      * 
+      * @param ascending
+      * @param doSort
+      */
+     private void setSortAscending(boolean ascending, boolean doSort) {
+         if (sortAscending != ascending) {
+             sortAscending = ascending;
+             if (doSort) {
+                 sort();
+             }
+         }
+         // Assures the visual refresh
+         refreshRenderedCells();
+     }
+ 
+     /**
+      * Is sorting disabled altogether.
+      * 
+      * True iff no sortable columns are given even in the case where data source
+      * would support this.
+      * 
+      * @return True iff sorting is disabled.
+      */
+     public boolean isSortDisabled() {
+         return sortDisabled;
+     }
+ 
+     /**
+      * Disables the sorting altogether.
+      * 
+      * To disable sorting altogether, set to true. In this case no sortable
+      * columns are given even in the case where datasource would support this.
+      * 
+      * @param sortDisabled
+      *                True iff sorting is disabled.
+      */
+     public void setSortDisabled(boolean sortDisabled) {
+         if (this.sortDisabled != sortDisabled) {
+             this.sortDisabled = sortDisabled;
+             refreshRenderedCells();
+         }
+     }
+ 
+     /**
+      * Table does not support lazy options loading mode. Setting this true will
+      * throw UnsupportedOperationException.
+      * 
+      * @see com.itmill.toolkit.ui.Select#setLazyLoading(boolean)
+      */
+     public void setLazyLoading(boolean useLazyLoading) {
+         if (useLazyLoading) {
+             throw new UnsupportedOperationException(
+                     "Lazy options loading is not supported by Table.");
+         }
+     }
+ 
+     /*
+      * Override abstract fields to string method to avoid non-informative null's
+      * in debugger
+      */
+     public String toString() {
+         return "Table:" + getContainerPropertyIds() + ", rows "
+                 + getContainerDataSource().size() + " ,value:"
+                 + super.toString();
+     }
+ 
+ }

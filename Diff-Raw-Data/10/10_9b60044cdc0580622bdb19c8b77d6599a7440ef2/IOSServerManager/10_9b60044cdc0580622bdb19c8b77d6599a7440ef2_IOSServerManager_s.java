@@ -1,0 +1,181 @@
+ /*
+  * Copyright 2012 ios-driver committers.
+  * 
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+  * in compliance with the License. You may obtain a copy of the License at
+  * 
+  * http://www.apache.org/licenses/LICENSE-2.0
+  * 
+  * Unless required by applicable law or agreed to in writing, software distributed under the License
+  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+  * or implied. See the License for the specific language governing permissions and limitations under
+  * the License.
+  */
+ package org.uiautomation.ios.server;
+ 
+ import org.openqa.selenium.SessionNotCreatedException;
+ import org.openqa.selenium.WebDriverException;
+ import org.uiautomation.ios.IOSCapabilities;
+ import org.uiautomation.ios.server.application.APPIOSApplication;
+ import org.uiautomation.ios.server.application.IOSRunningApplication;
+ import org.uiautomation.ios.server.application.ResourceCache;
+ import org.uiautomation.ios.server.configuration.Configuration;
+ import org.uiautomation.iosdriver.services.DeviceManagerService;
+ 
+ import java.util.ArrayList;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.logging.LogManager;
+ import java.util.logging.Logger;
+ 
+ 
+ public class IOSServerManager {
+ 
+   private final List<ServerSideSession> sessions = new ArrayList<ServerSideSession>();
+   private static final Logger log = Logger.getLogger(IOSServerManager.class.getName());
+  private final Set<APPIOSApplication> supportedApplications = new HashSet<APPIOSApplication>();
+ 
+   private final HostInfo hostInfo;
+   private final ResourceCache cache = new ResourceCache();
+   private DeviceManagerService deviceManager;
+   private final DeviceStore devices;
+   public final ApplicationStore apps;
+ 
+   public IOSServerManager(int port, String folder) {
+     try {
+       LogManager.getLogManager()
+           .readConfiguration(IOSServerManager.class.getResourceAsStream("/ios-logging.properties"));
+     } catch (Exception e) {
+       System.err.println("Cannot configure logger.");
+     }
+     this.hostInfo = new HostInfo(port);
+     devices = new DeviceStore();
+     devices.add(new SimulatorDevice());
+     apps = new ApplicationStore(folder);
+     if (Configuration.BETA_FEATURE) {
+       //LoggerService.enableDebug();
+       deviceManager = DeviceManagerService.create(devices);
+       deviceManager.startDetection();
+     }
+   }
+ 
+   public void stop() {
+     if (Configuration.BETA_FEATURE) {
+       deviceManager.stopDetection();
+     }
+   }
+ 
+   public DeviceStore getDeviceStore() {
+     return devices;
+   }
+ 
+   public void addSupportedApplication(APPIOSApplication application) {
+     apps.add(application);
+     cache.cacheResource(application);
+   }
+ 
+   public HostInfo getHostInfo() {
+     return hostInfo;
+   }
+ 
+   public ResourceCache getCache() {
+     return cache;
+   }
+ 
+   public int getPort() {
+     return hostInfo.getPort();
+   }
+ 
+   public ServerSideSession createSession(IOSCapabilities cap) {
+     ServerSideSession session = new ServerSideSession(this, cap);
+     sessions.add(session);
+     return session;
+   }
+ 
+   public void stop(String opaqueKey) {
+     ServerSideSession session = getSession(opaqueKey);
+     session.stop();
+     sessions.remove(session);
+   }
+ 
+   public List<IOSCapabilities> getAllCapabilities() {
+     List<IOSCapabilities> res = new ArrayList<IOSCapabilities>();
+     for (Device d : getDeviceStore().getDevices()) {
+       res.addAll(getApplicationStore().getCapabilities(d));
+     }
+     return res;
+   }
+ 
+ 
+   public IOSRunningApplication findAndCreateInstanceMatchingApplication(
+       IOSCapabilities desiredCapabilities) {
+     for (APPIOSApplication app : getApplicationStore().getApplications()) {
+       IOSCapabilities appCapabilities = app.getCapabilities();
+       if (APPIOSApplication.canRun(desiredCapabilities, appCapabilities)) {
+         return app.createInstance(desiredCapabilities.getLanguage());
+       }
+     }
+     throw new SessionNotCreatedException(
+         desiredCapabilities.getRawCapabilities() + " not found on server.");
+   }
+ 
+   public Device findAndReserveMatchingDevice(IOSCapabilities desiredCapabilities) {
+     for (Device device : getDeviceStore().getDevices()) {
+       IOSCapabilities deviceCapabilities = device.getCapability();
+       if (Device.canRun(desiredCapabilities, deviceCapabilities)) {
+         Device d = device.reserve();
+         if (d != null) {
+           return d;
+         }
+       }
+     }
+     throw new SessionNotCreatedException(
+         desiredCapabilities.getRawCapabilities() + "not available.");
+   }
+ 
+   public static boolean matches(Map<String, Object> appCapabilities,
+                                 Map<String, Object> desiredCapabilities) {
+     IOSCapabilities a = new IOSCapabilities(appCapabilities);
+     IOSCapabilities d = new IOSCapabilities(desiredCapabilities);
+     return matches(a, d);
+ 
+   }
+ 
+   private static boolean matches(IOSCapabilities applicationCapabilities,
+                                  IOSCapabilities desiredCapabilities) {
+ 
+     if (!APPIOSApplication.canRun(desiredCapabilities, applicationCapabilities)) {
+       return false;
+     }
+     if (!Device.canRun(desiredCapabilities, applicationCapabilities)) {
+       return false;
+     }
+     return true;
+   }
+ 
+   public ApplicationStore getApplicationStore() {
+     return apps;
+   }
+ 
+   public List<ServerSideSession> getSessions() {
+     return sessions;
+   }
+ 
+   public ServerSideSession getSession(String opaqueKey) {
+     for (ServerSideSession session : sessions) {
+       if (session.getSessionId().equals(opaqueKey)) {
+         return session;
+       }
+     }
+     throw new WebDriverException("Cannot find session " + opaqueKey + " on the sesver.");
+   }
+ 
+
+  public Set<APPIOSApplication> getSupportedApplications() {
+    return supportedApplications;
+   }
+
+
+ }

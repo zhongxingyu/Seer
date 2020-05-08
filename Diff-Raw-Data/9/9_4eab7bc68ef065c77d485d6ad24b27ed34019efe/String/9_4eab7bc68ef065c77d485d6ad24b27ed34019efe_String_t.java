@@ -1,0 +1,50 @@
+ package ceylon.language;
+ 
+ public final class String implements Equality {
+     public final java.lang.String value;
+ 
+     private String(java.lang.String s) {
+         value = s;
+     }
+ 
+     public java.lang.String toJavaString() {
+         return value;
+     }
+ 
+     public static ceylon.language.String instance(java.lang.String s) {
+         return new ceylon.language.String(s);
+     }
+ 
+    public java.lang.String uppercase() {
+        return value.toUpperCase();
+     }
+ 
+    public java.lang.String lowercase() {
+        return value.toLowerCase();
+     }
+ 
+ 	@Override
+     public boolean equals(Equality that) {
+ 		if (that instanceof String) {
+ 			String s = (String)that;
+ 			return value.equals(s.value);
+ 		} else {
+ 			return false;
+ 		}
+     }
+ 
+     public static ceylon.language.String instance(java.lang.String... strings) {
+         StringBuffer buf = new StringBuffer();
+         for (java.lang.String s: strings)
+             buf.append(s);
+         return new ceylon.language.String(buf.toString());
+     }
+ 
+     public static ceylon.language.String instance(String... strings) {
+         StringBuffer buf = new StringBuffer();
+         for (String s: strings)
+             buf.append(s.value);
+         return new ceylon.language.String(buf.toString());
+     }
+ 
+ }

@@ -1,0 +1,416 @@
+ /*
+  * Copyright (C) 2012 THM webMedia
+  *
+  * This file is part of ARSnova.
+  *
+  * ARSnova is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * ARSnova is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ package de.thm.arsnova.dao;
+ 
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.ConcurrentHashMap;
+ 
+ import org.springframework.context.annotation.Scope;
+ import org.springframework.stereotype.Component;
+ 
+ import de.thm.arsnova.entities.Answer;
+ import de.thm.arsnova.entities.Feedback;
+ import de.thm.arsnova.entities.FoodVote;
+ import de.thm.arsnova.entities.InterposedQuestion;
+ import de.thm.arsnova.entities.InterposedReadingCount;
+ import de.thm.arsnova.entities.LoggedIn;
+ import de.thm.arsnova.entities.Question;
+ import de.thm.arsnova.entities.Session;
+ import de.thm.arsnova.entities.User;
+ import de.thm.arsnova.exceptions.ForbiddenException;
+ import de.thm.arsnova.exceptions.NoContentException;
+ import de.thm.arsnova.exceptions.NotFoundException;
+ 
+ @Component
+ @Scope("singleton")
+ public class StubDatabaseDao implements IDatabaseDao {
+ 
+ 	private static Map<String, Session> stubSessions = new ConcurrentHashMap<String, Session>();
+ 	private static Map<String, Feedback> stubFeedbacks = new ConcurrentHashMap<String, Feedback>();
+ 	private static Map<String, List<Question>> stubQuestions = new ConcurrentHashMap<String, List<Question>>();
+ 	private static Map<String, User> stubUsers = new ConcurrentHashMap<String, User>();
+ 	
+ 	public InterposedQuestion interposedQuestion;
+ 
+ 	public StubDatabaseDao() {
+ 		fillWithDummySessions();
+ 		fillWithDummyFeedbacks();
+ 		fillWithDummyQuestions();
+ 	}
+ 
+ 	public void cleanupTestData() {
+ 		stubSessions.clear();
+ 		stubFeedbacks.clear();
+ 		stubQuestions.clear();
+ 		stubUsers.clear();
+ 		
+ 		fillWithDummySessions();
+ 		fillWithDummyFeedbacks();
+ 		fillWithDummyQuestions();
+ 	}
+ 	
+ 	private void fillWithDummySessions() {
+ 		Session session = new Session();
+ 		session.setActive(true);
+ 		session.setCreator("ptsr00");
+ 		session.setKeyword("12345678");
+ 		session.setName("TestSession1");
+ 		session.setShortName("TS1");
+ 
+ 		stubSessions.put("12345678", session);
+ 		
+ 		session = new Session();
+ 		session.setActive(true);
+ 		session.setCreator("ptsr00");
+ 		session.setKeyword("87654321");
+ 		session.setName("TestSession2");
+ 		session.setShortName("TS2");
+ 
+ 		stubSessions.put("87654321", session);
+ 	}
+ 
+ 	private void fillWithDummyFeedbacks() {
+ 		stubFeedbacks.put("12345678", new Feedback(0, 0, 0, 0));
+ 		stubFeedbacks.put("87654321", new Feedback(2, 3, 5, 7));
+ 		stubFeedbacks.put("18273645", new Feedback(2, 3, 5, 11));
+ 	}
+ 
+ 	private void fillWithDummyQuestions() {
+ 		List<Question> questions = new ArrayList<Question>();
+ 		questions.add(new Question());
+ 		stubQuestions.put("12345678", questions);
+ 	}
+ 
+ 	@Override
+ 	public void cleanFeedbackVotes(int cleanupFeedbackDelay) {
+ 		stubSessions.clear();
+ 	}
+ 
+ 	@Override
+ 	public Session getSession(String keyword) {
+ 		// Magic keyword for forbidden session
+ 		if (keyword.equals("99999999"))
+ 			throw new ForbiddenException();
+ 
+ 		Session session = stubSessions.get(keyword);
+ 		if (session == null)
+ 			throw new NotFoundException();
+ 
+ 		return session;
+ 	}
+ 
+ 	@Override
+ 	public Session saveSession(Session session) {
+ 		stubSessions.put(session.getKeyword(), session);
+ 		return session;
+ 	}
+ 
+ 	@Override
+ 	public int countSessions() {
+ 		return stubSessions.size();
+ 	}
+ 	
+ 	@Override
+ 	public int countOpenSessions() {
+ 		int result = 0;
+ 		for (Session session : stubSessions.values()) {
+ 			if (session.isActive()) result++;
+ 		}
+ 		return result;
+ 	}
+ 	
+ 	@Override
+ 	public int countClosedSessions() {
+ 		int result = 0;
+ 		for (Session session : stubSessions.values()) {
+ 			if (! session.isActive()) result++;
+ 		}
+ 		return result;
+ 	}
+ 	
+ 	@Override
+ 	public Feedback getFeedback(String keyword) {
+ 		// Magic keyword for forbidden session
+ 		if (keyword.equals("99999999"))
+ 			throw new ForbiddenException();
+ 
+ 		Feedback feedback = stubFeedbacks.get(keyword);
+ 		if (feedback == null)
+ 			throw new NotFoundException();
+ 
+ 		return feedback;
+ 	}
+ 
+ 	@Override
+ 	public boolean saveFeedback(String keyword, int value, User user) {
+ 		if (stubFeedbacks.get(keyword) == null) {
+ 			stubFeedbacks.put(keyword, new Feedback(0, 0, 0, 0));
+ 		}
+ 
+ 		Feedback sessionFeedback = stubFeedbacks.get(keyword);
+ 
+ 		List<Integer> values = sessionFeedback.getValues();
+ 		values.set(value, values.get(value) + 1);
+ 
+ 		sessionFeedback = new Feedback(values.get(0), values.get(1), values.get(2), values.get(3));
+ 
+ 		stubFeedbacks.put(keyword, sessionFeedback);
+ 
+ 		return true;
+ 	}
+ 
+ 	@Override
+ 	public boolean sessionKeyAvailable(String keyword) {
+ 		return (stubSessions.get(keyword) == null);
+ 	}
+ 
+ 	@Override
+ 	public Session getSessionFromKeyword(String keyword) {
+ 		return stubSessions.get(keyword);
+ 	}
+ 
+ 	@Override
+ 	public Question saveQuestion(Session session, Question question) {
+ 		List<Question> questions = stubQuestions.get(session.get_id());
+ 		questions.add(question);
+ 		stubQuestions.put(session.get_id(), questions);
+ 
+ 		return question;
+ 	}
+ 
+ 	@Override
+ 	public Question getQuestion(String id) {
+ 		// Simply ... no such question ;-)
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public List<Question> getSkillQuestions(String session) {
+ 		if (getSession(session) == null)
+ 			throw new NotFoundException();
+ 		List<Question> questions = stubQuestions.get(session);
+ 		if (questions == null)
+ 			throw new NoContentException();
+ 		return questions;
+ 	}
+ 
+ 	@Override
+ 	public int getSkillQuestionCount(Session session) {
+ 		return stubQuestions.get(session.getKeyword()).size();
+ 	}
+ 
+ 	@Override
+	public List<Session> getMySessions(String username) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public LoggedIn registerAsOnlineUser(User u, Session s) {
+ 		stubUsers.put(s.getKeyword(), u);
+ 		return new LoggedIn();
+ 	}
+ 
+ 	@Override
+ 	public void updateSessionOwnerActivity(Session session) {
+ 		// TODO Auto-generated method stub
+ 
+ 	}
+ 
+ 	@Override
+ 	public Integer getMyFeedback(String keyword, User user) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public Answer getMyAnswer(String questionId) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public List<Answer> getAnswers(String questionId) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public int getAnswerCount(String questionId) {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 
+ 	@Override
+ 	public List<Answer> getFreetextAnswers(String questionId) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 	
+ 	@Override
+ 	public int countActiveUsers(long since) {
+ 		return stubUsers.size();
+ 	}
+ 	
+ 	@Override
+ 	public List<Answer> getMyAnswers(String sessionKey) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 	
+ 	@Override
+ 	public int getTotalAnswerCount(String sessionKey) {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 	
+ 	@Override
+ 	public int getInterposedCount(String sessionKey) {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 	
+ 	@Override
+ 	public List<InterposedQuestion> getInterposedQuestions(String sessionKey) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 	
+ 	@Override
+ 	public void vote(String menu) {
+ 		// TODO Auto-generated method stub
+ 		
+ 	}
+ 
+ 	@Override
+ 	public int getFoodVoteCount() {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 
+ 	@Override
+ 	public List<FoodVote> getFoodVote() {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public int countActiveUsers(Session session, long since) {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 
+ 	@Override
+ 	public int countAnswers() {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 
+ 	@Override
+ 	public int countQuestions() {
+ 		// TODO Auto-generated method stub
+ 		return 0;
+ 	}
+ 
+ 	@Override
+ 	public boolean saveQuestion(Session session, InterposedQuestion question) {
+ 		// TODO Auto-generated method stub
+ 		return false;
+ 	}
+ 
+ 	@Override
+ 	public InterposedQuestion getInterposedQuestion(String questionId) {
+ 		return this.interposedQuestion;
+ 	}
+ 
+ 	@Override
+ 	public void markInterposedQuestionAsRead(InterposedQuestion question) {
+ 		this.interposedQuestion.setRead(true);
+ 	}
+ 
+ 	@Override
+ 	public List<Session> getMyVisitedSessions(User user) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public InterposedReadingCount getInterposedReadingCount(Session session) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public List<String> getQuestionIds(Session session, User user) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public List<String> getUnAnsweredQuestions(Session session, User user) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public void updateQuestion(Question question) {
+ 		// TODO Auto-generated method stub
+ 	}
+ 
+ 	@Override
+ 	public void deleteQuestion(Question question) {
+ 		// TODO Auto-generated method stub
+ 	}
+ 
+ 	@Override
+ 	public void deleteAnswers(Question question) {
+ 		// TODO Auto-generated method stub
+ 	}
+ 
+ 	@Override
+ 	public Answer saveAnswer(Answer answer, User user) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public Answer updateAnswer(Answer answer) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public Session getSessionFromId(String sessionId) {
+ 		// TODO Auto-generated method stub
+ 		return null;
+ 	}
+ 
+ 	@Override
+ 	public void deleteAnswer(String answerId) {
+ 		// TODO Auto-generated method stub
+ 	}
+ 
+ 	@Override
+ 	public void deleteInterposedQuestion(InterposedQuestion question) {
+ 		// TODO Auto-generated method stub
+ 	}
+ }

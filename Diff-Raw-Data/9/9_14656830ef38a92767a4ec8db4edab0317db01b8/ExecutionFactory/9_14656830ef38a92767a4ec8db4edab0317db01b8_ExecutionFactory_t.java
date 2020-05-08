@@ -1,0 +1,972 @@
+ /*
+  * JBoss, Home of Professional Open Source.
+  * See the COPYRIGHT.txt file distributed with this work for information
+  * regarding copyright ownership.  Some portions may be licensed
+  * to Red Hat, Inc. under one or more contributor license agreements.
+  * 
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+  * 
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  * 
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  * 02110-1301 USA.
+  */
+ 
+ package org.teiid.translator;
+ 
+ import java.util.Collection;
+ import java.util.LinkedList;
+ import java.util.List;
+ 
+ import javax.resource.ResourceException;
+ import javax.resource.cci.Connection;
+ import javax.resource.cci.ConnectionFactory;
+ 
+ import org.teiid.connector.DataPlugin;
+ import org.teiid.core.TeiidException;
+ import org.teiid.core.util.ReflectionHelper;
+ import org.teiid.language.BatchedUpdates;
+ import org.teiid.language.Call;
+ import org.teiid.language.Command;
+ import org.teiid.language.LanguageFactory;
+ import org.teiid.language.QueryExpression;
+ import org.teiid.language.Select;
+ import org.teiid.language.SetQuery;
+ import org.teiid.logging.LogConstants;
+ import org.teiid.logging.LogManager;
+ import org.teiid.metadata.FunctionMethod;
+ import org.teiid.metadata.FunctionParameter;
+ import org.teiid.metadata.MetadataFactory;
+ import org.teiid.metadata.RuntimeMetadata;
+ import org.teiid.translator.TypeFacility.RUNTIME_CODES;
+ 
+ 
+ 
+ /**
+  * <p>The primary entry point for a Translator.  This class should be extended by the custom translator writer.</p>
+  * 
+  * The deployer instantiates this class through reflection. So it is important to have no-arg constructor. Once constructed
+  * the "start" method is called. This class represents the basic capabilities of the translator.
+  */
+ public class ExecutionFactory<F, C> {
+ 	
+ 	public enum SupportedJoinCriteria {
+ 		/**
+ 		 * Indicates that any supported criteria is allowed.
+ 		 */
+ 		ANY, 
+ 		/**
+ 		 * Indicates that any simple comparison of elements is allowed. 
+ 		 */
+ 		THETA,
+ 		/**
+ 		 * Indicates that only equality predicates of elements are allowed.
+ 		 */
+ 		EQUI,
+ 		/**
+ 		 * Indicates that only equality predicates between
+ 		 * exactly one primary and foreign key is allowed per join.
+ 		 */
+ 		KEY
+ 	}
+ 	
+ 	public enum NullOrder {
+ 		HIGH,
+ 		LOW,
+ 		FIRST,
+ 		LAST,
+ 		UNKNOWN
+ 	}
+ 
+ 	public static final int DEFAULT_MAX_FROM_GROUPS = -1;
+ 	public static final int DEFAULT_MAX_IN_CRITERIA_SIZE = -1;
+ 
+ 	private static final TypeFacility TYPE_FACILITY = new TypeFacility();
+ 	
+ 	/*
+ 	 * Managed execution properties
+ 	 */
+ 	private boolean immutable;
+ 	private boolean sourceRequired = true;
+ 	
+ 	/*
+ 	 * Support properties
+ 	 */
+ 	private boolean supportsSelectDistinct;
+ 	private boolean supportsOuterJoins;
+ 	private SupportedJoinCriteria supportedJoinCriteria = SupportedJoinCriteria.ANY;
+ 	private boolean supportsOrderBy;
+ 	private boolean supportsInnerJoins;
+ 	private boolean supportsFullOuterJoins;
+ 	private boolean requiresCriteria;
+ 	private int maxInSize = DEFAULT_MAX_IN_CRITERIA_SIZE;
+ 	private int maxDependentInPredicates = DEFAULT_MAX_IN_CRITERIA_SIZE;
+ 	private boolean copyLobs;
+ 	
+ 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
+ 	
+ 	/**
+ 	 * Initialize the connector with supplied configuration
+ 	 */
+ 	@SuppressWarnings("unused")
+ 	public void start() throws TranslatorException {
+ 	}
+ 	    
+ 	/**
+ 	 * Defines if the Connector is read-only connector 
+ 	 * @return
+ 	 */
+ 	@TranslatorProperty(display="Is Immutable",description="Is Immutable, True if the source never changes.",advanced=true)
+ 	public boolean isImmutable() {
+ 		return immutable;
+ 	}
+ 	
+ 	public void setImmutable(boolean arg0) {
+ 		this.immutable = arg0;
+ 	}
+ 
+ 	@TranslatorProperty(display="Copy LOBs",description="If true, returned LOBs will be copied, rather than streamed from the source",advanced=true)
+ 	public boolean isCopyLobs() {
+ 		return copyLobs;
+ 	}
+ 	
+ 	public void setCopyLobs(boolean copyLobs) {
+ 		this.copyLobs = copyLobs;
+ 	}
+ 	
+ 	/**
+ 	 * Return a connection object from the given connection factory.
+ 	 * 
+ 	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
+ 	 * another type of connection factory.
+ 	 * 
+ 	 * @deprecated
+ 	 * @see #getConnection(Object, ExecutionContext)
+ 	 * @param factory
+ 	 * @return a connection
+ 	 * @throws TranslatorException
+ 	 */
+ 	@SuppressWarnings("unchecked")
+ 	public C getConnection(F factory) throws TranslatorException {
+ 		if (factory == null) {
+ 			return null;
+ 		}
+ 		if (factory instanceof ConnectionFactory) {
+ 			try {
+ 				return (C) ((ConnectionFactory)factory).getConnection();
+ 			} catch (ResourceException e) {
+ 				 throw new TranslatorException(DataPlugin.Event.TEIID60000, e);
+ 			}
+ 		}
+ 		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
+ 	}
+ 	
+ 	/**
+ 	 * Return a connection object from the given connection factory.
+ 	 * 
+ 	 * The default implementation assumes a JCA {@link ConnectionFactory}.  Subclasses should override, if they use 
+ 	 * another type of connection factory or wish to use the {@link ExecutionContext}.  By default calls {@link #getConnection(Object)}
+ 	 * 
+ 	 * @param factory
+ 	 * @param executionContext null if this is a system request for a connection
+ 	 * @return a connection
+ 	 * @throws TranslatorException
+ 	 */
+ 	public C getConnection(F factory,
+ 			ExecutionContext executionContext) throws TranslatorException {
+ 		return getConnection(factory);
+ 	}
+ 
+ 	/**
+ 	 * Closes a connection object from the given connection factory.
+ 	 * 
+ 	 * The default implementation assumes a JCA {@link Connection}.  Subclasses should override, if they use 
+ 	 * another type of connection.
+ 	 * 
+ 	 * @param connection
+ 	 * @param factory
+ 	 */
+ 	public void closeConnection(C connection, F factory) {
+ 		if (connection == null) {
+ 			return;
+ 		}
+ 		if (connection instanceof Connection) {
+ 			try {
+ 				((Connection)connection).close();
+ 			} catch (ResourceException e) {
+ 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
+ 			}
+ 			return;
+ 		}
+ 		throw new AssertionError("A connection was created, but no implementation provided for closeConnection"); //$NON-NLS-1$
+ 	}
+ 	
+     /**
+      * Flag that indicates if a underlying source connection required for this execution factory to work 
+      * @return
+      */
+ 	public boolean isSourceRequired() {
+ 		return sourceRequired;
+ 	}	
+ 	
+ 	public void setSourceRequired(boolean value) {
+ 		this.sourceRequired = value;
+ 	}
+ 	
+     /**
+      * Obtain a reference to the default LanguageFactory that can be used to construct
+      * new language interface objects.  This is typically needed when modifying the language
+      * objects passed to the connector or for testing when objects need to be created. 
+      */
+     public LanguageFactory getLanguageFactory()  {
+ 		return LanguageFactory.INSTANCE;
+ 	}
+     
+     /**
+      * Obtain a reference to the type facility, which can be used to perform many type 
+      * conversions supplied by the Connector API.
+      */
+     public TypeFacility getTypeFacility() {
+ 		return TYPE_FACILITY;
+ 	}
+     
+     /**
+      * Create an execution object for the specified command  
+      * @param command the command
+      * @param executionContext Provides information about the context that this command is
+      * executing within, such as the identifiers for the command being executed
+      * @param metadata Access to runtime metadata if needed to translate the command
+      * @param connection connection factory object to the data source
+      * @return An execution object that can use to execute the command
+      */
+ 	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+ 		if (command instanceof QueryExpression) {
+ 			return createResultSetExecution((QueryExpression)command, executionContext, metadata, connection);
+ 		}
+ 		if (command instanceof Call) {
+ 			return createProcedureExecution((Call)command, executionContext, metadata, connection);
+ 		}
+ 		return createUpdateExecution(command, executionContext, metadata, connection);
+ 	}
+ 
+ 	@SuppressWarnings("unused")
+ 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+ 		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001));
+ 	}
+ 
+ 	@SuppressWarnings("unused")
+ 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+ 		 throw new TranslatorException(DataPlugin.Event.TEIID60002,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60002));
+ 	}
+ 
+ 	@SuppressWarnings("unused")
+ 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+ 		 throw new TranslatorException(DataPlugin.Event.TEIID60003,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60003));
+ 	}   
+ 	
+     /** 
+      * Support indicates connector can accept queries with SELECT DISTINCT
+      * @since 3.1 SP2 
+      */
+ 	@TranslatorProperty(display="Supports Select Distinct", description="True, if this connector supports SELECT DISTINCT", advanced=true)
+     public boolean supportsSelectDistinct() {
+     	return supportsSelectDistinct;
+     }
+ 	
+ 	public void setSupportsSelectDistinct(boolean supportsSelectDistinct) {
+ 		this.supportsSelectDistinct = supportsSelectDistinct;
+ 	}
+ 
+     /** 
+      * Support indicates connector can accept expressions other than element
+      * symbols in the SELECT clause.  Specific supports for the expression
+      * type are still checked.
+      * @since 6.1.0
+      */
+     public boolean supportsSelectExpression() {
+     	return false;
+     }
+ 
+     /**
+      * Support indicates connector can accept groups with aliases  
+      * @since 3.1 SP2
+      */
+     public boolean supportsAliasedTable() {
+     	return false;
+     }
+ 
+     /** 
+      * Get the supported join criteria. A null return value will be treated
+      * as {@link SupportedJoinCriteria#ANY}  
+      * @since 6.1.0
+      */
+ 	@TranslatorProperty(display="Supported Join Criteria", description="Returns one of any, theta, equi, or key", advanced=true)
+     public SupportedJoinCriteria getSupportedJoinCriteria() {
+     	return supportedJoinCriteria;
+     }
+ 	
+ 	public void setSupportedJoinCriteria(
+ 			SupportedJoinCriteria supportedJoinCriteria) {
+ 		this.supportedJoinCriteria = supportedJoinCriteria;
+ 	}
+     
+     /** 
+      * Support indicates connector can accept inner or cross joins
+      * @since 6.1.0
+      */
+ 	@TranslatorProperty(display="Supports Inner Joins", description="True, if this connector supports inner joins", advanced=true)
+     public boolean supportsInnerJoins() {
+     	return supportsInnerJoins;
+     }
+ 	
+ 	public void setSupportsInnerJoins(boolean supportsInnerJoins) {
+ 		this.supportsInnerJoins = supportsInnerJoins;
+ 	}
+     
+     /** 
+      * Support indicates connector can accept self-joins where a 
+      * group is joined to itself with aliases.  Connector must also support
+      * {@link #supportsAliasedTable()}. 
+      * @since 3.1 SP2
+      */
+     public boolean supportsSelfJoins() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept left outer joins 
+      * @since 3.1 SP2
+      */
+ 	@TranslatorProperty(display="Supports Outer Joins", description="True, if this connector supports outer joins", advanced=true)
+     public boolean supportsOuterJoins() {
+     	return supportsOuterJoins;
+     }
+ 	
+ 	public void setSupportsOuterJoins(boolean supportsOuterJoins) {
+ 		this.supportsOuterJoins = supportsOuterJoins;
+ 	}
+     
+     /** 
+      * Support indicates connector can accept full outer joins
+      * @since 3.1 SP2 
+      */
+ 	@TranslatorProperty(display="Supports Full Outer Joins", description="True, if this connector supports full outer joins", advanced=true)
+     public boolean supportsFullOuterJoins() {
+     	return supportsFullOuterJoins;
+     }
+ 	
+ 	public void setSupportsFullOuterJoins(boolean supportsFullOuterJoins) {
+ 		this.supportsFullOuterJoins = supportsFullOuterJoins;
+ 	}
+ 
+     /** 
+      * Support indicates connector can accept inline views (subqueries
+      * in the FROM clause).  
+      * @since 4.1 
+      */
+     public boolean supportsInlineViews() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts criteria of form (element = constant) 
+      * @since 3.1 SP2
+      */
+     public boolean supportsCompareCriteriaEquals() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts criteria of form (element &lt;=|&gt;= constant)
+      * <br>The query engine will may pushdown queries containing &lt; or &gt; if NOT is also
+      * supported.  
+      * @since 3.1 SP2
+      */
+     public boolean supportsCompareCriteriaOrdered() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts criteria of form (element LIKE constant) 
+      * @since 3.1 SP2
+      */
+     public boolean supportsLikeCriteria() {
+     	return false;
+     }
+         
+     /** 
+      * Support indicates connector accepts criteria of form (element LIKE constant ESCAPE char)
+      * @since 3.1 SP2
+      */
+     public boolean supportsLikeCriteriaEscapeCharacter() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts criteria of form (element IN set) 
+      * @since 3.1 SP2
+      */
+     public boolean supportsInCriteria() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts IN criteria with a subquery on the right side 
+      * @since 4.0
+      */
+     public boolean supportsInCriteriaSubquery() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts criteria of form (element IS NULL) 
+      * @since 3.1 SP2
+      */
+     public boolean supportsIsNullCriteria() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts logical criteria connected by OR 
+      * @since 3.1 SP2
+      */
+     public boolean supportsOrCriteria() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts logical criteria NOT 
+      * @since 3.1 SP2
+      */
+     public boolean supportsNotCriteria() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts the EXISTS criteria 
+      * @since 4.0
+      */
+     public boolean supportsExistsCriteria() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts the quantified comparison criteria that 
+      * use SOME
+      * @since 4.0
+      */
+     public boolean supportsQuantifiedCompareCriteriaSome() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts the quantified comparison criteria that 
+      * use ALL
+      * @since 4.0
+      */
+     public boolean supportsQuantifiedCompareCriteriaAll() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector accepts ORDER BY clause, including multiple elements
+      * and ascending and descending sorts.    
+      * @since 3.1 SP2
+      */
+     @TranslatorProperty(display="Supports ORDER BY", description="True, if this connector supports ORDER BY", advanced=true)
+     public boolean supportsOrderBy() {
+     	return supportsOrderBy;
+     }
+     
+     public void setSupportsOrderBy(boolean supportsOrderBy) {
+ 		this.supportsOrderBy = supportsOrderBy;
+ 	}
+     
+     /**
+      * Support indicates connector accepts ORDER BY clause with columns not from the select    
+      * @since 6.2
+      * @return
+      */
+     public boolean supportsOrderByUnrelated() {
+     	return false;
+     }
+     
+     /**
+      * Returns the default null ordering
+      * @since 7.1
+      * @return the {@link NullOrder}
+      */
+     public NullOrder getDefaultNullOrder() {
+     	return NullOrder.UNKNOWN;
+     }
+     
+ 	/**
+ 	 * Returns whether the database supports explicit join ordering.
+ 	 * @since 7.1
+ 	 * @return true if nulls first/last can be specified
+ 	 */
+ 	public boolean supportsOrderByNullOrdering() {
+ 		return false;
+ 	}
+     
+     /**
+      * Whether the source supports an explicit GROUP BY clause
+      * @since 6.1
+      */
+     public boolean supportsGroupBy() {
+     	return false;
+     }
+     
+     /**
+      * Whether the source supports grouping only over a single table
+      * @return
+      */
+     public boolean supportsOnlySingleTableGroupBy() {
+     	return false;
+     }
+ 
+     /**
+      * Whether the source supports the HAVING clause
+      * @since 6.1
+      */
+     public boolean supportsHaving() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept the SUM aggregate function 
+      * @since 3.1 SP2
+      */
+     public boolean supportsAggregatesSum() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept the AVG aggregate function
+      * @since 3.1 SP2 
+      */
+     public boolean supportsAggregatesAvg() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept the MIN aggregate function 
+      * @since 3.1 SP2
+      */
+     public boolean supportsAggregatesMin() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept the MAX aggregate function 
+      * @since 3.1 SP2
+      */
+     public boolean supportsAggregatesMax() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept the COUNT aggregate function
+      * @since 3.1 SP2 
+      */
+     public boolean supportsAggregatesCount() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept the COUNT(*) aggregate function 
+      * @since 3.1 SP2
+      */
+     public boolean supportsAggregatesCountStar() {
+     	return false;
+     }
+     
+     /** 
+      * Support indicates connector can accept DISTINCT within aggregate functions 
+      * @since 3.1 SP2
+      */
+     public boolean supportsAggregatesDistinct() {
+     	return false;
+     }
+     
+     /**
+      * Support indicates connector can accept STDDEV_POP, STDDEV_VAR, VAR_POP, VAR_SAMP
+      * @since 7.1
+      */
+     public boolean supportsAggregatesEnhancedNumeric() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and
+      * HAVING clauses
+      * @since 4.0
+      */
+     public boolean supportsScalarSubqueries() {
+     	return false;
+     }
+ 
+     /** 
+      * Support indicates connector can accept correlated subqueries wherever subqueries
+      * are accepted 
+      * @since 4.0
+      */
+     public boolean supportsCorrelatedSubqueries() {
+     	return false;
+     }
+     
+     /**
+      * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
+      * @since 4.0
+      */
+     public boolean supportsSearchedCaseExpressions() {
+     	return false;
+     }
+    
+     /**
+      * Support indicates that the connector supports the UNION of two queries. 
+      * @since 4.2
+      */
+     public boolean supportsUnions() {
+     	return false;
+     }
+ 
+     /**
+      * Support indicates that the connector supports an ORDER BY on a SetQuery. 
+      * @since 5.6
+      */
+     public boolean supportsSetQueryOrderBy() {
+     	return false;
+     }
+     
+     /**
+      * Support indicates that the connector supports the INTERSECT of two queries. 
+      * @since 5.6
+      */
+     public boolean supportsIntersect() {
+     	return false;
+     }
+ 
+     /**
+      * Support indicates that the connector supports the EXCEPT of two queries. 
+      * @since 5.6
+      */
+     public boolean supportsExcept() {
+     	return false;
+     }
+         
+     /**
+      * Get list of all supported function names.  Arithmetic functions have names like
+      * &quot;+&quot;.  
+      * @see SourceSystemFunctions for a listing of system pushdown functions.  Note that
+      * not all system functions are listed as some functions will use a common name
+      * such as CONCAT vs. the || operator, and other functions will be rewritten and
+      * not pushed down, such as SPACE.
+      * @since 3.1 SP3    
+      */        
+     public List<String> getSupportedFunctions() {
+     	return null;
+     }
+     
+     /**
+      * Get a list of {@link FunctionMethod}s that will be contributed to the SYS schema.  
+      * To avoid conflicts with system functions, the function name should contain a 
+      * qualifier - typically &lt;translator name&gt;.&lt;function name&gt; 
+      * @see ExecutionFactory#addPushDownFunction(String, String, FunctionParameter, FunctionParameter...)
+      * @return
+      */
+     public List<FunctionMethod> getPushDownFunctions(){
+     	return pushdownFunctionMethods;
+     }
+     
+     protected FunctionMethod addPushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
+     	FunctionMethod method = FunctionMethod.createFunctionMethod(qualifier + '.' + name, name, qualifier,
+ 				returnType, paramTypes);
+ 		method.setNameInSource(name);
+     	pushdownFunctionMethods.add(method);
+     	return method;
+     }
+     
+     /**
+      * Get the integer value representing the number of values allowed in an IN criteria
+      * in the WHERE clause of a query
+      * @since 5.0
+      */
+ 	@TranslatorProperty(display="Max number of IN predicate entries", advanced=true)
+     public int getMaxInCriteriaSize() {
+         return maxInSize;
+     }
+ 	
+ 	public void setMaxInCriteriaSize(int maxInSize) {
+ 		this.maxInSize = maxInSize;
+ 	}
+ 	
+     /**
+     * Get the integer value representing the max number of dependent IN predicates.
+     * This may be used to split a single dependent value via OR, or multiple dependent values
+     * via AND.
+      */
+	@TranslatorProperty(display="Max number of dependent IN predicates", advanced=true)
+ 	public int getMaxDependentInPredicates() {
+ 		return maxDependentInPredicates;
+ 	}
+ 	
+ 	public void setMaxDependentInPredicates(int maxDependentInPredicates) {
+ 		this.maxDependentInPredicates = maxDependentInPredicates;
+ 	}
+ 
+     /**
+      * <p>Support indicates that the connector supports non-column expressions in GROUP BY, such as:
+      *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>
+      * @since 5.0
+      */
+     public boolean supportsFunctionsInGroupBy() {
+     	return false;
+     }
+     
+     /**
+      * Gets whether the connector can limit the number of rows returned by a query.
+      * @since 5.0 SP1
+      */
+     public boolean supportsRowLimit() {
+     	return false;
+     }
+     
+     /**
+      * Gets whether the connector supports a SQL clause (similar to the LIMIT with an offset) that can return
+      * result sets that start in the middle of the resulting rows returned by a query
+      * @since 5.0 SP1
+      */
+     public boolean supportsRowOffset() {
+     	return false;
+     }
+     
+     /**
+      * The number of groups supported in the from clause.  Added for a Sybase limitation. 
+      * @since 5.6
+      * @return the number of groups supported in the from clause, or -1 if there is no limit
+      */
+     public int getMaxFromGroups() {
+     	return DEFAULT_MAX_FROM_GROUPS;
+     }
+     
+     /**
+      * Whether the source prefers to use ANSI style joins.
+      * @since 6.0
+      */
+     public boolean useAnsiJoin() {
+     	return false;
+     }
+     
+     /**
+      * Whether the source supports queries without criteria.
+      * @since 6.0
+      */
+ 	@TranslatorProperty(display="Requries Criteria", description="True, if this connector requires criteria on source queries", advanced=true)
+     public boolean requiresCriteria() {
+     	return requiresCriteria;
+     }
+ 	
+ 	public void setRequiresCriteria(boolean requiresCriteria) {
+ 		this.requiresCriteria = requiresCriteria;
+ 	}
+     
+     /**
+      * Whether the source supports {@link BatchedUpdates}
+      * @since 6.0
+      */
+     public boolean supportsBatchedUpdates() {
+     	return false;
+     }
+     
+     /**
+      * Whether the source supports updates with multiple value sets
+      * @since 6.0
+      */
+     public boolean supportsBulkUpdate() {
+     	return false;
+     }
+     
+     /**
+      * Support indicates that the connector can accept INSERTs with
+      * values specified by a {@link SetQuery} or {@link Select}
+      * @since 6.1
+      */
+     public boolean supportsInsertWithQueryExpression() {
+     	return false;
+     }
+     
+     public static <T> T getInstance(Class<T> expectedType, String className, Collection<?> ctorObjs, Class<? extends T> defaultClass) throws TranslatorException {
+     	try {
+ 	    	if (className == null) {
+ 	    		if (defaultClass == null) {
+ 	    			 throw new TranslatorException(DataPlugin.Event.TEIID60004, DataPlugin.Util.gs(DataPlugin.Event.TEIID60004));
+ 	    		}
+ 	    		return expectedType.cast(defaultClass.newInstance());
+ 	    	}
+ 	    	return expectedType.cast(ReflectionHelper.create(className, ctorObjs, Thread.currentThread().getContextClassLoader()));
+ 		} catch (TeiidException e) {
+ 			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
+ 		} catch (IllegalAccessException e) {
+ 			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
+ 		} catch(InstantiationException e) {
+ 			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
+ 		}    	
+     } 
+     
+     /**
+      * Implement to provide metadata to the metadata for use by the engine.  This is the 
+      * primary method of creating metadata for dynamic VDBs.
+      * @param metadataFactory
+      * @param conn
+      * @throws TranslatorException
+      */
+     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
+     	
+     }
+     
+     /**
+      * Indicates if LOBs are usable after the execution is closed.
+      * @return true if LOBs can be used after close
+      * @since 7.2
+      */
+     public boolean areLobsUsableAfterClose() {
+     	return false;
+     }
+     
+     /**
+      * @return true if the WITH clause is supported
+      * @since 7.2
+      */
+     public boolean supportsCommonTableExpressions() {
+     	return false;
+     }
+     
+     /**
+      * @return true if Advanced OLAP operations are supported
+      *  including the aggregate function filter clause.
+      * @since 7.5
+      */
+     public boolean supportsAdvancedOlapOperations() {
+     	return false;
+     }
+     
+     /**
+      * @return true if Elementary OLAP operations are supported
+      *  including window functions and inline window specifications that include 
+      *  simple expressions in partitioning and ordering 
+      * @since 7.5
+      */
+     public boolean supportsElementaryOlapOperations() {
+     	return false;
+     }
+     
+     /**
+      * @return true if all aggregates can have window function order by clauses.
+      * @since 7.5
+      */
+     public boolean supportsWindowOrderByWithAggregates() {
+     	return supportsElementaryOlapOperations();
+     }
+     
+     /**
+      * @return true if distinct aggregates can be windowed function.
+      * @since 7.6
+      */
+     public boolean supportsWindowDistinctAggregates() {
+     	return supportsElementaryOlapOperations();
+     }
+     
+     /**
+      * @return true if array_agg is supported
+      * @since 7.5
+      */
+     public boolean supportsArrayAgg() {
+     	return false;
+     }
+ 
+     /**
+      * @return true if the SIMILAR TO predicate is supported
+      * @since 7.5
+      */
+ 	public boolean supportsSimilarTo() {
+ 		return false;
+ 	}
+ 
+ 	/**
+ 	 * @return true if the LIKE_REGEX predicate is supported
+ 	 * @since 7.4
+ 	 */
+ 	public boolean supportsLikeRegex() {
+ 		return false;
+ 	}
+ 	
+ 	/**
+ 	 * Used for fine grained control of convert/cast pushdown.  The {@link #getSupportedFunctions()} should
+ 	 * contain {@link SourceSystemFunctions#CONVERT}.  This method can then return false to indicate
+ 	 * a lack of specific support.  The engine will does not care about an unnecessary conversion 
+ 	 * where fromType == toType.
+ 	 * 
+ 	 * By default lob conversion is disabled.
+ 	 * 
+ 	 * @param fromType @see RUNTIME_CODES
+ 	 * @param toType @see RUNTIME_CODES
+ 	 * @return true if the given conversion is supported.
+ 	 * @since 8.0
+ 	 */
+ 	public boolean supportsConvert(int fromType, int toType) {
+ 		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.CLOB || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
+ 			return false;
+ 		}
+ 		return true;
+ 	}
+ 	
+ 	/**
+ 	 * @return true if only Literal comparisons (equality, ordered, like, etc.) are supported for non-join conditions.
+ 	 * @since 8.0
+ 	 */
+ 	public boolean supportsOnlyLiteralComparison() {
+ 		return false;
+ 	}
+ 	
+ 	/**
+ 	 * @return true if dependent join pushdown is supported
+ 	 * @since 8.0
+ 	 */
+ 	public boolean supportsDependentJoins() {
+ 		return false;
+ 	}
+ 	
+ 		
+ 	public enum Format {
+ 		NUMBER,
+ 		DATE
+ 	}
+ 	
+ 	/**
+ 	 * See also {@link #supportsFormatLiteral(String, Format)}
+ 	 * @return true if only literal formats are supports.
+ 	 */
+ 	public boolean supportsOnlyFormatLiterals() {
+ 		return false;
+ 	}
+ 	
+ 	/**
+ 	 * 
+ 	 * @param literal
+ 	 * @param format
+ 	 * @return true if the given Java format string is supported
+ 	 */
+ 	public boolean supportsFormatLiteral(String literal, Format format) {
+ 		return false;
+ 	}
+ 
+ }

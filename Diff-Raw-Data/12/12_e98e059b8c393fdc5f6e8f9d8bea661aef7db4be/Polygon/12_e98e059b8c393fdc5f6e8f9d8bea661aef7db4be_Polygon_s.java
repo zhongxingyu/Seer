@@ -1,0 +1,88 @@
+ /**
+  * Copyright (c) 2010-2011, SimpleGeo
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without 
+  * modification, are permitted provided that the following conditions are met:
+  *
+  * Redistributions of source code must retain the above copyright notice, 
+  * this list of conditions and the following disclaimer. Redistributions 
+  * in binary form must reproduce the above copyright notice, this list of
+  * conditions and the following disclaimer in the documentation and/or 
+  * other materials provided with the distribution.
+  * 
+  * Neither the name of the SimpleGeo nor the names of its contributors may
+  * be used to endorse or promote products derived from this software 
+  * without specific prior written permission.
+  *  
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS 
+  * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE 
+  * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
+ package com.simplegeo.client.types;
+ 
+ import java.util.ArrayList;
+ 
+ import org.json.JSONArray;
+ import org.json.JSONException;
+ 
+ public class Polygon {
+ 
+ 	private ArrayList<ArrayList<Point>> rings;
+ 	
+ 	public Polygon() {
+ 		
+ 	}
+ 	
+ 	public Polygon(ArrayList<ArrayList<Point>> rings) {
+ 		this.rings = rings;
+ 	}
+ 
+ 	public ArrayList<ArrayList<Point>> getRings() {
+ 		return rings;
+ 	}
+ 
+ 	public void setRings(ArrayList<ArrayList<Point>> rings) {
+ 		this.rings = rings;
+ 	}
+ 	
+ 	public static Polygon fromJSONArray(JSONArray polygonArray) throws JSONException {
+ 		ArrayList<ArrayList<Point>> ringList = new ArrayList<ArrayList<Point>>();
+ 		int numOfRings = polygonArray.length();
+ 		for (int i=0; i<numOfRings; i++) {
+ 			JSONArray ring = polygonArray.getJSONArray(i);
+ 			int numOfCoords = ring.length();
+ 			ArrayList<Point> pointList = new ArrayList<Point>();
+ 			for (int j=0; j<numOfCoords; j++) {
+ 				JSONArray coords = ring.getJSONArray(j);
+ 				pointList.add(new Point(coords.getDouble(0), coords.getDouble(1)));
+ 			}
+ 			ringList.add(pointList);
+ 		}
+ 		return new Polygon(ringList);
+ 	}
+ 	
+ 	public JSONArray toJSONArray() throws JSONException {
+		JSONArray polygonArray = new JSONArray();
+ 		JSONArray rings = new JSONArray();
+ 		ArrayList<ArrayList<Point>> ringList = this.getRings();
+ 		for (ArrayList<Point> ring : ringList) {
+ 			int numOfPoints = ring.size();
+ 			for (int i=0; i<numOfPoints; i++) {
+ 				Point point = ring.get(i);
+				rings.put(point.toJSONArray());
+ 			}
+ 		}
+		polygonArray.put(rings);
+		return polygonArray;
+ 	}
+ 	
+ }

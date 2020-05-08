@@ -1,0 +1,869 @@
+ package org.a0z.mpd;
+ 
+ import java.net.InetAddress;
+ import java.net.UnknownHostException;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.LinkedList;
+ import java.util.List;
+ import java.util.regex.Pattern;
+ 
+ import org.a0z.mpd.exception.MPDServerException;
+ 
+ /**
+  * MPD Server controller.
+  * 
+  * @version $Id: MPD.java 2716 2004-11-20 17:37:20Z galmeida $
+  */
+ public class MPD {
+ 	public static final int MIN_VOLUME = 0;
+ 	public static final int MAX_VOLUME = 100;
+ 
+ 	private static final String MPD_CMD_CLEARERROR = "clearerror";
+ 	private static final String MPD_CMD_CLOSE = "close";
+ 	private static final String MPD_CMD_CROSSFADE = "crossfade";
+ 	private static final String MPD_CMD_FIND = "find";
+ 	private static final String MPD_CMD_KILL = "kill";
+ 	private static final String MPD_CMD_LIST_TAG = "list";
+ 	@SuppressWarnings("unused")
+ 	private static final String MPD_CMD_LISTALL = "listall";
+ 	private static final String MPD_CMD_LISTPLAYLISTS = "listplaylists";
+ 	private static final String MPD_CMD_LSDIR = "lsinfo";
+ 	private static final String MPD_CMD_NEXT = "next";
+ 	private static final String MPD_CMD_PAUSE = "pause";
+ 	private static final String MPD_CMD_PASSWORD = "password";
+ 	private static final String MPD_CMD_PLAY = "play";
+ 	private static final String MPD_CMD_PLAY_ID = "playid";
+ 	private static final String MPD_CMD_PREV = "previous";
+ 	private static final String MPD_CMD_REFRESH = "update";
+ 	private static final String MPD_CMD_REPEAT = "repeat";
+ 	private static final String MPD_CMD_RANDOM = "random";
+ 	private static final String MPD_CMD_SEARCH = "search";
+ 	private static final String MPD_CMD_SEEK = "seek";
+ 	private static final String MPD_CMD_SEEK_ID = "seekid";
+ 	private static final String MPD_CMD_STATISTICS = "stats";
+ 	private static final String MPD_CMD_STATUS = "status";
+ 	private static final String MPD_CMD_STOP = "stop";
+ 	private static final String MPD_CMD_SET_VOLUME = "setvol";
+ 	private static final String MPD_CMD_OUTPUTS = "outputs";
+ 	private static final String MPD_CMD_OUTPUTENABLE = "enableoutput";
+ 	private static final String MPD_CMD_OUTPUTDISABLE = "disableoutput";
+ 
+ 	// deprecated commands
+ 	@SuppressWarnings("unused")
+ 	private static final String MPD_CMD_VOLUME = "volume";
+ 
+ 	/**
+ 	 * MPD default TCP port.
+ 	 */
+ 	public static final int DEFAULT_MPD_PORT = 6600;
+ 
+ 	public static final String MPD_FIND_ALBUM = "album";
+ 	public static final String MPD_FIND_ARTIST = "artist";
+ 	
+ 	public static final String MPD_SEARCH_ALBUM = "album";
+ 	public static final String MPD_SEARCH_ARTIST = "artist";
+ 	public static final String MPD_SEARCH_FILENAME = "filename";
+ 	public static final String MPD_SEARCH_TITLE = "title";
+ 
+ 	public static final String MPD_TAG_ALBUM = "album";
+ 	public static final String MPD_TAG_ARTIST = "artist";
+ 	public static final String MPD_TAG_ALBUM_ARTIST = "albumartist";
+ 	
+ 	
+ 	private MPDConnection mpdConnection;
+ 	private MPDStatus mpdStatus;
+ 	private MPDPlaylist playlist;
+ 	private Directory rootDirectory;
+ 
+ 	/**
+ 	 * Constructs a new MPD server controller without connection.
+ 	 */
+ 	public MPD() {
+ 		this.playlist = new MPDPlaylist(this);
+ 		this.mpdStatus = new MPDStatus();
+ 		this.rootDirectory = Directory.makeRootDirectory(this);
+ 	}
+ 
+ 	/**
+ 	 * Constructs a new MPD server controller.
+ 	 * 
+ 	 * @param server
+ 	 *           server address or host name
+ 	 * @param port
+ 	 *           server port
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server
+ 	 * @throws UnknownHostException 
+ 	 */
+ 	public MPD(String server, int port) throws MPDServerException, UnknownHostException {
+ 		this();
+ 		connect(server, port);
+ 	}
+ 	
+ 	/**
+ 	 * Constructs a new MPD server controller.
+ 	 * 
+ 	 * @param server
+ 	 *           server address or host name
+ 	 * @param port
+ 	 *           server port
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server
+ 	 */
+ 	public MPD(InetAddress server, int port) throws MPDServerException {
+ 		this();
+ 		connect(server, port);
+ 	}
+ 
+ 	/**
+ 	 * Retrieves <code>MPDConnection</code>.
+ 	 * 
+ 	 * @return <code>MPDConnection</code>.
+ 	 */
+ 	MPDConnection getMpdConnection() {
+ 		return this.mpdConnection;
+ 	}
+ 	
+ 
+ 	/**
+ 	 * Increases or decreases volume by <code>modifier</code> amount.
+ 	 * 
+ 	 * @param modifier
+ 	 *           volume adjustment
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server
+ 	 */
+ 	public void adjustVolume(int modifier) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 
+ 		// calculate final volume (clip value with [0, 100])
+ 		int vol = getVolume() + modifier;
+ 		vol = Math.max(MIN_VOLUME, Math.min(MAX_VOLUME, vol));
+ 
+ 		mpdConnection.sendCommand(MPD_CMD_SET_VOLUME, Integer.toString(vol));
+ 	}
+ 
+ 	/**
+ 	 * Clears error message.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void clearError() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_CLEARERROR);
+ 	}
+ 
+ 	/**
+ 	 * Connects to a MPD server.
+ 	 * 
+ 	 * @param server
+ 	 *           server address or host name
+ 	 * @param port
+ 	 *           server port
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server
+ 	 * @throws UnknownHostException 
+ 	 */
+ 	public final void connect(String server, int port) throws MPDServerException, UnknownHostException {
+ 		InetAddress adress = InetAddress.getByName(server);
+ 		connect(adress, port);
+ 	}
+ 	
+ 	/**
+ 	 * Connects to a MPD server.
+ 	 * 
+ 	 * @param server
+ 	 *           server address or host name
+ 	 * @param port
+ 	 *           server port
+ 	 */
+ 	public final void connect(InetAddress server, int port) throws MPDServerException {
+ 		this.mpdConnection = new MPDConnection(server, port);
+ 	}
+ 
+ 	/**
+ 	 * Connects to a MPD server.
+ 	 * 
+ 	 * @param server
+ 	 *           server address or host name and port (server:port)
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server
+ 	 * @throws UnknownHostException 
+ 	 */
+ 	public final void connect(String server) throws MPDServerException, UnknownHostException {
+ 		int port = DEFAULT_MPD_PORT;
+ 		String host = null;
+ 		if (server.indexOf(':') != -1) {
+ 			host = server.substring(0, server.lastIndexOf(':'));
+ 			port = Integer.parseInt(server.substring(server.lastIndexOf(':') + 1));
+ 		} else {
+ 			host = server;
+ 		}
+ 		connect(host, port);
+ 	}
+ 
+ 	/**
+ 	 * Disconnects from server.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while closing connection
+ 	 */
+ 	public void disconnect() throws MPDServerException {
+ 		mpdConnection.sendCommand(MPD_CMD_CLOSE);
+ 		mpdConnection.disconnect();
+ 	}
+ 
+ 	/**
+ 	 * Similar to <code>search</code>,<code>find</code> looks for exact matches in the MPD database.
+ 	 * 
+ 	 * @param type
+ 	 *           type of search. Should be one of the following constants: MPD_FIND_ARTIST, MPD_FIND_ALBUM
+ 	 * @param string
+ 	 *           case-insensitive locator string. Anything that exactly matches <code>string</code> will be returned in the results.
+ 	 * @return a Collection of <code>Music</code>
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server
+ 	 * @see org.a0z.mpd.Music
+ 	 */
+ 	public List<Music> find(String type, String string) throws MPDServerException {
+ 		return genericSearch(MPD_CMD_FIND, type, string);
+ 	}
+ 
+ 	// Returns a pattern where all punctuation characters are escaped. 
+ 	private static Pattern escaper = Pattern.compile("([^a-zA-z0-9])"); 
+ 	private List<Music> genericSearch(String searchCommand, String type, String strToFind) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> response = mpdConnection.sendCommand(searchCommand, type, escaper.matcher(strToFind).replaceAll("\\\\$1"));
+ 		return Music.getMusicFromList(response);
+ 	}
+ 
+ 	/**
+ 	 * Retrieves a database directory listing of the base of the database directory path.
+ 	 * 
+ 	 * @return a <code>Collection</code> of <code>Music</code> and <code>Directory</code> representing directory entries.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 * @see Music
+ 	 * @see Directory
+ 	 */
+ 	public List<FilesystemTreeEntry> getDir() throws MPDServerException {
+ 		return getDir(null);
+ 	}
+ 
+ 	/**
+ 	 * Retrieves a database directory listing of <code>path</code> directory.
+ 	 * 
+ 	 * @param path Directory to be listed.
+ 	 * @return a <code>Collection</code> of <code>Music</code> and <code>Directory</code> representing directory entries.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 * @see Music
+ 	 * @see Directory
+ 	 */
+ 	public List<FilesystemTreeEntry> getDir(String path) throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> resonse = mpdConnection.sendCommand(MPD_CMD_LSDIR, path);
+ 		
+ 		LinkedList<String> lineCache = new LinkedList<String>();
+ 		LinkedList<FilesystemTreeEntry> result = new LinkedList<FilesystemTreeEntry>();
+ 		for (String line : resonse) {
+ 			// file-elements are the only ones using fileCache, therefore if something new begins and the cache contains data, its music
+ 			if ((line.startsWith("file: ") || line.startsWith("directory: ") || line.startsWith("playlist: ")) && lineCache.size() > 0) {
+ 				result.add(new Music(lineCache));
+ 				lineCache.clear();
+ 			}
+ 			
+ 			if (line.startsWith("playlist: ")) {
+ 				line = line.substring("playlist: ".length());
+ 				result.add(new PlaylistFile(line));
+ 			} else if (line.startsWith("directory: ")) {
+ 				line = line.substring("directory: ".length());
+ 				result.add(rootDirectory.makeDirectory(line));
+ 			} else if (line.startsWith("file: ")) {
+ 				lineCache.add(line);
+ 			}
+ 
+ 		}
+ 		if (lineCache.size() > 0) {
+ 			result.add(new Music(lineCache));
+ 		}
+ 
+ 		return result;
+ 	}
+ 
+ 	/**
+ 	 * Returns MPD server version.
+ 	 * 
+ 	 * @return MPD Server version.
+ 	 */
+ 	public String getMpdVersion() throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		int[] version = mpdConnection.getMpdVersion();
+ 				
+ 		StringBuffer sb = new StringBuffer();
+ 		for (int i = 0; i < version.length; i++) {
+ 			sb.append(version[i]);
+ 			if (i < (version.length - 1))
+ 				sb.append(".");
+ 		}
+ 		return sb.toString();
+ 	}
+ 
+ 	/**
+ 	 * Retrieves <code>playlist</code>.
+ 	 * 
+ 	 * @return playlist.
+ 	 */
+ 	public MPDPlaylist getPlaylist() {
+ 		return this.playlist;
+ 	}
+ 
+ 	/**
+ 	 * Retrieves statistics for the connected server.
+ 	 * 
+ 	 * @return statistics for the connected server.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public MPDStatistics getStatistics() throws MPDServerException {
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_STATISTICS);
+ 		return new MPDStatistics(response);
+ 	}
+ 
+ 	/**
+ 	 * Retrieves status of the connected server.
+ 	 * 
+ 	 * @return status of the connected server.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public MPDStatus getStatus() throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_STATUS);
+ 		mpdStatus.updateStatus(response);
+ 		return mpdStatus;
+ 	}
+ 
+ 	/**
+ 	 * Retrieves current volume.
+ 	 * 
+ 	 * @return current volume.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public int getVolume() throws MPDServerException {
+ 		return this.getStatus().getVolume();
+ 	}
+ 
+ 	/**
+ 	 * Returns true when connected and false when not connected.
+ 	 * 
+ 	 * @return true when connected and false when not connected
+ 	 */
+ 	public boolean isConnected() {
+ 		if (mpdConnection == null)
+ 			return false;
+ 		return mpdConnection.isConnected();
+ 	}
+ 
+ 
+ 	/**
+ 	 * List all albums from database.
+ 	 * 
+ 	 * @return <code>Collection</code> with all album names from database.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public List<String> listAlbums() throws MPDServerException {
+ 		return listAlbums(null, false);
+ 	}
+ 
+ 	/**
+ 	 * List all albums from database.
+ 	 * 
+ 	 * @param sortInsensitive
+ 	 * 			 do an insensitive sort on the returned list
+ 	 * @return <code>Collection</code> with all album names from database.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public List<String> listAlbums(boolean sortInsensitive) throws MPDServerException {
+ 		return listAlbums(null, sortInsensitive);
+ 	}
+ 	
+ 	/**
+ 	 * List all albums from a given artist.
+ 	 * 
+ 	 * @param artist
+ 	 *           artist to list albums
+ 	 * @param sortInsensitive
+ 	 * 			 do an insensitive sort on the returned list
+ 	 * @return <code>Collection</code> with all album names from the given artist present in database.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public List<String> listAlbums(String artist, boolean sortInsensitive) throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_LIST_TAG, MPD_TAG_ALBUM, artist);
+ 		LinkedList<String> result = new LinkedList<String>();
+ 		for (String line : response) {
+ 			String name = line.substring("Album: ".length());
+			if (name.length() > 0)
+ 				result.add(name);
+ 		}
+ 		
+ 		if (sortInsensitive)
+ 			Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
+ 		else
+ 			Collections.sort(result);
+ 		
+ 		return result;
+ 	}
+ 
+ 	/**
+ 	 * Recursively retrieves all songs and directories.
+ 	 * 
+ 	 * @param dir
+ 	 *           directory to list.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 * @return <code>FileStorage</code> with all songs and directories.
+ 	 */
+ 	/*public Directory listAllFiles(String dir) throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> list = mpdConnection.sendCommand(MPD_CMD_LISTALL, dir);
+ 		
+ 		for (String line : list) {
+ 			if (line.startsWith("directory: ")) {
+ 				rootDirectory.makeDirectory(line.substring("directory: ".length()));
+ 			} else if (line.startsWith("file: ")) {
+ 				rootDirectory.addFile(new Music(line.substring("file: ".length())));
+ 			}
+ 		}
+ 		return rootDirectory;
+ 	}*/
+ 	
+ 	/**
+ 	 * List all artist names from database.
+ 	 * 
+ 	 * @return artist names from database.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public List<String> listArtists() throws MPDServerException {
+ 		return listArtists(false);
+ 	}
+ 	/**
+ 	 * List all artist names from database.
+ 	 * 
+ 	 * @param sortInsensitive
+ 	 *           boolean for insensitive sort when true
+ 	 * @return artist names from database.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public List<String> listArtists(boolean sortInsensitive) throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_LIST_TAG, MPD_TAG_ARTIST);
+ 		
+ 		LinkedList<String> result = new LinkedList<String>();
+ 		for (String s : response) {
+ 			String name = s.substring("Artist: ".length());
+			if (name.length() > 0)
+ 				result.add(name);
+ 		}
+ 		if (sortInsensitive)
+ 			Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
+ 		else
+ 			Collections.sort(result);
+ 		
+ 		return result;
+ 	}
+ 	
+ 	/**
+ 	 * List all album artist names from database.
+ 	 * 
+ 	 * @return album artist names from database.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public List<String> listAlbumArtists() throws MPDServerException {
+ 		if(!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_LIST_TAG, MPD_TAG_ALBUM_ARTIST);
+ 		
+ 		LinkedList<String> result = new LinkedList<String>();
+ 		for (String s : response) {
+ 			String name = s.substring("albumartist: ".length());
+			if (name.length() > 0)
+ 				result.add(name);
+ 		}
+ 		
+ 		Collections.sort(result);
+ 		
+ 		return result;
+ 	}
+ 
+ 	/**
+ 	 * Jumps to next playlist track.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void next() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_NEXT);
+ 	}
+ 
+ 	/**
+ 	 * Authenticate using password.
+ 	 * 
+ 	 * @param password
+ 	 *           password.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void password(String password) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_PASSWORD, password);
+ 	}
+ 
+ 	/**
+ 	 * Pauses/Resumes music playing.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void pause() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_PAUSE);
+ 	}
+ 
+ 	/**
+ 	 * Starts playing music.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void play() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_PLAY);
+ 	}
+ 
+ 	/**
+ 	 * Plays previous playlist music.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server..
+ 	 */
+ 	public void previous() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_PREV);
+ 	}
+ 
+ 	/**
+ 	 * Tells server to refresh database.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void refreshDatabase() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_REFRESH);
+ 	}
+ 
+ 	/**
+ 	 * Similar to <code>find</code>,<code>search</code> looks for partial matches in the MPD database.
+ 	 * 
+ 	 * @param type
+ 	 *           type of search. Should be one of the following constants: MPD_SEARCH_ARTIST, MPD_SEARCH_TITLE, MPD_SEARCH_ALBUM,
+ 	 *           MPD_SEARCG_FILENAME
+ 	 * @param string
+ 	 *           case-insensitive locator string. Anything that contains <code>string</code> will be returned in the results.
+ 	 * @return a Collection of <code>Music</code>.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 * @see org.a0z.mpd.Music
+ 	 */
+ 	public Collection<Music> search(String type, String string) throws MPDServerException {
+ 		return genericSearch(MPD_CMD_SEARCH, type, string);
+ 	}
+ 
+ 	/**
+ 	 * Seeks music to the position.
+ 	 * 
+ 	 * @param songId
+ 	 *           music id in playlist.
+ 	 * @param position
+ 	 *           song position in seconds.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void seekById(int songId, long position) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_SEEK_ID, Integer.toString(songId), Long.toString(position));
+ 	}
+ 	
+ 	/**
+ 	 * Seeks music to the position.
+ 	 * 
+ 	 * @param index
+ 	 *           music position in playlist.
+ 	 * @param position
+ 	 *           song position in seconds.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void seekByIndex(int index, long position) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_SEEK, Integer.toString(index), Long.toString(position));
+ 	}
+ 
+ 	/**
+ 	 * Seeks current music to the position.
+ 	 * 
+ 	 * @param position
+ 	 *           song position in seconds
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void seek(long position) throws MPDServerException {
+ 		seekById(this.getStatus().getSongId(), position);
+ 	}
+ 
+ 	/**
+ 	 * Enabled or disable random.
+ 	 * 
+ 	 * @param random
+ 	 *           if true random will be enabled, if false random will be disabled.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void setRandom(boolean random) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_RANDOM, random ? "1" : "0");
+ 	}
+ 
+ 	/**
+ 	 * Enabled or disable repeating.
+ 	 * 
+ 	 * @param repeat
+ 	 *           if true repeating will be enabled, if false repeating will be disabled.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void setRepeat(boolean repeat) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_REPEAT, repeat ? "1" : "0");
+ 	}
+ 
+ 	/**
+ 	 * Sets volume to <code>volume</code>.
+ 	 * 
+ 	 * @param volume
+ 	 *           new volume value, must be in 0-100 range.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void setVolume(int volume) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		int vol = Math.max(MIN_VOLUME, Math.min(MAX_VOLUME, volume));
+ 		mpdConnection.sendCommand(MPD_CMD_SET_VOLUME, Integer.toString(vol));
+ 	}
+ 
+ 	/**
+ 	 * Kills server.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void shutdown() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_KILL);
+ 	}
+ 
+ 	/**
+ 	 * Jumps to track <code>position</code> from playlist.
+ 	 * 
+ 	 * @param position
+ 	 *           track number.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 * @see #skipToId(int)
+ 	 */
+ 	public void skipToPositon(int position) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_PLAY, Integer.toString(position));
+ 	}
+ 
+ 	/**
+ 	 * Skip to song with specified <code>id</code>.
+ 	 * 
+ 	 * @param id
+ 	 *           song id.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void skipToId(int id) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_PLAY_ID, Integer.toString(id));
+ 	}
+ 
+ 	/**
+ 	 * Stops music playing.
+ 	 * 
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void stop() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_STOP);
+ 	}
+ 
+ 	/**
+ 	 * Retrieves root directory.
+ 	 * 
+ 	 * @return root directory.
+ 	 */
+ 	public Directory getRootDirectory() {
+ 		return rootDirectory;
+ 	}
+ 
+ 	/**
+ 	 * Sets cross-fade.
+ 	 * 
+ 	 * @param time
+ 	 *           cross-fade time in seconds. 0 to disable cross-fade.
+ 	 * @throws MPDServerException
+ 	 *            if an error occur while contacting server.
+ 	 */
+ 	public void setCrossfade(int time) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_CROSSFADE, Integer.toString(Math.max(0, time)));
+ 	}
+ 
+ 	/**
+      * Returns the available outputs
+      * 
+      * @return List of available outputs
+      */
+ 	public List<MPDOutput> getOutputs() throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<MPDOutput> result = new LinkedList<MPDOutput>();
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_OUTPUTS);
+ 		
+ 		LinkedList<String> lineCache = new LinkedList<String>();
+ 		for (String line : response) {
+ 			if (line.startsWith("outputid: ")) {
+ 				if (lineCache.size() != 0) {
+ 					result.add(new MPDOutput(lineCache));
+ 					lineCache.clear();
+ 				}
+ 			}
+ 			lineCache.add(line);
+ 		}
+ 
+ 		if (lineCache.size() != 0) {
+ 			result.add(new MPDOutput(lineCache));
+ 		}
+ 
+ 		return result;
+ 	}
+ 
+ 	/**
+ 	 * Returns a list of all available playlists
+ 	 */
+ 	public List<String> getPlaylists() throws MPDServerException {
+ 		return getPlaylists(false);
+ 	}
+ 
+ 	/**
+ 	 * Returns a list of all available playlists
+ 	 * 
+ 	 * @param sort whether the return list should be sorted
+ 	 */
+ 	public List<String> getPlaylists(boolean sort) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		List<String> result = new ArrayList<String>();
+ 		List<String> response = mpdConnection.sendCommand(MPD_CMD_LISTPLAYLISTS);
+ 		for(String line : response) {
+ 			if(line.startsWith("playlist"))
+ 				result.add(line.substring("playlist: ".length()));
+ 		}
+ 		if (sort)
+ 			Collections.sort((ArrayList<String>) result, String.CASE_INSENSITIVE_ORDER);
+ 		
+ 		return result;
+ 	}
+ 
+ 	public void enableOutput(int id) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_OUTPUTENABLE, Integer.toString(id));
+ 	}
+ 
+ 	public void disableOutput(int id) throws MPDServerException {
+ 		if (!isConnected())
+ 			throw new MPDServerException("MPD Connection is not established");
+ 		
+ 		mpdConnection.sendCommand(MPD_CMD_OUTPUTDISABLE, Integer.toString(id));
+ 	}
+ }

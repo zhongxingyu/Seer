@@ -1,0 +1,55 @@
+ package com.handlerexploit.common.utils;
+ 
+ import java.nio.ByteBuffer;
+ import java.nio.ByteOrder;
+ import java.security.MessageDigest;
+ import java.security.NoSuchAlgorithmException;
+ 
+ /**
+  * @hide
+  */
+ public class Hashing {
+ 
+     private static final LruCache<CharSequence, String> CACHE = new LruCache<CharSequence, String>(100);
+     private static final char[] DIGITS = "0123456789abcdef".toCharArray();
+     private static final MessageDigest DIGEST = getMessageDigest("SHA-1");
+ 
+    public static synchronized String hashString(CharSequence input) {
+        if (input == null) {
+            return null;
+        }
+
+         String hash = CACHE.get(input);
+         if (hash != null) {
+             return hash;
+         }
+ 
+         ByteBuffer scratch = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
+         for (int i = 0; i < input.length(); i++) {
+             scratch.putChar(input.charAt(i));
+             DIGEST.update(scratch.array(), 0, Character.SIZE / Byte.SIZE);
+             scratch.clear();
+         }
+ 
+         byte[] bytes = DIGEST.digest();
+         StringBuilder builder = new StringBuilder(2 * bytes.length);
+         for (byte b : bytes) {
+             builder.append(DIGITS[(b >> 4) & 0xf]).append(DIGITS[b & 0xf]);
+         }
+         hash = builder.toString();
+ 
+         if (hash != null) {
+             CACHE.put(input, hash);
+         }
+ 
+         return hash;
+     }
+ 
+     private static MessageDigest getMessageDigest(String algorithmName) {
+         try {
+             return MessageDigest.getInstance(algorithmName);
+         } catch (NoSuchAlgorithmException e) {
+             throw new AssertionError(e);
+         }
+     }
+ }

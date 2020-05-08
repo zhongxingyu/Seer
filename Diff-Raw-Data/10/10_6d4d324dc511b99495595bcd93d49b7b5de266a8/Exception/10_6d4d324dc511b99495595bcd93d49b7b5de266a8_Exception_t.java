@@ -1,0 +1,68 @@
+ package ceylon.language;
+ 
+ import com.redhat.ceylon.compiler.java.metadata.Ceylon;
+ import com.redhat.ceylon.compiler.java.metadata.Class;
+ import com.redhat.ceylon.compiler.java.metadata.Defaulted;
+ import com.redhat.ceylon.compiler.java.metadata.Ignore;
+ import com.redhat.ceylon.compiler.java.metadata.Name;
+ import com.redhat.ceylon.compiler.java.metadata.TypeInfo;
+ 
+ @Ceylon
+ @Class(extendsType="ceylon.language.IdentifiableObject")
+ public class Exception extends RuntimeException {
+ 
+ 	private static final long serialVersionUID = -1790691559137471641L;
+ 
+ 	private String description;
+     
+     public Exception(
+             @TypeInfo("ceylon.language.String|ceylon.language.Nothing")
+             @Name("description")
+             @Defaulted
+             String description,
+             @TypeInfo("ceylon.language.Exception|ceylon.language.Nothing")
+             @Name("cause")
+             @Defaulted
+             java.lang.Throwable cause) {
+         super(description==null ? null : description.toString(), cause);
+         this.description = description;
+     }
+         
+     @TypeInfo("ceylon.language.Exception|ceylon.language.Nothing")
+     public java.lang.Throwable getCause() {
+         return super.getCause();
+     }
+     
+     @TypeInfo("ceylon.language.String")
+     public java.lang.String getMessage() {
+         if (description != null
+                 && description != null) {
+             return description.toString();
+         } 
+         else if (getCause() != null 
+                 && getCause().getMessage() != null) {
+             return getCause().getMessage();
+         }
+         return "";
+     }
+ 
+     @TypeInfo("ceylon.language.String")
+     public java.lang.String toString() {
+         return "Exception \"" + getMessage() +"\""; 
+     }
+     
+     @Override
+     public void printStackTrace() {
+     	super.printStackTrace();
+     }
+
+    @Ignore
+    public static final class Exception$impl {
+        public static ceylon.language.String $init$message(){
+            return null;
+        }
+        public static java.lang.Throwable $init$cause(ceylon.language.String message){
+            return null;
+        }
+    }
+ }

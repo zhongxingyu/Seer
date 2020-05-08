@@ -1,0 +1,89 @@
+ //
+// $Id: ParlorProvider.java,v 1.4 2001/10/02 02:09:06 mdb Exp $
+ 
+ package com.threerings.parlor.server;
+ 
+ import com.threerings.cocktail.cher.server.InvocationProvider;
+ import com.threerings.cocktail.cher.server.ServiceFailedException;
+ import com.threerings.cocktail.party.data.BodyObject;
+ import com.threerings.cocktail.party.server.PartyServer;
+ 
+ import com.threerings.parlor.client.ParlorCodes;
+ import com.threerings.parlor.data.GameConfig;
+ 
+ /**
+  * The parlor provider handles the server side of the various Parlor
+  * services that are made available for direct invocation by the client.
+  * Primarily these are the matchmaking mechanisms.
+  */
+ public class ParlorProvider
+     extends InvocationProvider implements ParlorCodes
+ {
+     /**
+      * Constructs a parlor provider instance which will be used to handle
+      * all parlor-related invocation service requests. This is
+      * automatically taken care of by the parlor manager, so no other
+      * entity need instantiate and register a parlor provider.
+      *
+      * @param pmgr a reference to the parlor manager active in this
+      * server.
+      */
+     public ParlorProvider (ParlorManager pmgr)
+     {
+         _pmgr = pmgr;
+     }
+ 
+     /**
+      * Processes a request from the client to invite another user to play
+      * a game.
+      */
+     public void handleInviteRequest (
+         BodyObject source, int invid, String invitee, GameConfig config)
+     {
+         String rsp = null;
+ 
+         // ensure that the invitee is online at present
+         try {
+             BodyObject target = PartyServer.lookupBody(invitee);
+             if (target == null) {
+                 throw new ServiceFailedException(INVITEE_NOT_ONLINE);
+             }
+ 
+             // submit the invite request to the parlor manager
+             int inviteId = _pmgr.invite(source, target, config);
+             sendResponse(source, invid, INVITE_RECEIVED_RESPONSE,
+                          new Integer(inviteId));
+ 
+         } catch (ServiceFailedException sfe) {
+             // the exception message is the code indicating the reason
+             // for the invitation rejection
+             sendResponse(source, invid, INVITE_FAILED_RESPONSE,
+                          sfe.getMessage());
+         }
+     }
+ 
+     /**
+      * Processes a request from the client to respond to an outstanding
+      * invitation by accepting, refusing, or countering it.
+      */
+    public void handleRepsondInviteRequest (
+         BodyObject source, int invid, int inviteId, int code, Object arg)
+     {
+         // pass this on to the parlor manager
+         _pmgr.respondToInvite(source, inviteId, code, arg);
+     }
+ 
+     /**
+      * Processes a request from the client to cancel an outstanding
+      * invitation.
+      */
+     public void handleCancelInviteRequest (
+         BodyObject source, int invid, int inviteId)
+     {
+         // pass this on to the parlor manager
+         _pmgr.cancelInvite(source, inviteId);
+     }
+ 
+     /** A reference to the parlor manager we're working with. */
+     protected ParlorManager _pmgr;
+ }

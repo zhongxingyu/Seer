@@ -1,0 +1,325 @@
+ 
+ package org.drools.semantics.builder.model;
+ 
+ 
+ import org.drools.util.CodedHierarchy;
+ import org.drools.util.HierarchyEncoder;
+ import org.drools.util.HierarchyEncoderImpl;
+ import org.drools.util.HierarchySorter;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ 
+ public class GenericModelImpl implements OntoModel, Cloneable {
+ 
+ 
+     private String defaultPackage;
+ 
+     private String defaultNamespace;
+ 
+     private String name;
+ 
+     private Mode mode;
+     
+     private Set<Individual> individuals = new HashSet<Individual>();
+ 
+     private LinkedHashMap<String, Concept> concepts = new LinkedHashMap<String, Concept>();
+ 
+     private Set<SubConceptOf> subConcepts = new HashSet<SubConceptOf>();
+ 
+     private Map<String, Set<PropertyRelation>> properties = new HashMap<String, Set<PropertyRelation>>();
+ 
+     private Set<String> packageNames = new HashSet<String>();
+ 
+     private ClassLoader classLoader;
+ 
+     private HierarchyEncoder<Concept> hierarchyEncoder = new HierarchyEncoderImpl<Concept>();
+ 
+ 
+     protected GenericModelImpl newInstance() {
+         return new GenericModelImpl();
+     }
+ 
+     public Object clone() {
+         GenericModelImpl twin = newInstance();
+         twin.setDefaultPackage( defaultPackage );
+         twin.setName( name );
+         twin.setMode(mode);
+         twin.setConcepts( new LinkedHashMap<String, Concept>( concepts ) );
+         twin.setSubConcepts( new HashSet<SubConceptOf>( subConcepts ) );
+         twin.setProperties( new HashMap<String, Set<PropertyRelation>>( properties ) );
+         return twin;
+     }
+ 
+ 
+     public String getDefaultPackage() {
+         return defaultPackage;
+     }
+ 
+     public void setDefaultPackage( String pack ) {
+         this.defaultPackage = pack;
+     }
+ 
+     public Set<String> getAllPackageNames() {
+         return packageNames;
+     }
+ 
+     public String getDefaultNamespace() {
+         return defaultNamespace;
+     }
+ 
+     public void setDefaultNamespace(String namespace) {
+         this.defaultNamespace = namespace;
+     }
+ 
+     public String getDefaultPackagee() {
+         return defaultPackage;
+     }
+ 
+     public String getName() {
+         return name;
+     }
+ 
+     public void setName(String name) {
+         this.name = name;
+     }
+ 
+     public List<Concept> getConcepts() {
+         return new ArrayList<Concept>( concepts.values() );
+     }
+ 
+     public Concept getConcept( String id ) {
+         return concepts.get( id );
+     }
+ 
+     public void addConcept( Concept con ) {
+ 
+         try {
+             Class klass = Class.forName( con.getFullyQualifiedName(), true, getClassLoader() );
+             con.setResolved( true );
+             if ( klass.isInterface() ) {
+                 con.setResolvedAs( Concept.Resolution.IFACE );
+             } else if ( klass.isEnum() ) {
+                 con.setResolvedAs( Concept.Resolution.ENUM );
+             } else {
+                 con.setResolvedAs( Concept.Resolution.CLASS );
+             }
+         } catch ( ClassNotFoundException e ) {
+             con.setResolved( false );
+             con.setResolvedAs( Concept.Resolution.NONE );
+         }
+ 
+         concepts.put( con.getIri(), con );
+         packageNames.add( con.getPackage() );
+     }
+ 
+     public Concept removeConcept( Concept con ) {
+         return concepts.remove( con.getIri() );
+     }
+ 
+     public Set<Individual> getIndividuals() {
+         return individuals;
+     }
+ 
+     public void addIndividual( Individual i ) {
+         individuals.add( i );
+     }
+ 
+     public Individual removeIndividual( Individual i ) {
+         return individuals.remove( i ) ? i : null;
+     }
+ 
+     protected void setConcepts(LinkedHashMap<String, Concept> concepts) {
+         this.concepts = concepts;
+     }
+ 
+ 
+ 
+     public Set<SubConceptOf> getSubConcepts() {
+         return subConcepts;
+     }
+ 
+     public void addSubConceptOf( SubConceptOf sub ) {
+         subConcepts.add( sub );
+     }
+ 
+     public boolean removeSubConceptOf( SubConceptOf sub ) {
+         return subConcepts.remove( sub );
+     }
+ 
+     public SubConceptOf getSubConceptOf( String sub, String sup ) {
+         for ( SubConceptOf rel : subConcepts ) {
+             if ( rel.getSubject().equals( sub ) ) {
+                 if ( rel.getObject().equals( sup ) ) {
+                     return rel;
+                 }
+             }
+         }
+         return null;
+     }
+ 
+     protected void setSubConcepts(Set<SubConceptOf> subConcepts) {
+         this.subConcepts = subConcepts;
+     }
+ 
+ 
+     public Set<PropertyRelation> getProperties( String domainIri ) {
+         return properties.get( domainIri );
+     }
+ 
+     public Set<PropertyRelation> getProperties() {
+         HashSet<PropertyRelation> set = new HashSet<PropertyRelation>();
+         for ( Set<PropertyRelation> subset : properties.values() ) {
+             set.addAll( subset );
+         }
+         return set;
+     }
+ 
+     public void addProperty( PropertyRelation rel ) {
+         Set<PropertyRelation> set = properties.get( rel.getProperty() );
+         if ( set == null ) {
+             set = new HashSet<PropertyRelation>();
+             properties.put( rel.getProperty(), set );
+         }
+         set.add( rel );
+     }
+ 
+     public PropertyRelation removeProperty( PropertyRelation rel ) {
+         Set<PropertyRelation> set = properties.get( rel.getProperty() );
+         if ( set != null ) {
+             set.remove( rel );
+             return  rel;
+         }
+         return null;
+     }
+ 
+     public PropertyRelation getProperty( String iri ) {
+         Collection<PropertyRelation> props = properties.get( iri );
+         return props != null ? props.iterator().next() : null;
+     }
+ 
+     protected void setProperties(Map<String, Set<PropertyRelation>> properties) {
+         this.properties = properties;
+     }
+ 
+ 
+ 
+ 
+ 
+     @Override
+     public String toString() {
+         return "Model{\n" +
+                 "\n\n concepts=\n" + conceptsToString() +
+                 "\n\n subConcepts=\n" + subConceptsToString() +
+                 "\n\n properties=\n" + propertiesToString() +
+                 '}';
+     }
+ 
+ 
+ 
+ 
+ 
+     private String propertiesToString() {
+         StringBuilder sb = new StringBuilder();
+         for ( PropertyRelation prop : getProperties() ) {
+             sb.append("\t").append(prop.toFullString()).append("\n");
+         }
+         return sb.toString();
+     }
+ 
+     private String subConceptsToString() {
+         StringBuilder sb = new StringBuilder();
+         for ( SubConceptOf sub : subConcepts ) {
+             sb.append("\t").append(sub.toFullString()).append("\n");
+         }
+         return sb.toString();
+     }
+ 
+     private String conceptsToString() {
+         StringBuilder sb = new StringBuilder();
+         for ( Concept con : getConcepts() ) {
+             sb.append("\t").append( con.toFullString() ).append("\n");
+         }
+         return sb.toString();
+ 
+     }
+ 
+ 
+     public CodedHierarchy<Concept> getConceptHierarchy() {
+         return hierarchyEncoder;
+     }
+ 
+ 
+     public Mode getMode() {
+         return mode;
+     }
+ 
+     public void setMode(Mode mode) {
+         this.mode = mode;
+     }
+ 
+ 
+     public boolean isHierarchyConsistent() {
+         for ( Concept con : getConcepts() ) {
+             for ( PropertyRelation rel : con.getProperties().values() ) {
+ //                System.out.println( "Looking for property " + rel.getName() + " starting from " + con.getName() );
+                 if ( ! isPropertyAvailableToImpl( rel, con ) ) {
+                     return false;
+                 }
+             }
+         }
+         return true;
+     }
+ 
+     private boolean isPropertyAvailableToImpl( PropertyRelation rel, Concept con ) {
+         if ( con == null ) {
+             return false;
+         }
+         if ( con.getChosenProperties().containsKey( rel.getProperty() ) ) {
+             return true;
+         } else {
+             if ( con.getChosenSuperConcept() != con ) {
+                 return isPropertyAvailableToImpl( rel, con.getChosenSuperConcept() );
+             } else {
+ //                System.err.print( "Topp reached looking fir " + rel.getProperty() + " in " + con.getIri() );
+                 return false;
+             }
+         }
+     }
+ 
+     public void reassignConceptCodes() {
+         for ( Concept con : getConcepts() ) {
+             con.setTypeCode( hierarchyEncoder.encode( con, con.getSuperConcepts() ) );
+         }
+         System.out.println( hierarchyEncoder );
+     }
+ 
+ 
+     public ClassLoader getClassLoader() {
+         return classLoader;
+     }
+ 
+     public void setClassLoader(ClassLoader classLoader) {
+         this.classLoader = classLoader;
+     }
+ 
+     public void sort() {
+         Map<Concept,Collection<Concept>> hier = new HashMap<Concept, Collection<Concept>>();
+         for ( Concept c : concepts.values() ) {
+             hier.put( c, c.getSuperConcepts() );
+         }
+         concepts.clear();
+ 
+         List<Concept> sorted = new HierarchySorter<Concept>().sort( hier );
+         for ( Concept c : sorted ) {
+             concepts.put( c.getIri(), c );
+         }
+     }
+ 
+ }

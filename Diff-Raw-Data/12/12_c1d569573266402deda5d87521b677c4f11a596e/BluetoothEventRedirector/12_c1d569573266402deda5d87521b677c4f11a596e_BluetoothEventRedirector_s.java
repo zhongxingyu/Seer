@@ -1,0 +1,148 @@
+ /*
+  * Copyright (C) 2008 The Android Open Source Project
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+ 
+ package com.android.settings.bluetooth;
+ 
+ import android.bluetooth.BluetoothA2dp;
+ import android.bluetooth.BluetoothClass;
+ import android.bluetooth.BluetoothDevice;
+ import android.bluetooth.BluetoothError;
+ import android.bluetooth.BluetoothHeadset;
+ import android.bluetooth.BluetoothIntent;
+ import android.content.BroadcastReceiver;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.IntentFilter;
+ import android.util.Log;
+ 
+ import com.android.settings.bluetooth.LocalBluetoothProfileManager.Profile;
+ 
+ /**
+  * BluetoothEventRedirector receives broadcasts and callbacks from the Bluetooth
+  * API and dispatches the event on the UI thread to the right class in the
+  * Settings.
+  */
+ public class BluetoothEventRedirector {
+     private static final String TAG = "BluetoothEventRedirector";
+     private static final boolean V = LocalBluetoothManager.V;
+ 
+     private LocalBluetoothManager mManager;
+ 
+     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+         @Override
+         public void onReceive(Context context, Intent intent) {
+             if (V) {
+                 Log.v(TAG, "Received " + intent.getAction());
+             }
+ 
+             String action = intent.getAction();
+             BluetoothDevice device = intent.getParcelableExtra(BluetoothIntent.DEVICE);
+ 
+             if (action.equals(BluetoothIntent.BLUETOOTH_STATE_CHANGED_ACTION)) {
+                 int state = intent.getIntExtra(BluetoothIntent.BLUETOOTH_STATE,
+                                         BluetoothError.ERROR);
+                 mManager.setBluetoothStateInt(state);
+             } else if (action.equals(BluetoothIntent.DISCOVERY_STARTED_ACTION)) {
+                 mManager.onScanningStateChanged(true);
+ 
+             } else if (action.equals(BluetoothIntent.DISCOVERY_COMPLETED_ACTION)) {
+                 mManager.onScanningStateChanged(false);
+ 
+             } else if (action.equals(BluetoothIntent.REMOTE_DEVICE_FOUND_ACTION)) {
+                 short rssi = intent.getShortExtra(BluetoothIntent.RSSI, Short.MIN_VALUE);
+                 int btClass = intent.getIntExtra(BluetoothIntent.CLASS, BluetoothClass.ERROR);
+                 String name = intent.getStringExtra(BluetoothIntent.NAME);
+                 mManager.getCachedDeviceManager().onDeviceAppeared(device, rssi, btClass, name);
+ 
+             } else if (action.equals(BluetoothIntent.REMOTE_DEVICE_DISAPPEARED_ACTION)) {
+                 mManager.getCachedDeviceManager().onDeviceDisappeared(device);
+ 
+             } else if (action.equals(BluetoothIntent.REMOTE_NAME_UPDATED_ACTION)) {
+                 mManager.getCachedDeviceManager().onDeviceNameUpdated(device);
+ 
+             } else if (action.equals(BluetoothIntent.BOND_STATE_CHANGED_ACTION)) {
+                 int bondState = intent.getIntExtra(BluetoothIntent.BOND_STATE,
+                                                    BluetoothError.ERROR);
+                 mManager.getCachedDeviceManager().onBondingStateChanged(device, bondState);
+                 if (bondState == BluetoothDevice.BOND_NOT_BONDED) {
+                     int reason = intent.getIntExtra(BluetoothIntent.REASON, BluetoothError.ERROR);
+                     if (reason == BluetoothDevice.UNBOND_REASON_AUTH_REJECTED ||
+                             reason == BluetoothDevice.UNBOND_REASON_REMOTE_DEVICE_DOWN) {
+                         mManager.getCachedDeviceManager().onBondingError(device, reason);
+                     }
+                 }
+ 
+             } else if (action.equals(BluetoothIntent.HEADSET_STATE_CHANGED_ACTION)) {
+                 int newState = intent.getIntExtra(BluetoothIntent.HEADSET_STATE, 0);
+                 int oldState = intent.getIntExtra(BluetoothIntent.HEADSET_PREVIOUS_STATE, 0);
+                 if (newState == BluetoothHeadset.STATE_DISCONNECTED &&
+                         oldState == BluetoothHeadset.STATE_CONNECTING) {
+                     Log.i(TAG, "Failed to connect BT headset");
+                 }
+ 
+                 mManager.getCachedDeviceManager().onProfileStateChanged(device,
+                         Profile.HEADSET, newState);
+ 
+             } else if (action.equals(BluetoothA2dp.SINK_STATE_CHANGED_ACTION)) {
+                 int newState = intent.getIntExtra(BluetoothA2dp.SINK_STATE, 0);
+                 int oldState = intent.getIntExtra(BluetoothA2dp.SINK_PREVIOUS_STATE, 0);
+                 if (newState == BluetoothA2dp.STATE_DISCONNECTED &&
+                         oldState == BluetoothA2dp.STATE_CONNECTING) {
+                     Log.i(TAG, "Failed to connect BT A2DP");
+                 }
+ 
+                 mManager.getCachedDeviceManager().onProfileStateChanged(device,
+                         Profile.A2DP, newState);
+ 
+             } else if (action.equals(BluetoothIntent.REMOTE_DEVICE_CLASS_UPDATED_ACTION)) {
+                 mManager.getCachedDeviceManager().onBtClassChanged(device);
+ 
+             }
+         }
+     };
+ 
+     public BluetoothEventRedirector(LocalBluetoothManager localBluetoothManager) {
+         mManager = localBluetoothManager;
+     }
+ 
+     public void start() {
+         IntentFilter filter = new IntentFilter();
+ 
+         // Bluetooth on/off broadcasts
+         filter.addAction(BluetoothIntent.BLUETOOTH_STATE_CHANGED_ACTION);
+ 
+         // Discovery broadcasts
+         filter.addAction(BluetoothIntent.DISCOVERY_STARTED_ACTION);
+         filter.addAction(BluetoothIntent.DISCOVERY_COMPLETED_ACTION);
+         filter.addAction(BluetoothIntent.REMOTE_DEVICE_DISAPPEARED_ACTION);
+         filter.addAction(BluetoothIntent.REMOTE_DEVICE_FOUND_ACTION);
+         filter.addAction(BluetoothIntent.REMOTE_NAME_UPDATED_ACTION);
+ 
+         // Pairing broadcasts
+         filter.addAction(BluetoothIntent.BOND_STATE_CHANGED_ACTION);
+ 
+         // Fine-grained state broadcasts
+         filter.addAction(BluetoothA2dp.SINK_STATE_CHANGED_ACTION);
+         filter.addAction(BluetoothIntent.HEADSET_STATE_CHANGED_ACTION);
+         filter.addAction(BluetoothIntent.REMOTE_DEVICE_CLASS_UPDATED_ACTION);
+ 
+         mManager.getContext().registerReceiver(mBroadcastReceiver, filter);
+     }
+ 
+     public void stop() {
+         mManager.getContext().unregisterReceiver(mBroadcastReceiver);
+     }
+ }

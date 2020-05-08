@@ -1,0 +1,1247 @@
+ /*
+  * Copyright 1999-2007 Sun Microsystems, Inc.  All Rights Reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License version 2 only, as
+  * published by the Free Software Foundation.  Sun designates this
+  * particular file as subject to the "Classpath" exception as provided
+  * by Sun in the LICENSE file that accompanied this code.
+  *
+  * This code is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+  * version 2 for more details (a copy is included in the LICENSE file that
+  * accompanied this code).
+  *
+  * You should have received a copy of the GNU General Public License version
+  * 2 along with this work; if not, write to the Free Software Foundation,
+  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+  *
+  * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
+  * CA 95054 USA or visit www.sun.com if you need additional information or
+  * have any questions.
+  */
+ package com.sun.tools.javafx.comp;
+ 
+ import com.sun.tools.javac.code.Flags;
+ import com.sun.tools.javac.code.Kinds;
+ import com.sun.tools.javac.code.Scope.Entry;
+ import com.sun.tools.javac.code.Symbol;
+ import com.sun.tools.javac.code.Symbol.ClassSymbol;
+ import com.sun.tools.javac.code.Symbol.MethodSymbol;
+ import com.sun.tools.javac.code.Symbol.VarSymbol;
+ import com.sun.tools.javac.code.Symbol.VarSymbol;
+ import com.sun.tools.javac.code.TypeTags;
+ import com.sun.tools.javac.code.Type;
+ import com.sun.tools.javac.code.Type.MethodType;
+ import com.sun.tools.javac.tree.JCTree;
+ import com.sun.tools.javac.tree.JCTree.*;
+ import com.sun.tools.javac.tree.JCTree.JCClassDecl;
+ import com.sun.tools.javac.tree.TreeInfo;
+ import com.sun.tools.javac.tree.TreeTranslator;
+ import com.sun.tools.javac.util.Context;
+ import com.sun.tools.javac.util.ListBuffer;
+ import com.sun.tools.javac.util.Name;
+ import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
+ import com.sun.tools.javac.util.List;
+ import com.sun.tools.javac.util.Position;
+ 
+ import com.sun.tools.javafx.tree.*;
+ import com.sun.tools.javafx.code.JavafxSymtab;
+ import com.sun.tools.javafx.comp.JavafxTypeMorpher.VarMorphInfo;
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.Map;
+ import java.util.Set;
+ 
+ public class JavafxInitializationBuilder {
+     protected static final Context.Key<JavafxInitializationBuilder> javafxInitializationBuilderKey =
+         new Context.Key<JavafxInitializationBuilder>();
+ 
+     private final JavafxTreeMaker make;
+     private final Name.Table names;
+     private final JavafxToJava toJava;
+     private final JavafxSymtab syms;
+     private final JavafxTypeMorpher typeMorpher;
+     
+     private final Name addChangeListenerName;
+     private final Name changeListenerInterfaceName;
+     private final Name sequenceChangeListenerInterfaceName;
+     private final Name valueChangedName;
+     private final Name classNameSuffix;
+     final Name interfaceNameSuffix;
+     final String attributeGetMethodNamePrefix = "get$";
+     final String attributeInitMethodNamePrefix = "init$";
+     private final String initHelperClassName = "com.sun.javafx.runtime.InitHelper";
+     private final Name locationName;
+     final Name setDefaultsName;
+     final Name userInitName;
+     final Name receiverName;
+     final Name initializeName;
+     private final Name numberFieldsName;
+     private final Name getNumFieldsName;
+     private final Name initHelperName;
+     private final Name getPreviousValueName;
+     private final String assertNonNullName = "assertNonNull";
+     private final String addName = "add";
+     private final Name initializeNonSyntheticName;
+     private final Name onChangeArgName;
+     private final String fullLocationName = "com.sun.javafx.runtime.location.Location";
+     private final String addDependenciesName = "addDependencies";
+     private final String fxObjectName = "com.sun.javafx.runtime.FXObject";
+     Name outerAccessorName;
+     Name outerAccessorFieldName;
+     
+     private Map<ClassSymbol, JFXClassDeclaration> fxClasses;
+     Map<ClassSymbol, java.util.List<Symbol>> fxClassAttributes;
+ 
+     public static JavafxInitializationBuilder instance(Context context) {
+         JavafxInitializationBuilder instance = context.get(javafxInitializationBuilderKey);
+         if (instance == null)
+             instance = new JavafxInitializationBuilder(context);
+         return instance;
+     }
+ 
+     protected JavafxInitializationBuilder(Context context) {
+         context.put(javafxInitializationBuilderKey, this);
+ 
+         make = (JavafxTreeMaker)JavafxTreeMaker.instance(context);
+         names = Name.Table.instance(context);
+         toJava = JavafxToJava.instance(context);
+         syms = (JavafxSymtab)(JavafxSymtab.instance(context));
+         typeMorpher = JavafxTypeMorpher.instance(context);
+         
+         addChangeListenerName = names.fromString("addChangeListener");
+         changeListenerInterfaceName = names.fromString(JavafxTypeMorpher.locationPackageName + "ChangeListener");
+         sequenceChangeListenerInterfaceName = names.fromString(JavafxTypeMorpher.locationPackageName + "SequenceChangeListener");
+         valueChangedName = names.fromString("valueChanged");
+         classNameSuffix = names.fromString("$Impl");
+         interfaceNameSuffix = names.fromString("$Intf");
+         locationName = names.fromString("location");
+         setDefaultsName = names.fromString("setDefaults$");
+         userInitName = names.fromString("userInit$");
+         receiverName = names.fromString("receiver$");
+         initializeName = names.fromString("initialize$");
+         numberFieldsName = names.fromString("NUM$FIELDS");
+         getNumFieldsName = names.fromString("getNumFields$");
+         initHelperName = names.fromString("initHelper$");
+         getPreviousValueName = names.fromString("getPreviousValue");
+         initializeNonSyntheticName = names.fromString("initialize");
+         onChangeArgName = names.fromString("$location");
+         outerAccessorName = names.fromString("accessOuter$");
+         outerAccessorFieldName = names.fromString("accessOuterField$");
+     }
+     
+     static class TranslatedAttributeInfo {
+         private final JFXVar attribute;
+         private final Type elemType;
+         final JCExpression initExpr;
+         final List<JFXAbstractOnChange> onChanges;
+         final List<JCExpression> args;
+         TranslatedAttributeInfo(JFXVar attribute, JCExpression initExpr, final List<JCExpression> args, List<JFXAbstractOnChange> onChanges) {
+             this.attribute = attribute;
+             this.initExpr = initExpr;
+             this.onChanges = onChanges;
+             this.elemType = attribute.type.getTypeArguments().head;
+            this.args = args;
+         }
+         
+         Name name() { return attribute.getName(); }
+         Type type() { return attribute.type; }
+         Type elemType() { return elemType; }
+         DiagnosticPosition diagPos() { return attribute.pos(); }
+     }
+   
+     /**
+      * Non-destructively build the statements to fill-in the 
+      * body of a translated class initializer method.
+      * Incoming info MUST be translated into Java ASTs already
+      */
+     List<JCStatement> initializerMethodBody(
+             JFXClassDeclaration classDecl,
+             List<TranslatedAttributeInfo> attrInfo, 
+             List<JCBlock> initBlocks) {
+         ListBuffer<JCStatement> stmts = ListBuffer.<JCStatement>lb();
+         stmts.append(toJava.callStatement(classDecl.pos(), null, initializeName.toString()));
+         return stmts.toList();
+     }  
+     
+     /**
+      * Non-destructive creation of initialization code for an attribute
+      */
+     private JCStatement makeAttributeInitialization(TranslatedAttributeInfo info) {
+         JCLiteral nullValue = make.Literal(TypeTags.BOT, null);
+         JCIdent lhsIdent = make.Ident(info.name());
+         JCBinary cond = make.Binary(JCTree.EQ, lhsIdent, nullValue);
+ 
+         JCIdent lhsAssignIdent = make.Ident(info.name());
+         JCAssign defValAssign = make.Assign(lhsAssignIdent, info.initExpr);
+         JCExpressionStatement defAttrValue = make.Exec(defValAssign);
+         return make.If(cond, defAttrValue, null);
+     }
+     
+     /**
+      * Non-destructive creation of "on change" change listener set-up call.
+      */
+     JCStatement makeChangeListenerCall(TranslatedAttributeInfo info) {
+         JFXOnReplace onReplace = null;
+         JFXOnReplaceElement onReplaceElement = null;
+         JFXOnInsertElement onInsertElement = null;
+         JFXOnDeleteElement onDeleteElement = null;
+         DiagnosticPosition diagPos = info.diagPos();
+         ListBuffer<JCTree> defs = ListBuffer.<JCTree>lb();
+         
+         if (!info.onChanges.nonEmpty()) {
+             return null;
+         } 
+         
+         for (JFXAbstractOnChange onc : info.onChanges) {
+             switch (onc.getTag()) {
+                 case JavafxTag.ON_REPLACE:
+                     onReplace = (JFXOnReplace)onc;
+                     break;
+                 case JavafxTag.ON_REPLACE_ELEMENT:
+                     onReplaceElement = (JFXOnReplaceElement)onc;
+                     break;
+                 case JavafxTag.ON_INSERT_ELEMENT:
+                     onInsertElement = (JFXOnInsertElement)onc;
+                     break;
+                 case JavafxTag.ON_DELETE_ELEMENT:
+                     onDeleteElement = (JFXOnDeleteElement)onc;
+                     break;
+             }
+         }
+        
+         // If there are any listeners, we need to build this, even if empty
+         defs.append(makeOnReplaceChangeListenerMethod(
+                         diagPos,
+                         onReplace));
+         
+         JCExpression changeListener = make.at(diagPos).Identifier(changeListenerInterfaceName);
+         List<JCExpression> emptyTypeArgs = List.nil();
+         if (onReplaceElement != null || onInsertElement != null || onDeleteElement != null) {
+             changeListener = make.at(diagPos).Identifier(sequenceChangeListenerInterfaceName);
+             changeListener = make.at(diagPos).TypeApply(changeListener, 
+                     List.<JCExpression>of(toJava.makeTypeTree(info.elemType(), diagPos)));
+             defs.append(makeSequenceChangeListenerMethod(
+                     diagPos, 
+                     onReplaceElement, 
+                     "onReplace", 
+                     List.<JCVariableDecl>of(
+                         makeIndexParam(diagPos, onReplaceElement), 
+                         makeParam(diagPos, info.elemType(),
+                                   onReplaceElement == null ? null : onReplaceElement.getOldValue(),
+                                   "$oldVallue$"), 
+                         makeParam(diagPos, info.elemType(), null, "$newValue$")), 
+                     TypeTags.VOID));
+             defs.append(makeSequenceChangeListenerMethod(
+                     diagPos, 
+                     onInsertElement, 
+                     "onInsert", 
+                     List.<JCVariableDecl>of(
+                         makeIndexParam(diagPos, onInsertElement), 
+                         makeParam(diagPos, info.elemType(),
+                                   onInsertElement == null ? null : onInsertElement.getOldValue(),
+                                   "$newValue$")), 
+                     TypeTags.VOID));
+             defs.append(makeSequenceChangeListenerMethod(
+                     diagPos, 
+                     onDeleteElement, 
+                     "onDelete", 
+                     List.<JCVariableDecl>of(
+                         makeIndexParam(diagPos, onDeleteElement), 
+                         makeParam(diagPos, info.elemType(),
+                                   onDeleteElement == null ? null : onDeleteElement.getOldValue(),
+                                   "$oldVallue$")), 
+                     TypeTags.VOID));
+         }
+         JCNewClass anonymousChangeListener = make.NewClass(
+                 null, 
+                 emptyTypeArgs, 
+                 changeListener, 
+                 List.<JCExpression>nil(), 
+                 make.at(diagPos).AnonymousClassDef(make.Modifiers(0L), defs.toList()));
+ 
+         JCIdent varIdent = make.at(diagPos).Ident(info.name());
+         varIdent.sym = info.attribute.sym;
+         JCFieldAccess tmpSelect = make.at(diagPos).Select(varIdent, addChangeListenerName);
+ 
+         List<JCExpression> args = List.<JCExpression>of(anonymousChangeListener);
+         return make.at(diagPos).Exec(make.at(diagPos).Apply(emptyTypeArgs, tmpSelect, args));
+     }
+     
+     private JCVariableDecl makeParam(DiagnosticPosition diagPos, Type type, JFXVar var, String nameDefault) {
+         Name name;
+         if (var != null) {
+             name = var.getName();
+             diagPos = var.pos();
+         } else {
+             name = names.fromString(nameDefault);
+         }
+         return make.at(diagPos).VarDef(
+                 make.Modifiers(Flags.PARAMETER),
+                 name,
+                 toJava.makeTypeTree(type, diagPos),
+                 null);
+         
+     }
+ 
+     private JCVariableDecl makeIndexParam(DiagnosticPosition diagPos, JFXAbstractOnChange onChange) {
+         return makeParam(diagPos, syms.intType, onChange == null ? null : onChange.getIndex(), "$index$");
+     }
+ 
+     /**
+      * construct a change listener method for sequence triggers.  Insert in a listener anon class.
+      *   void onInsert(...);
+      *   void on Delete(...); ...
+      */
+     private JCMethodDecl makeSequenceChangeListenerMethod(
+             DiagnosticPosition diagPos,
+             JFXAbstractOnChange onChange, 
+             String methodName, 
+             List<JCVariableDecl> args, 
+             int returnTypeTag) {
+         return makeChangeListenerMethod(
+              diagPos,
+              onChange, 
+              ListBuffer.<JCStatement>lb(),
+              methodName, 
+              args, 
+              returnTypeTag);
+     }
+     
+     /**
+      * construct a change listener method for insertion in a listener anon class.
+      *   void onReplace(...); ...
+      */
+     private JCMethodDecl makeOnReplaceChangeListenerMethod(
+             DiagnosticPosition diagPos,
+             JFXOnReplace onReplace) {
+         List<JCVariableDecl> onChangeArgs = List.<JCVariableDecl>nil();
+         onChangeArgs = onChangeArgs.append(make.VarDef(make.Modifiers(0L), onChangeArgName, make.Identifier(fullLocationName), null));
+         ListBuffer<JCStatement> setUpStmts = ListBuffer.<JCStatement>lb();
+         if (onReplace != null && onReplace.getOldValue() != null) {
+             // an oldValue variable was specificied, create it.  For example:
+             //   int oldValue = ((IntLocation) location).getPreviousValue();
+             JFXVar oldValue = onReplace.getOldValue();
+             VarMorphInfo vmi = typeMorpher.varMorphInfo(oldValue.sym);
+             Type locationType = vmi.typeMorph();
+ 
+             setUpStmts.append( 
+                     make.at(diagPos).VarDef(
+                         make.Modifiers(0L), 
+                         oldValue.getName(), 
+                         toJava.makeTypeTree(vmi.getRealType(), diagPos, false), 
+                         make.at(diagPos).Apply(
+                             List.<JCExpression>nil(),       // no type args
+                             make.at(diagPos).Select(
+                                 make.at(diagPos).TypeCast(   // cast to the specific Location type -- eg: (IntLocation) $location
+                                     toJava.makeTypeTree(locationType, diagPos, false), 
+                                     make.at(diagPos).Ident(onChangeArgName)),
+                                 getPreviousValueName),
+                             List.<JCExpression>nil()        // no args
+                             )));
+         }
+          return makeChangeListenerMethod(
+              diagPos,
+              onReplace, 
+              setUpStmts,
+              "onChange", 
+              onChangeArgs, 
+              TypeTags.BOOLEAN);
+     }
+     
+     /**
+      * construct a change listener method for insertion in a listener anon class.
+      *   boolean onChange();
+      *   void onInsert(...);
+      *   void on Delete(...); ...
+      */
+     private JCMethodDecl makeChangeListenerMethod(
+             DiagnosticPosition diagPos,
+             JFXAbstractOnChange onChange, 
+             ListBuffer<JCStatement> prefixStmts,
+             String methodName, 
+             List<JCVariableDecl> args, 
+             int returnTypeTag) {
+         ListBuffer<JCStatement> ocMethStmts = ListBuffer.<JCStatement>lb();
+         ocMethStmts.appendList(prefixStmts);
+         if (onChange != null) {
+             diagPos = onChange.pos();
+             ocMethStmts.appendList(onChange.getBody().getStatements());
+         }
+         if (returnTypeTag == TypeTags.BOOLEAN) {
+             ocMethStmts.append(make.at(diagPos).Return(make.at(diagPos).Literal(TypeTags.BOOLEAN, 1)));
+         }
+ 
+         return make.at(diagPos).MethodDef(
+                 make.at(diagPos).Modifiers(Flags.PUBLIC), 
+                 names.fromString(methodName), 
+                 make.at(diagPos).TypeIdent(returnTypeTag), 
+                 List.<JCTypeParameter>nil(), 
+                 args,
+                 List.<JCExpression>nil(), 
+                 make.at(diagPos).Block(0L, ocMethStmts.toList()), 
+                 null);
+     }
+ 
+     private void makeOnChangedCall(JFXClassDeclaration classDecl,
+                                     ListBuffer<JCStatement> stmts) {
+         for (JCTree tree : classDecl.getMembers()) {
+             if (tree.getTag() == JavafxTag.VAR_DEF) {
+                 JFXVar attrDef = (JFXVar)tree;
+                 DiagnosticPosition diagPos = attrDef.pos();
+                 JCIdent varIdent = make.at(diagPos).Ident(attrDef.name);
+                 JCFieldAccess tmpSelect = make.at(diagPos).Select(varIdent, valueChangedName);
+ 
+                 List<JCExpression> typeargs = List.nil();
+                 List<JCExpression> args = List.<JCExpression>nil();
+                 stmts = stmts.append(make.at(diagPos).Exec(make.at(diagPos).Apply(typeargs, tmpSelect, args)));
+             }
+         }
+     }
+     
+     List<JCStatement> createJFXClassModel(JFXClassDeclaration cDecl, JavafxTypeMorpher typeMorpher) {
+ 
+         Set<String> visitedClasses = new HashSet<String>();
+         Map<String, Symbol> collectedAttributes = new HashMap<String, Symbol>();
+         Map<String, MethodSymbol> collectedMethods = new HashMap<String, MethodSymbol>();
+         java.util.List<Symbol> attributes = new java.util.ArrayList<Symbol>();
+         java.util.List<MethodSymbol> methods = new java.util.ArrayList<MethodSymbol>();
+         java.util.List<ClassSymbol> baseClasses = new java.util.ArrayList<ClassSymbol>();
+         java.util.List<ClassSymbol> classesToVisit = new java.util.ArrayList<ClassSymbol>();
+         
+         classesToVisit.add(cDecl.sym);
+         
+         collectAttributesAndMethods(visitedClasses,
+                                     collectedAttributes,
+                                     collectedMethods,
+                                     attributes,
+                                     methods,
+                                     baseClasses,
+                                     classesToVisit);
+ 
+         addFxClassAttributes(cDecl.sym, attributes);
+         ListBuffer<JCStatement> ret = new ListBuffer<JCStatement>();
+         
+         ListBuffer<JCExpression> implementing = new ListBuffer<JCExpression>();
+         implementing.append(make.Identifier(fxObjectName));
+ 
+         for (ClassSymbol baseClass : baseClasses) {
+             if (!baseClass.name.endsWith(interfaceNameSuffix) && 
+                     baseClass.fullname != names.fromString(fxObjectName) &&
+                     isJFXClass(baseClass)) {
+                 implementing.append(make.Ident(names.fromString(baseClass.name.toString() + interfaceNameSuffix)));
+             }
+         }
+         
+         JCExpression intIdent = make.TypeIdent(TypeTags.INT);
+         
+         JCVariableDecl numFieldsVar = make.VarDef(
+                 make.Modifiers(Flags.PRIVATE | Flags.STATIC | Flags.FINAL), numberFieldsName, intIdent, make.Literal(new Integer(attributes.size())));
+         
+         VarSymbol numFieldsVarSym = new VarSymbol(numFieldsVar.mods.flags, numberFieldsName, intIdent.type, cDecl.sym);
+         numFieldsVar.sym = numFieldsVarSym;
+         numFieldsVarSym.type = intIdent.type;
+         
+         cDecl.hackAppendToMembers(numFieldsVar);
+ 
+         ListBuffer<JCTree> iDefinitions = new ListBuffer<JCTree>();
+         ListBuffer<AttributeWrapper> attrInfos = new ListBuffer<AttributeWrapper>();
+         for (Symbol attrSym : attributes) {
+             if (attrSym.kind == Kinds.VAR) {
+                 VarSymbol varSym = (VarSymbol)attrSym;
+                 VarMorphInfo vmi = typeMorpher.varMorphInfo(varSym);
+                 vmi.shouldMorph();
+                 attrInfos.append(new AttributeWrapper(varSym, vmi.getUsedType(), varSym.name));
+             }
+             else {
+                 if (attrSym.kind != Kinds.MTH) {
+                     throw new AssertionError("Invalid attribute type collected");
+                 }
+                 
+                 MethodSymbol methodSym = (MethodSymbol)attrSym;
+                 attrInfos.append(new AttributeWrapper(null, ((MethodType)methodSym.type).restype,
+                         names.fromString(methodSym.name.toString().substring(attributeGetMethodNamePrefix.length()))));
+             }
+         }
+         
+         addInterfaceAttributeMethods(iDefinitions, attrInfos);
+         addClassAttributeMethods(cDecl, attrInfos, baseClasses);
+ 
+         Name interfaceName = names.fromString(cDecl.getName().toString() + interfaceNameSuffix);
+         addInterfaceeMethods(iDefinitions, methods, cDecl);
+         addInterfaceOuterAccessorMethod(iDefinitions, cDecl, typeMorpher);
+ 
+         addClassMethods(cDecl, methods, interfaceName);
+         addClassOuterAccessorMethod(iDefinitions, cDecl, typeMorpher);
+ 
+         implementing.appendList(cDecl.getImplementing());
+ 
+         JCClassDecl cInterface = make.ClassDef(make.Modifiers((cDecl.mods.flags & (~Flags.STATIC)) | Flags.INTERFACE),
+                 interfaceName, 
+                 List.<JCTypeParameter>nil(), null, implementing.toList(), iDefinitions.toList());
+         
+         cDecl.translatedAdditionalImplementing = List.<JCExpression>of(
+                 make.Ident(interfaceName),
+                 make.Identifier(fxObjectName));
+         ret.append(cInterface);
+         
+         return ret.toList();
+     }
+ 
+     // Add the methods and field for accessing the outer members. Also add a constructor with an extra parameter to handle the instantiation of the classes that access outer members
+     private void addClassOuterAccessorMethod(ListBuffer<JCTree> iDefinitions, JFXClassDeclaration cdecl, JavafxTypeMorpher typeMorpher) {
+         if (cdecl.sym != null && toJava.hasOuters.contains(cdecl.sym)) {
+             Symbol typeOwner = cdecl.sym.owner;
+             while (typeOwner != null && typeOwner.kind != Kinds.TYP) {
+                 typeOwner = typeOwner.owner;
+             }
+             
+             if (typeOwner != null) {
+                 ClassSymbol returnSym = typeMorpher.reader.enterClass(names.fromString(typeOwner.type.toString() + interfaceNameSuffix.toString()));
+                 // Create the field to store the outer instance reference
+                 JCVariableDecl accessorField = make.VarDef(make.Modifiers(Flags.PUBLIC), outerAccessorFieldName, make.Ident(returnSym), null);
+                 VarSymbol vs = new VarSymbol(Flags.PUBLIC, outerAccessorFieldName, returnSym.type, cdecl.sym);
+                 accessorField.type = returnSym.type;
+                 accessorField.sym = vs;
+ 
+                 // Create the interface method with it's type(s) and symbol(s)
+                 ListBuffer<JCStatement> mStats = new ListBuffer<JCStatement>();
+                 JCIdent retIdent = make.Ident(vs);
+                 JCReturn retRet = make.Return(retIdent);
+                 retRet.type = vs.type;
+                 mStats.append(retRet);
+ 
+                 JCMethodDecl accessorMethod = make.MethodDef(make.Modifiers(Flags.PUBLIC), outerAccessorName, make.Ident(returnSym), List.<JCTypeParameter>nil(), List.<JCVariableDecl>nil(),
+                         List.<JCExpression>nil(), make.Block(0L, mStats.toList()), null);
+ 
+                 MethodType mt = new MethodType(List.<Type>nil(), returnSym.type, List.<Type>nil(), returnSym);
+                 accessorMethod.type = mt;
+                 MethodSymbol ms = new MethodSymbol(Flags.PUBLIC, outerAccessorName, returnSym.type, returnSym);
+                 accessorMethod.sym = ms;
+                 cdecl.prependToMembers(accessorMethod);
+                 cdecl.prependToMembers(accessorField);
+ 
+                 // Now add the construcotr taking the outer instance reference
+                 JCVariableDecl accessorParam = make.VarDef(make.Modifiers(0L), outerAccessorFieldName, make.Ident(returnSym), null);
+                 VarSymbol vs1 = new VarSymbol(0L, outerAccessorFieldName, returnSym.type, cdecl.sym);
+                 accessorParam.type = returnSym.type;
+                 accessorParam.sym = vs1;
+ 
+                 ListBuffer<JCStatement> cStats = new ListBuffer<JCStatement>();
+                 JCIdent cSelected = make.Ident(names._this);
+                 cSelected.type = returnSym.type;
+                 cSelected.sym = returnSym;
+ 
+                 JCFieldAccess cSelect = make.Select(cSelected, outerAccessorFieldName);
+                 cSelect.sym = accessorField.sym;
+                 cSelect.type = accessorField.type;
+ 
+                 JCIdent paramIdent = make.Ident(outerAccessorFieldName);
+                 paramIdent.type = accessorParam.type;
+                 paramIdent.sym = accessorParam.sym;
+ 
+                 JCAssign assignStat = make.Assign(cSelect, paramIdent);
+                 assignStat.type = returnSym.type;
+ 
+                 JCStatement assignWrapper = make.Exec(assignStat);
+                 assignWrapper.type = assignStat.type;
+ 
+                 cStats.append(assignWrapper);
+ 
+                 JCMethodDecl ctor = make.MethodDef(make.Modifiers(Flags.PUBLIC), names.init, make.TypeIdent(TypeTags.VOID), List.<JCTypeParameter>nil(), List.<JCVariableDecl>of(accessorParam),
+                         List.<JCExpression>nil(), make.Block(0L, cStats.toList()), null);
+ 
+                 MethodType ct = new MethodType(List.<Type>of(accessorParam.type), returnSym.type, List.<Type>nil(), returnSym);
+                 accessorMethod.type = ct;
+                 MethodSymbol cs = new MethodSymbol(Flags.PUBLIC, outerAccessorName, returnSym.type, returnSym);
+                 accessorMethod.sym = cs;
+                 cdecl.prependToMembers(ctor);
+             }
+         }
+     }
+ 
+     // Add the methods for accessing the outer members.
+     private void addInterfaceOuterAccessorMethod(ListBuffer<JCTree> iDefinitions, JFXClassDeclaration cdecl, JavafxTypeMorpher typeMorpher) {
+         if (cdecl.sym != null && toJava.hasOuters.contains(cdecl.sym)) {
+             Symbol typeOwner = cdecl.sym.owner;
+             while (typeOwner != null && typeOwner.kind != Kinds.TYP) {
+                 typeOwner = typeOwner.owner;
+             }
+ 
+             if (typeOwner != null) {
+                 ClassSymbol returnSym = typeMorpher.reader.enterClass(names.fromString(typeOwner.type.toString() + interfaceNameSuffix.toString()));
+                 JCMethodDecl accessorMethod = make.MethodDef(make.Modifiers(Flags.PUBLIC), outerAccessorName, make.Ident(returnSym), List.<JCTypeParameter>nil(), List.<JCVariableDecl>nil(),
+                         List.<JCExpression>nil(), null, null);
+ 
+                 MethodType mt = new MethodType(List.<Type>nil(), returnSym.type, List.<Type>nil(), returnSym);
+                 accessorMethod.type = mt;
+                 MethodSymbol ms = new MethodSymbol(Flags.PUBLIC, outerAccessorName, returnSym.type, returnSym);
+                 accessorMethod.sym = ms;
+ 
+                 iDefinitions = iDefinitions.append(accessorMethod);
+             }
+         }
+     }
+ 
+     private void addInterfaceeMethods(ListBuffer<JCTree> iDefinitions, java.util.List<MethodSymbol> methods, JFXClassDeclaration cdecl) {
+         for (MethodSymbol mth : methods) {
+             // Add the non-abstract, non-static, and non-synthetic JavaFX methods to the class' interface
+             if (mth.owner == cdecl.sym &&
+                     ((mth.flags_field & Flags.STATIC) == 0)) {
+                 JCMethodDecl methodDecl = make.MethodDef(mth, null);
+                 // Made all the operations public. Per Brian's spec.
+                 // If they are left package level it interfere with Multiple Inheritance
+                 // The interface methods cannot be package level and an error is reported.
+                 {
+                     methodDecl.mods.flags &= ~Flags.PROTECTED;
+                     methodDecl.mods.flags &= ~Flags.PRIVATE;
+                     methodDecl.mods.flags |= Flags.PUBLIC;
+                 }
+                 
+                 if (methodDecl.restype != null && TreeInfo.symbol(methodDecl.restype) != null) {
+                     Symbol s = TreeInfo.symbol(methodDecl.restype);
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)TreeInfo.symbol(methodDecl.restype))) {
+                             methodDecl.restype = make.Identifier(methodDecl.restype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }
+                 }
+                 
+                 for (JCVariableDecl varDecl : methodDecl.params) {
+                     Symbol s = TreeInfo.symbol(varDecl.vartype);
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)TreeInfo.symbol(varDecl.vartype))) {
+                             varDecl.vartype = make.Identifier(varDecl.vartype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }                    
+                 }
+ 
+                 iDefinitions = iDefinitions.append(methodDecl);
+             }
+         }
+     }
+     
+     private void makeStaticStatements(final JCClassDecl cdecl, JCBlock block) {
+         class MakeStaticStatement extends TreeTranslator {
+             private JCMethodInvocation currentApply;
+             @Override
+             public void visitIdent(JCIdent tree) {
+                 if (tree.sym == null ||
+                         (tree.sym.flags_field & Flags.STATIC) != 0 ||
+                         (tree.sym.owner != null && tree.sym.owner.kind != Kinds.TYP)) {
+                     result = tree;
+                     tree.sym = null;
+                 }
+                 else if (tree.name == names._this) {
+                     tree.name = receiverName;
+                     result = tree;
+                     tree.sym = null;
+                 }
+                 else if (tree.name == names._super) {
+                     List<JCExpression> newArgs = List.<JCExpression>nil(); 
+                     newArgs = newArgs.append(make.Ident(receiverName));
+                     for (JCExpression argExpr : currentApply.args) {
+                         newArgs = newArgs.append(argExpr);
+                     }
+                     
+                     currentApply.args = newArgs;
+                     
+                     result = make.Ident(tree.type.tsym.name);
+                 }
+                 else {
+                     if (JavafxToJava.isOuterMember(tree.sym, cdecl.sym)) {
+                         result = tree;
+                     }
+                     else {
+                         result = make.Select(make.Ident(receiverName), tree.name);
+                     }
+                 }
+             }
+ 
+             @Override
+             public void visitSelect(JCFieldAccess tree) {
+                 super.visitSelect(tree);
+             }
+             
+             @Override
+             public void visitApply(JCMethodInvocation tree) {
+                 JCMethodInvocation prevMethodInvocation = currentApply;
+ 
+                 currentApply = tree;
+                 try {
+                     super.visitApply(tree);
+                     if (tree.meth == null) {
+                         tree.meth = make.Ident(receiverName);
+                     }
+ 
+                     result = tree;
+                 }
+                 finally {
+                     currentApply = prevMethodInvocation;
+                 }
+             }
+         };
+         
+         new MakeStaticStatement().translate(block);
+     }
+     
+     void processCDeclMethods(JCClassDecl cdecl, Name intfName) {
+         for (JCTree meth : cdecl.defs) {
+             if (meth.getTag() == JCTree.METHODDEF &&
+                     meth.pos != Position.NOPOS &&
+                     ((JCMethodDecl)meth).sym != null &&
+                     ((((JCMethodDecl)meth).mods.flags & Flags.ABSTRACT) == 0) &&
+                     ((((JCMethodDecl)meth).mods.flags & Flags.STATIC) == 0)) { // TODO: Deal with static and abstarct. The design doesn't say anything about that.
+ 
+                 JCMethodDecl methodDecl = make.MethodDef(((JCMethodDecl)meth).sym, null);
+                 
+                 // Made all the operations public. Per Brian's spec.
+                 // If they are left package level it interfere with Multiple Inheritance
+                 // The interface methods cannot be package level and an error is reported.
+                 {
+                     methodDecl.mods.flags &= ~Flags.PUBLIC;
+                     methodDecl.mods.flags &= ~Flags.PRIVATE;
+                     methodDecl.mods.flags |= Flags.PROTECTED | Flags.STATIC;
+                 }
+ 
+                 if (((JCMethodDecl)meth).restype != null && ((MethodType)((JCMethodDecl)meth).type) != null &&
+                         ((MethodType)((JCMethodDecl)meth).type).restype != null && ((MethodType)((JCMethodDecl)meth).type).restype.tsym != null) {
+                     Symbol s = ((MethodType)((JCMethodDecl)meth).type).restype.tsym;
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)s)) {
+                             ((JCMethodDecl)meth).restype = make.Identifier(((JCMethodDecl)meth).restype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }
+                 }
+ 
+                 if (methodDecl.restype != null && TreeInfo.symbol(methodDecl.restype) != null) {
+                     Symbol s = TreeInfo.symbol(methodDecl.restype);
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)TreeInfo.symbol(methodDecl.restype))) {
+                             methodDecl.restype = make.Identifier(methodDecl.restype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }
+                 }
+ 
+                 for (JCVariableDecl varDecl : methodDecl.params) {
+                     Symbol s = TreeInfo.symbol(varDecl.vartype);
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)TreeInfo.symbol(varDecl.vartype))) {
+                             varDecl.vartype = make.Identifier(varDecl.vartype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }                    
+                 }
+ 
+ 
+                 // Create the parameter list for the body statements
+                 List<JCStatement> methodStats = List.<JCStatement>nil();
+                 List<JCExpression> statBodyArgs = List.<JCExpression>nil();
+                 
+                 statBodyArgs = statBodyArgs.append(make.Ident(names._this));
+                 for (JCVariableDecl var : methodDecl.params) {
+                     statBodyArgs = statBodyArgs.append(make.Ident(var.name));
+                 }
+ 
+                 JCStatement methStatement = null;
+                 JCExpression methExpr = toJava.callExpression(cdecl.pos(),
+                         make.Ident(cdecl.name), methodDecl.name.toString(), statBodyArgs);
+                 if (((MethodType)methodDecl.sym.type).restype == syms.voidType) {
+                     methStatement = make.Exec(methExpr);
+                 }
+                 else {
+                     methStatement = make.Return(methExpr);
+                 }
+                 methodStats = methodStats.append(methStatement);
+                 
+                 makeStaticStatements(cdecl, ((JCMethodDecl)meth).body);
+                 // Add the extra receiver parameter
+                 methodDecl.params = methodDecl.params.prepend(make.VarDef(make.Modifiers(0L), receiverName, make.Ident(intfName), null));
+                 methodDecl.body = ((JCMethodDecl)meth).body;
+                 
+                 // Add the call-to-static method body.
+                 ((JCMethodDecl)meth).body = make.Block(0L, methodStats);
+                                 
+                 cdecl.defs = cdecl.defs.append(methodDecl);
+             }
+         }
+     }
+     
+     private void addClassMethods(JFXClassDeclaration cdecl, java.util.List<MethodSymbol> methods, Name intfName) {
+         for (MethodSymbol mth : methods) {
+             if (mth.owner != cdecl.sym &&
+                 ((mth.flags_field & Flags.ABSTRACT) == 0) &&
+                 ((mth.flags_field & Flags.STATIC) == 0)) { // TODO: Deal with static and abstarct. The design doesn't say anything about that.
+ 
+                 List<JCStatement> newMthStats = List.<JCStatement>nil();
+                 List<JCExpression> args = List.<JCExpression>nil();
+                 // Add the this argument, so the static method is invoked
+                 args = args.append(make.Ident(names._this));
+                 for (VarSymbol var : mth.params) {
+                     args = args.append(make.Ident(var.name));
+                 }
+ 
+                 String receiver = mth.owner.name.toString();
+ 
+                 JCExpression expr = toJava.callExpression(cdecl.pos(), make.Identifier(receiver), mth.name.toString(), args);
+                 if (((MethodType)mth.type).restype == syms.voidType) {
+                     newMthStats = newMthStats.append(make.Exec(expr));
+                 }
+                 else {
+                     newMthStats = newMthStats.append(make.Return(expr));
+                 }
+ 
+                 JCBlock mthBody = make.Block(0L, newMthStats);
+                 JCMethodDecl newMethod = make.MethodDef(mth, mthBody);
+                 newMethod.pos = Position.NOPOS;
+                 // Made all the operations public. Per Brian's spec.
+                 // If they are left package level it interfere with Multiple Inheritance
+                 // The interface methods cannot be package level and an error is reported.
+                 {
+                     newMethod.mods.flags &= ~Flags.PROTECTED;
+                     newMethod.mods.flags &= ~Flags.PRIVATE;
+                     newMethod.mods.flags |= Flags.PUBLIC;
+                 }
+                 if (newMethod.restype != null && TreeInfo.symbol(newMethod.restype) != null) {
+                     Symbol s = TreeInfo.symbol(newMethod.restype);
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)TreeInfo.symbol(newMethod.restype))) {
+                             newMethod.restype = make.Identifier(newMethod.restype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }
+                 }
+                 
+                 for (JCVariableDecl varDecl : newMethod.params) {
+                     Symbol s = TreeInfo.symbol(varDecl.vartype);
+                     if (s != null && s.kind == Kinds.TYP) {
+                         if (isJFXClass((ClassSymbol)TreeInfo.symbol(varDecl.vartype))) {
+                             varDecl.vartype = make.Identifier(varDecl.vartype.toString() + interfaceNameSuffix.toString());
+                         }
+                     }                    
+                 }
+ 
+                 cdecl.hackAppendToMembers(newMethod);
+             }
+         }
+     }
+     
+     private void addInterfaceAttributeMethods(ListBuffer<JCTree> idefs, ListBuffer<AttributeWrapper> attrInfos) {
+         for (AttributeWrapper attrInfo : attrInfos) {            
+             idefs.append(make.MethodDef(
+                     make.Modifiers(Flags.PUBLIC | Flags.ABSTRACT),
+                     names.fromString(attributeGetMethodNamePrefix + attrInfo.name.toString()),
+                     toJava.makeTypeTree(attrInfo.type, null),
+                     List.<JCTypeParameter>nil(), 
+                     List.<JCVariableDecl>nil(), 
+                     List.<JCExpression>nil(), 
+                     null, null));
+ 
+             List<JCVariableDecl> locationVarDeclList = List.<JCVariableDecl>nil();
+                 locationVarDeclList = locationVarDeclList.append(make.VarDef(make.Modifiers(0L),
+                     locationName, toJava.makeTypeTree(attrInfo.type, null), null));
+                 
+             idefs.append(make.MethodDef(
+                     make.Modifiers(Flags.PUBLIC | Flags.ABSTRACT),
+                     names.fromString(attributeInitMethodNamePrefix + attrInfo.name.toString()),
+                     toJava.makeTypeTree(syms.voidType, null),
+                     List.<JCTypeParameter>nil(), 
+                     locationVarDeclList, 
+                     List.<JCExpression>nil(), 
+                     null, null));
+         }
+     }
+ 
+     private void addClassAttributeMethods(JFXClassDeclaration cdef, ListBuffer<AttributeWrapper> attrInfos, java.util.List<ClassSymbol> baseClasses) {
+         for (AttributeWrapper attrInfo : attrInfos) { 
+ // TODO: Add attributes gotten from interface introspection.
+             List<JCStatement> stats = List.<JCStatement>nil();
+             
+             // Add the return stastement for the attribute
+             JCBlock statBlock = make.Block(0L, stats);
+             
+             JCReturn returnStat = make.Return(make.Ident(attrInfo.name));
+             stats = stats.append(returnStat);
+             statBlock.stats = stats;
+             
+             // Add the method for this class' attributes
+             cdef.hackAppendToMembers(make.MethodDef(
+                     make.Modifiers(Flags.PUBLIC),
+                     names.fromString(attributeGetMethodNamePrefix + attrInfo.name.toString()),
+                     toJava.makeTypeTree(attrInfo.type, null),
+                     List.<JCTypeParameter>nil(), 
+                     List.<JCVariableDecl>nil(), 
+                     List.<JCExpression>nil(), 
+                     statBlock, null));
+ 
+             // Add the init$ method
+             // Add the InitHelper.assertNonNull(...) call
+             List<JCStatement> initBlockStats = List.<JCStatement>nil();
+             List<JCExpression> initAssertArgs = List.<JCExpression>nil();
+             initAssertArgs = initAssertArgs.append(make.Ident(attrInfo.name));
+             initAssertArgs = initAssertArgs.append(make.Literal(new String(cdef.getName().toString() + "." + attrInfo.name.toString())));
+             
+             initBlockStats = initBlockStats.append(toJava.callStatement(cdef.pos(), make.Identifier(initHelperClassName), assertNonNullName, initAssertArgs));
+ 
+             // Add the initHelper$.add(...) call
+             List<JCExpression> initAddArgs = List.<JCExpression>nil();
+             initAddArgs = initAddArgs.append(make.Assign(make.Ident(attrInfo.name), make.Ident(locationName)));
+             
+             initBlockStats = initBlockStats.append(toJava.callStatement(cdef.pos(), make.Ident(initHelperName), addName, initAddArgs));
+             
+             JCBlock initBlock = make.Block(0L, initBlockStats);
+             List<JCVariableDecl> locationVarDeclList = List.<JCVariableDecl>nil();
+             locationVarDeclList = locationVarDeclList.append(make.VarDef(make.Modifiers(0L),
+                     locationName, toJava.makeTypeTree(attrInfo.type, null), null));
+             cdef.hackAppendToMembers(make.MethodDef(
+                     make.Modifiers(Flags.PUBLIC),
+                     names.fromString(attributeInitMethodNamePrefix + attrInfo.name.toString()),
+                     toJava.makeTypeTree(syms.voidType, null),
+                     List.<JCTypeParameter>nil(), 
+                     locationVarDeclList, 
+                     List.<JCExpression>nil(), 
+                     initBlock, null));
+         }
+         
+         // Add the getNumFields$ method
+         List<JCStatement> numFieldsStats = List.<JCStatement>nil();
+         numFieldsStats = numFieldsStats.append(make.Return(make.Ident(numberFieldsName)));
+         
+         JCBlock numFieldsBlock = make.Block(0L, numFieldsStats);
+         cdef.hackAppendToMembers(make.MethodDef(
+                 make.Modifiers(Flags.PUBLIC | Flags.STATIC),
+                 getNumFieldsName,
+                 toJava.makeTypeTree(syms.intType, null),
+                 List.<JCTypeParameter>nil(), 
+                 List.<JCVariableDecl>nil(), 
+                 List.<JCExpression>nil(), 
+                 numFieldsBlock, null));
+ 
+         // Add the InitHelper field
+         List<JCExpression> ncArgs = List.<JCExpression>nil();
+         ncArgs = ncArgs.append(make.Ident(numberFieldsName));
+         
+         JCNewClass newIHClass = make.NewClass(null, List.<JCExpression>nil(), make.Identifier(initHelperClassName), ncArgs, null);
+         
+         cdef.hackAppendToMembers(make.VarDef(make.Modifiers(Flags.PRIVATE),
+                 initHelperName, make.Identifier(initHelperClassName), newIHClass));
+         
+         // Add the setDefaults$ method
+         List<JCVariableDecl> receiverVarDeclList = List.<JCVariableDecl>nil();
+         receiverVarDeclList = receiverVarDeclList.append(make.VarDef(make.Modifiers(Flags.FINAL),
+                 receiverName, make.Ident(names.fromString(cdef.getName().toString() + interfaceNameSuffix.toString())), null));
+ 
+         List<JCStatement> setDefStats = List.<JCStatement>nil();
+         
+         for (ClassSymbol csym : baseClasses) {
+             if (isJFXClass(csym)) {
+                 String className = csym.fullname.toString();
+                 if (className.endsWith(interfaceNameSuffix.toString())) {
+                     className = className.substring(0, className.length() - interfaceNameSuffix.toString().length());
+                 }
+                 
+                 List<JCExpression> args1 = List.<JCExpression>nil();
+                 args1 = args1.append(make.Ident(receiverName));
+                 setDefStats = setDefStats.append(toJava.callStatement(cdef.pos(), make.Identifier(className), setDefaultsName.toString(), args1));
+             }
+         }
+                 
+         JCBlock setDefBlock = make.Block(0L, setDefStats);
+         
+         cdef.hackAppendToMembers(make.MethodDef(
+                 make.Modifiers(Flags.PUBLIC | Flags.STATIC),
+                 setDefaultsName,
+                 toJava.makeTypeTree(syms.voidType, null),
+                 List.<JCTypeParameter>nil(), 
+                 receiverVarDeclList, 
+                 List.<JCExpression>nil(), 
+                 setDefBlock, null));
+ 
+         // Add the userInit$ method
+         receiverVarDeclList = List.<JCVariableDecl>nil();
+         receiverVarDeclList = receiverVarDeclList.append(make.VarDef(make.Modifiers(Flags.FINAL),
+                 receiverName, make.Ident(names.fromString(cdef.getName().toString() + interfaceNameSuffix.toString())), null));
+ 
+         JCBlock userInitBlock = make.Block(0L, List.<JCStatement>nil());
+         cdef.hackAppendToMembers(make.MethodDef(
+                 make.Modifiers(Flags.PUBLIC | Flags.STATIC),
+                 userInitName,
+                 toJava.makeTypeTree(syms.voidType, null),
+                 List.<JCTypeParameter>nil(), 
+                 receiverVarDeclList, 
+                 List.<JCExpression>nil(), 
+                 userInitBlock, null));
+ 
+         // Add the initialize$ method
+         List<JCStatement> initializeStats = List.<JCStatement>nil();
+ 
+         // Add calls to do the the default value initialization and user init code (validation for example.)
+         initializeStats = initializeStats.append(toJava.callStatement(cdef.pos(), make.Ident(cdef.getName())/*TODO: Add the class suffix*/, 
+             setDefaultsName.toString(), make.TypeCast(make.Ident(names.fromString(cdef.getName().toString() + interfaceNameSuffix)), make.Ident(names._this))));
+         initializeStats = initializeStats.append(toJava.callStatement(cdef.pos(), make.Ident(cdef.getName())/*TODO: Add the class suffix*/, 
+             userInitName.toString(), make.TypeCast(make.Ident(names.fromString(cdef.getName().toString() + interfaceNameSuffix)), make.Ident(names._this))));
+         
+         // Add a call to initialize the attributes using the initHelper$.initialize();
+         initializeStats = initializeStats.append(toJava.callStatement(cdef.pos(), make.Ident(initHelperName), 
+             initializeNonSyntheticName.toString()));
+         
+         // Set the initHelper = null;
+         initializeStats = initializeStats.append(make.Exec(make.Assign(make.Ident(initHelperName), make.Literal(TypeTags.BOT, null))));
+         
+         JCBlock initializeBlock = make.Block(0L, initializeStats);
+         cdef.hackAppendToMembers(make.MethodDef(
+                 make.Modifiers(Flags.PUBLIC),
+                 initializeName,
+                 toJava.makeTypeTree(syms.voidType, null),
+                 List.<JCTypeParameter>nil(), 
+                 List.<JCVariableDecl>nil(), 
+                 List.<JCExpression>nil(), 
+                 initializeBlock, null));
+     }
+ 
+     // Add the initialization of this class' attributes
+     List<JCStatement> addSetDefaultAttributeInitialization(ListBuffer<TranslatedAttributeInfo> attrInfo, JFXClassDeclaration cdef) {
+         List<JCStatement> ret = List.<JCStatement>nil();
+         for (TranslatedAttributeInfo tai : attrInfo) {
+             if (tai.attribute != null && tai.attribute.getTag() == JavafxTag.VAR_DEF && tai.attribute.pos != Position.NOPOS) {
+                 if (tai.attribute.sym != null && tai.attribute.sym.owner == cdef.sym) {
+                     JCExpression getAttrCall = toJava.callExpression(cdef.pos(), make.Ident(receiverName),
+                             attributeGetMethodNamePrefix + tai.attribute.name.toString(), List.<JCExpression>nil());
+ 
+                     JCExpression cond = make.Binary(JCTree.EQ, getAttrCall, make.Literal(TypeTags.BOT, null));
+                     
+                     JCStatement thenStat = toJava.callStatement(cdef.pos(), make.Ident(receiverName), attributeInitMethodNamePrefix + tai.attribute.name.toString(), tai.initExpr);
+                     JCIf defInitIf = make.If(cond, thenStat, null);
+                     ret = ret.append(defInitIf);
+                 }
+             }
+         }
+         return ret;
+     }
+ 
+     // Add the initialization of this class' attributes
+     List<JCStatement> addSetDefaultAttributeDependencies(ListBuffer<TranslatedAttributeInfo> attrInfo, JFXClassDeclaration cdef) {
+         List<JCStatement> ret = List.<JCStatement>nil();
+         for (TranslatedAttributeInfo tai : attrInfo) {
+             if (tai.attribute != null && tai.attribute.getTag() == JavafxTag.VAR_DEF && tai.attribute.pos != Position.NOPOS &&
+                     tai.args != null) {
+                 if (tai.attribute.sym != null && tai.attribute.sym.owner == cdef.sym) {
+                     ret = ret.append(toJava.callStatement(cdef.pos(), 
+                             toJava.callExpression(cdef.pos(), make.Ident(receiverName), attributeGetMethodNamePrefix + tai.attribute.name.toString(), List.<JCExpression>nil()),
+                             addDependenciesName, tai.args));
+                 }
+             }
+         }
+         return ret;
+     }
+ 
+     private void collectAttributesAndMethods(Set<String> visitedClasses,
+                                              Map<String, Symbol> collectedAttributes,
+                                              Map<String, MethodSymbol> collectedMethods,
+                                              java.util.List<Symbol> attributes,
+                                              java.util.List<MethodSymbol> methods,
+                                              java.util.List<ClassSymbol> baseClasses,
+                                              java.util.List<ClassSymbol> classesToVisit) {
+         while(!classesToVisit.isEmpty()) {
+             ClassSymbol cSym = classesToVisit.get(0);
+             classesToVisit.remove(0);
+             
+             if (!visitedClasses.contains(cSym.fullname.toString())) {
+                 if (isJFXClass(cSym)) {
+                     if (((cSym.flags_field & Flags.INTERFACE) != 0 || fxClasses.get(cSym) == null)) {
+                         if (cSym != null && cSym.members() != null) {
+                             for (Entry e = cSym.members().elems; e != null && e.sym != null; e = e.sibling) {
+                                 if (e.sym.kind == Kinds.MTH) {
+                                     MethodSymbol meth = (MethodSymbol)e.sym;
+                                     String methName = meth.name.toString();
+                                     if (meth.name == initializeName ||
+                                             meth.name == setDefaultsName ||
+                                             meth.name == userInitName ||
+                                             meth.name == names.init ||
+                                             meth.name == names.clinit ||
+                                             methName.equals(JavafxModuleBuilder.runMethodString)) {
+                                         continue;
+                                     }
+                                     
+                                     if (!methName.startsWith(attributeGetMethodNamePrefix)) {
+                                         StringBuilder nameSigBld = new StringBuilder();
+                                         nameSigBld.append(methName.toString());
+                                         nameSigBld.append(":");
+                                         nameSigBld.append(meth.getReturnType().toString());
+                                         nameSigBld.append(":");
+                                         for (VarSymbol param : meth.getParameters()) {
+                                             nameSigBld.append(param.type.toString());
+                                             nameSigBld.append(":");
+                                         }
+ 
+                                         String nameSig = nameSigBld.toString();
+                                         if (collectedMethods.containsKey(nameSig)) {
+                                             continue;
+                                         }
+ 
+                                         if (!methName.startsWith(attributeInitMethodNamePrefix)) {
+                                             collectedMethods.put(nameSig, meth);
+                                             methods.add(meth);
+                                         }                                                                            }
+                                     else {
+                                         String nameSig = methName.substring(attributeGetMethodNamePrefix.length());
+                                         if (collectedAttributes.containsKey(nameSig)) {
+                                             continue;
+                                         }
+ 
+                                         collectedAttributes.put(nameSig, meth);
+                                         attributes.add(meth);
+                                     }
+                                 }
+                                 else if (e.sym.kind == Kinds.VAR) {
+                                     VarSymbol var = (VarSymbol)e.sym;
+                                     
+                                     if (var.owner.kind != Kinds.TYP) {
+                                         continue;
+                                     }
+                                     
+                                     String name = var.name.toString();
+                                     
+                                     if (!name.startsWith(attributeGetMethodNamePrefix)) {
+                                         continue;
+                                     }
+                                     
+                                     if (collectedAttributes.containsKey(name)) {
+                                         continue;
+                                     }
+                                     
+                                     collectedAttributes.put(name, var);
+                                     attributes.add(var);
+                                 }
+                             }
+ 
+                             for (Type supertype : cSym.getInterfaces()) {
+                                if (supertype != null && supertype.tsym != null && supertype.tsym.kind == Kinds.TYP) {
+                                     classesToVisit.add((ClassSymbol)supertype.tsym);
+                                     baseClasses.add((ClassSymbol)supertype.tsym);
+                                 }
+                             }
+ 
+                             visitedClasses.add(cSym.fullname.toString());
+                         }
+                     }
+                     else {
+                         JFXClassDeclaration cDecl = fxClasses.get(cSym);
+ 
+                         if (cDecl != null && cDecl.getMembers() != null) {
+                             for (JCTree def : cDecl.getMembers()) {
+                                 if (def.getTag() == JavafxTag.FUNCTION_DEF) {
+                                     MethodSymbol meth = (MethodSymbol)((JFXOperationDefinition)def).sym;
+                                     List<JFXVar> pars = ((JFXOperationDefinition)def).getParameters();
+                                     StringBuilder nameSigBld = new StringBuilder();
+                                     nameSigBld.append(meth.name.toString());
+                                     nameSigBld.append(":");
+                                     nameSigBld.append(meth.getReturnType().toString());
+                                     nameSigBld.append(":");
+                                     for (VarSymbol param : meth.getParameters()) {
+                                         param.name = pars.head.name;
+                                         pars = pars.tail;
+                                         nameSigBld.append(param.type.toString());
+                                         nameSigBld.append(":");
+                                     }
+                                     
+                                     String nameSig = nameSigBld.toString();
+                                     if (def.pos == Position.NOPOS || collectedMethods.containsKey(nameSig)) {
+                                         continue;
+                                     }
+                                     
+                                     collectedMethods.put(nameSig, meth);
+                                     methods.add(meth);
+                                 }
+                                 else if (def.getTag() == JavafxTag.VAR_DEF) {
+                                     VarSymbol var = (VarSymbol)((JFXVar)def).sym;
+                                     
+                                     if (def.pos == Position.NOPOS || var.owner.kind != Kinds.TYP) {
+                                         continue;
+                                     }
+                                     
+                                     String name = var.name.toString();
+                                     
+                                     if (collectedAttributes.containsKey(name)) {
+                                         continue;
+                                     }
+                                     
+                                     collectedAttributes.put(name, var);
+                                     attributes.add(var);
+                                 }
+                             }
+ 
+                             for (JCExpression supertype : cDecl.getSupertypes()) {
+                                if (supertype.type != null && supertype.type.tsym != null && supertype.type.tsym.kind == Kinds.TYP) {
+                                     classesToVisit.add((ClassSymbol)supertype.type.tsym);
+                                     baseClasses.add((ClassSymbol)supertype.type.tsym);
+                                 }
+                             }
+                             
+                             visitedClasses.add(cSym.fullname.toString());
+                         }
+                     }
+                 }
+             }
+         }
+     }
+     
+     boolean isJFXClass(ClassSymbol cSym) {
+         if ((cSym.flags_field & Flags.INTERFACE) != 0) {
+             for (List<Type> intfs = cSym.getInterfaces(); intfs.nonEmpty(); intfs = intfs.tail) {
+                 if (intfs.head.tsym.type == syms.javafx_FXObjectType) {
+                     return true;
+                 }
+             }
+         }
+         else {
+             if (fxClasses != null) {
+                 if (fxClasses.containsKey(cSym)) {
+                     return true;
+                 }
+                 
+                 for (List<Type> intfs = cSym.getInterfaces(); intfs.nonEmpty(); intfs = intfs.tail) {
+                     if (intfs.head.tsym.type == syms.javafx_FXObjectType) {
+                         return true;
+                     }
+                 }
+             }
+         }
+         
+         return false;
+     }
+     
+     void addFxClass(ClassSymbol csym, JFXClassDeclaration cdecl) {
+         if (fxClasses == null) {
+             fxClasses = new HashMap<ClassSymbol, JFXClassDeclaration>();
+         }
+         
+         fxClasses.put(csym, cdecl);
+     }
+ 
+     void addFxClassAttributes(ClassSymbol csym, java.util.List<Symbol> attrs) {
+         if (fxClassAttributes == null) {
+             fxClassAttributes = new HashMap<ClassSymbol, java.util.List<Symbol>>();
+         }
+         
+         fxClassAttributes.put(csym, attrs);
+     }
+ 
+     public void clearCaches() {
+         fxClasses = null;
+         fxClassAttributes = null;
+     }
+     
+     static class AttributeWrapper {
+         VarSymbol var;
+         Type type;
+         Name name;
+         
+         AttributeWrapper(VarSymbol var, Type type, Name name) {
+             this.var = var;
+             this.type = type;
+             this.name = name;
+         }
+     }
+ }

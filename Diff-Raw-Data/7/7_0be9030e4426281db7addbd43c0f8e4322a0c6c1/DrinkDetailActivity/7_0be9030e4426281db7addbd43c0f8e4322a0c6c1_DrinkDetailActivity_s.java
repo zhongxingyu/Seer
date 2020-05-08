@@ -1,0 +1,282 @@
+ package com.markupartist.iglaset.activity;
+ 
+ import java.net.URLEncoder;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import android.app.ListActivity;
+ import android.content.Intent;
+ import android.net.Uri;
+ import android.os.AsyncTask;
+ import android.os.Bundle;
+ import android.text.format.Time;
+ import android.util.Log;
+ import android.view.Menu;
+ import android.view.MenuInflater;
+ import android.view.MenuItem;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.view.Window;
+ import android.widget.ArrayAdapter;
+ import android.widget.ImageView;
+ import android.widget.RatingBar;
+ import android.widget.SimpleAdapter;
+ import android.widget.TextView;
+ import android.widget.SimpleAdapter.ViewBinder;
+ 
+ import com.markupartist.iglaset.R;
+ import com.markupartist.iglaset.provider.Comment;
+ import com.markupartist.iglaset.provider.CommentsStore;
+ import com.markupartist.iglaset.provider.Drink;
+ import com.markupartist.iglaset.provider.Drink.Volume;
+ 
+ public class DrinkDetailActivity extends ListActivity {
+     static String TAG = "DrinkDetailActivity";
+     private CommentsStore mCommentsStore = new CommentsStore();
+     private SimpleAdapter mCommentsAdapter;
+     private ArrayList<Comment> mComments;
+     private Drink mDrink;
+ 
+     /** Called when the activity is first created. */
+     @Override
+     public void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+ 
+         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+         // Remove when we have progress bar near the comments
+         requestWindowFeature(Window.FEATURE_NO_TITLE); 
+ 
+         setContentView(R.layout.drink_details);
+ 
+         Bundle extras = getIntent().getExtras();
+         Drink drink = extras.getParcelable("com.markupartist.iglaset.Drink");
+ 
+         TextView nameTextView = (TextView) findViewById(R.id.drink_name);
+         nameTextView.setText(drink.getName());
+ 
+         TextView originTextView = (TextView) findViewById(R.id.drink_origin);
+         originTextView.setText(drink.getOrigin());
+ 
+         TextView originCountryTextView = (TextView) findViewById(R.id.drink_origin_country);
+         originCountryTextView.setText(drink.getOriginCountry());
+ 
+         TextView alcoholPercentTextView = (TextView) findViewById(R.id.drink_alcohol_percent);
+         alcoholPercentTextView.setText(drink.getAlcoholPercent());
+ 
+         TextView yearTextView = (TextView) findViewById(R.id.drink_year);
+         yearTextView.setText(drink.getYear() == 0 ? "" : String.valueOf(drink.getYear()));
+ 
+         RatingBar drinkRatingBar = (RatingBar) findViewById(R.id.drink_rating);
+         drinkRatingBar.setRating(Float.parseFloat(drink.getRating()));
+ 
+         ImageView imageView = (ImageView) findViewById(R.id.drink_image);
+         imageView.setImageBitmap(drink.loadImage());
+ 
+         //TextView descriptionTextView = (TextView) findViewById(R.id.drink_description);
+         //descriptionTextView.setText(Html.fromHtml(drink.getDescription()));
+ 
+         HashMap<String, ArrayList<String>> tags = drink.getTags();
+         for (String type : tags.keySet()) {
+             ArrayList<String> nameList = tags.get(type);
+             mSectionedAdapter.addSection(0, type, new ArrayAdapter<String>(this, 
+                     R.layout.simple_row, nameList));
+         }
+ 
+         ArrayList<Volume> volumes = drink.getVolumes();
+         if (!volumes.isEmpty()) {
+             ArrayList<HashMap<String, String>> volumeList = new ArrayList<HashMap<String, String>>();
+             for (Volume volume : volumes) {
+                 HashMap<String, String> map = new HashMap<String, String>();
+                 map.put("id", String.valueOf(volume.getArticleId()));
+                 map.put("amount", String.valueOf(volume.getVolume()) + " ml");
+                 map.put("price", volume.getPriceSek() + " kr");
+                 volumeList.add(map);
+             }
+ 
+             SimpleAdapter volumeAdapter = new SimpleAdapter(this, volumeList, 
+                     R.layout.volume_row,
+                     new String[] { "id", "amount", "price" },
+                     new int[] { 
+                         R.id.volume_id,
+                         R.id.volume_amount, 
+                         R.id.volume_price
+                     }
+             );
+ 
+             mSectionedAdapter.addSection(1, (String) getText(R.string.packings), volumeAdapter);
+         }
+ 
+         // Check if already have some data, used if screen is rotated.
+         @SuppressWarnings("unchecked")
+         final ArrayList<Comment> comments = (ArrayList<Comment>) getLastNonConfigurationInstance();
+         if (comments == null) {
+             new GetCommentsTask().execute(drink.getId());
+         } else {
+             updateComments(comments);
+         }
+ 
+        // This is temporary till we have fixed a proper comments adapter. 
+        mSectionedAdapter.addSection(2, (String) getText(R.string.comments), createLoadCommentsAdapter());
+
+         setListAdapter(mSectionedAdapter);
+         mDrink = drink;
+     }
+ 
+     /**
+      * Called before this activity is destroyed, returns the previous search 
+      * result. This list is used if the screen is rotated. Then we don't need
+      * to search for it again.
+      */
+     @Override
+     public Object onRetainNonConfigurationInstance() {
+         return mComments;
+     }
+ 
+     private SimpleAdapter createLoadCommentsAdapter() {
+         ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+         Map<String, Object> map = new HashMap<String, Object>();
+         map.put("text", getText(R.string.loading_comments));
+         list.add(map);
+ 
+         SimpleAdapter commentsAdapter = new SimpleAdapter(this, list, 
+                 R.layout.progress_bar,
+                 new String[] { "text" },
+                 new int[] { 
+                     R.id.search_progress_text
+                 }
+         );
+         return commentsAdapter;
+     }
+     
+     /**
+      * Update comments view.
+      * @param comments the comments
+      */
+     private void updateComments(ArrayList<Comment> comments) {
+         // Save the result to return it from onRetainNonConfigurationInstance.
+         mComments = comments;
+ 
+         if (comments.isEmpty()) {
+             ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+             Map<String, Object> map = new HashMap<String, Object>();
+             map.put("text", getText(R.string.no_comments));
+             list.add(map);
+ 
+             mCommentsAdapter = new SimpleAdapter(this, list, 
+                     R.layout.simple_row,
+                     new String[] { "text" },
+                     new int[] { 
+                         R.id.simple_row_text
+                     }
+             );
+         } else {
+             ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+             for (Comment comment : comments) {
+                 Log.d(TAG, "comment: " + comment);
+                 Map<String, Object> map = new HashMap<String, Object>();
+                 map.put("nickname", comment.getNickname());
+                 map.put("created", comment.getCreated());
+                 map.put("comment", comment.getComment());
+                 map.put("rating", comment.getRating());
+                 list.add(map);
+             }
+     
+             mCommentsAdapter = new SimpleAdapter(this, list, 
+                     R.layout.comment_row,
+                     new String[] { "nickname", "created", "comment", "rating" },
+                     new int[] { 
+                         R.id.comment_nickname,
+                         R.id.comment_created, 
+                         R.id.comment_comment,
+                         R.id.comment_rating
+                     }
+             );
+     
+             mCommentsAdapter.setViewBinder(new ViewBinder() {
+                 @Override
+                 public boolean setViewValue(View view, Object data,
+                         String textRepresentation) {
+                     switch (view.getId()) {
+                     case R.id.comment_nickname:
+                         TextView nicknameView = (TextView) view;
+                         nicknameView.setText(textRepresentation);
+                         return true;
+                     case R.id.comment_created:
+                         TextView createdView = (TextView) view;
+                         createdView.setText(((Time) data).format("%Y-%m-%d"));
+                         return true;
+                     case R.id.comment_comment:
+                         TextView commentView = (TextView) view;
+                         commentView.setText(textRepresentation);
+                         return true;
+                     case R.id.comment_rating:
+                         RatingBar rateView = (RatingBar) view;
+                         rateView.setRating(Float.parseFloat(textRepresentation));
+                         return true;
+                     }
+                     return false;
+                 }
+             });
+         }
+ 
+         mSectionedAdapter.removeSection(2);
+         mSectionedAdapter.addSection(2, (String) getText(R.string.comments), mCommentsAdapter);
+         // This is really ugly, but notifyDataSetChanged is crashing on some items...
+         setListAdapter(mSectionedAdapter);
+         //mSectionedAdapter.notifyDataSetChanged();
+     }
+ 
+     SectionedAdapter mSectionedAdapter = new SectionedAdapter() {
+         protected View getHeaderView(Section section, int index, 
+                 View convertView, ViewGroup parent) {
+             TextView result = (TextView) convertView;
+ 
+             if (convertView == null)
+                 result = (TextView) getLayoutInflater().inflate(R.layout.header, null);
+ 
+             result.setText(section.caption);
+             return (result);
+         }
+     };
+ 
+     @Override
+     public boolean onCreateOptionsMenu(Menu menu) {
+         MenuInflater inflater = getMenuInflater();
+         inflater.inflate(R.menu.options_menu_drink_detail, menu);
+         return true;
+     }
+ 
+     @Override
+     public boolean onOptionsItemSelected(MenuItem item) {
+         switch (item.getItemId()) {
+             case R.id.menu_goto_iglaset:
+                 String name = URLEncoder.encode(mDrink.getName());
+                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
+                         Uri.parse("http://www.iglaset.se/dryck/" + name + "/" + mDrink.getId()));
+                 startActivity(browserIntent);
+                 return true;
+         }
+         return super.onOptionsItemSelected(item);
+     }
+ 
+     private class GetCommentsTask extends AsyncTask<Integer, Void, ArrayList<Comment>> {
+ 
+         @Override
+         protected ArrayList<Comment> doInBackground(Integer... params) {
+             publishProgress();
+             return mCommentsStore.getComments(params[0]);
+         }
+ 
+         @Override
+         public void onProgressUpdate(Void... values) {
+             setProgressBarIndeterminateVisibility(true);
+         }
+ 
+         @Override
+         protected void onPostExecute(ArrayList<Comment> result) {
+             setProgressBarIndeterminateVisibility(false);
+             updateComments(result);
+         }
+     }
+ }

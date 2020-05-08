@@ -1,0 +1,346 @@
+ /***************************************************
+ *
+ * cismet GmbH, Saarbruecken, Germany
+ *
+ *              ... and it just works.
+ *
+ ****************************************************/
+ /*
+  * To change this template, choose Tools | Templates
+  * and open the template in the editor.
+  */
+ package de.cismet.cids.custom.wupp.client.alkis;
+ 
+ import java.awt.Color;
+ import java.awt.Dimension;
+ import java.awt.FontMetrics;
+ import java.awt.Toolkit;
+ 
+ import javax.swing.text.AttributeSet;
+ import javax.swing.text.BadLocationException;
+ import javax.swing.text.PlainDocument;
+ 
+ import static de.cismet.cids.custom.wupp.client.alkis.AbstractInputField.BlockType.DISTRICT;
+ import static de.cismet.cids.custom.wupp.client.alkis.AbstractInputField.PROP_DISTRICT_NUMBER;
+ 
+ /**
+  * DOCUMENT ME!
+  *
+  * @author   Gilles Baatz
+  * @version  $Revision$, $Date$
+  */
+ public class GrundbuchblattInputField extends AbstractInputField {
+ 
+     //~ Static fields/initializers ---------------------------------------------
+ 
+     public static final String PROP_GRUNDBUCHBLATTNUMMER = "grundbuchblattnummer"; // NOI18N
+     public static final String PROP_BUCHUNGSBLATTNUMMER = "buchungsblattnummer";   // NOI18N
+ 
+     //~ Instance fields --------------------------------------------------------
+ 
+     private final GrundbuchblattInputFieldConfig config;
+     private String buchungsblattnummer;
+     private String grundbuchblattnummer;
+ 
+     // Variables declaration - do not modify//GEN-BEGIN:variables
+     private javax.swing.JLabel lblDelimitier1;
+     private javax.swing.JTextField txtBuchungsblattnummer;
+     private javax.swing.JTextField txtDistrict;
+     // End of variables declaration//GEN-END:variables
+ 
+     //~ Constructors -----------------------------------------------------------
+ 
+     /**
+      * Creates new form GrundbuchblattInputField.
+      */
+     public GrundbuchblattInputField() {
+         this(GrundbuchblattInputFieldConfig.FallbackConfig);
+     }
+ 
+     /**
+      * Creates a new GrundbuchblattInputField object.
+      *
+      * @param  config  DOCUMENT ME!
+      */
+     public GrundbuchblattInputField(final GrundbuchblattInputFieldConfig config) {
+         super(config);
+         this.config = config;
+ 
+         initComponents();
+         setTxtDistrict(txtDistrict);
+         txtDistrict.setDocument(new DistrictPlainDocument(txtDistrict, txtBuchungsblattnummer));
+ 
+         txtBuchungsblattnummer.setDocument(new PlainDocument() {
+ 
+                 @Override
+                 public void insertString(final int offs, String str, final AttributeSet a) throws BadLocationException {
+                     if ((str == null) || str.isEmpty()) {
+                         return;
+                     }
+                     txtBuchungsblattnummer.setForeground(Color.BLACK);
+ 
+                     str = str.replaceAll("[^-a-zA-Z0-9_%]", "");
+ 
+                     // cut the characters before the delimiter
+                     final int posDel = str.indexOf(config.getDelimiter1());
+                     if (posDel >= 0) {
+                         str = str.substring(posDel + 1);
+                     }
+ 
+                     // build the text which will appear in txtBuchungsblattnummer
+                     final StringBuilder futureStringBuilder = new StringBuilder(txtBuchungsblattnummer.getText());
+                     futureStringBuilder.insert(offs, str);
+                     final String futureText = futureStringBuilder.toString();
+ 
+                     checkFutureString(futureText);
+ 
+                     super.insertString(offs, str, a);
+                     updateResult();
+                 }
+ 
+                 @Override
+                 public void remove(final int offs, final int len) throws BadLocationException {
+                     txtBuchungsblattnummer.setForeground(Color.BLACK);
+ 
+                     // build the text which will appear in txtBuchungsblattnummer
+                     String futureText = txtBuchungsblattnummer.getText();
+                     futureText = futureText.substring(offs, offs + len);
+                     checkFutureString(futureText);
+ 
+                     super.remove(offs, len);
+                     updateResult();
+                 }
+ 
+                 private void checkFutureString(final String futureString) {
+                     // if the number is not a regular one, just change the color of the textfield
+                     if (!futureString.matches("^[0-9_%]{0,6}[a-zA-Z_%]*")) {
+                         txtBuchungsblattnummer.setForeground(Color.RED);
+                     }
+                 }
+             });
+     }
+ 
+     //~ Methods ----------------------------------------------------------------
+ 
+     /**
+      * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The
+      * content of this method is always regenerated by the Form Editor.
+      */
+     @SuppressWarnings("unchecked")
+     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+     private void initComponents() {
+         final java.awt.GridBagConstraints gridBagConstraints;
+ 
+         txtDistrict = new javax.swing.JTextField();
+         lblDelimitier1 = new javax.swing.JLabel(config.getDelimiter1AsString());
+         txtBuchungsblattnummer = new javax.swing.JTextField();
+ 
+         setLayout(new java.awt.GridBagLayout());
+ 
+         txtDistrict.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+         final FontMetrics metrics = Toolkit.getDefaultToolkit().getFontMetrics(txtDistrict.getFont());
+         Dimension dim = new Dimension(metrics.stringWidth("0") * (config.getMaxLenDistrictNumberField() + 4),
+                 txtDistrict.getPreferredSize().height);
+         txtDistrict.setMinimumSize(dim);
+         txtDistrict.setPreferredSize(dim);
+         txtDistrict.addFocusListener(new java.awt.event.FocusAdapter() {
+ 
+                 @Override
+                 public void focusGained(final java.awt.event.FocusEvent evt) {
+                     txtDistrictFocusGained(evt);
+                 }
+                 @Override
+                 public void focusLost(final java.awt.event.FocusEvent evt) {
+                     txtDistrictFocusLost(evt);
+                 }
+             });
+         add(txtDistrict, new java.awt.GridBagConstraints());
+ 
+         lblDelimitier1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+         gridBagConstraints = new java.awt.GridBagConstraints();
+         gridBagConstraints.insets = new java.awt.Insets(0, 2, 0, 2);
+         add(lblDelimitier1, gridBagConstraints);
+ 
+         txtBuchungsblattnummer.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+         dim = new Dimension(metrics.stringWidth("0") * (config.getMaxBuchungsblattnummerField() + 4),
+                 txtBuchungsblattnummer.getPreferredSize().height);
+         txtBuchungsblattnummer.setMinimumSize(dim);
+         txtBuchungsblattnummer.setPreferredSize(dim);
+         txtBuchungsblattnummer.addFocusListener(new java.awt.event.FocusAdapter() {
+ 
+                 @Override
+                 public void focusGained(final java.awt.event.FocusEvent evt) {
+                     txtBuchungsblattnummerFocusGained(evt);
+                 }
+                 @Override
+                 public void focusLost(final java.awt.event.FocusEvent evt) {
+                     txtBuchungsblattnummerFocusLost(evt);
+                 }
+             });
+         add(txtBuchungsblattnummer, new java.awt.GridBagConstraints());
+     } // </editor-fold>//GEN-END:initComponents
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @param  evt  DOCUMENT ME!
+      */
+     private void txtDistrictFocusGained(final java.awt.event.FocusEvent evt) { //GEN-FIRST:event_txtDistrictFocusGained
+         final int textLength = txtDistrict.getText().length();
+         if (isOverwritten()) {
+             setOverwritten(false);
+             txtDistrict.getHighlighter().removeAllHighlights();
+             txtDistrict.setCaretPosition(textLength);
+         } else {
+             txtDistrict.setCaretPosition(0);
+             txtDistrict.moveCaretPosition(textLength);
+         }
+     }                                                                          //GEN-LAST:event_txtDistrictFocusGained
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @param  evt  DOCUMENT ME!
+      */
+     private void txtDistrictFocusLost(final java.awt.event.FocusEvent evt) { //GEN-FIRST:event_txtDistrictFocusLost
+         finishDistrict();
+         txtDistrict.setCaretPosition(0);
+     }                                                                        //GEN-LAST:event_txtDistrictFocusLost
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @param  evt  DOCUMENT ME!
+      */
+     private void txtBuchungsblattnummerFocusGained(final java.awt.event.FocusEvent evt) { //GEN-FIRST:event_txtBuchungsblattnummerFocusGained
+         final int textLenght = txtBuchungsblattnummer.getText().length();
+         if (isOverwritten()) {
+             setOverwritten(false);
+             txtBuchungsblattnummer.getHighlighter().removeAllHighlights();
+             txtBuchungsblattnummer.setCaretPosition(textLenght);
+         } else {
+             txtBuchungsblattnummer.setCaretPosition(0);
+             txtBuchungsblattnummer.moveCaretPosition(textLenght);
+         }
+     }                                                                                     //GEN-LAST:event_txtBuchungsblattnummerFocusGained
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @param  evt  DOCUMENT ME!
+      */
+     private void txtBuchungsblattnummerFocusLost(final java.awt.event.FocusEvent evt) { //GEN-FIRST:event_txtBuchungsblattnummerFocusLost
+         finishBuchungsblattnummer();
+         txtBuchungsblattnummer.setCaretPosition(0);
+     }                                                                                   //GEN-LAST:event_txtBuchungsblattnummerFocusLost
+ 
+     /**
+      * DOCUMENT ME!
+      */
+     private void finishBuchungsblattnummer() {
+         final String text = txtBuchungsblattnummer.getText();
+         if ((text != null) && !text.isEmpty() && !txtBuchungsblattnummer.getText().contains("%")) {
+             final int countLetters = text.length() - text.replaceAll("[a-zA-Z]", "").length();
+             final int newMaxLength = config.getMaxBuchungsblattnummerField() + countLetters;
+             addLeadingZeroes(txtBuchungsblattnummer.getDocument(), newMaxLength);
+         }
+         fireAreaBlockFinished(BlockType.BUCHUNGSBLATTNUMMER);
+     }
+ 
+     @Override
+     void updateResult() {
+         final String oldGrundbuchblattnummer = grundbuchblattnummer;
+         final StringBuilder sb = new StringBuilder();
+ 
+         if ((txtDistrict.getText() != null) && !txtDistrict.getText().isEmpty()) {
+             sb.append(txtDistrict.getText());
+         }
+         if ((txtBuchungsblattnummer.getText() != null) && !txtBuchungsblattnummer.getText().isEmpty()
+                     && !txtBuchungsblattnummer.getText().matches("^0+$")) {
+             sb.append(config.getDelimiter1AsString()).append(txtBuchungsblattnummer.getText());
+         }
+ 
+         grundbuchblattnummer = sb.toString();
+         super.firePropertyChange(PROP_GRUNDBUCHBLATTNUMMER, oldGrundbuchblattnummer, grundbuchblattnummer);
+ 
+ //        final boolean oldValid = validParcelNr;
+ //        checkValidParcelNr();
+ //        if (oldValid != validParcelNr) {
+ //            super.firePropertyChange(PROP_VALID_PARCEL_NUMBER, oldValid, validParcelNr);
+ //        }
+     }
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @return  DOCUMENT ME!
+      */
+     public String getGrundbuchblattnummer() {
+         return grundbuchblattnummer;
+     }
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @param  grundbuchblattnummer  DOCUMENT ME!
+      */
+     public void setGrundbuchblattNummerForTest(final String grundbuchblattnummer) {
+         changeFocus = false;
+         txtDistrict.setText(grundbuchblattnummer);
+         finishDistrict();
+         finishBuchungsblattnummer();
+         changeFocus = true;
+     }
+ 
+     /**
+      * DOCUMENT ME!
+     */
+    public void finish() {
+        changeFocus = false;
+        finishDistrict();
+        finishBuchungsblattnummer();
+        changeFocus = true;
+    }
+
+    /**
+     * DOCUMENT ME!
+      *
+      * @return  DOCUMENT ME!
+      */
+     public String getBuchungsblattnummer() {
+         return buchungsblattnummer;
+     }
+ 
+     /**
+      * DOCUMENT ME!
+      *
+      * @param  buchungsblattnummer  DOCUMENT ME!
+      */
+     public void setBuchungsblattnummerInTxtBuchungsblattnummer(final String buchungsblattnummer) {
+         changeFocus = false;
+         writeOver = false;
+         txtBuchungsblattnummer.setText(buchungsblattnummer);
+         finishBuchungsblattnummer();
+         changeFocus = true;
+         writeOver = true;
+     }
+ 
+     @Override
+     void fireAreaBlockFinished(final BlockType blockNr) {
+         String oldValue;
+         switch (blockNr) {
+             case DISTRICT: {
+                 oldValue = getDistrictNumber();
+                 setDistrictNumber(txtDistrict.getText());
+                 super.firePropertyChange(PROP_DISTRICT_NUMBER, oldValue, getDistrictNumber());
+                 break;
+             }
+             case BUCHUNGSBLATTNUMMER: {
+                 oldValue = buchungsblattnummer;
+                 buchungsblattnummer = txtBuchungsblattnummer.getText();
+                 super.firePropertyChange(PROP_BUCHUNGSBLATTNUMMER, oldValue, buchungsblattnummer);
+                 break;
+             }
+         }
+     }
+ }

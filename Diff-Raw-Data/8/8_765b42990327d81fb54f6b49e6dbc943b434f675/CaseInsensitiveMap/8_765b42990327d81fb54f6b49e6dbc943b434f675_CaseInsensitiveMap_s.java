@@ -1,0 +1,348 @@
+ package com.cedarsoftware.util;
+ 
+ import java.util.AbstractMap;
+ import java.util.Collection;
+ import java.util.Iterator;
+ import java.util.LinkedHashMap;
+ import java.util.LinkedHashSet;
+ import java.util.Map;
+ import java.util.Set;
+ 
+ /**
+  * Useful Map that does not care about the case-sensitivity of keys
+  * when the key value is a String.  Other key types can be used.
+  * String keys will be treated case insensitively, yet key case will
+  * be retained.  Non-string keys will work as they normally would.
+  * <p/>
+  * The internal CaseInsentitiveString is never exposed externally
+  * from this class. When requesting the keys or entries of this map,
+  * or calling containsKey() or get() for example, use a String as you
+  * normally would.  The returned Set of keys for the keySet() and
+  * entrySet() APIs return the original Strings, not the internally
+  * wrapped CaseInsensitiveString.
+  *
+  * @author John DeRegnaucourt (jdereg@gmail.com)
+  *         <br/>
+  *         Copyright (c) Cedar Software LLC
+  *         <br/><br/>
+  *         Licensed under the Apache License, Version 2.0 (the "License");
+  *         you may not use this file except in compliance with the License.
+  *         You may obtain a copy of the License at
+  *         <br/><br/>
+  *         http://www.apache.org/licenses/LICENSE-2.0
+  *         <br/><br/>
+  *         Unless required by applicable law or agreed to in writing, software
+  *         distributed under the License is distributed on an "AS IS" BASIS,
+  *         WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *         See the License for the specific language governing permissions and
+  *         limitations under the License.
+  */
+ public class CaseInsensitiveMap<K, V> implements Map<K, V>
+ {
+     private Map<K, V> map;
+ 
+     public CaseInsensitiveMap()
+     {
+         map = new LinkedHashMap<K, V>();
+     }
+ 
+     public CaseInsensitiveMap(int initialCapacity)
+     {
+         map = new LinkedHashMap<K, V>(initialCapacity);
+     }
+ 
+     public CaseInsensitiveMap(Map<? extends K, ? extends V> map)
+     {
+         this(map.size());
+         putAll(map);
+     }
+ 
+     public CaseInsensitiveMap(int initialCapacity, float loadFactor)
+     {
+         map = new LinkedHashMap<K, V>(initialCapacity, loadFactor);
+     }
+ 
+     public V get(Object key)
+     {
+         if (key instanceof String)
+         {
+             String keyString = (String) key;
+             return map.get(new CaseInsensitiveString(keyString));
+         }
+         return map.get(key);
+     }
+ 
+     public V put(K key, V value)
+     {
+         if (key instanceof String)
+         {    // Must remove entry because the key case can change
+             CaseInsensitiveString newKey = new CaseInsensitiveString((String) key);
+             if (map.containsKey(newKey))
+             {
+                 map.remove(newKey);
+             }
+             return map.put((K) newKey, value);
+         }
+         return map.put(key, value);
+     }
+ 
+     public boolean containsKey(Object key)
+     {
+         if (key instanceof String)
+         {
+             String keyString = (String) key;
+             return map.containsKey(new CaseInsensitiveString(keyString));
+         }
+         return map.containsKey(key);
+     }
+ 
+     public void putAll(Map<? extends K, ? extends V> m)
+     {
+         if (m == null)
+         {
+             return;
+         }
+ 
+         for (Entry entry : m.entrySet())
+         {
+             put((K) entry.getKey(), (V) entry.getValue());
+         }
+     }
+ 
+     public V remove(Object key)
+     {
+         if (key instanceof String)
+         {
+             String keyString = (String) key;
+             return map.remove(new CaseInsensitiveString(keyString));
+         }
+         return map.remove(key);
+     }
+ 
+     /**
+      * @return Set of Keys from the Map.  This API is implemented to allow
+      *         this class to unwrap the internal structure placed around String
+      *         keys, returning them as the original String keys, retaining their case.
+      */
+     public Set<K> keySet()
+     {
+         Set temp = new LinkedHashSet();
+         for (Object key : map.keySet())
+         {
+             temp.add(key instanceof CaseInsensitiveString ? key.toString() : key);
+         }
+         return new LocalSet(temp, this);
+     }
+ 
+     private class LocalSet extends LinkedHashSet<K>
+     {
+ 
+         private static final long serialVersionUID = -4681165782204849813L;
+        Set<K> localSet;
+         Map<K, V> localMap;
+ 
+         public LocalSet(Set<K> s, Map<K, V> m)
+         {
+             super(s);
+            this.localSet = s;
+             this.localMap = m;
+         }
+ 
+         public Iterator<K> iterator()
+         {
+             return new Iterator<K>()
+             {
+                Iterator<K> iter = localSet.iterator();
+                 K lastRetured = null;
+ 
+                 public boolean hasNext()
+                 {
+                     return iter.hasNext();
+                 }
+ 
+                 public K next()
+                 {
+                     lastRetured = iter.next();
+                     return lastRetured;
+                 }
+ 
+                 public void remove()
+                 {
+                     iter.remove();
+                     localMap.remove(lastRetured);
+ 
+                 }
+             };
+         }
+     }
+ 
+     /**
+      * @return Set of Map.Entry for each entry in the Map.  This API is
+      *         implemented to allow this class to unwrap the internal structure placed
+      *         around String keys, returning them as the original String keys, retaining
+      *         their case.
+      */
+     public Set<Entry<K, V>> entrySet()
+     {
+         Set<Entry<K, V>> insensitiveEntrySet = map.entrySet();
+         Set<Entry<K, V>> returnEntrySet = new LinkedHashSet<Entry<K, V>>();
+ 
+         for (Entry entry : insensitiveEntrySet)
+         {
+             if (entry.getKey() instanceof CaseInsensitiveString)
+             {
+                 CaseInsensitiveString key = (CaseInsensitiveString) entry.getKey();
+                 entry = new AbstractMap.SimpleImmutableEntry<K, V>((K) key.toString(), (V) entry.getValue());
+             }
+             returnEntrySet.add(entry);
+         }
+ 
+         return returnEntrySet;
+     }
+ 
+     /**
+      * Internal class used to wrap String keys.  This class ignores the
+      * case of Strings when they are compared.
+      */
+     private static class CaseInsensitiveString
+     {
+         private final String caseInsensitiveString;
+ 
+         private CaseInsensitiveString(String string)
+         {
+             caseInsensitiveString = string;
+         }
+ 
+         public String toString()
+         {
+             return caseInsensitiveString;
+         }
+ 
+         public int hashCode()
+         {
+             if (caseInsensitiveString == null)
+             {
+                 return 0;
+             }
+             return caseInsensitiveString.toLowerCase().hashCode();
+         }
+ 
+         public boolean equals(Object obj)
+         {
+             if (!(obj instanceof CaseInsensitiveString))
+             {
+                 return false;
+             }
+ 
+             if (this == obj)
+             {
+                 return true;
+             }
+ 
+             CaseInsensitiveString other = (CaseInsensitiveString) obj;
+             if (caseInsensitiveString == null)
+             {
+                 return other.caseInsensitiveString == null;
+             }
+             else
+             {
+                 return caseInsensitiveString.equalsIgnoreCase(other.caseInsensitiveString);
+             }
+         }
+     }
+ 
+     // delegates
+     public int size()
+     {
+         return map.size();
+     }
+ 
+     public boolean isEmpty()
+     {
+         return map.isEmpty();
+     }
+ 
+     public boolean equals(Object other)
+     {
+         if (other == this) return true;
+         if (!(other instanceof Map)) return false;
+ 
+         Map<?, ?> that = (Map<?, ?>) other;
+         if (that.size() != size())
+         {
+             return false;
+         }
+ 
+         for (Entry entry : that.entrySet())
+         {
+             final Object thatKey = entry.getKey();
+             if (!containsKey(thatKey))
+             {
+                  return false;
+             }
+ 
+             Object thatValue = entry.getValue();
+             Object thisValue = get(thatKey);
+ 
+             if (thatValue == null || thisValue == null)
+             {   // Perform null checks
+                 if (thatValue != thisValue)
+                 {
+                     return false;
+                 }
+             }
+             else if (!thisValue.equals(thatValue))
+             {
+                 return false;
+             }
+         }
+         return true;
+     }
+ 
+     public int hashCode()
+     {
+         int h = 0;
+         for (Entry<K, V> entry : entrySet())
+         {
+             Object key = entry.getKey();
+             if (key != null)
+             {
+                 if (key instanceof String)
+                 {
+                     h += ((String) key).toLowerCase().hashCode();
+                 }
+                 else
+                 {
+                     h += key.hashCode();
+                 }
+             }
+ 
+             Object value = entry.getValue();
+             if (value != null)
+             {
+                 h += value.hashCode();
+             }
+         }
+         return h;
+     }
+ 
+     public String toString()
+     {
+         return map.toString();
+     }
+ 
+     public void clear()
+     {
+         map.clear();
+     }
+ 
+     public boolean containsValue(Object value)
+     {
+         return map.containsValue(value);
+     }
+ 
+     public Collection<V> values()
+     {
+         return map.values();
+     }
+ }

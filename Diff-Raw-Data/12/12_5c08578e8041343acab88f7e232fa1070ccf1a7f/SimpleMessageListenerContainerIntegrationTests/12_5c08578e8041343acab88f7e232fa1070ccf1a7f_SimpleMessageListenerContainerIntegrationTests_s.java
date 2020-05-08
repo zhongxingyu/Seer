@@ -1,0 +1,354 @@
+ package org.springframework.amqp.rabbit.listener;
+ 
+ import static org.junit.Assert.assertNotNull;
+ import static org.junit.Assert.assertNull;
+ import static org.junit.Assert.assertTrue;
+ 
+ import java.util.Arrays;
+ import java.util.List;
+ import java.util.concurrent.CountDownLatch;
+ import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.atomic.AtomicInteger;
+ 
+ import org.apache.commons.logging.Log;
+ import org.apache.commons.logging.LogFactory;
+ import org.apache.log4j.Level;
+ import org.junit.After;
+ import org.junit.Before;
+ import org.junit.Rule;
+ import org.junit.Test;
+ import org.junit.runner.RunWith;
+ import org.junit.runners.Parameterized;
+ import org.junit.runners.Parameterized.Parameters;
+ import org.springframework.amqp.core.AcknowledgeMode;
+ import org.springframework.amqp.core.Message;
+ import org.springframework.amqp.core.MessageListener;
+ import org.springframework.amqp.core.Queue;
+ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+ import org.springframework.amqp.rabbit.core.ChannelAwareMessageListener;
+ import org.springframework.amqp.rabbit.core.RabbitTemplate;
+ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+ import org.springframework.amqp.rabbit.test.BrokerRunning;
+ import org.springframework.amqp.rabbit.test.BrokerTestUtils;
+ import org.springframework.amqp.rabbit.test.Log4jLevelAdjuster;
+ import org.springframework.transaction.TransactionDefinition;
+ import org.springframework.transaction.TransactionException;
+ import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+ import org.springframework.transaction.support.DefaultTransactionStatus;
+ 
+ import com.rabbitmq.client.Channel;
+ 
+ @RunWith(Parameterized.class)
+ public class SimpleMessageListenerContainerIntegrationTests {
+ 
+ 	private static Log logger = LogFactory.getLog(SimpleMessageListenerContainerIntegrationTests.class);
+ 
+ 	private Queue queue = new Queue("test.queue");
+ 
+ 	private RabbitTemplate template = new RabbitTemplate();
+ 
+ 	private final int concurrentConsumers;
+ 
+ 	private final AcknowledgeMode acknowledgeMode;
+ 
+ 	@Rule
+ 	public Log4jLevelAdjuster logLevels = new Log4jLevelAdjuster(Level.OFF, RabbitTemplate.class,
+ 			SimpleMessageListenerContainer.class, BlockingQueueConsumer.class, CachingConnectionFactory.class);
+ 
+ 	@Rule
+ 	public Log4jLevelAdjuster testLogLevels = new Log4jLevelAdjuster(Level.DEBUG,
+ 			SimpleMessageListenerContainerIntegrationTests.class);
+ 
+ 	@Rule
+ 	public BrokerRunning brokerIsRunning = BrokerRunning.isRunningWithEmptyQueues(queue);
+ 
+ 	private final int messageCount;
+ 
+ 	private SimpleMessageListenerContainer container;
+ 
+ 	private final int txSize;
+ 
+ 	private final boolean externalTransaction;
+ 
+ 	private final boolean transactional;
+ 
+ 	public SimpleMessageListenerContainerIntegrationTests(int messageCount, int concurrency,
+ 			AcknowledgeMode acknowledgeMode, boolean transactional, int txSize, boolean externalTransaction) {
+ 		this.messageCount = messageCount;
+ 		this.concurrentConsumers = concurrency;
+ 		this.acknowledgeMode = acknowledgeMode;
+ 		this.transactional = transactional;
+ 		this.txSize = txSize;
+ 		this.externalTransaction = externalTransaction;
+ 	}
+ 
+ 	@Parameters
+ 	public static List<Object[]> getParameters() {
+ 		return Arrays.asList( //
+ 				params(0, 1, 1, AcknowledgeMode.AUTO), //
+ 				params(1, 1, 1, AcknowledgeMode.NONE), //
+ 				params(2, 4, 1, AcknowledgeMode.AUTO), //
+ 				extern(3, 4, 1, AcknowledgeMode.AUTO), //
+ 				params(4, 4, 1, AcknowledgeMode.AUTO, false), //
+ 				params(5, 2, 2, AcknowledgeMode.AUTO), //
+ 				params(6, 2, 2, AcknowledgeMode.NONE), //
+ 				params(7, 20, 4, AcknowledgeMode.AUTO), //
+ 				params(8, 20, 4, AcknowledgeMode.NONE), //
+ 				params(9, 300, 4, AcknowledgeMode.AUTO), //
+ 				params(10, 300, 4, AcknowledgeMode.NONE), //
+ 				params(11, 300, 4, AcknowledgeMode.AUTO, 10) //
+ 				);
+ 	}
+ 
+ 	private static Object[] params(int i, int messageCount, int concurrency, AcknowledgeMode acknowledgeMode,
+ 			boolean transactional, int txSize) {
+ 		// "i" is just a counter to make it easier to identify the test in the log
+ 		return new Object[] { messageCount, concurrency, acknowledgeMode, transactional, txSize, false };
+ 	}
+ 
+ 	private static Object[] params(int i, int messageCount, int concurrency, AcknowledgeMode acknowledgeMode, int txSize) {
+ 		// For this test always us a transaction if it makes sense...
+ 		return params(i, messageCount, concurrency, acknowledgeMode, acknowledgeMode.isTransactionAllowed(), txSize);
+ 	}
+ 
+ 	private static Object[] params(int i, int messageCount, int concurrency, AcknowledgeMode acknowledgeMode,
+ 			boolean transactional) {
+ 		return params(i, messageCount, concurrency, acknowledgeMode, transactional, 1);
+ 	}
+ 
+ 	private static Object[] params(int i, int messageCount, int concurrency, AcknowledgeMode acknowledgeMode) {
+ 		return params(i, messageCount, concurrency, acknowledgeMode, 1);
+ 	}
+ 
+ 	private static Object[] extern(int i, int messageCount, int concurrency, AcknowledgeMode acknowledgeMode) {
+ 		return new Object[] { messageCount, concurrency, acknowledgeMode, true, 1, true };
+ 	}
+ 
+ 	@Before
+ 	public void declareQueue() {
+ 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+ 		connectionFactory.setChannelCacheSize(concurrentConsumers);
+ 		connectionFactory.setPort(BrokerTestUtils.getPort());
+ 		template.setConnectionFactory(connectionFactory);
+ 	}
+ 
+ 	@After
+ 	public void clear() throws Exception {
+ 		// Wait for broker communication to finish before trying to stop container
+ 		Thread.sleep(300L);
+ 		logger.debug("Shutting down at end of test");
+ 		if (container != null) {
+ 			container.shutdown();
+ 		}
+ 	}
+ 
+ 	@Test
+ 	public void testPojoListenerSunnyDay() throws Exception {
+ 		CountDownLatch latch = new CountDownLatch(messageCount);
+ 		doSunnyDayTest(latch, new MessageListenerAdapter(new PojoListener(latch)));
+ 	}
+ 
+ 	@Test
+ 	public void testListenerSunnyDay() throws Exception {
+ 		CountDownLatch latch = new CountDownLatch(messageCount);
+ 		doSunnyDayTest(latch, new Listener(latch));
+ 	}
+ 
+ 	@Test
+ 	public void testChannelAwareListenerSunnyDay() throws Exception {
+ 		CountDownLatch latch = new CountDownLatch(messageCount);
+ 		doSunnyDayTest(latch, new ChannelAwareListener(latch));
+ 	}
+ 
+ 	@Test
+ 	public void testPojoListenerWithException() throws Exception {
+ 		CountDownLatch latch = new CountDownLatch(messageCount);
+ 		doListenerWithExceptionTest(latch, new MessageListenerAdapter(new PojoListener(latch, true)));
+ 	}
+ 
+ 	@Test
+ 	public void testListenerWithException() throws Exception {
+ 		CountDownLatch latch = new CountDownLatch(messageCount);
+ 		doListenerWithExceptionTest(latch, new Listener(latch, true));
+ 	}
+ 
+ 	@Test
+ 	public void testChannelAwareListenerWithException() throws Exception {
+ 		CountDownLatch latch = new CountDownLatch(messageCount);
+ 		doListenerWithExceptionTest(latch, new ChannelAwareListener(latch, true));
+ 	}
+ 
+ 	private void doSunnyDayTest(CountDownLatch latch, Object listener) throws Exception {
+ 		container = createContainer(listener);
+ 		for (int i = 0; i < messageCount; i++) {
+ 			template.convertAndSend(queue.getName(), i + "foo");
+ 		}
+		boolean waited = latch.await(Math.max(2, messageCount / 40), TimeUnit.SECONDS);
+ 		assertTrue("Timed out waiting for message", waited);
+ 		assertNull(template.receiveAndConvert(queue.getName()));
+ 	}
+ 
+ 	private void doListenerWithExceptionTest(CountDownLatch latch, Object listener) throws Exception {
+ 		container = createContainer(listener);
+ 		if (acknowledgeMode.isTransactionAllowed()) {
+ 			// Should only need one message if it is going to fail
+ 			for (int i = 0; i < concurrentConsumers; i++) {
+ 				template.convertAndSend(queue.getName(), i + "foo");
+ 			}
+ 		} else {
+ 			for (int i = 0; i < messageCount; i++) {
+ 				template.convertAndSend(queue.getName(), i + "foo");
+ 			}
+ 		}
+ 		try {
+			boolean waited = latch.await(5 + Math.max(1, messageCount / 20), TimeUnit.SECONDS);
+ 			assertTrue("Timed out waiting for message", waited);
+ 		} finally {
+ 			// Wait for broker communication to finish before trying to stop
+ 			// container
+ 			Thread.sleep(300L);
+ 			container.shutdown();
+ 			Thread.sleep(300L);
+ 		}
+ 		if (acknowledgeMode.isTransactionAllowed()) {
+ 			assertNotNull(template.receiveAndConvert(queue.getName()));
+ 		} else {
+ 			assertNull(template.receiveAndConvert(queue.getName()));
+ 		}
+ 	}
+ 
+ 	private SimpleMessageListenerContainer createContainer(Object listener) {
+ 		SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(template.getConnectionFactory());
+ 		container.setMessageListener(listener);
+ 		container.setQueueNames(queue.getName());
+ 		container.setTxSize(txSize);
+ 		container.setPrefetchCount(txSize);
+ 		container.setConcurrentConsumers(concurrentConsumers);
+ 		container.setChannelTransacted(transactional);
+ 		container.setAcknowledgeMode(acknowledgeMode);
+ 		if (externalTransaction) {
+ 			container.setTransactionManager(new TestTransactionManager());
+ 		}
+ 		container.afterPropertiesSet();
+ 		container.start();
+ 		return container;
+ 	}
+ 
+ 	public static class PojoListener {
+ 		private AtomicInteger count = new AtomicInteger();
+ 
+ 		private final CountDownLatch latch;
+ 
+ 		private final boolean fail;
+ 
+ 		public PojoListener(CountDownLatch latch) {
+ 			this(latch, false);
+ 		}
+ 
+ 		public PojoListener(CountDownLatch latch, boolean fail) {
+ 			this.latch = latch;
+ 			this.fail = fail;
+ 		}
+ 
+ 		public void handleMessage(String value) {
+ 			try {
+ 				int counter = count.getAndIncrement();
+ 				if (logger.isDebugEnabled() && counter % 100 == 0) {
+ 					logger.debug("Handling: " + value + ":" + counter + " - " + latch);
+ 				}
+ 				if (fail) {
+ 					throw new RuntimeException("Planned failure");
+ 				}
+ 			} finally {
+ 				latch.countDown();
+ 			}
+ 		}
+ 	}
+ 
+ 	public static class Listener implements MessageListener {
+ 		private AtomicInteger count = new AtomicInteger();
+ 
+ 		private final CountDownLatch latch;
+ 
+ 		private final boolean fail;
+ 
+ 		public Listener(CountDownLatch latch) {
+ 			this(latch, false);
+ 		}
+ 
+ 		public Listener(CountDownLatch latch, boolean fail) {
+ 			this.latch = latch;
+ 			this.fail = fail;
+ 		}
+ 
+ 		public void onMessage(Message message) {
+ 			String value = new String(message.getBody());
+ 			try {
+ 				int counter = count.getAndIncrement();
+ 				if (logger.isDebugEnabled() && counter % 100 == 0) {
+ 					logger.debug(value + counter);
+ 				}
+ 				if (fail) {
+ 					throw new RuntimeException("Planned failure");
+ 				}
+ 			} finally {
+ 				latch.countDown();
+ 			}
+ 		}
+ 	}
+ 
+ 	public static class ChannelAwareListener implements ChannelAwareMessageListener {
+ 		private AtomicInteger count = new AtomicInteger();
+ 
+ 		private final CountDownLatch latch;
+ 
+ 		private final boolean fail;
+ 
+ 		public ChannelAwareListener(CountDownLatch latch) {
+ 			this(latch, false);
+ 		}
+ 
+ 		public ChannelAwareListener(CountDownLatch latch, boolean fail) {
+ 			this.latch = latch;
+ 			this.fail = fail;
+ 		}
+ 
+ 		public void onMessage(Message message, Channel channel) throws Exception {
+ 			String value = new String(message.getBody());
+ 			try {
+ 				int counter = count.getAndIncrement();
+ 				if (logger.isDebugEnabled() && counter % 100 == 0) {
+ 					logger.debug(value + counter);
+ 				}
+ 				if (fail) {
+ 					throw new RuntimeException("Planned failure");
+ 				}
+ 			} finally {
+ 				latch.countDown();
+ 			}
+ 		}
+ 
+ 	}
+ 
+ 	@SuppressWarnings("serial")
+ 	private class TestTransactionManager extends AbstractPlatformTransactionManager {
+ 
+ 		@Override
+ 		protected void doBegin(Object transaction, TransactionDefinition definition) throws TransactionException {
+ 		}
+ 
+ 		@Override
+ 		protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
+ 		}
+ 
+ 		@Override
+ 		protected Object doGetTransaction() throws TransactionException {
+ 			return new Object();
+ 		}
+ 
+ 		@Override
+ 		protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
+ 		}
+ 
+ 	}
+ }

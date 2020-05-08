@@ -1,0 +1,538 @@
+ package com.crawljax.core;
+ 
+ import java.util.ArrayList;
+ import java.util.LinkedHashSet;
+ import java.util.List;
+ import java.util.Set;
+ import java.util.concurrent.ThreadPoolExecutor;
+ import java.util.concurrent.TimeUnit;
+ 
+ import net.jcip.annotations.GuardedBy;
+ 
+ import org.apache.commons.configuration.ConfigurationException;
+ import org.apache.log4j.Logger;
+ 
+ import com.crawljax.browser.BrowserFactory;
+ import com.crawljax.browser.EmbeddedBrowser;
+ import com.crawljax.condition.browserwaiter.WaitConditionChecker;
+ import com.crawljax.condition.crawlcondition.CrawlConditionChecker;
+ import com.crawljax.condition.eventablecondition.EventableConditionChecker;
+ import com.crawljax.condition.invariant.Invariant;
+ import com.crawljax.condition.invariant.InvariantChecker;
+ import com.crawljax.core.configuration.CrawlSpecificationReader;
+ import com.crawljax.core.configuration.CrawljaxConfiguration;
+ import com.crawljax.core.configuration.CrawljaxConfigurationReader;
+ import com.crawljax.core.plugin.CrawljaxPluginsUtil;
+ import com.crawljax.core.state.Eventable;
+ import com.crawljax.core.state.StateMachine;
+ import com.crawljax.core.state.StateVertix;
+ import com.crawljax.oraclecomparator.OracleComparator;
+ import com.crawljax.oraclecomparator.StateComparator;
+ import com.crawljax.util.PropertyHelper;
+ import com.crawljax.util.database.HibernateUtil;
+ 
+ /**
+  * The Crawljax Controller class is the core of Crawljax.
+  * 
+  * @author mesbah
+  * @version $Id$
+  */
+ public class CrawljaxController {
+ 	private static final Logger LOGGER = Logger.getLogger(CrawljaxController.class.getName());
+ 
+ 	private int stateCounter = 1;
+ 	private StateVertix indexState;
+ 	private EmbeddedBrowser browser;
+ 	private StateMachine stateMachine;
+ 	private CrawlSession session;
+ 
+ 	private long startCrawl;
+ 
+ 	private final String propertiesFile;
+ 
+ 	private final StateComparator stateComparator;
+ 	private final InvariantChecker invariantChecker = new InvariantChecker();
+ 	private final CrawlConditionChecker crawlConditionChecker = new CrawlConditionChecker();
+ 	private final EventableConditionChecker eventableConditionChecker =
+ 	        new EventableConditionChecker();
+ 
+ 	private final WaitConditionChecker waitConditionChecker = new WaitConditionChecker();
+ 	private Crawler crawler;
+ 
+ 	private final CrawljaxConfiguration crawljaxConfiguration;
+ 
+ 	private final List<OracleComparator> oracleComparator;
+ 
+ 	private final Set<String> checkedElements = new LinkedHashSet<String>();
+ 
+ 	private final ThreadPoolExecutor workQueue;
+ 
+ 	private boolean foundNewState;
+ 
+ 	private int numberofExaminedElements;
+ 
+ 	/**
+ 	 * The constructor.
+ 	 * 
+ 	 * @throws ConfigurationException
+ 	 *             if the configuration fails.
+ 	 */
+ 	public CrawljaxController() throws ConfigurationException {
+ 		this("crawljax.properties");
+ 		LOGGER.warn("No custom setting is provided! Using the default settings.");
+ 	}
+ 
+ 	/**
+ 	 * @param propertiesfile
+ 	 *            the properties file.
+ 	 * @throws ConfigurationException
+ 	 *             if the configuration fails.
+ 	 */
+ 	public CrawljaxController(final String propertiesfile) throws ConfigurationException {
+ 		this.propertiesFile = propertiesfile;
+ 		this.crawljaxConfiguration = null;
+ 		this.oracleComparator = new ArrayList<OracleComparator>();
+ 		stateComparator = new StateComparator(this.oracleComparator);
+ 		workQueue = init();
+ 	}
+ 
+ 	/**
+ 	 * @param config
+ 	 *            the crawljax configuration.
+ 	 * @throws ConfigurationException
+ 	 *             if the configuration fails.
+ 	 */
+ 	public CrawljaxController(final CrawljaxConfiguration config) throws ConfigurationException {
+ 		this.propertiesFile = null;
+ 		this.crawljaxConfiguration = config;
+ 		CrawljaxConfigurationReader configReader = new CrawljaxConfigurationReader(config);
+ 		CrawlSpecificationReader crawlerReader =
+ 		        new CrawlSpecificationReader(configReader.getCrawlSpecification());
+ 		this.oracleComparator = crawlerReader.getOracleComparators();
+ 		stateComparator = new StateComparator(crawlerReader.getOracleComparators());
+ 		invariantChecker.setInvariants(crawlerReader.getInvariants());
+ 		crawlConditionChecker.setCrawlConditions(crawlerReader.getCrawlConditions());
+ 		waitConditionChecker.setWaitConditions(crawlerReader.getWaitConditions());
+ 		eventableConditionChecker.setEventableConditions(configReader.getEventableConditions());
+ 		workQueue = init();
+ 	}
+ 
+ 	/**
+ 	 * @throws ConfigurationException
+ 	 *             if the configuration fails.
+ 	 * @NotThreadSafe
+ 	 */
+ 	private ThreadPoolExecutor init() throws ConfigurationException {
+ 		LOGGER.info("Starting Crawljax...");
+ 		LOGGER.info("Loading properties...");
+ 
+ 		if (crawljaxConfiguration != null) {
+ 			PropertyHelper.init(crawljaxConfiguration);
+ 		} else {
+ 			if (propertiesFile == null || propertiesFile.equals("")) {
+ 				throw new ConfigurationException("No properties specified");
+ 			}
+ 			PropertyHelper.init(propertiesFile);
+ 		}
+ 
+		LOGGER.info("Embedded browser implementation: " + BrowserFactory.getBrowserTypeString());
+		crawler = new Crawler(this);
+
+ 		HibernateUtil.initialize();
+ 
+ 		LOGGER.info("Used plugins:");
+ 
+ 		CrawljaxPluginsUtil.loadPlugins();
+ 
+ 		if (PropertyHelper.getCrawljaxConfiguration() != null) {
+ 			CrawljaxPluginsUtil.runProxyServerPlugins(PropertyHelper.getCrawljaxConfiguration()
+ 			        .getProxyConfiguration());
+ 		}
+ 
+ 		LOGGER.info("Crawljax initialized!");
+ 
+ 		return new ThreadPoolExecutor(PropertyHelper.getCrawNumberOfThreadsValue(),
+ 		        PropertyHelper.getCrawNumberOfThreadsValue(), 0L, TimeUnit.MILLISECONDS,
+ 		        new CrawlQueue());
+ 	}
+ 
+ 	/**
+ 	 * Run Crawljax.
+ 	 * 
+ 	 * @throws CrawljaxException
+ 	 *             If the browser cannot be instantiated.
+ 	 * @throws ConfigurationException
+ 	 *             if crawljax configuration fails.
+ 	 * @NotThreadSafe
+ 	 */
+ 	public final void run() throws CrawljaxException, ConfigurationException {
+ 
+ 		browser = crawler.getBrowser();
+ 
+ 		startCrawl = System.currentTimeMillis();
+ 
+ 		CrawljaxPluginsUtil.runPreCrawlingPlugins(browser);
+ 
+ 		try {
+ 			crawler.goToInitialURL();
+ 		} catch (CrawljaxException e) {
+ 			LOGGER.fatal("Failed to load the site: " + e.getMessage(), e);
+ 			throw e;
+ 		}
+ 
+ 		indexState =
+ 		        new StateVertix(browser.getCurrentUrl(), "index", browser.getDom(),
+ 		                stateComparator.getStrippedDom(browser));
+ 
+ 		stateMachine = new StateMachine(indexState);
+ 		if (crawljaxConfiguration != null) {
+ 			session = new CrawlSession(browser, stateMachine, indexState, crawljaxConfiguration);
+ 		} else {
+ 			session = new CrawlSession(browser, stateMachine, indexState);
+ 		}
+ 
+ 		CrawljaxPluginsUtil.runOnNewStatePlugins(session);
+ 
+ 		LOGGER.info("Start crawling with " + PropertyHelper.getCrawlTagsValues().size()
+ 		        + " tags and threshold-coefficient " + PropertyHelper.getCrawlThreholdValue());
+ 
+ 		try {
+ 
+ 			addWorkToQueue(crawler);
+ 
+ 			// TODO Stefan Ok this is not so nice....
+ 			while (!BrowserFactory.isFinished()) {
+ 				try {
+ 					Thread.sleep(1000);
+ 				} catch (InterruptedException e) {
+ 					LOGGER.error("The waiting on the browsers to be finished was Interruped", e);
+ 				}
+ 			}
+ 		} catch (OutOfMemoryError om) {
+ 			LOGGER.error(om.getMessage(), om);
+ 		}
+ 
+ 		long timeCrawlCalc = System.currentTimeMillis() - startCrawl;
+ 
+ 		/**
+ 		 * Shutdown the ThreadPool, closing all the possible open Crawler instances
+ 		 */
+ 		this.workQueue.shutdownNow();
+ 
+ 		/**
+ 		 * Close all the opened browsers
+ 		 */
+ 		BrowserFactory.close();
+ 
+ 		for (Eventable c : stateMachine.getStateFlowGraph().getAllEdges()) {
+ 			LOGGER.info("Interaction Element= " + c.toString());
+ 		}
+ 
+ 		LOGGER.info("Total Crawling time("
+ 		        + timeCrawlCalc
+ 		        + "ms) ~= "
+ 		        + String.format("%d min, %d sec", TimeUnit.MILLISECONDS.toMinutes(timeCrawlCalc),
+ 		                TimeUnit.MILLISECONDS.toSeconds(timeCrawlCalc)
+ 		                        - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS
+ 		                                .toMinutes(timeCrawlCalc))));
+ 		LOGGER.info("EXAMINED ELEMENTS: " + numberofExaminedElements);
+ 		LOGGER.info("CLICKABLES: " + stateMachine.getStateFlowGraph().getAllEdges().size());
+ 		LOGGER.info("STATES: " + stateMachine.getStateFlowGraph().getAllStates().size());
+ 		LOGGER.info("Dom average size (byte): "
+ 		        + stateMachine.getStateFlowGraph().getMeanStateStringSize());
+ 
+ 		LOGGER.info("Starting PostCrawlingPlugins...");
+ 
+ 		CrawljaxPluginsUtil.runPostCrawlingPlugins(session);
+ 
+ 		LOGGER.info("DONE!!!");
+ 	}
+ 
+ 	/**
+ 	 * Checks the state and time constraints. This function is ThreadSafe
+ 	 * 
+ 	 * @return true if all conditions are met.
+ 	 * @throws CrawljaxException
+ 	 *             a crawljaxexception.
+ 	 */
+ 	@GuardedBy("stateMachine")
+ 	public boolean checkConstraints() throws CrawljaxException {
+ 		long timePassed = System.currentTimeMillis() - startCrawl;
+ 
+ 		if ((PropertyHelper.getCrawlMaxTimeValue() != 0)
+ 		        && (timePassed > PropertyHelper.getCrawlMaxTimeValue())) {
+ 
+ 			/* remove all possible candidates left */
+ 			// EXACTEVENTPATH.clear(); TODO Stefan: FIX this!
+ 			LOGGER.info("Max time " + PropertyHelper.getCrawlMaxTimeValue() + "passed!");
+ 			/* stop crawling */
+ 			return false;
+ 		}
+ 
+ 		synchronized (stateMachine) {
+ 			if ((PropertyHelper.getCrawlMaxStatesValue() != 0)
+ 			        && (stateMachine.getStateFlowGraph().getAllStates().size() >= PropertyHelper
+ 			                .getCrawlMaxStatesValue())) {
+ 				/* remove all possible candidates left */
+ 				// EXACTEVENTPATH.clear(); TODO Stefan: FIX this!
+ 
+ 				LOGGER.info("Max number of states " + PropertyHelper.getCrawlMaxStatesValue()
+ 				        + " reached!");
+ 
+ 				/* stop crawling */
+ 				return false;
+ 			}
+ 		}
+ 		/* continue crawling */
+ 		return true;
+ 	}
+ 
+ 	/**
+ 	 * @param currentHold
+ 	 *            the placeholder for the current stateVertix.
+ 	 * @param event
+ 	 *            the event edge.
+ 	 * @param newState
+ 	 *            the new state.
+ 	 * @param crawler
+ 	 *            used to feet to checkInvariants
+ 	 * @return true if the new state is not found in the state machine.
+ 	 * @NotThreadSafe
+ 	 */
+ 	public boolean updateStateMachine(final StateVertix currentHold, final Eventable event,
+ 	        StateVertix newState, Crawler crawler) {
+ 		StateVertix cloneState = stateMachine.addStateToCurrentState(newState, event);
+ 		foundNewState = true;
+ 		if (cloneState != null) {
+ 			foundNewState = false;
+ 			newState = cloneState.clone();
+ 		}
+ 
+ 		stateMachine.changeState(newState);
+ 		LOGGER.info("StateMachine's Pointer changed to: "
+ 		        + stateMachine.getCurrentState().getName() + " FROM " + currentHold.getName());
+ 
+ 		if (PropertyHelper.getTestInvariantsWhileCrawlingValue()) {
+ 			checkInvariants(crawler);
+ 		}
+ 
+ 		synchronized (session) {
+ 			/**
+ 			 * Only one thread at the time may set the currentState in the session and expose it to
+ 			 * the OnNewStatePlugins. Garranty it will not be interleaved
+ 			 */
+ 			session.setCurrentState(newState);
+ 
+ 			if (cloneState == null) {
+ 				CrawljaxPluginsUtil.runOnNewStatePlugins(session);
+ 				// recurse
+ 				return true;
+ 			} else {
+ 				// non recurse
+ 				return false;
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Test to see if the (new) dom is changed with regards to the old dom. This method is Thread
+ 	 * safe, at least as the equals call of StateVertix is Thread safe and the stateBefor and
+ 	 * stateAfter do not change on interleaving.
+ 	 * 
+ 	 * @param stateBefore
+ 	 *            the state before the event.
+ 	 * @param stateAfter
+ 	 *            the state after the event.
+ 	 * @return true if the state is changed according to the compare method of the oracle.
+ 	 */
+ 	public final boolean isDomChanged(final StateVertix stateBefore, final StateVertix stateAfter) {
+ 		boolean isChanged = false;
+ 
+ 		// do not need Oracle Comparators now, because hash of stripped domis
+ 		// already calculated
+ 		// isChanged = !stateComparator.compare(stateBefore.getDom(),
+ 		// stateAfter.getDom(), browser);
+ 		isChanged = !stateAfter.equals(stateBefore);
+ 		if (isChanged) {
+ 			LOGGER.info("Dom is Changed!");
+ 		} else {
+ 			LOGGER.info("Dom Not Changed!");
+ 		}
+ 
+ 		return isChanged;
+ 	}
+ 
+ 	/**
+ 	 * Return the name of the (new)State.
+ 	 * 
+ 	 * @return State name the name of the state
+ 	 */
+ 	@GuardedBy("this")
+ 	public synchronized String getStateName() {
+ 		if (foundNewState) {
+ 			stateCounter++;
+ 		}
+ 		String state = "state" + stateCounter;
+ 		return state;
+ 	}
+ 
+ 	/**
+ 	 * @param crawler
+ 	 *            the Crawler to execute the invariants from
+ 	 */
+ 	private void checkInvariants(Crawler crawler) {
+ 		if (!invariantChecker.check(crawler.getBrowser())) {
+ 			final List<Invariant> failedInvariants = invariantChecker.getFailedInvariants();
+ 			for (Invariant failedInvariant : failedInvariants) {
+ 				CrawljaxPluginsUtil.runOnInvriantViolationPlugins(failedInvariant, session);
+ 			}
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * @return the eventableConditionChecker
+ 	 * @NotTheadSafe The Condition classes contains 1 not Thread safe implementation
+ 	 *               (XPathCondition)
+ 	 */
+ 	public final EventableConditionChecker getEventableConditionChecker() {
+ 		return eventableConditionChecker;
+ 	}
+ 
+ 	/**
+ 	 * @return the oracleComparator
+ 	 * @NotTheadSafe The Condition classes contains 1 not Thread safe implementation
+ 	 *               (XPathCondition)
+ 	 */
+ 	public final List<OracleComparator> getOracleComparator() {
+ 		return oracleComparator;
+ 	}
+ 
+ 	/**
+ 	 * @NotThreadSafe
+ 	 * @return the session
+ 	 */
+ 	public final CrawlSession getSession() {
+ 		return session;
+ 	}
+ 
+ 	/**
+ 	 * @NotThreadSafe
+ 	 * @param state
+ 	 *            the state to change the state machines pointer to.
+ 	 */
+ 	public void changeStateMachineState(StateVertix state) {
+ 		synchronized (stateMachine) {
+ 			LOGGER.debug("AFTER: sm.current: " + stateMachine.getCurrentState().getName()
+ 			        + " hold.current: " + state.getName());
+ 			stateMachine.changeState(state);
+ 			LOGGER.info("StateMachine's Pointer changed back to: "
+ 			        + stateMachine.getCurrentState().getName());
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * @NotThreadSafe
+ 	 */
+ 	public void rewindStateMachine() {
+ 		/**
+ 		 * TODO Stefan There is some performance loss using this technique The state machine can
+ 		 * also be hard forced into the new 'start' state...
+ 		 */
+ 		stateMachine.rewind();
+ 	}
+ 
+ 	/**
+ 	 * Add work (Crawler) to the Queue of work that need to be done.
+ 	 * 
+ 	 * @param work
+ 	 *            the work (Crawler) to add to the Queue
+ 	 */
+ 	@GuardedBy("workQueue")
+ 	public final void addWorkToQueue(Crawler work) {
+ 		synchronized (workQueue) {
+ 			workQueue.execute(work);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Check if a given element is already checked, preventing duplicate work.
+ 	 * 
+ 	 * @param element
+ 	 *            the to search for if its already checked
+ 	 * @return true if the element is already checked
+ 	 */
+ 	@GuardedBy("checkedElements")
+ 	public boolean elementIsAlreadyChecked(String element) {
+ 		synchronized (checkedElements) {
+ 			return this.checkedElements.contains(element);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Mark a given element as checked to prevent duplicate work.
+ 	 * 
+ 	 * @param element
+ 	 *            the elements that is checked
+ 	 */
+ 	@GuardedBy("checkedElements")
+ 	public void markElementAsChecked(String element) {
+ 		synchronized (checkedElements) {
+ 			this.checkedElements.add(element);
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Wait for a given condition.
+ 	 * 
+ 	 * @param browser
+ 	 *            the browser which requires a wait condition
+ 	 */
+ 	public void doBrowserWait(EmbeddedBrowser browser) {
+ 		this.waitConditionChecker.wait(browser);
+ 	}
+ 
+ 	/**
+ 	 * Retrieve the index state.
+ 	 * 
+ 	 * @return the indexState of the current crawl
+ 	 */
+ 	public final StateVertix getIndexState() {
+ 		return this.indexState;
+ 	}
+ 
+ 	/**
+ 	 * Return the Checker of the CrawlConditions.
+ 	 * 
+ 	 * @return the crawlConditionChecker
+ 	 */
+ 	public final CrawlConditionChecker getCrawlConditionChecker() {
+ 		return crawlConditionChecker;
+ 	}
+ 
+ 	/**
+ 	 * increase the number of checked elements, as a statistics measure to know how many elements
+ 	 * were actually examined.
+ 	 */
+ 	@GuardedBy("this")
+ 	public synchronized void increaseNumberExaminedElements() {
+ 		numberofExaminedElements++;
+ 	}
+ 
+ 	/**
+ 	 * TODO Check thread safety.
+ 	 * 
+ 	 * @param browser
+ 	 *            the browser instance.
+ 	 * @return a stripped string of the DOM tree taken from the browser.
+ 	 */
+ 	public String getStripedDom(EmbeddedBrowser browser) {
+ 		return this.stateComparator.getStrippedDom(browser);
+ 	}
+ 
+ 	/**
+ 	 * @return the crawler
+ 	 */
+ 	public final Crawler getCrawler() {
+ 		return crawler;
+ 	}
+ }

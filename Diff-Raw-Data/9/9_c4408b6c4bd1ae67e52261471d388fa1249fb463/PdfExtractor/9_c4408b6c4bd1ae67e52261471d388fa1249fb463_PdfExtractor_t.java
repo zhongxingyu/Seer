@@ -1,0 +1,194 @@
+ /*
+  * Copyright 2004-2009 the Seasar Foundation and the Others.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
+  * either express or implied. See the License for the specific language
+  * governing permissions and limitations under the License.
+  */
+ package org.seasar.robot.extractor.impl;
+ 
+ import java.io.ByteArrayOutputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.OutputStreamWriter;
+ import java.io.Writer;
+ import java.util.Calendar;
+ import java.util.HashMap;
+ import java.util.Map;
+ 
+ import org.apache.pdfbox.pdmodel.PDDocument;
+ import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+ import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+ import org.apache.pdfbox.pdmodel.encryption.StandardDecryptionMaterial;
+ import org.apache.pdfbox.util.PDFTextStripper;
+ import org.apache.tika.exception.TikaException;
+ import org.apache.tika.metadata.Metadata;
+ import org.seasar.framework.util.StringUtil;
+ import org.seasar.robot.RobotSystemException;
+ import org.seasar.robot.entity.ExtractData;
+ import org.seasar.robot.extractor.ExtractException;
+ import org.seasar.robot.extractor.Extractor;
+ 
+ /**
+  * Gets a text from .doc file.
+  * 
+  * @author shinsuke
+  * 
+  */
+ public class PdfExtractor implements Extractor {
+     protected String encoding = "UTF-8";
+ 
+     /**
+      * When true, the parser will skip corrupt pdf objects and
+      */
+     protected boolean force = false;
+ 
+     protected Map<String, String> passwordMap = new HashMap<String, String>();
+ 
+     /*
+      * (non-Javadoc)
+      * 
+      * @see org.seasar.robot.extractor.Extractor#getText(java.io.InputStream,
+      * java.util.Map)
+      */
+     public ExtractData getText(final InputStream in,
+             final Map<String, String> params) {
+         if (in == null) {
+             throw new RobotSystemException("The inputstream is null.");
+         }
+         PDDocument document = null;
+         try {
+             document = PDDocument.load(in, null, force);
+            if (document.isEncrypted() && params != null) {
+                 String password = params.get(ExtractData.PDF_PASSWORD);
+                 if (password == null) {
+                     password =
+                         getPassword(
+                             params.get(ExtractData.URL),
+                             params.get(ExtractData.RESOURCE_NAME_KEY));
+                 }
+                 if (password != null) {
+                     final StandardDecryptionMaterial sdm =
+                         new StandardDecryptionMaterial(password);
+                     document.openProtection(sdm);
+                     final AccessPermission ap =
+                         document.getCurrentAccessPermission();
+ 
+                     if (!ap.canExtractContent()) {
+                         throw new IOException(
+                             "You do not have permission to extract text.");
+                     }
+                 }
+             }
+ 
+             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             final Writer output = new OutputStreamWriter(baos, encoding);
+             final PDFTextStripper stripper = new PDFTextStripper(encoding);
+             stripper.setForceParsing(force);
+             stripper.writeText(document, output);
+             output.flush();
+             ExtractData extractData = new ExtractData(baos.toString(encoding));
+             return extractData;
+         } catch (Exception e) {
+             throw new ExtractException(e);
+         } finally {
+             if (document != null) {
+                 try {
+                     document.close();
+                 } catch (IOException e) {
+                     // NOP
+                 }
+             }
+         }
+     }
+ 
+     private void extractMetadata(PDDocument document, ExtractData extractData)
+             throws TikaException {
+         PDDocumentInformation info = document.getDocumentInformation();
+         addMetadata(extractData, Metadata.TITLE, info.getTitle());
+         addMetadata(extractData, Metadata.AUTHOR, info.getAuthor());
+         addMetadata(extractData, Metadata.CREATOR, info.getCreator());
+         addMetadata(extractData, Metadata.KEYWORDS, info.getKeywords());
+         addMetadata(extractData, "producer", info.getProducer());
+         addMetadata(extractData, Metadata.SUBJECT, info.getSubject());
+         addMetadata(extractData, "trapped", info.getTrapped());
+         try {
+             addMetadata(extractData, "created", info.getCreationDate());
+         } catch (IOException e) {
+             // Invalid date format, just ignore
+         }
+         try {
+             Calendar modified = info.getModificationDate();
+             addMetadata(
+                 extractData,
+                 Metadata.LAST_MODIFIED.toString(),
+                 modified);
+         } catch (IOException e) {
+             // Invalid date format, just ignore
+         }
+     }
+ 
+     private void addMetadata(ExtractData extractData, String name, String value) {
+         if (value != null) {
+             extractData.putValue(name, value);
+         }
+     }
+ 
+     private void addMetadata(ExtractData extractData, String name,
+             Calendar value) {
+         if (value != null) {
+             extractData.putValue(name, value.getTime().toString());
+         }
+     }
+ 
+     public String getEncoding() {
+         return encoding;
+     }
+ 
+     public void setEncoding(final String encoding) {
+         this.encoding = encoding;
+     }
+ 
+     public boolean isForce() {
+         return force;
+     }
+ 
+     public void setForce(boolean force) {
+         this.force = force;
+     }
+ 
+     public void addPassword(String regex, String password) {
+         passwordMap.put(regex, password);
+     }
+ 
+     String getPassword(String url, String resourceName) {
+         if (passwordMap.size() == 0) {
+             return null;
+         }
+ 
+         String value = null;
+         if (StringUtil.isNotEmpty(url)) {
+             value = url;
+         } else if (StringUtil.isNotEmpty(resourceName)) {
+             value = resourceName;
+         }
+ 
+         if (value != null) {
+             for (Map.Entry<String, String> entry : passwordMap.entrySet()) {
+                 if (value.matches(entry.getKey())) {
+                     return entry.getValue();
+                 }
+             }
+         }
+ 
+         return null;
+     }
+ }

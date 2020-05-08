@@ -1,0 +1,23 @@
+ package lexer;
+ 
+ public enum TokenType {
+ 
+     EOF,
+ 
+     SEMICOLON, COMMA, POINT, L_PARENTHESIS, R_PARENTHESIS,
+     L_BRAKET, R_BRAKET, L_BRACE, R_BRACE,
+     KEY_WORD, VAR,
+     MUL, DIV, PLUS, MINUS, INC, DEC, AND, OR, XOR, NOT,
+     ASSIGN,
+     PLUS_ASSIGN, MINUS_ASSIGN, MUL_ASSIGN, DIV_ASSIGN,
+     OR_ASSIGN, AND_ASSIGN, XOR_ASSIGN,
+     MOD, MOD_ASSIGN,
+     AND_B, OR_B, XOR_B, NOT_B,
+     EQ, LT, GT, NE, LE, GE,
+     SHL, SHR, SHL_ASSIGN, SHR_ASSIGN,
+
+     INT, FLOAT, STRING
+ 
+ 
+ }
+ 

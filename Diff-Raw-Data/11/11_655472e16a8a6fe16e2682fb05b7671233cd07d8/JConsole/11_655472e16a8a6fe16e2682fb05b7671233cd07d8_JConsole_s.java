@@ -1,0 +1,382 @@
+ package mikera.gui;
+ 
+ import java.awt.Color;
+ import java.awt.Dimension;
+ import java.awt.Font;
+ import java.awt.Graphics;
+ import java.awt.Graphics2D;
+ import java.awt.Rectangle;
+ import java.awt.event.ActionEvent;
+ import java.awt.event.ActionListener;
+ import java.awt.event.HierarchyEvent;
+ import java.awt.event.HierarchyListener;
+ import java.awt.font.FontRenderContext;
+ import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+ import java.io.PrintStream;
+ import java.util.Arrays;
+ 
+ import javax.swing.JComponent;
+ import javax.swing.Timer;
+ 
+ 
+ /**
+  * Class implementing a Swing-based text console
+  * 
+  * @author Mike Anderson
+  *
+  */
+ public class JConsole extends JComponent implements HierarchyListener  {
+ 	private static final long serialVersionUID = 3571518591759968333L;
+ 	
+ 	private static final Color DEFAULT_FOREGROUND=Color.LIGHT_GRAY;
+ 	private static final Color DEFAULT_BACKGROUND=Color.BLACK;
+ 	private static final Font DEFAULT_FONT=new Font("Courier New", Font.PLAIN, 20);
+ 	private static final int DEFAULT_BLINKRATE = 200;
+ 	private static final boolean DEFAULT_BLINK_ON = true;
+ 
+ 	
+ 	private int size;
+ 	private int rows;
+ 	private int columns;
+ 	private Color[] background;
+ 	private Color[] foreground;
+ 	private Font[] font;
+ 	private char[] text;
+ 	private int fontWidth;
+ 	private int fontHeight;
+ 	private int fontYOffset;
+ 	
+ 	private boolean cursorVisible=false;
+ 	private boolean cursorBlinkOn=true;
+ 	private boolean cursorInverted=true;
+ 	
+ 	private int curPosition=0;
+ 	private Font mainFont=null;
+ 	private Font currentFont=null;
+ 	private Color curForeground=DEFAULT_FOREGROUND;
+ 	private Color curBackground=DEFAULT_BACKGROUND;
+ 	
+ 	private Timer blinkTimer;
+ 
+ 	public JConsole(int columns, int rows) {
+ 		setMainFont(DEFAULT_FONT);
+ 		setFont(mainFont);
+ 		init(columns,rows);
+ 		if (DEFAULT_BLINK_ON) {
+ 			setCursorBlink(true);
+ 		}
+ 	}
+ 	
+ 	private void setMainFont(Font font) {
+ 		mainFont=font;
+ 		
+ 		FontRenderContext fontRenderContext=new FontRenderContext(mainFont.getTransform(),false,false);
+ 	    Rectangle2D charBounds = mainFont.getStringBounds("X", fontRenderContext);
+ 	    fontWidth=(int)charBounds.getWidth();
+ 	    fontHeight=(int)charBounds.getHeight();
+ 	    fontYOffset=-(int)charBounds.getMinY();	
+ 	    repaint();
+ 	}
+ 
+ 	private class TimerAction implements ActionListener {
+ 		@Override
+ 		public void actionPerformed(ActionEvent e) {
+ 			if (cursorBlinkOn&&isShowing()) {
+ 				cursorInverted=!cursorInverted;
+ 				repaintRegion(getCursorX(),getCursorY(),1,1);
+ 			} else {
+ 				blinkTimer.stop();
+ 				cursorInverted=true;
+ 			}
+ 		}		
+ 	}
+ 	
+ 	private void stopBlinking() {
+ 		if (blinkTimer!=null) {
+ 			blinkTimer.stop();
+ 			cursorInverted=true;
+ 		}	
+ 	}
+ 
+ 	private void startBlinking() {
+ 		getTimer().start();
+ 	}
+ 	
+ 	
+ 	public void setCursorBlink(boolean blink) {
+ 		if (blink) {
+ 			cursorBlinkOn=true;
+ 			startBlinking();
+ 		} else {
+ 			cursorBlinkOn=false;
+ 			stopBlinking();
+ 		}
+ 	}
+ 	
+ 	public void setBlinkDelay(int millis) {
+ 		getTimer().setDelay(millis);
+ 	}
+ 	
+ 	private Timer getTimer() {
+ 		if (blinkTimer==null) {
+ 			blinkTimer=new Timer(DEFAULT_BLINKRATE, new TimerAction());
+ 			blinkTimer.setRepeats(true);
+ 			if (cursorBlinkOn) {
+ 				startBlinking();
+ 			}
+ 		}
+ 		return blinkTimer;
+ 	}
+ 	
+ 	@Override
+     public void addNotify() {
+         super.addNotify();
+         addHierarchyListener(this);
+     }
+ 
+ 	@Override
+ 	public void removeNotify() {
+     	removeHierarchyListener(this);
+         super.removeNotify();
+     }
+ 
+ 	
+ 	public  void setRows(int rows) {
+ 		init(columns,rows);
+ 	}
+ 	
+ 	public void setFont(Font f) {
+ 		currentFont=f;
+ 	}
+ 	
+ 	public void setCursorVisible(boolean visible) {
+ 		cursorVisible=visible;
+ 	}
+ 
+ 	public int getRows() {
+ 		return rows;
+ 	}
+ 
+ 	public void setColumns(int columns) {
+ 		init(columns,rows);
+ 	}
+ 
+ 	public int getColumns() {
+ 		return columns;
+ 	}
+ 	
+ 	public int getFontWidth() {
+ 		return fontWidth;
+ 	}
+ 	
+ 	public int getFontHeight() {
+ 		return fontHeight;
+ 	}
+ 	
+ 	public void repaintRegion(int x, int y, int width, int height) {
+ 		int fw = getFontWidth();
+ 		int fh=getFontHeight();
+ 		repaint(x*fw, y*fh, width*fw, height*fh);
+ 	}
+ 	
+ 	protected void init(int columns, int rows) {
+ 		size=rows*columns;
+ 		this.rows=rows;
+ 		this.columns=columns;
+ 		
+ 		text=new char[size];
+ 		background=new Color[size];
+ 		foreground=new Color[size];
+ 		font=new Font[size];
+ 		Arrays.fill(background,DEFAULT_BACKGROUND);
+ 		Arrays.fill(foreground,DEFAULT_FOREGROUND);
+ 		Arrays.fill(font,DEFAULT_FONT);
+ 		Arrays.fill(text,' ');
+ 	    
+ 	    setPreferredSize(new Dimension(columns*fontWidth, rows*fontHeight));
+ 	}
+ 	
+ 	@Override
+     public void paint(Graphics graphics) {
+         Graphics2D g = (Graphics2D) graphics;
+         Rectangle r=g.getClipBounds();
+         
+         //AffineTransform textTransform=new AffineTransform();
+         //textTransform.scale(fontWidth, fontHeight);
+         //g.setTransform(textTransform);
+ 		
+         // calculate x and y range to redraw
+         int x1=(int)(r.getMinX()/fontWidth);
+         int x2=(int)(r.getMaxX()/fontWidth)+1;
+         int y1=(int)(r.getMinY()/fontWidth);
+         int y2=(int)(r.getMaxY()/fontWidth)+1;
+         
+ 		int curX=getCursorX();
+ 		int curY=getCursorY();
+ 
+ 		for(int j = Math.max(0,y1); j < Math.min(y2,rows); j++) {
+     		int offset=j*columns;
+     		int start=Math.max(x1, 0);
+     		int end=Math.min(x2,columns);
+     		
+         	while (start<end) {
+         		Color nfg=foreground[offset+start];
+         		Color nbg=background[offset+start];
+         		Font nf=font[offset+start];
+   
+         		// index of ending position
+         		int i=start+1;
+ 
+         		if ((j==curY)&&(start==curX)) {
+         			if (cursorVisible&&cursorBlinkOn&&cursorInverted) {
+         				// swap foreground and background colours
+         				Color t=nfg;
+         				nfg=nbg;
+         				nbg=t;
+         			}
+         		} else {	
+ 	        		// detect run
+ 	        		while ((i<end)&&(!((j==curY)&&(i==curX)))
+ 	        				&&(nfg==foreground[offset+i])
+ 	        				&&(nbg==background[offset+i])
+ 	        				&&(nf==font[offset+i])) {
+ 	        			i++;
+ 	        		}
+         		}
+ 
+         		// set font
+                 g.setFont(nf);
+ 
+      			// draw background
+     			g.setBackground(nbg);
+     			g.clearRect(fontWidth*start, j*fontHeight, fontWidth*(i-start), fontHeight);
+     			
+     			// draw chars up to this point
+     			g.setColor(nfg);
+     			g.drawChars(text,offset+start,i-start,start*fontWidth,j*fontHeight+fontYOffset);
+         		
+         		start=i;
+         	}
+         }
+     }
+ 	
+ 	public void setCursorPos(int x, int y) {
+ 		if ((x<0)||(x>=columns)) throw new Error("Invalid X cursor position: "+x);
+ 		if ((y<0)||(y>=rows)) throw new Error("Invalid Y cursor position: "+y);
+ 		curPosition=y*columns+x;
+ 	}
+ 	
+ 	public int getCursorX() {
+ 		return curPosition%columns;
+ 	}
+ 	
+ 	public int getCursorY() {
+ 		return curPosition/columns;
+ 	}
+ 
+ 	public void setForeground(Color c) {
+ 		curForeground=c;
+ 	}
+ 	
+ 	public void setBackground(Color c) {
+ 		curBackground=c;
+ 	}
+ 	
+ 	public Color getForeground() {
+ 		return curForeground;
+ 	}
+ 	
+ 	public Color getBackground() {
+ 		return curBackground;
+ 	}
+ 	
+ 
+ 	
+ 	/**
+ 	 * Redirects System.out to this console by calling System.setOut
+ 	 */
+ 	public void captureStdOut() {
+ 		PrintStream ps = new PrintStream(System.out) {  
+ 			public void println(String x) {  
+ 				writeln(x);  
+ 			}  
+ 		};  
+ 		
+ 		System.setOut(ps);
+ 	}
+ 	
+ 
+ 	public void write(char c) {
+ 		int pos=curPosition;
+ 		pos=writeChar(c,pos);
+ 		curPosition=pos;	
+ 	}
+ 	
+ 	public void writeln(String line) {
+ 		write(line);
+ 		write ('\n');
+ 	}
+ 	
+ 	/**
+ 	 * Write a single character and update cursor position
+ 	 */
+ 	private int writeChar(char c, int pos) {
+ 		switch (c) {
+ 			case '\n':
+ 				pos=((pos+columns)/columns)*columns;
+ 				break;
+ 			default:
+ 				text[pos]=c;
+ 				foreground[pos]=curForeground;
+ 				background[pos]=curBackground;
+ 				font[pos]=currentFont;
+ 				pos++;
+ 		}
+ 		if (pos>=size) pos=0;		
+ 		return pos;
+ 	}
+ 	
+ 	public void write(String string, Color foreGround, Color backGround) {
+ 		setForeground(foreGround);
+ 		setBackground(backGround);
+ 		write(string);
+ 	}
+ 	
+ 	public void fillArea(char c, Color fg, Color bg, int x, int y, int w, int h) {
+ 		for (int q=Math.max(0,y); q<Math.min(y+h, rows); q++) {
+ 			for (int p=Math.max(0,x); p<Math.min(x+w, columns); p++) {
+ 				int offset=p+q*columns;
+ 				text[offset]=c;
+ 				foreground[offset]=fg;
+ 				background[offset]=bg;
+ 			}
+ 		}
+ 	}
+ 
+ 	public void write(String string) {
+ 		int pos=curPosition;
+ 		for (int i=0; i<string.length(); i++) {
+ 			char c=string.charAt(i);
+ 			pos=writeChar(c,pos);
+ 		}
+ 		curPosition=pos;
+ 	}
+ 
+ 	@Override
+ 	public void hierarchyChanged(HierarchyEvent e) {
+ 		 if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+ 			 if (isShowing()) {
+ 				 startBlinking();
+ 			 } else {
+ 				 stopBlinking();
+ 			 }
+ 		 }
+ 	}
+ 
+ 
+ 
+ }

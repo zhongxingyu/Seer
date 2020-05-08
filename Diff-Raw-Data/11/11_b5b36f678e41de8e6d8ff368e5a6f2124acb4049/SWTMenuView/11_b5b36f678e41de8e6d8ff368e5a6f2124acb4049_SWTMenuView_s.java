@@ -1,0 +1,79 @@
+ /*
+  * Created on Oct 15, 2004
+  */
+ package strangebrew.ui.swt;
+ 
+ import org.eclipse.swt.*;
+ import org.eclipse.swt.widgets.*;
+ import strangebrew.ui.core.*;
+ 
+ 
+ /**
+  * @author mike
+  *
+  */
+ public class SWTMenuView extends MenuView {
+ 	Shell myContainer;
+ 	FileDialog myOpenFileDialog;
+ 	org.eclipse.swt.widgets.Menu myMenuBar;
+ 	SWTMenu myFileMenu;
+ 	SWTMenuItem myOpenItem;
+ 	SWTMenuItem myQuitItem;
+ 
+ 	public SWTMenuView(Shell container) {
+ 		myContainer = container;
+ 	}
+ 
+ 	public void init() {
+ 		myOpenFileDialog = new FileDialog(myContainer, SWT.OPEN);
+ 		
+        myMenuBar = new org.eclipse.swt.widgets.Menu(myContainer, SWT.BAR);
+        myContainer.setMenuBar(myMenuBar);
+        
+        myFileMenu = new SWTMenu();
+        myFileMenu.init(myContainer, myMenuBar);
+        
+        myOpenItem = new SWTMenuItem(myController);
+        myOpenItem.init(myFileMenu.getWidget());
+        
+        myQuitItem = new SWTMenuItem(myController);
+        myQuitItem.init(myFileMenu.getWidget());
+ 	}
+ 	
+ 	public void layout() {
+ 		// Nothing to do right now
+ 		myContainer.layout();
+ 		myContainer.pack();
+ 	}
+ 	
+ 	public void display() {
+ 		// Not needed in SWT
+ 	}
+ 	
+ 	public void dispose() {
+         // @TODO Figure out who should dispose myContainer
+ 	}
+ 	
+ 	public strangebrew.ui.core.Menu getFileMenu() {
+ 		return myFileMenu;
+ 	}
+ 	
+ 	public strangebrew.ui.core.MenuItem getOpenItem() {
+ 		return myOpenItem;
+ 	}
+ 
+ 	public strangebrew.ui.core.MenuItem getQuitItem() {
+ 		return myQuitItem;
+ 	}
+ 	
+ 	public void quit() {
+ 		myContainer.close();
+ 	}
+ 	
+ 	public String getOpenFilename() {
+		myOpenFileDialog.open();
+		return myOpenFileDialog.getFilterPath().concat("/").concat(
+				myOpenFileDialog.getFileName());
+ 	}
+ 	
+ }

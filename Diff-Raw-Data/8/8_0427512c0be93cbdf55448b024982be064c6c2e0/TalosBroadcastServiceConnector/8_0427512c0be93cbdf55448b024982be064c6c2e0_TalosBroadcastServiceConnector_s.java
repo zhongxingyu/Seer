@@ -1,0 +1,105 @@
+ /*
+  * Copyright (c) 2012 Tal Shalif
+  * 
+  * This file is part of Talos-Rowing.
+  * 
+  * Talos-Rowing is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  * 
+  * Talos-Rowing is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  * 
+  * You should have received a copy of the GNU General Public License
+  * along with Talos-Rowing.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
+ package org.nargila.robostroke.android.remote;
+ 
+ import org.nargila.robostroke.data.SessionRecorderConstants;
+ import org.nargila.robostroke.data.remote.DataSender;
+ 
+ import android.content.Context;
+ import android.content.Intent;
+ 
+ public class TalosBroadcastServiceConnector  implements DataSender {
+ 
+ 	private final static String SERVICE_ID = "org.nargila.robostroke.android.remote.TalosBroadcastService";	
+ 		
+ 	private final Context owner;
+ 	private Intent service;
+ 	private boolean started;
+ 	private int port = SessionRecorderConstants.BROADCAST_PORT; 
+	private String address = SessionRecorderConstants.BROADCAST_HOST; 
+ 			
+ 	public TalosBroadcastServiceConnector(Context owner) {
+ 		this.owner = owner;		
+ 	}
+ 
+ 	@Override
+ 	public synchronized void start() throws DataRemoteError {
+ 
+ 		TalosRemoteServiceHelper helper;
+ 		
+ 		try {
+ 			helper = new TalosRemoteServiceHelper(owner, SERVICE_ID);
+ 		} catch (ServiceNotExist e) {
+ 			throw new DataRemoteError(e);
+ 		}
+ 		
+ 		service = helper.service;
+ 
+ 		service.putExtra("port", port);
+		service.putExtra("address", address);
+ 		
+ 		owner.startService(service);
+ 		
+ 		started = true;
+ 	}
+ 
+ 	@Override
+ 	public synchronized void stop() {
+ 		
+ 		if (started) {
+ 			owner.stopService(service);
+ 
+ 			started = false;
+ 		}
+ 	}
+ 
+ 
+ 	@Override
+ 	public void write(String data) {
+ 		
+ 		if (started) {
+ 			Intent intent = new Intent(SERVICE_ID);
+ 			intent.putExtra("data", data);
+ 			owner.sendBroadcast(intent);
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void setAddress(String address) {		
+		this.address = address;
+ 		restart();
+ 	}
+ 	
+ 	@Override
+ 	public synchronized void setPort(int port) {		
+ 		this.port = port;		
+ 		restart();
+ 	}
+ 
+ 	private synchronized void restart() {
+ 		if (started) {
+ 			stop();
+ 			try {
+ 				start();
+ 			} catch (Exception e) {
+ 			}
+ 		}
+ 	}
+ }

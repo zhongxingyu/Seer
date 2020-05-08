@@ -1,0 +1,638 @@
+ /**
+  * Part of the CCNx Java Library.
+  *
+  * Copyright (C) 2008, 2009 Palo Alto Research Center, Inc.
+  *
+  * This library is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU Lesser General Public License version 2.1
+  * as published by the Free Software Foundation. 
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  * Lesser General Public License for more details. You should have received
+  * a copy of the GNU Lesser General Public License along with this library;
+  * if not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+  * Fifth Floor, Boston, MA 02110-1301 USA.
+  */
+ 
+ package org.ccnx.ccn.profiles.nameenum;
+ 
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.LinkedList;
+ 
+ import org.ccnx.ccn.CCNFilterListener;
+ import org.ccnx.ccn.CCNHandle;
+ import org.ccnx.ccn.CCNInterestListener;
+ import org.ccnx.ccn.impl.support.Log;
+ import org.ccnx.ccn.io.content.ContentDecodingException;
+ import org.ccnx.ccn.io.content.Link;
+ import org.ccnx.ccn.io.content.Collection.CollectionObject;
+ import org.ccnx.ccn.profiles.CommandMarkers;
+ import org.ccnx.ccn.profiles.VersioningProfile;
+ import org.ccnx.ccn.profiles.nameenum.NameEnumerationResponse.NameEnumerationResponseMessage;
+ import org.ccnx.ccn.profiles.nameenum.NameEnumerationResponse.NameEnumerationResponseMessage.NameEnumerationResponseMessageObject;
+ import org.ccnx.ccn.profiles.security.KeyProfile;
+ import org.ccnx.ccn.protocol.ContentName;
+ import org.ccnx.ccn.protocol.ContentObject;
+ import org.ccnx.ccn.protocol.Exclude;
+ import org.ccnx.ccn.protocol.Interest;
+ import org.ccnx.ccn.protocol.MalformedContentNameStringException;
+ 
+ 
+ 
+ 
+ /**
+  * Implements the base Name Enumerator.  Applications register name prefixes.
+  * Each prefix is explored until canceled by the application.
+  * 
+  * An application can have multiple enumerations active at the same time.
+  * For each prefix, the name enumerator will generate an Interest.  Responses
+  * to the Interest will be in the form of Collections (by a
+  * NameEnumeratorResponder and repository implementations).  Returned Collections
+  * will be parsed for the enumerated names and sent back to the application
+  * using the callback with the applicable prefix and an array of names in
+  * that namespace.  The application is expected to handle duplicate names from
+  * multiple responses and should be able to handle names that are returned, but
+  * may not be available at this time (for example, /a.com/b/c.txt might have
+  * been enumerated but a.com content may not be available).  Additionally,
+  * multiple responders (repositories and applications) are not explicitly supported.
+  * Some names may be missed by the base enumeration protocol, this will be remedied
+  * in a future release.  
+  * 
+  * @see CCNFilterListener
+  * @see CCNInterestListener
+  * @see BasicNameEnumeratorListener
+  * @see NameEnumerationResponse
+  *
+  */
+ 
+ public class CCNNameEnumerator implements CCNFilterListener, CCNInterestListener {
+ 
+ 	protected CCNHandle _handle = null;
+ 	//protected ArrayList<ContentName> _registeredPrefixes = new ArrayList<ContentName>();
+ 	protected BasicNameEnumeratorListener callback; 
+ 	protected ArrayList<ContentName> _registeredNames = new ArrayList<ContentName>();
+ 	
+ 	/**
+ 	 * A supporting class for CCNNameEnumerator.  NERequest objects hold registered prefixes and
+ 	 * their corresponding active interests.
+ 	 *
+ 	 */
+ 	
+ 	private class NERequest{
+ 		ContentName prefix = null;
+ 		ArrayList<Interest> ongoingInterests = new ArrayList<Interest>();
+ 		
+ 		public NERequest(ContentName n) {
+ 			prefix = n;
+ 		}
+ 		
+ 		Interest getInterest(ContentName in) {
+ 			for (Interest i : ongoingInterests)
+ 				if (i.name().equals(in))
+ 					return i;
+ 			return null;
+ 		}
+ 		
+ 		void removeInterest(Interest i) {
+ 			ongoingInterests.remove(getInterest(i.name()));
+ 		}
+ 		
+ 		void addInterest(Interest i) {
+ 			if (getInterest(i.name()) == null)
+ 				ongoingInterests.add(i);
+ 		}
+ 		
+ 		ArrayList<Interest> getInterests() {
+ 			return ongoingInterests;
+ 		}
+ 
+ 		public boolean containsInterest(Interest interest) {
+ 			
+ 			for (Interest i : ongoingInterests) {
+ 				if(i.equals(interest))
+ 					return true;
+ 			}
+ 			
+ 			return false;
+ 		}
+ 		
+ 	}
+ 	
+ 	/**
+ 	 * A supporting class for CCNNameEnumerator.  NEResponse objects hold ContentName responses
+ 	 * for incoming name enumeration requests.  Each NEResponse flag additionally has a dirty
+ 	 * flag to determine if a new name enumeration response is needed.  If there is not any new
+ 	 * information since the last request, a new response will not be sent.
+ 	 *
+ 	 */
+ 	
+ 	private class NEResponse {
+ 		ContentName prefix = null;
+ 		boolean dirty = true;
+ 		
+ 		public NEResponse(ContentName n) {
+ 			prefix = n;
+ 		}
+ 		
+ 		boolean isDirty() {
+ 			return dirty;
+ 		}
+ 		
+ 		void clean() {
+ 			dirty = false;
+ 		}
+ 		
+ 		void dirty() {
+ 			dirty = true;
+ 		}
+ 	}
+ 	
+ 	protected ArrayList<NEResponse> _handledResponses = new ArrayList<NEResponse>();
+ 	protected ArrayList<NERequest>  _currentRequests = new ArrayList<NERequest>();
+ 	
+ 	
+ 	/**
+ 	 * CCNNameEnumerator constructor.  Creates a CCNNameEnumerator, sets the CCNHandle,
+ 	 * registers the callback and registers a prefix for enumeration.
+ 	 * 
+ 	 * @param prefix ContentName to enumerate names under
+ 	 * @param handle CCNHandle for sending and receiving collection objects during enumeration.
+ 	 * @param c BasicNameEnumeratorListener callback to receive enumeration responses.
+ 	 */
+ 	
+ 	public CCNNameEnumerator(ContentName prefix, CCNHandle handle, BasicNameEnumeratorListener c) throws IOException {
+ 		_handle = handle;
+ 		callback = c;
+ 		registerPrefix(prefix);
+ 	}
+ 	
+ 	
+ 	/**
+ 	 * CCNNameEnumerator constructor.  Creates a CCNNameEnumerator, sets the CCNHandle, and
+ 	 * registers the callback.
+ 	 * 
+ 	 * @param handle CCNHandle for sending and receiving collection objects during enumeration.
+ 	 * @param c BasicNameEnumeratorListener callback to receive enumeration responses.
+ 	 */
+ 	
+ 	public CCNNameEnumerator(CCNHandle handle, BasicNameEnumeratorListener c) {
+ 		_handle = handle;
+ 		callback = c;
+ 	}
+ 	
+ 	
+ 	/**
+ 	 * Method to register a prefix for name enumeration.  A NERequest and initial interest is created for new prefixes.
+ 	 * Prefixes that are already registered return and do not impact the already active registration.
+ 	 * 
+ 	 * @param prefix ContentName to enumerate
+ 	 * @throws IOException
+ 	 */
+ 	
+ 	public void registerPrefix(ContentName prefix) throws IOException {
+ 		synchronized (_currentRequests) {
+ 			NERequest r = getCurrentRequest(prefix);
+ 			if (r != null) {
+ 				// this prefix is already registered...
+ 				Log.info("prefix " + prefix.toString() + " is already registered...  returning");
+ 				return;
+ 			} else {
+ 				r = new NERequest(prefix);
+ 				_currentRequests.add(r);
+ 			}
+ 
+ 			Log.info("Registered Prefix: " + prefix.toString());
+ 
+ 			ContentName prefixMarked = new ContentName(prefix, CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION);
+ 			
+ 			//we have minSuffixComponents to account for sig, version, seg and digest
+ 			Interest pi = Interest.constructInterest(prefixMarked, null, null, null, 4, null);
+ 			
+ 			r.addInterest(pi);
+ 
+ 			_handle.expressInterest(pi, this);
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Method to cancel active enumerations.  The active interests are retrieved from the corresponding
+ 	 * NERequest object for the prefix.  Each interest is canceled and the NERequest object is removed
+ 	 * from the list of active enumerations.
+ 	 * 
+ 	 * @param prefix  ContentName to cancel enumeration
+ 	 * @return boolean Returns if the prefix is successfully canceled.
+ 	 */
+ 	
+ 	public boolean cancelPrefix(ContentName prefix) {
+ 		Log.info("cancel prefix: "+prefix.toString());
+ 		synchronized(_currentRequests) {
+ 			//cancel the behind the scenes interests and remove from the local ArrayList
+ 			NERequest r = getCurrentRequest(prefix);
+ 			if (r != null) {
+ 				ArrayList<Interest> is = r.getInterests();
+ 				Log.fine("we have "+is.size()+" interests to cancel");
+ 				Interest i;
+ 				while (!r.getInterests().isEmpty()) {
+ 					i=r.getInterests().remove(0);
+ 					_handle.cancelInterest(i, this);
+ 				}
+ 			
+ 				_currentRequests.remove(r);
+ 				return (getCurrentRequest(prefix) == null);
+ 			}
+ 			return false;
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Callback for name enumeration responses.  The results contain CollectionObjects containing the
+ 	 * names under a prefix.  The collection objects are matched to registered prefixes and returned
+ 	 * to the calling applications using their registered callback handlers.  Each response can create
+ 	 * a new Interest that is used to further enumerate the namespace. The implementation currently
+ 	 * does not explicitly handle multiple name enumeration responders.  This will be supported
+ 	 * in a future release.  The implication is that some names under a registered prefix may be
+ 	 * missed due to version timestamps for enumeration responses.  For example, if two repositories
+ 	 * (A and B) are enumerating the namespace ccnx.org and the one with the most recent content object
+ 	 * save (A) may respond before the other (B), names that are saved at A will be included in the
+ 	 * enumeration but names at B and not at A may not be returned.
+ 	 * 
+ 	 * @param results ArrayList of ContentObjects containing the ContentNames under a registered prefix
+ 	 * @param interest The interest matching or triggering a name enumeration response
+ 	 * 
+ 	 * @return Interest Returns a new Interest to further enumerate or null to cancel the interest
+ 	 * that matched these objects.  This implementation returns null since new interests are created and
+ 	 * expressed as the returned CollectionObjects are processed.
+ 	 * 
+ 	 * @see CollectionObject
+ 	 * @see CCNInterestHandler
+ 	 */
+ 	
+ 	public Interest handleContent(ArrayList<ContentObject> results, Interest interest) {
+ 		
+ 		if (interest.name().contains(CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION)) {
+ 			//the NEMarker is in the name...  good!
+ 		} else {
+ 			//COMMAND_MARKER_BASIC_ENUMERATION missing...  we have a problem
+ 			Log.warning("the name enumeration marker is missing...  shouldn't have gotten this callback");
+ 			return null;
+ 		}
+ 		
+ 		synchronized(_currentRequests) {
+ 			ContentName prefix = interest.name().cut(CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION);
+ 			NERequest ner = getCurrentRequest(prefix);
+ 		
+ 			//need to make sure the prefix is still registered
+ 			if (ner==null) {
+ 				//this is no longer registered...  no need to keep refreshing the interest use the callback
+ 				return null;
+ 			} else {
+ 				ner.removeInterest(interest);
+             }
+ 
+ 			NameEnumerationResponseMessageObject neResponse;
+ 			ArrayList<ContentName> names = new ArrayList<ContentName>();
+ 			LinkedList<Link> links;
+ 			Interest newInterest = interest;
+ 		
+ 			//TODO  integrate handling for multiple responders, for now, just handles one result properly
+ 			if (results != null) {
+ 				for (ContentObject c: results) {
+ 					Log.fine("we have a match for: "+interest.name()+" ["+ interest.toString()+"]");
+ 					
+ 					System.out.println("we got a response to interest: "+interest);
+ 					System.out.println("CO: "+c.name());
+ 					
+ 					ArrayList<Interest> newInterests = new ArrayList<Interest>(); 
+ 					
+ 					//we want to get new versions of this object
+ 					newInterest = VersioningProfile.firstBlockLatestVersionInterest(c.name(), null);
+ 					newInterests.add(newInterest);
+ 					
+ 					//does this content object have a response id in it?
+ 					ContentName responseName = getIdFromName(c.name());
+ 					
+					if (responseName==null) {
+						//no response name...  try to get a later version - done at end of this if/else
+ 					} else {
+ 						//we have a response name.  get a later version from this responder - done after this if/else
+ 						
+ 						//TODO  This version of handling content objects with responder IDs only
+ 						//supports single component response IDs
+ 						//if response IDs are hierarchical, we need to avoid exploding the number of Interests we express
+ 								
+ 						//if the interest had a responseId in it, we don't need to make a new base interest with an exclude, we would have done this already.
+ 						System.out.println("get id from interest: "+getIdFromName(interest.name()));
+ 						System.out.println("interest name: "+ getIdFromName(interest.name()).count());
+ 						if(getIdFromName(interest.name()) != null && getIdFromName(interest.name()).count() > 0) {
+ 							//the interest has a response ID in it already...  skip making new base interest
+ 						} else {
+ 							//also need to add this responder to the exclude list to find more responders
+ 							ContentName prefixWithMarker = new ContentName(prefix, CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION);
+ 							Exclude excludes = interest.exclude();
+ 							if(excludes==null)
+ 								excludes = new Exclude();
+ 							excludes.add(new byte[][]{responseName.component(0)});
+							newInterest = Interest.constructInterest(prefixWithMarker, excludes, null, null, 3, null); 
+ 											
+ 							//check to make sure the interest isn't already expressed
+ 							if(!ner.containsInterest(newInterest))
+ 								newInterests.add(newInterest);
+ 						}
+ 						
+ 					}
+ 					
+ 					try {
+ 						for(Interest i: newInterests) {
+ 							_handle.expressInterest(i, this);
+ 							ner.addInterest(i);
+ 							System.out.println("expressed: "+i);
+ 						}
+ 					} catch (IOException e1) {
+ 						// error registering new interest
+ 						Log.warning("error registering new interest in handleContent");
+ 						Log.warningStackTrace(e1);
+ 					}
+ 					
+ 					for(Interest i: ner.getInterests())
+ 						System.out.println("current interests: "+i);
+ 					
+ 					newInterests.clear();
+ 					
+ 					
+ 					try {
+ 						neResponse = new NameEnumerationResponseMessageObject(c, _handle);
+ 						links = neResponse.contents();
+ 						for (Link l: links) {
+ 							names.add(l.targetName());
+ 						}
+ 						//strip off NEMarker before passing through callback
+ 						callback.handleNameEnumerator(interest.name().cut(CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION), names);
+ 					} catch(ContentDecodingException e) {
+ 						Log.warning("Error parsing Collection from ContentObject in CCNNameEnumerator");
+ 						Log.warningStackTrace(e);
+ 					} catch(IOException e) {
+ 						Log.warning("error getting CollectionObject from ContentObject in CCNNameEnumerator.handleContent");
+ 						Log.warningStackTrace(e);
+ 					}
+ 				}
+ 			}
+ 		}
+ 		return null; 
+ 	}
+ 		
+ 	
+ 	/**
+ 	 * Method for receiving Interests matching the namespace for answering name enumeration requests.  Incoming Interests are
+ 	 * verified to have the name enumeration marker.  The NEResponse matching the interest is found (if it already exists) and if
+ 	 * new names have been registered under the prefix or if no matching NEResponse object is found, a name enumeration
+ 	 * response is created.
+ 	 * 
+ 	 * @param interests ArrayList of Interest objects matching the namespace filter.
+ 	 * 
+ 	 * @return int 
+ 	 */
+ 	
+ 	public int handleInterests(ArrayList<Interest> interests) {
+ 		
+ 		ContentName responseName = null;
+ 		Link match;
+ 		NameEnumerationResponseMessage nem;
+ 				
+ 		ContentName name = null;
+ 		NEResponse r = null;
+ 		for (Interest i: interests) {
+ 			name = i.name().clone();
+ 
+ 			nem = new NameEnumerationResponseMessage();
+ 			//Verify NameEnumeration Marker is in the name
+ 			if (!name.contains(CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION)) {
+ 				//Skip...  we don't handle these
+ 			} else {
+ 				name = name.cut(CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION);
+ 				responseName = new ContentName(name, CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION);
+ 				
+ 				boolean skip = false;
+ 				synchronized (_handledResponses) {
+ 					//have we handled this response already?
+ 					r = getHandledResponse(name);
+ 					if (r != null) {
+ 						//we have handled this before!
+ 						if (r.isDirty()) {
+ 							//this has updates to send back!!
+ 						} else {
+ 							//nothing new to send back...  go ahead and skip to next interest
+ 							skip = true;
+ 						}
+ 					} else {
+ 						//this is a new one...
+ 						r = new NEResponse(name);
+ 						_handledResponses.add(r);
+ 					}
+ 					
+ 					if (!skip) {
+ 						for (ContentName n: _registeredNames) {
+ 							if (name.isPrefixOf(n)) {
+ 								ContentName tempName = n.clone();
+ 								byte[] tn = n.component(name.count());
+ 								byte[][] na = new byte[1][tn.length];
+ 								na[0] = tn;
+ 								tempName = new ContentName(na);
+ 								match = new Link(tempName);
+ 								if (!nem.contents().contains(match)) {
+ 									nem.add(match);
+ 								}
+ 							}
+ 						}
+ 					}
+ 			
+ 					if (nem.size() > 0) {
+ 						try {
+ 							//TODO add an id to responses - need to test!
+ 							ContentName responseNameWithId = KeyProfile.keyName(responseName, _handle.keyManager().getDefaultKeyID());
+ 							NameEnumerationResponseMessageObject nemobj = new NameEnumerationResponseMessageObject(responseNameWithId, nem, _handle);
+ 							nemobj.save();
+ 							Log.fine("Saved collection object in name enumeration: " + nemobj.getVersionedName());
+ 							
+ 							r.clean();
+ 						} catch(IOException e) {
+ 							Log.warning("error processing an incoming interest..  dropping and returning");
+ 							Log.warningStackTrace(e);
+ 							return 0;
+ 						}
+ 					}
+ 					Log.finer("this interest did not have any matching names...  not returning anything.");
+ 					if (r != null)
+ 						r.clean();
+ 				} //end of synchronized
+ 			}  //end of name enumeration marker check
+ 		} //end of interest processing loop
+ 			
+ 		return 0;
+ 	}
+ 
+ 	/**
+ 	 * Method to check if a name is already registered to be included in name enumeration responses for incoming Interests.
+ 	 * 
+ 	 * @param name ContentName to check for in registered names for responses
+ 	 * @return boolean Returns true if the name is registered and false if not
+ 	 */
+ 	
+ 	public boolean containsRegisteredName(ContentName name) {
+ 		if (name == null) {
+ 			System.err.println("trying to check for null registered name");
+ 			return false;
+ 		}
+ 		synchronized(_handledResponses) {
+ 			if (_registeredNames.contains(name))
+ 				return true;
+ 			else
+ 				return false;
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Method to register a namespace for filtering incoming Interests
+ 	 * 
+ 	 * @param name ContentName to register for filtering incoming Interests
+ 	 * @throws IOException 
+ 	 * 
+ 	 * @see CCNFilterListener
+ 	 */
+ 	
+ 	public void registerNameSpace(ContentName name) throws IOException {
+ 		synchronized(_handledResponses) {
+ 			if (!_registeredNames.contains(name)) {
+ 				_registeredNames.add(name);
+ 				_handle.registerFilter(name, this);
+ 			}
+ 		}
+ 		
+ 	}
+ 	
+ 	/**
+ 	 * Method to register a name to include in incoming name enumeration requests.
+ 	 * 
+ 	 * @param name ContentName to register for name enumeration responses
+ 	 */
+ 	
+ 	public void registerNameForResponses(ContentName name) {
+ 
+ 		if (name == null) {
+ 			System.err.println("The content name for registerNameForResponses was null, ignoring");
+ 			return;
+ 		}
+ 		//Do not need to register each name as a filter...  the namespace should cover it
+ 		synchronized(_handledResponses) {
+ 			if (!_registeredNames.contains(name)) {
+ 				// DKS - if we don't care about order, could use a Set instead of an ArrayList,
+ 				// then just call add as duplicates suppressed
+ 				_registeredNames.add(name);
+ 			}
+ 			//check prefixes that were handled...  if so, mark them dirty
+ 			updateHandledResponses(name);
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Method to get the NEResponse object for a registered name.  Returns null if no matching NEResponse is found.
+ 	 * 
+ 	 * @param n ContentName identifying a NEResponse
+ 	 * @return NEResponse Returns the NEResponse matching the name.
+ 	 */
+ 	
+ 	protected NEResponse getHandledResponse(ContentName n) {
+ 		//Log.info("checking handled responses...");
+ 		synchronized (_handledResponses) {
+ 			for (NEResponse t: _handledResponses) {
+ 				if (t.prefix.equals(n))
+ 					return t;
+ 			}
+ 			return null;
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Method to set the dirty flag for NEResponse objects that are updated as new names are registered for responses.
+ 	 * 
+ 	 * @param n New ContentName to be included in name enumeration responses
+ 	 */
+ 	
+ 	protected void updateHandledResponses(ContentName n) {
+ 		synchronized (_handledResponses) {
+ 			for (NEResponse t: _handledResponses) {
+ 				if (t.prefix.isPrefixOf(n)) {
+ 					t.dirty();
+ 				}
+ 			}
+ 		}
+ 	}
+ 	
+ 	/**
+ 	 * Method to get the corresponding NERequest for a ContentName. Returns null
+ 	 * if no NERequest is found.
+ 	 * 
+ 	 * @param n ContentName for the NERequest to be found.
+ 	 * 
+ 	 * @return NERequest NERequest instance with the supplied ContentName.
+ 	 *         Returns null if no NERequest exists.
+ 	 */
+ 
+ 	protected NERequest getCurrentRequest(ContentName n) {
+ 		synchronized (_currentRequests) {
+ 			for (NERequest r : _currentRequests) {
+ 				if (r.prefix.equals(n))
+ 					return r;
+ 			}
+ 			return null;
+ 		}
+ 	}
+ 
+ 	/**
+ 	 * Method to cancel more than one prefix at a time.  This method will cancel all active Interests
+ 	 * matching the prefix supplied. The matching NERequest objects are removed from the set of active
+ 	 * registered prefixes and the corresponding Interests are canceled. 
+ 	 * 
+ 	 * @param prefixToCancel
+ 	 */
+ 	
+ 	public void cancelEnumerationsWithPrefix(ContentName prefixToCancel) {
+ 		Log.info("cancel prefix: "+prefixToCancel.toString());
+ 		synchronized(_currentRequests) {
+ 			//cancel the behind the scenes interests and remove from the local ArrayList
+ 			ArrayList<NERequest> toRemove = new ArrayList<NERequest>();
+ 			for(NERequest n: _currentRequests){
+ 				if(prefixToCancel.isPrefixOf(n.prefix))
+ 					toRemove.add(n);
+ 			}
+ 			while(!toRemove.isEmpty()){
+ 				if(cancelPrefix(toRemove.remove(0).prefix))
+ 					Log.info("cancelled prefix: "+prefixToCancel.toString());
+ 				else
+ 					Log.info("could not cancel prefix: "+prefixToCancel.toString());
+ 			}
+ 		}
+ 	}
+ 	
+ 	
+ 	private ContentName getIdFromName(ContentName name) {
+ 		//get the response id, could be more than one component and have a version in it
+ 		ContentName responseName = null;
+ 
+ 		try {
+ 			int index = name.containsWhere(CommandMarkers.COMMAND_MARKER_BASIC_ENUMERATION);
+ 			ContentName prefix = name.subname(index+1, name.count());
+ 			if(VersioningProfile.hasTerminalVersion(prefix))
+ 				responseName = VersioningProfile.cutLastVersion(prefix);
+ 			else
+ 				responseName = prefix;
+ 			Log.finest("NameEnumeration response ID: {0}", responseName);
+ 		} catch(Exception e) {
+ 			return null;
+ 		}
+ 			
+ 		return responseName;
+ 	}
+ 	
+ }

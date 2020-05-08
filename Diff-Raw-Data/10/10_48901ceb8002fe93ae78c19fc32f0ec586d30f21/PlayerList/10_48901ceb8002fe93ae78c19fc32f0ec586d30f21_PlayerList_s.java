@@ -1,0 +1,321 @@
+ package no.arcticdrakefox.wolfbot.management;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Random;
+ 
+ import no.arcticdrakefox.wolfbot.model.Role;
+ import no.arcticdrakefox.wolfbot.roles.AuraScry;
+ import no.arcticdrakefox.wolfbot.roles.Baner;
+ import no.arcticdrakefox.wolfbot.roles.Devil;
+ import no.arcticdrakefox.wolfbot.roles.Ghost;
+ import no.arcticdrakefox.wolfbot.roles.Mason;
+ import no.arcticdrakefox.wolfbot.roles.Mayor;
+ import no.arcticdrakefox.wolfbot.roles.OldMan;
+ import no.arcticdrakefox.wolfbot.roles.Scry;
+ import no.arcticdrakefox.wolfbot.roles.ToughGuy;
+ import no.arcticdrakefox.wolfbot.roles.Vigilante;
+ import no.arcticdrakefox.wolfbot.roles.Villager;
+ import no.arcticdrakefox.wolfbot.roles.Wolf;
+ 
+ import com.google.common.collect.Lists;
+ 
+ public class PlayerList {
+ 	public List<Player> players = new ArrayList<Player>();
+ 	private int[] roleCount = new int[Role.values().length];
+ 	
+ 	//Constructor
+ 	
+ 	public PlayerList(){
+ 		autoRole(5);
+ 	}
+ 	
+ 	//List information
+ 	
+ 	public int wolfCount(){
+ 		return getWolves().size();
+ 	}
+ 	
+ 	public int playerCount(){
+ 		return getLivingPlayers().size();
+ 	}
+ 	
+ 	
+ 	public String votesToString(){
+ 		return StringHandler.listToString(new VoteTable(getLivingPlayers()).getSortedStringList());
+ 	}
+ 	
+ 	public String nonvotersToString ()
+ 	{
+ 		List<Player> playersNotVoted = Lists.newArrayList ();
+ 		for (Player player : getLivingPlayers())
+ 		{
+ 			if (player.getVote() == null)
+ 			{
+ 				playersNotVoted.add(player);
+ 			}
+ 		}
+ 		
+ 		String nonVoters = StringHandler.listToString(playersNotVoted);
+ 		if (nonVoters.equals(BotConstants.NO_VOTES))
+ 		{
+ 			return "";
+ 		}
+ 		else
+ 		{
+ 			return nonVoters;
+ 		}
+ 	}
+ 	
+ 	public List<Player> getWolves(){
+ 		List<Player> ret = new ArrayList<Player>();
+ 		for (Player player : players)
+ 			if (player.isWolf() && player.isAlive())
+ 				ret.add(player);
+ 		return ret;
+ 	}
+ 	
+ 	public List<Player> getRole(Role role){
+ 		List<Player> ret = new ArrayList<Player>();
+ 		for (Player player : players){
+ 			Role playerRole = player.getRole();
+ 			if (playerRole == role && player.isAlive())
+ 				ret.add(player);
+ 		}
+ 		return ret;
+ 	}
+ 	
+ 	public String toString(){
+ 		return StringHandler.listToString(players);
+ 	}
+ 	
+ 	public String roleCountToString(){
+ 		List<String> roleCountList = new ArrayList<String>(roleCount.length-1);
+ 		for (int i = 1; i < roleCount.length; ++i)
+ 			if (roleCount[i] > 0)
+ 				roleCountList.add(String.format("%s: %d", Role.values()[i].toString(), roleCount[i]));
+ 		return StringHandler.listToString(roleCountList);
+ 	}
+ 	
+ 	public List<Player> getLivingPlayers(){
+ 		List<Player> ret = new ArrayList<Player>(players.size());
+ 		System.out.println(players.size());
+ 		for (Player player : players)
+ 		{
+ 			if (player.isAlive())
+ 			{
+ 				ret.add(player);
+ 			}
+ 		}	
+ 		return ret;
+ 	}
+ 	
+ 	public List<Player> getRecentlyDead(){
+ 		List<Player> ret = new ArrayList<Player>(players.size());
+ 		for (Player player : players)
+ 			if (player.getCauseOfDeath() != null)
+ 				ret.add(player);
+ 		return ret;
+ 	}
+ 	
+ 	public List<Player> getList(){
+ 		return players;
+ 	}
+ 	
+ 	public boolean allReady(){
+ 		for (Player player : getLivingPlayers())
+ 			if (!player.isReady)
+ 				return false;
+ 		return true;
+ 	}
+ 	
+ 	public int totalRoleCount(){
+ 		int ret = 0;
+ 		for(int i : roleCount)
+ 			ret += i;
+ 		return ret;
+ 	}
+ 	
+ 	//Setting list data
+ 	
+ 		public boolean setRoleCount(String roleS, int amount){
+ 			Role role = Role.valueOf(roleS.toLowerCase());
+ 			if (role == null)
+ 				return false;
+ 			roleCount[role.ordinal()] = amount;
+ 				return true;
+ 		}
+ 	
+ 	//Individual player operations
+ 	
+ 	public boolean addPlayer(String name){
+ 		if (getPlayer(name) == null){
+ 			players.add(new Villager(name));
+ 			return true;
+ 		} else
+ 			return false;
+ 	}
+ 	
+ 	public boolean removePlayer(String name){
+ 		Player player = getPlayer(name);
+ 		if (player == null){
+ 			return false;
+ 		} else {
+ 			players.remove(player);
+ 			return true;
+ 		}
+ 	}
+ 	
+ 	public Player getPlayer(String name){
+ 		for (Player player : players)
+ 			if (player.getName().equalsIgnoreCase(name))
+ 				return player;
+ 		return null;
+ 	}
+ 		
+ 	public Player getVote(){
+ 		return getVote(false);
+ 	}
+ 	
+ 	public Player getVote(boolean justWolves){
+ 		VoteTable table = new VoteTable(
+ 			justWolves ? getWolves() : getLivingPlayers() 
+ 		);
+ 		List<Player> targets = table.getTargets();
+ 		int targetCount = targets.size();
+ 		if (targetCount < 1){
+ 			return null;
+ 		} else if (targetCount == 1){
+ 			return targets.get(0);
+ 		} else {
+ 			return targets.get(new Random().nextInt(targetCount));
+ 		}
+ 	}
+ 	
+ 	public Player getRandomPlayer(){
+ 		return getLivingPlayers().get(new Random().nextInt(players.size()));
+ 	}
+ 	
+ 	public Player getRandomPlayer(Role role){
+ 		List<Player> players = getRole(role); 
+ 		return players.get(new Random().nextInt(players.size()));
+ 	}
+ 	
+ 	public Player getPlayerTargeting(Player target, Role role){
+ 		for (Player player : getRole(role))
+ 			if (target.equals(player.getVote()))
+ 				return player;
+ 		return null;
+ 	}
+ 		
+ 	//Mass player operations
+ 	
+ 	public void reset(){
+ 		List<Player> newList = new ArrayList<Player>(players.size());
+ 		for (Player player : players){
+ 			newList.add(new Villager(player.getName()));
+ 		}
+ 		players = newList;
+ 	}
+ 	
+ 	public void clearVotes() {
+ 		for (Player player : players)
+ 			player.clearVote();
+ 	}
+ 	
+ 	public void clearRecentlyDead(){
+ 		for (Player player : players)
+ 			if (player.getCauseOfDeath() != null)
+ 				player.clearCauseOfDeath();
+ 	}
+ 	
+ 	public void assignRoles(){
+ 		for (int i = 0; i < roleCount.length; ++i){
+ 			for (int j = 0; j < roleCount[i]; ++j){
+ 				Player player = getRandomPlayer(Role.villager);
+ 				int index = players.indexOf(player);
+ 				players.set(index, PlayerFactory.makePlayer(player.getName(), Role.values()[i]));
+ 			}
+ 		}
+ 	}
+ 	
+ 	//Autorole
+ 	
+ 	public void clearRoles(){
+ 		for (int i = 0; i < roleCount.length; ++i)
+ 			roleCount[i] = 0;
+ 	}
+ 	
+ 	public void autoRole(){
+ 		autoRole(players.size());
+ 	}
+ 	
+ 	public void autoRole(int players){
+ 		clearRoles();
+ 		switch (players){
+ 		default:
+ 			roleCount[Role.mason.ordinal()]++;
+ 			roleCount[Role.wolf.ordinal()]++;
+ 		case 17:
+ 		case 16:
+ 			addOther();
+ 		case 15:
+ 		case 14:
+ 			roleCount[Role.mason.ordinal()] += 2;
+ 			roleCount[Role.wolf.ordinal()]++;
+ 		case 13:
+ 			addWarrior();
+ 		case 12:
+ 		case 11:
+ 		case 10:
+ 			roleCount[Role.wolf.ordinal()]++;
+ 			roleCount[Role.devil.ordinal()] = 1;
+ 			roleCount[Role.scry.ordinal()] = 1;
+ 			addWarrior();
+ 			break;
+ 		case 9:
+ 			roleCount[Role.scry.ordinal()] = 1;
+ 		case 8:
+ 		case 7:
+ 			roleCount[Role.wolf.ordinal()] = 2;
+ 			roleCount[Role.vigilante.ordinal()] = 1;
+ 			addWarrior();
+ 			break;
+ 		case 6:
+ 			addWarrior();
+ 		case 5:
+ 			roleCount[Role.wolf.ordinal()] = 1;
+ 			roleCount[Role.scry.ordinal()] = 1;
+ 			break;
+ 		case 4:
+ 			roleCount[Role.wolf.ordinal()] = 1;
+ 			addWarrior();
+ 			break;
+ 		case 3:
+ 			roleCount[Role.mason.ordinal()] = 1;
+ 		case 2:
+ 		case 1:
+ 		case 0:
+ 			roleCount[Role.wolf.ordinal()] = 1;
+ 			break;
+ 		}
+ 	}
+ 	
+ 	public void addWarrior(){
+ 		if (new Random().nextBoolean())
+ 			roleCount[Role.baner.ordinal()]++;
+ 		else
+ 			roleCount[Role.vigilante.ordinal()]++;
+ 	}
+ 	public void addOther(){
+		switch (new Random().nextInteger(3)){
+ 		case 0: 
+			roleCount[Role.oldguy.ordinal()]++;
+ 		case 1: 
+ 			roleCount[Role.toughguy.ordinal()]++;
+ 		case 2: 
+			roleCount[Role.mason.ordinal())]++;
+ 		}
+						
+ 	}
+ }

@@ -1,0 +1,159 @@
+ /*
+  * jGnash, a personal finance application
+  * Copyright (C) 2001-2013 Craig Cavanaugh
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  *  This program is distributed in the hope that it will be useful,
+  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  *  GNU General Public License for more details.
+  *
+  *  You should have received a copy of the GNU General Public License
+  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+ package jgnash.engine.jpa;
+ 
+ import jgnash.engine.DataStoreType;
+ import jgnash.util.FileUtils;
+ 
+ import java.util.Properties;
+ import java.util.logging.Logger;
+ 
+ /**
+  * Utility class to help with JPA configuration
+  *
+  * @author Craig Cavanaugh
+  */
+ public class JpaConfiguration {
+ 
+     public static final String JAVAX_PERSISTENCE_JDBC_URL = "javax.persistence.jdbc.url";
+     private static final String JAVAX_PERSISTENCE_JDBC_DRIVER = "javax.persistence.jdbc.driver";
+     private static final String JAVAX_PERSISTENCE_JDBC_USER = "javax.persistence.jdbc.user";
+     private static final String JAVAX_PERSISTENCE_JDBC_PASSWORD = "javax.persistence.jdbc.password";
+     private static final String HIBERNATE_DIALECT = "hibernate.dialect";
+     private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
+ 
+     public static final String DEFAULT_USER = "JGNASH";
+ 
+     private static Properties getBaseProperties(final DataStoreType database) {
+         Properties properties = System.getProperties();
+ 
+         properties.setProperty(HIBERNATE_HBM2DDL_AUTO, "update");
+ 
+         switch (database) {
+             case H2_DATABASE:
+                 properties.setProperty(JAVAX_PERSISTENCE_JDBC_DRIVER, "org.h2.Driver");
+                 properties.setProperty(HIBERNATE_DIALECT, "org.hibernate.dialect.H2Dialect");
+                 break;
+             case HSQL_DATABASE:
+                 properties.setProperty(JAVAX_PERSISTENCE_JDBC_DRIVER, "org.hsqldb.jdbcDriver");
+                 properties.setProperty(HIBERNATE_DIALECT, "org.hibernate.dialect.HSQLDialect");
+         }
+ 
+         return properties;
+     }
+ 
+     public static Properties getLocalProperties(final DataStoreType database, final String fileName, final char[] password, final boolean readOnly) {
+         StringBuilder urlBuilder = new StringBuilder();
+ 
+         switch (database) {
+             case H2_DATABASE:
+                 urlBuilder.append("jdbc:h2:file:");
+ 
+                 urlBuilder.append(FileUtils.stripFileExtension(fileName));
+ 
+                 urlBuilder.append(";USER=").append(DEFAULT_USER);
+ 
+                 if (password != null && password.length > 0) {
+                     urlBuilder.append(";PASSWORD=").append(password);
+                 }
+ 
+                 if (readOnly) {
+                     urlBuilder.append(";ACCESS_MODE_DATA=r");
+                 }
+
+                urlBuilder.append(";TRACE_LEVEL_SYSTEM_OUT=1"); // make sure errors are logged to the console
+                 break;
+             case HSQL_DATABASE:
+                 urlBuilder.append("jdbc:hsqldb:file:");
+                 urlBuilder.append(FileUtils.stripFileExtension(fileName));
+ 
+                 urlBuilder.append(";user=").append(DEFAULT_USER);
+ 
+                 if (password != null && password.length > 0) {
+                     urlBuilder.append(";password=").append(password);
+                 }
+ 
+                 if (readOnly) {
+                     urlBuilder.append(";readonly=true");
+                 }
+         }
+ 
+         Properties properties = getBaseProperties(database);
+ 
+         properties.setProperty(JAVAX_PERSISTENCE_JDBC_URL, urlBuilder.toString());
+         properties.setProperty(JAVAX_PERSISTENCE_JDBC_USER, DEFAULT_USER);
+         properties.setProperty(JAVAX_PERSISTENCE_JDBC_PASSWORD, new String(password));
+ 
+         return properties;
+     }
+ 
+     /**
+      * Generates and a JPA properties to connect to a remote database
+      *
+      * @param database DataStoreType type
+      * @param fileName remote file to connect to, ignored for HSQL_DATABASE connections
+      * @param host remote host
+      * @param port remote port
+      * @param password database password
+      * @return   JPA properties
+      */
+     public static Properties getClientProperties(final DataStoreType database, final String fileName, final String host, final int port, final char[] password) {
+ 
+         StringBuilder urlBuilder = new StringBuilder();
+ 
+         Properties properties = getBaseProperties(database);
+ 
+         boolean useSSL = Boolean.parseBoolean(properties.getProperty("ssl"));
+ 
+         switch (database) {
+             case H2_DATABASE:
+                 urlBuilder.append("jdbc:h2");
+ 
+                 if (useSSL) {
+                     urlBuilder.append(":ssl://");
+                 } else {
+                     urlBuilder.append(":tcp://");
+                 }
+ 
+                 urlBuilder.append(host).append(":").append(port).append("/");
+                 urlBuilder.append(fileName);
+ 
+                 urlBuilder.append(";USER=").append(DEFAULT_USER);
+                 urlBuilder.append(";PASSWORD=").append(password);
+                 break;
+             case HSQL_DATABASE:
+                 urlBuilder.append("jdbc:hsqldb:hsql://");
+                 urlBuilder.append(host).append(":").append(port).append("/jgnash"); // needs a public alias
+ 
+                 urlBuilder.append(";user=").append(DEFAULT_USER);
+                 if (password != null && password.length > 0) {
+                     urlBuilder.append(";password=").append(password);
+                 }
+ 
+                 Logger.getLogger(JpaConfiguration.class.getName()).info(urlBuilder.toString());
+         }
+ 
+ 
+         properties.setProperty(JAVAX_PERSISTENCE_JDBC_USER, DEFAULT_USER);
+         properties.setProperty(JAVAX_PERSISTENCE_JDBC_PASSWORD, new String(password));
+         properties.setProperty(JAVAX_PERSISTENCE_JDBC_URL, urlBuilder.toString());
+ 
+         return properties;
+     }
+ 
+ }

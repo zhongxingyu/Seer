@@ -1,0 +1,318 @@
+ package org.basex.core.cmd;
+ 
+ import static org.basex.core.Text.*;
+ import static org.basex.query.util.Err.*;
+ 
+ import java.io.*;
+ import java.util.*;
+ 
+ import org.basex.core.*;
+ import org.basex.core.parse.*;
+ import org.basex.data.*;
+ import org.basex.io.*;
+ import org.basex.io.out.*;
+ import org.basex.io.serial.*;
+ import org.basex.io.serial.dot.*;
+ import org.basex.query.*;
+ import org.basex.query.iter.*;
+ import org.basex.query.value.item.*;
+ import org.basex.util.*;
+ 
+ /**
+  * Abstract class for database queries.
+  *
+  * @author BaseX Team 2005-13, BSD License
+  * @author Christian Gruen
+  */
+ public abstract class AQuery extends Command {
+   /** Query result. */
+   protected Result result;
+ 
+   /** Variables. */
+   private HashMap<String, String[]> vars = new HashMap<String, String[]>();
+   /** HTTP context. */
+   private Object http;
+ 
+   /** Query info. */
+   private final QueryInfo qi = new QueryInfo();
+   /** Query processor. */
+   private QueryProcessor qp;
+   /** Query exception. */
+   private QueryException qe;
+ 
+   /**
+    * Protected constructor.
+    * @param p required permission
+    * @param d requires opened database
+    * @param arg arguments
+    */
+   protected AQuery(final Perm p, final boolean d, final String... arg) {
+     super(p, d, arg);
+   }
+ 
+   /**
+    * Evaluates the specified query.
+    * @param query query
+    * @return success flag
+    */
+   protected final boolean query(final String query) {
+     final Performance p = new Performance();
+     String err;
+     if(qe != null) {
+       err = qe.getMessage();
+     } else {
+       try {
+         final boolean serial = options.get(MainOptions.SERIALIZE);
+         qi.runs = Math.max(1, options.get(MainOptions.RUNS));
+         long hits = 0;
+         for(int r = 0; r < qi.runs; ++r) {
+           // reuse existing processor instance
+           if(r != 0) qp = null;
+           qp(query, context);
+           qp.http(http);
+           for(final String name : vars.keySet()) {
+             final String[] value = vars.get(name);
+             if(name == null) qp.context(value[0], value[1]);
+             else qp.bind(name, value[0], value[1]);
+           }
+           qp.parse();
+           qi.pars += p.time();
+           if(r == 0) plan(false);
+           qp.compile();
+           qi.cmpl += p.time();
+           if(r == 0) plan(true);
+ 
+           final PrintOutput po = r == 0 && serial ? out : new NullOutput();
+           final Serializer ser;
+ 
+           if(options.get(MainOptions.CACHEQUERY)) {
+             result = qp.execute();
+             qi.evlt += p.time();
+             ser = qp.getSerializer(po);
+             result.serialize(ser);
+             hits = result.size();
+           } else {
+             hits = 0;
+             final Iter ir = qp.iter();
+             qi.evlt += p.time();
+             Item it = ir.next();
+             ser = qp.getSerializer(po);
+             while(it != null) {
+               checkStop();
+               ser.serialize(it);
+               it = ir.next();
+               ++hits;
+             }
+           }
+           ser.close();
+           qp.close();
+           qi.srlz += p.time();
+         }
+         // dump some query info
+         out.flush();
+         // remove string list if global locking is used and if query is updating
+         if(goptions.get(GlobalOptions.GLOBALLOCK) && qp.updating)
+           qi.readLocked = qi.writeLocked = null;
+         return info(qi.toString(qp, out, hits, options.get(MainOptions.QUERYINFO)));
+ 
+       } catch(final QueryException ex) {
+         err = Util.message(ex);
+       } catch(final IOException ex) {
+         err = Util.message(ex);
+       } catch(final ProcException ex) {
+         err = INTERRUPTED;
+       } catch(final StackOverflowError ex) {
+         Util.debug(ex);
+         err = BASX_STACKOVERFLOW.desc;
+       } catch(final RuntimeException ex) {
+         extError("");
+         Util.debug(info());
+         throw ex;
+       } finally {
+         // close processor after exceptions
+         if(qp != null) qp.close();
+       }
+     }
+     return extError(err);
+   }
+ 
+   /**
+    * Checks if the query might perform updates.
+    * @param ctx database context
+    * @param qu query
+    * @return result of check
+    */
+   protected final boolean updating(final Context ctx, final String qu) {
+     try {
+       final Performance p = new Performance();
+       qp(qu, ctx).parse();
+       qi.pars = p.time();
+       return qp.updating;
+     } catch(final QueryException ex) {
+       Util.debug(ex);
+       qe = ex;
+       qp.close();
+       return false;
+     }
+   }
+ 
+   /**
+    * Parses the XQuery and returns a node set.
+    */
+   protected final void queryNodes() {
+     try {
+       result = qp(args[0], context).queryNodes();
+      qp.close();
+     } catch(final QueryException ex) {
+      qp.close();
+       qp = null;
+       error(Util.message(ex));
+     }
+   }
+ 
+   /**
+    * Returns a query processor instance.
+    * @param query query string
+    * @param ctx database context
+    * @return query processor
+    */
+   private QueryProcessor qp(final String query, final Context ctx) {
+     if(qp == null) qp = proc(new QueryProcessor(query, ctx));
+     return qp;
+   }
+ 
+   /**
+    * Returns the serialization parameters.
+    * @param ctx context
+    * @return serialization parameters
+    */
+   public SerializerOptions parameters(final Context ctx) {
+     SerializerOptions params = Serializer.OPTIONS;
+     try {
+       qp(args[0], ctx).parse();
+       params = qp.ctx.serParams();
+     } catch(final QueryException ex) {
+       error(Util.message(ex));
+     }
+     qp = null;
+     return params;
+   }
+ 
+   /**
+    * Binds a variable.
+    * @param name name of variable (if {@code null}, value will be bound as context value)
+    * @param value value to be bound
+    * @return reference
+    */
+   public AQuery bind(final String name, final String value) {
+     return bind(name, value, null);
+   }
+ 
+   /**
+    * Binds a variable.
+    * @param name name of variable (if {@code null}, value will be bound as context value)
+    * @param value value to be bound
+    * @param type type
+    * @return reference
+    */
+   public AQuery bind(final String name, final String value, final String type) {
+     vars.put(name, new String[] { value, type });
+     return this;
+   }
+ 
+   /**
+    * Binds the HTTP context.
+    * @param value HTTP context
+    */
+   public void http(final Object value) {
+     http = value;
+   }
+ 
+   /**
+    * Returns an extended error message.
+    * @param err error message
+    * @return result of check
+    */
+   private boolean extError(final String err) {
+     // will only be evaluated when an error has occurred
+     final StringBuilder sb = new StringBuilder();
+     if(options.get(MainOptions.QUERYINFO)) {
+       sb.append(info()).append(qp.info()).append(NL).append(ERROR).append(COL).append(NL);
+     }
+     sb.append(err);
+     return error(sb.toString());
+   }
+ 
+   /**
+    * Creates query plans.
+    * @param c compiled flag
+    */
+   private void plan(final boolean c) {
+     if(c != options.get(MainOptions.COMPPLAN)) return;
+ 
+     // show dot plan
+     BufferOutput bo = null;
+     try {
+       if(options.get(MainOptions.DOTPLAN)) {
+         final String path = context.options.get(MainOptions.QUERYPATH);
+         final String dot = path.isEmpty() ? "plan.dot" :
+             new IOFile(path).name().replaceAll("\\..*?$", ".dot");
+ 
+         bo = new BufferOutput(dot);
+         final DOTSerializer d = new DOTSerializer(bo, options.get(MainOptions.DOTCOMPACT));
+         d.serialize(qp.plan());
+         d.close();
+ 
+         if(options.get(MainOptions.DOTDISPLAY))
+           new ProcessBuilder(options.get(MainOptions.DOTTY), dot).start();
+       }
+       // show XML plan
+       if(options.get(MainOptions.XMLPLAN)) {
+         info(NL + QUERY_PLAN + COL);
+         info(qp.plan().serialize().toString());
+       }
+     } catch(final Exception ex) {
+       Util.stack(ex);
+     } finally {
+       if(bo != null) try { bo.close(); } catch(final IOException ignored) { }
+     }
+   }
+ 
+   @Override
+   public boolean updating(final Context ctx) {
+     return args[0] != null && updating(ctx, args[0]);
+   }
+ 
+   @Override
+   public boolean updated(final Context ctx) {
+     return qp != null && qp.updates() != 0;
+   }
+ 
+   @Override
+   public void databases(final LockResult lr) {
+     if(null == qp) {
+       lr.writeAll = true;
+     } else {
+       qp.databases(lr);
+       qi.readLocked = lr.readAll ? null : lr.read;
+       qi.writeLocked = lr.writeAll ? null : lr.write;
+     }
+   }
+ 
+   @Override
+   public void build(final CmdBuilder cb) {
+     cb.init().xquery(0);
+   }
+ 
+   @Override
+   public boolean stoppable() {
+     return true;
+   }
+ 
+   @Override
+   public final Result result() {
+     final Result r = result;
+     result = null;
+     return r;
+   }
+ }

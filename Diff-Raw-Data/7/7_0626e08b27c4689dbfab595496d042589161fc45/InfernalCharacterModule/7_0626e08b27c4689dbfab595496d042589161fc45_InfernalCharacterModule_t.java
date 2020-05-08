@@ -1,0 +1,127 @@
+ package net.sf.anathema.character.infernal;
+ 
+ import net.sf.anathema.character.generic.backgrounds.IBackgroundTemplate;
+ import net.sf.anathema.character.generic.framework.ICharacterGenerics;
+ import net.sf.anathema.character.generic.framework.additionaltemplate.IAdditionalViewFactory;
+ import net.sf.anathema.character.generic.framework.additionaltemplate.model.IAdditionalModelFactory;
+ import net.sf.anathema.character.generic.framework.additionaltemplate.persistence.IAdditionalPersisterFactory;
+ import net.sf.anathema.character.generic.framework.magic.FirstExcellency;
+ import net.sf.anathema.character.generic.framework.magic.SecondExcellency;
+ import net.sf.anathema.character.generic.framework.module.CharacterModule;
+ import net.sf.anathema.character.generic.framework.module.NullObjectCharacterModuleAdapter;
+ import net.sf.anathema.character.generic.impl.backgrounds.CharacterTypeBackgroundTemplate;
+ import net.sf.anathema.character.generic.impl.caste.CasteCollection;
+ import net.sf.anathema.character.generic.impl.rules.ExaltedSourceBook;
+ import net.sf.anathema.character.generic.impl.traits.EssenceTemplate;
+ import net.sf.anathema.character.generic.magic.IMagicStats;
+ import net.sf.anathema.character.infernal.caste.InfernalCaste;
+ import net.sf.anathema.character.infernal.generic.EffortlessYoziDominance;
+ import net.sf.anathema.character.infernal.generic.SoSpeaksYozi;
+ import net.sf.anathema.character.infernal.generic.YoziInevitabilityTechnique;
+ import net.sf.anathema.character.infernal.generic.YoziMythosExultant;
+ import net.sf.anathema.character.infernal.patron.InfernalPatronModelFactory;
+ import net.sf.anathema.character.infernal.patron.InfernalPatronParser;
+ import net.sf.anathema.character.infernal.patron.InfernalPatronTemplate;
+ import net.sf.anathema.character.infernal.patron.InfernalPatronViewFactory;
+ import net.sf.anathema.character.infernal.patron.persistence.InfernalPatronPersisterFactory;
+ import net.sf.anathema.character.infernal.reporting.ExtendedInfernalPartEncoder;
+ import net.sf.anathema.character.infernal.reporting.content.InfernalUrgeContent;
+ import net.sf.anathema.character.infernal.reporting.content.InfernalUrgeContentFactory;
+ import net.sf.anathema.character.infernal.reporting.content.InfernalYoziListContent;
+ import net.sf.anathema.character.infernal.reporting.content.InfernalYoziListContentFactory;
+ import net.sf.anathema.character.infernal.reporting.rendering.AnimaEncoderFactory;
+ import net.sf.anathema.character.infernal.reporting.rendering.UrgeEncoderFactory;
+ import net.sf.anathema.character.infernal.urge.*;
+ import net.sf.anathema.character.reporting.CharacterReportingModule;
+ import net.sf.anathema.character.reporting.CharacterReportingModuleObject;
+ import net.sf.anathema.character.reporting.pdf.content.ReportContentRegistry;
+ import net.sf.anathema.character.reporting.pdf.layout.extended.ExtendedEncodingRegistry;
+ import net.sf.anathema.lib.registry.IIdentificateRegistry;
+ import net.sf.anathema.lib.registry.IRegistry;
+ import net.sf.anathema.lib.resources.IResources;
+ 
+ import static net.sf.anathema.character.generic.impl.rules.ExaltedEdition.SecondEdition;
+ import static net.sf.anathema.character.generic.type.CharacterType.INFERNAL;
+ 
+ @CharacterModule
+ public class InfernalCharacterModule extends NullObjectCharacterModuleAdapter
+ {
+   public static final String BACKGROUND_ID_UNWOVEN_COADJUTOR = "UnwovenCoadjutor"; //$NON-NLS-1$
+   public static final String BACKGROUND_ID_DEMONIC_FAMILIAR = "DemonicFamiliar"; //$NON-NLS-1$
+  public static final String BACKGROUND_ID_PAST_LIVES = "PastLives"; //$NON-NLS-1$
+  public static final String BACKGROUND_ID_SAVANT = "InfernalSavant"; //$NON-NLS-1$
+  public static final String BACKGROUND_ID_SPIES = "Spies"; //$NON-NLS-1$
+ 
+   @Override
+   public void registerCommonData(ICharacterGenerics characterGenerics) {
+     characterGenerics.getCasteCollectionRegistry().register(INFERNAL, new CasteCollection(InfernalCaste.values()));
+     characterGenerics.getAdditionalTemplateParserRegistry().register(InfernalPatronTemplate.ID, new InfernalPatronParser());
+     characterGenerics.getAdditionalTemplateParserRegistry().register(InfernalUrgeTemplate.ID, new InfernalUrgeParser());
+     characterGenerics.getGenericCharmStatsRegistry()
+             .register(INFERNAL, new IMagicStats[]{new FirstExcellency(INFERNAL, ExaltedSourceBook.Infernals, "1 m per die"), //$NON-NLS-1$
+                     new SecondExcellency(INFERNAL,
+                             ExaltedSourceBook.Infernals), new YoziMythosExultant(), new YoziInevitabilityTechnique(), new EffortlessYoziDominance(),
+                     new SoSpeaksYozi()});
+   }
+ 
+   @Override
+   public void addCharacterTemplates(ICharacterGenerics characterGenerics) {
+     registerParsedTemplate(characterGenerics, "template/Infernal2nd.template"); //$NON-NLS-1$
+     registerParsedTemplate(characterGenerics, "template/RevisedInfernal2nd.template"); //$NON-NLS-1$
+   }
+ 
+   @Override
+   public void addAdditionalTemplateData(ICharacterGenerics characterGenerics) {
+     IRegistry<String, IAdditionalModelFactory> additionalModelFactoryRegistry = characterGenerics.getAdditionalModelFactoryRegistry();
+     IRegistry<String, IAdditionalViewFactory> additionalViewFactoryRegistry = characterGenerics.getAdditionalViewFactoryRegistry();
+     IRegistry<String, IAdditionalPersisterFactory> persisterFactory = characterGenerics.getAdditonalPersisterFactoryRegistry();
+     registerInfernalPatron(additionalModelFactoryRegistry, additionalViewFactoryRegistry, persisterFactory);
+     registerInfernalUrge(additionalModelFactoryRegistry, additionalViewFactoryRegistry, persisterFactory);
+   }
+ 
+   private void registerInfernalPatron(IRegistry<String, IAdditionalModelFactory> additionalModelFactoryRegistry,
+                                       IRegistry<String, IAdditionalViewFactory> additionalViewFactoryRegistry, IRegistry<String, IAdditionalPersisterFactory> persisterFactory) {
+     String templateId = InfernalPatronTemplate.ID;
+     additionalModelFactoryRegistry.register(templateId, new InfernalPatronModelFactory());
+     additionalViewFactoryRegistry.register(templateId, new InfernalPatronViewFactory());
+     persisterFactory.register(templateId, new InfernalPatronPersisterFactory());
+   }
+ 
+   private void registerInfernalUrge(IRegistry<String, IAdditionalModelFactory> additionalModelFactoryRegistry,
+                                     IRegistry<String, IAdditionalViewFactory> additionalViewFactoryRegistry, IRegistry<String, IAdditionalPersisterFactory> persisterFactory) {
+     String templateId = InfernalUrgeTemplate.ID;
+     additionalModelFactoryRegistry.register(templateId, new InfernalUrgeModelFactory());
+     additionalViewFactoryRegistry.register(templateId, new InfernalUrgeViewFactory());
+     persisterFactory.register(templateId, new InfernalUrgePersisterFactory());
+   }
+   
+   @Override
+   public void addBackgroundTemplates(ICharacterGenerics generics)
+   {
+ 	  IIdentificateRegistry<IBackgroundTemplate> backgroundRegistry = generics.getBackgroundRegistry();
+ 	  backgroundRegistry.add(new CharacterTypeBackgroundTemplate(BACKGROUND_ID_UNWOVEN_COADJUTOR, INFERNAL));
+ 	  backgroundRegistry.add(new CharacterTypeBackgroundTemplate(BACKGROUND_ID_DEMONIC_FAMILIAR, INFERNAL));
+	  backgroundRegistry.add(new CharacterTypeBackgroundTemplate(BACKGROUND_ID_SAVANT, INFERNAL));
+	  backgroundRegistry.add(new CharacterTypeBackgroundTemplate(BACKGROUND_ID_PAST_LIVES, INFERNAL));
+	  backgroundRegistry.add(new CharacterTypeBackgroundTemplate(BACKGROUND_ID_SPIES, INFERNAL));
+   }
+ 
+   @Override
+   public void addReportTemplates(ICharacterGenerics generics, IResources resources) {
+     CharacterReportingModuleObject moduleObject = generics.getModuleObjectMap().getModuleObject(CharacterReportingModule.class);
+     addReportContent(resources, moduleObject.getContentRegistry());
+     moduleObject.getEncoderRegistry().add(new UrgeEncoderFactory());
+     moduleObject.getEncoderRegistry().add(new AnimaEncoderFactory());
+     addExtendedParts(resources, moduleObject);
+   }
+ 
+   private void addReportContent(IResources resources, ReportContentRegistry registry) {
+     registry.addFactory(InfernalYoziListContent.class, new InfernalYoziListContentFactory(resources));
+     registry.addFactory(InfernalUrgeContent.class, new InfernalUrgeContentFactory(resources));
+   }
+ 
+   private void addExtendedParts(IResources resources, CharacterReportingModuleObject moduleObject) {
+     ExtendedEncodingRegistry registry = moduleObject.getExtendedEncodingRegistry();
+     registry.setPartEncoder(INFERNAL, SecondEdition, new ExtendedInfernalPartEncoder(resources, registry, EssenceTemplate.SYSTEM_ESSENCE_MAX));
+   }
+ }

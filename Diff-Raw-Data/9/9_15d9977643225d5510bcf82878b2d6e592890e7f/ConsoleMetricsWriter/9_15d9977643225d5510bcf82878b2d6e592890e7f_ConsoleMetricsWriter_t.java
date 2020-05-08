@@ -1,0 +1,51 @@
+ package org.metricssampler.extensions.base;
+ 
+ import static org.metricssampler.util.Preconditions.checkArgumentNotNull;
+ 
+ import java.text.DateFormat;
+ import java.text.SimpleDateFormat;
+ import java.util.Date;
+ import java.util.Map;
+ 
+ import org.metricssampler.reader.MetricValue;
+ import org.metricssampler.writer.MetricWriteException;
+ import org.metricssampler.writer.MetricsWriter;
+ 
+ /**
+ * Write metrics to the standard output. This class is not thread safe and one instance should not be used by multiple samplers. Currently,
+ * each sampler gets its own instance so that is not a problem.
+  */
+ public class ConsoleMetricsWriter implements MetricsWriter {
+ 	private final ConsoleOutputConfig config;
+	private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+ 
+ 	public ConsoleMetricsWriter(final ConsoleOutputConfig config) {
+ 		checkArgumentNotNull(config, "config");
+ 		this.config = config;
+ 	}
+ 
+ 	@Override
+ 	public void write(final Map<String, MetricValue> metrics) {
+ 		checkArgumentNotNull(metrics, "metrics");
+ 		for (final Map.Entry<String, MetricValue> entry : metrics.entrySet()) {
+ 			final MetricValue value = entry.getValue();
+			final String timestampPrefix = dateFormat.format(new Date(value.getTimestamp())) + " ";
+ 			System.out.println(timestampPrefix + entry.getKey() + "=" + value.getValue());
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void open() throws MetricWriteException {
+ 		// Nothing to do here
+ 	}
+ 
+ 	@Override
+ 	public void close() throws MetricWriteException {
+ 		// Nothing to do here
+ 	}
+ 
+ 	@Override
+ 	public String toString() {
+ 		return getClass().getSimpleName() + "[" + config.getName() + "]";
+ 	}
+ }

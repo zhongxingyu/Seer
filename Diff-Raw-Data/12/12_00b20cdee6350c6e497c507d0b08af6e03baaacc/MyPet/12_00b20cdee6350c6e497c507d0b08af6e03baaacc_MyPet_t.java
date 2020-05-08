@@ -1,0 +1,553 @@
+ /*
+  * Copyright (C) 2011-2012 Keyle
+  *
+  * This file is part of MyPet
+  *
+  * MyPet is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * MyPet is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with MyPet. If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
+ package de.Keyle.MyPet.entity.types;
+ 
+ import de.Keyle.MyPet.MyPetPlugin;
+ import de.Keyle.MyPet.entity.types.bat.MyBat;
+ import de.Keyle.MyPet.entity.types.cavespider.MyCaveSpider;
+ import de.Keyle.MyPet.entity.types.chicken.MyChicken;
+ import de.Keyle.MyPet.entity.types.cow.MyCow;
+ import de.Keyle.MyPet.entity.types.creeper.MyCreeper;
+ import de.Keyle.MyPet.entity.types.enderman.MyEnderman;
+ import de.Keyle.MyPet.entity.types.irongolem.MyIronGolem;
+ import de.Keyle.MyPet.entity.types.magmacube.MyMagmaCube;
+ import de.Keyle.MyPet.entity.types.mooshroom.MyMooshroom;
+ import de.Keyle.MyPet.entity.types.ocelot.MyOcelot;
+ import de.Keyle.MyPet.entity.types.pig.MyPig;
+ import de.Keyle.MyPet.entity.types.pigzombie.MyPigZombie;
+ import de.Keyle.MyPet.entity.types.sheep.MySheep;
+ import de.Keyle.MyPet.entity.types.silverfish.MySilverfish;
+ import de.Keyle.MyPet.entity.types.skeleton.MySkeleton;
+ import de.Keyle.MyPet.entity.types.slime.MySlime;
+ import de.Keyle.MyPet.entity.types.snowman.MySnowman;
+ import de.Keyle.MyPet.entity.types.spider.MySpider;
+ import de.Keyle.MyPet.entity.types.villager.MyVillager;
+ import de.Keyle.MyPet.entity.types.wolf.MyWolf;
+ import de.Keyle.MyPet.entity.types.zombie.MyZombie;
+ import de.Keyle.MyPet.event.MyPetLevelUpEvent;
+ import de.Keyle.MyPet.event.MyPetSpoutEvent;
+ import de.Keyle.MyPet.event.MyPetSpoutEvent.MyPetSpoutEventReason;
+ import de.Keyle.MyPet.skill.MyPetExperience;
+ import de.Keyle.MyPet.skill.MyPetSkillTree;
+ import de.Keyle.MyPet.skill.MyPetSkills;
+ import de.Keyle.MyPet.skill.skills.MyPetGenericSkill;
+ import de.Keyle.MyPet.util.*;
+ import net.minecraft.server.v1_4_5.NBTTagCompound;
+ import org.bukkit.Location;
+ import org.bukkit.Material;
+ import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
+ import org.bukkit.event.entity.CreatureSpawnEvent;
+ 
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
+ public abstract class MyPet
+ {
+     private static Map<Class<? extends MyPet>, Integer> startHP = new HashMap<Class<? extends MyPet>, Integer>();
+     private static Map<Class<? extends MyPet>, Integer> startDamage = new HashMap<Class<? extends MyPet>, Integer>();
+     private static Map<Class<? extends MyPet>, Float> startSpeed = new HashMap<Class<? extends MyPet>, Float>();
+     private static Map<Class<? extends MyPet>, List<Material>> food = new HashMap<Class<? extends MyPet>, List<Material>>();
+     private static Map<Class<? extends MyPet>, List<LeashFlag>> leashFlags = new HashMap<Class<? extends MyPet>, List<LeashFlag>>();
+     private static Map<Class<? extends MyPet>, Float[]> entitySizes = new HashMap<Class<? extends MyPet>, Float[]>();
+ 
+     static
+     {
+         for (MyPetType petType : MyPetType.values())
+         {
+             startHP.put(petType.getMyPetClass(), 20);
+             startDamage.put(petType.getMyPetClass(), 4);
+         }
+ 
+         entitySizes.put(MyBat.class, new Float[]{0.5F, 0.9F});
+         entitySizes.put(MyCaveSpider.class, new Float[]{0.7F, 0.5F});
+         entitySizes.put(MyChicken.class, new Float[]{0.3F, 0.7F});
+         entitySizes.put(MyCow.class, new Float[]{0.9F, 1.3F});
+         entitySizes.put(MyCreeper.class, new Float[]{0.9F, 0.9F});
+         entitySizes.put(MyEnderman.class, new Float[]{0.6F, 2.9F});
+         entitySizes.put(MyIronGolem.class, new Float[]{1.4F, 2.9F});
+         entitySizes.put(MyMagmaCube.class, new Float[]{0.6F, 0.6F});
+         entitySizes.put(MyMooshroom.class, new Float[]{0.9F, 1.3F});
+         entitySizes.put(MyOcelot.class, new Float[]{0.6F, 0.8F});
+         entitySizes.put(MyPig.class, new Float[]{0.9F, 0.9F});
+         entitySizes.put(MyPigZombie.class, new Float[]{0.9F, 0.9F});
+         entitySizes.put(MySheep.class, new Float[]{0.9F, 1.3F});
+         entitySizes.put(MySilverfish.class, new Float[]{0.3F, 0.7F});
+         entitySizes.put(MySkeleton.class, new Float[]{0.6F, 0.6F});
+         entitySizes.put(MySlime.class, new Float[]{0.6F, 0.6F});
+         entitySizes.put(MySnowman.class, new Float[]{0.4F, 1.8F});
+         entitySizes.put(MySpider.class, new Float[]{1.4F, 0.9F});
+         entitySizes.put(MyVillager.class, new Float[]{0.6F, 0.8F});
+         entitySizes.put(MyWolf.class, new Float[]{0.6F, 0.8F});
+         entitySizes.put(MyZombie.class, new Float[]{0.9F, 0.9F});
+     }
+ 
+     public static enum LeashFlag
+     {
+         Baby, Adult, LowHp, Tamed, UserCreated, Wild, CanBreed, Angry, None;
+ 
+         public static LeashFlag getLeashFlagByName(String name)
+         {
+             for (LeashFlag leashFlags : LeashFlag.values())
+             {
+                 if (leashFlags.name().equalsIgnoreCase(name))
+                 {
+                     return leashFlags;
+                 }
+             }
+             return null;
+         }
+     }
+ 
+     public static enum PetState
+     {
+         Dead, Despawned, Here
+     }
+ 
+     protected CraftMyPet craftMyPet;
+     public String petName = "Pet";
+     protected final MyPetPlayer petOwner;
+     protected int health;
+     public int respawnTime = 0;
+     public int hungerTime = 0;
+     protected int hunger = 100;
+ 
+     public PetState status = PetState.Despawned;
+ 
+     protected Location petLocation;
+ 
+     protected MyPetSkillTree skillTree = null;
+     protected MyPetSkills skills;
+     protected MyPetExperience experience;
+ 
+     public MyPet(MyPetPlayer Owner)
+     {
+         this.petOwner = Owner;
+         if (MyPetConfig.automaticSkilltreeAssignment)
+         {
+             if (MyPetSkillTreeConfigLoader.getSkillTreeNames(this.getPetType()).size() > 0)
+             {
+                 for (String skillTreeName : MyPetSkillTreeConfigLoader.getSkillTreeNames(this.getPetType()))
+                 {
+                     if (MyPetPermissions.has(Owner.getPlayer(), "MyPet.custom.skilltree." + skillTreeName))
+                     {
+                         this.skillTree = MyPetSkillTreeConfigLoader.getMobType(this.getPetType().getTypeName()).getSkillTree(skillTreeName);
+                         break;
+                     }
+                 }
+             }
+             if (this.skillTree == null)
+             {
+                 for (String skillTreeName : MyPetSkillTreeConfigLoader.getSkillTreeNames("default"))
+                 {
+                     if (MyPetPermissions.has(Owner.getPlayer(), "MyPet.custom.skilltree." + skillTreeName))
+                     {
+                         this.skillTree = MyPetSkillTreeConfigLoader.getMobType("default").getSkillTree(skillTreeName);
+                         break;
+                     }
+                 }
+             }
+             if (this.skillTree == null)
+             {
+                 this.skillTree = new MyPetSkillTree("%+-%NoNe%-+%");
+             }
+         }
+         skills = new MyPetSkills(this);
+         experience = new MyPetExperience(this);
+         hungerTime = MyPetConfig.hungerSystemTime;
+     }
+ 
+     public void setPetName(String newName)
+     {
+         this.petName = newName;
+         MyPetUtil.getServer().getPluginManager().callEvent(new MyPetSpoutEvent(this, MyPetSpoutEventReason.Name));
+     }
+ 
+     public MyPetSkillTree getSkillTree()
+     {
+         return skillTree;
+     }
+ 
+     public boolean setSkilltree(MyPetSkillTree skillTree)
+     {
+         if (skillTree == null || this.skillTree == skillTree)
+         {
+             return false;
+         }
+         skills.reset();
+         if (this.skillTree != null)
+         {
+             if (this.getOwner().isMyPetAdmin() && MyPetConfig.skilltreeSwitchPenaltyAdmin)
+             {
+                 experience.removeExp(MyPetConfig.skilltreeSwitchPenaltyFixed);
+                 experience.removeExp(experience.getExp() * MyPetConfig.skilltreeSwitchPenaltyPercent / 100.);
+             }
+             else
+             {
+                 experience.removeExp(MyPetConfig.skilltreeSwitchPenaltyFixed);
+                 experience.removeExp(experience.getExp() * MyPetConfig.skilltreeSwitchPenaltyPercent / 100.);
+             }
+         }
+         this.skillTree = skillTree;
+         for (int i = 1 ; i <= experience.getLevel() ; i++)
+         {
+             MyPetPlugin.getPlugin().getServer().getPluginManager().callEvent(new MyPetLevelUpEvent(this, i, true));
+         }
+         return true;
+     }
+ 
+     public void removePet()
+     {
+         if (status == PetState.Here)
+         {
+             health = craftMyPet.getHealth();
+             petLocation = craftMyPet.getLocation();
+             if (petLocation == null && getOwner().isOnline())
+             {
+                 petLocation = getOwner().getPlayer().getLocation();
+             }
+             status = PetState.Despawned;
+             craftMyPet.remove();
+         }
+     }
+ 
+     protected void respawnPet()
+     {
+         if (status != PetState.Here && getOwner().isOnline())
+         {
+             petLocation = getOwner().getPlayer().getLocation();
+             sendMessageToOwner(MyPetUtil.setColors(MyPetLanguage.getString("Msg_OnRespawn")).replace("%petname%", petName));
+             createPet();
+             respawnTime = 0;
+             if (MyPetConfig.hungerSystem)
+             {
+                 setHealth((int) Math.ceil(getMaxHealth() / 100. * (hunger + 1 - (hunger % 10))));
+             }
+             else
+             {
+                 setHealth(getMaxHealth());
+             }
+         }
+     }
+ 
+     public boolean createPet()
+     {
+         if (status != PetState.Here && getOwner().isOnline())
+         {
+             if (respawnTime <= 0)
+             {
+                 net.minecraft.server.v1_4_5.World mcWorld = ((CraftWorld) petLocation.getWorld()).getHandle();
+                 EntityMyPet petEntity = getPetType().getNewEntityInstance(mcWorld, this);
+                 petEntity.setLocation(petLocation);
+                 if (!MyPetUtil.canSpawn(petLocation, petEntity))
+                 {
+                     return false;
+                 }
+                 if (!petLocation.getChunk().isLoaded())
+                 {
+                     petLocation.getChunk().load();
+                 }
+                 if (!mcWorld.addEntity(petEntity, CreatureSpawnEvent.SpawnReason.CUSTOM))
+                 {
+                     status = PetState.Despawned;
+                     return false;
+                 }
+                 craftMyPet = (CraftMyPet) petEntity.getBukkitEntity();
+                 status = PetState.Here;
+                 return true;
+             }
+         }
+         return false;
+     }
+ 
+     public CraftMyPet getCraftPet()
+     {
+         return craftMyPet;
+     }
+ 
+     public void setHealth(int d)
+     {
+         if (d > getMaxHealth())
+         {
+             health = getMaxHealth();
+         }
+         else
+         {
+             health = d;
+         }
+         if (status == PetState.Here)
+         {
+             craftMyPet.setHealth(health);
+         }
+     }
+ 
+     public int getHealth()
+     {
+ 
+         if (status == PetState.Here)
+         {
+             return craftMyPet.getHealth();
+         }
+         else
+         {
+             return health;
+         }
+     }
+ 
+     public int getMaxHealth()
+     {
+         return getStartHP(this.getClass()) + (skills.hasSkill("HP") ? skills.getSkill("HP").getLevel() : 0);
+     }
+ 
+     public int getHungerValue()
+     {
+        if (MyPetConfig.hungerSystem)
+        {
+            return hunger;
+        }
+        else
+        {
+            return 100;
+        }
+     }
+ 
+     public void setHungerValue(int value)
+     {
+         if (value > 100)
+         {
+             hunger = 100;
+         }
+         else if (value < 1)
+         {
+             hunger = 1;
+         }
+         else
+         {
+             hunger = value;
+         }
+         hungerTime = MyPetConfig.hungerSystemTime;
+     }
+ 
+     public int getDamage()
+     {
+         return MyPet.getStartDamage(this.getClass()) + (getSkills().hasSkill("Damage") ? getSkills().getSkillLevel("Damage") : 0);
+     }
+ 
+     public MyPetSkills getSkills()
+     {
+         return skills;
+     }
+ 
+     public MyPetExperience getExperience()
+     {
+         return experience;
+     }
+ 
+     public Location getLocation()
+     {
+         if (status == PetState.Here)
+         {
+             return craftMyPet.getLocation();
+         }
+         else
+         {
+             return petLocation;
+         }
+     }
+ 
+     public void setLocation(Location loc)
+     {
+         this.petLocation = loc;
+         if (status == PetState.Here && MyPetUtil.canSpawn(loc, this.craftMyPet.getHandle()))
+         {
+             craftMyPet.teleport(loc);
+         }
+     }
+ 
+     public void scheduleTask()
+     {
+         if (status != PetState.Despawned && getOwner().isOnline())
+         {
+             if (skills.getSkills().size() > 0)
+             {
+                 for (MyPetGenericSkill skill : skills.getSkills())
+                 {
+                     skill.schedule();
+                 }
+             }
+             if (status == PetState.Dead)
+             {
+                 respawnTime--;
+                 if (respawnTime <= 0)
+                 {
+                     respawnPet();
+                 }
+             }
+            if (MyPetConfig.hungerSystem && hunger > 1 && --hungerTime <= 0)
+             {
+                 hunger--;
+                 hungerTime = MyPetConfig.hungerSystemTime;
+             }
+         }
+     }
+ 
+     public MyPetPlayer getOwner()
+     {
+         return petOwner;
+     }
+ 
+     public void sendMessageToOwner(String text)
+     {
+         if (petOwner.isOnline())
+         {
+             getOwner().getPlayer().sendMessage(text);
+         }
+     }
+ 
+     public static int getStartHP(Class<? extends MyPet> myPetClass)
+     {
+         if (startHP.containsKey(myPetClass))
+         {
+             return startHP.get(myPetClass);
+         }
+         return 1;
+     }
+ 
+     public static void setStartHP(Class<? extends MyPet> myPetClass, int hp)
+     {
+         startHP.put(myPetClass, hp);
+     }
+ 
+     public static int getStartDamage(Class<? extends MyPet> myPetClass)
+     {
+         if (startDamage.containsKey(myPetClass))
+         {
+             return startDamage.get(myPetClass);
+         }
+         return 1;
+     }
+ 
+     public static void setStartDamage(Class<? extends MyPet> myPetClass, int damage)
+     {
+         startDamage.put(myPetClass, damage);
+     }
+ 
+     public static float getStartSpeed(Class<? extends MyPet> myPetClass)
+     {
+         if (startSpeed.containsKey(myPetClass))
+         {
+             return startSpeed.get(myPetClass);
+         }
+         return 0.3F;
+     }
+ 
+     public static void setStartSpeed(Class<? extends MyPet> myPetClass, float speed)
+     {
+         startSpeed.put(myPetClass, speed);
+     }
+ 
+     public static List<Material> getFood(Class<? extends MyPet> myPetClass)
+     {
+         List<Material> foodList = new ArrayList<Material>();
+         if (food.containsKey(myPetClass))
+         {
+             foodList.addAll(food.get(myPetClass));
+         }
+         return foodList;
+     }
+ 
+     public static void setFood(Class<? extends MyPet> myPetClass, Material foodToAdd)
+     {
+         if (food.containsKey(myPetClass))
+         {
+             List<Material> foodList = food.get(myPetClass);
+             if (!foodList.contains(foodToAdd))
+             {
+                 foodList.add(foodToAdd);
+             }
+         }
+         else
+         {
+             List<Material> foodList = new ArrayList<Material>();
+             foodList.add(foodToAdd);
+             food.put(myPetClass, foodList);
+         }
+     }
+ 
+     public static List<LeashFlag> getLeashFlags(Class<? extends MyPet> myPetClass)
+     {
+         List<LeashFlag> leashFlagList = new ArrayList<LeashFlag>();
+         if (leashFlags.containsKey(myPetClass))
+         {
+             leashFlagList.addAll(leashFlags.get(myPetClass));
+         }
+         return leashFlagList;
+     }
+ 
+     public static void setLeashFlags(Class<? extends MyPet> myPetClass, LeashFlag leashFlagToAdd)
+     {
+         if (leashFlags.containsKey(myPetClass))
+         {
+             List<LeashFlag> leashFlagList = leashFlags.get(myPetClass);
+             if (!leashFlagList.contains(leashFlagToAdd))
+             {
+                 leashFlagList.add(leashFlagToAdd);
+             }
+         }
+         else
+         {
+             List<LeashFlag> leashFlagList = new ArrayList<LeashFlag>();
+             leashFlagList.add(leashFlagToAdd);
+             leashFlags.put(myPetClass, leashFlagList);
+         }
+     }
+ 
+     public static Float[] getEntitySize(Class<? extends MyPet> myPetClass)
+     {
+         if (entitySizes.containsKey(myPetClass))
+         {
+             return entitySizes.get(myPetClass);
+         }
+         return null;
+     }
+ 
+     public boolean isPassiv()
+     {
+         return getDamage() == 0;
+     }
+ 
+     public abstract MyPetType getPetType();
+ 
+     public NBTTagCompound getExtendedInfo()
+     {
+         return new NBTTagCompound("Info");
+     }
+ 
+     public void setExtendedInfo(NBTTagCompound info)
+     {
+     }
+ 
+     @Override
+     public String toString()
+     {
+         return "MyPet{owner=" + getOwner().getName() + ", name=" + petName + ", exp=" + experience.getExp() + "/" + experience.getRequiredExp() + ", lv=" + experience.getLevel() + ", status=" + status.name() + ", skilltree=" + skillTree.getName() + "}";
+     }
+ }

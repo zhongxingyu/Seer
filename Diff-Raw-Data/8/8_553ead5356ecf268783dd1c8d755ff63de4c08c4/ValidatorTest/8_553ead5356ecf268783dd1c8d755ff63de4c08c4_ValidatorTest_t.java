@@ -1,0 +1,127 @@
+ package br.com.caelum.vraptor.vraptor2;
+ 
+ import java.io.IOException;
+ 
+ import javax.servlet.ServletException;
+ 
+import org.hamcrest.Matcher;
+ import org.jmock.Expectations;
+ import org.junit.Before;
+ import org.junit.Test;
+ import org.vraptor.i18n.Message;
+import org.vraptor.i18n.ValidationMessage;
+ import org.vraptor.validator.ValidationErrors;
+ 
+ import br.com.caelum.vraptor.InterceptionException;
+ import br.com.caelum.vraptor.VRaptorMockery;
+ import br.com.caelum.vraptor.core.InterceptorStack;
+ import br.com.caelum.vraptor.http.ParametersProvider;
+ import br.com.caelum.vraptor.resource.ResourceMethod;
+ import br.com.caelum.vraptor.view.jsp.PageResult;
+ 
+ public class ValidatorTest {
+ 
+     private VRaptorMockery mockery;
+     private Validator validator;
+     private PageResult result;
+     private ParametersProvider provider;
+     private InterceptorStack stack;
+     private ValidationErrors errors;
+ 
+     @Before
+     public void setup() {
+         this.mockery = new VRaptorMockery();
+         this.result = mockery.mock(PageResult.class);
+         this.provider = mockery.mock(ParametersProvider.class);
+         this.errors = mockery.mock(ValidationErrors.class);
+         this.validator = new Validator(this.provider, this.result, errors);
+         this.stack = mockery.mock(InterceptorStack.class);
+     }
+ 
+     class OldComponent {
+         void method() {
+         }
+     }
+ 
+     @Test
+     public void doesNothingIfNotAnOldComponent() throws InterceptionException, IOException, NoSuchMethodException {
+         final OldComponent resourceInstance = new OldComponent();
+         final ResourceMethod method = mockery.methodFor(OldComponent.class, "method");
+         mockery.checking(new Expectations() {
+             {
+                 one(stack).next(method, resourceInstance);
+             }
+         });
+         validator.intercept(stack, method, resourceInstance);
+         mockery.assertIsSatisfied();
+     }
+     
+     @org.vraptor.annotations.Component
+     interface MyComponent {
+         void noValidation();
+         void withValidation();
+         void validateWithValidation(ValidationErrors errors);
+     }
+ 
+ 
+     @Test
+     public void doestNothingIfValidationMethodNotFound() throws NoSuchMethodException, InterceptionException, IOException {
+         final MyComponent resourceInstance = mockery.mock(MyComponent.class);
+         final ResourceMethod method = mockery.methodFor(MyComponent.class, "noValidation");
+         mockery.checking(new Expectations() {
+             {
+                 one(stack).next(method, resourceInstance);
+             }
+         });
+         validator.intercept(stack, method, resourceInstance);
+         mockery.assertIsSatisfied();
+     }
+ 
+     @Test
+     public void forwardToValidationPageWithErrorsIfSomeFound() throws NoSuchMethodException, InterceptionException, IOException, ServletException {
+         final MyComponent resourceInstance = new MyComponent() {
+             public void validateWithValidation(ValidationErrors errors) {
+                 errors.add(new Message("", ""));
+             }
+             public void noValidation() {
+             }
+             public void withValidation() {
+             }
+         };
+         final ResourceMethod method = mockery.methodFor(MyComponent.class, "withValidation");
+         mockery.checking(new Expectations() {
+             {
+                 one(provider).getParametersFor(method); will(returnValue(new Object[0]));
+                 one(result).include(with(equal("errors")), with(an(ValidationErrors.class)));
+                 one(result).forward("invalid");
+                one(errors).add(with((Matcher<? extends ValidationMessage>) an(Message.class)));
+                one(errors).size(); will(returnValue(1));
+             }
+         });
+         validator.intercept(stack, method, resourceInstance);
+         mockery.assertIsSatisfied();
+     }
+ 
+     @Test
+     public void doesNothingIfValidationMethodExistsButNoErrorsOccur() throws NoSuchMethodException, InterceptionException, IOException {
+         final MyComponent resourceInstance = new MyComponent() {
+             public void validateWithValidation(ValidationErrors errors) {
+             }
+             public void noValidation() {
+             }
+             public void withValidation() {
+             }
+         };
+         final ResourceMethod method = mockery.methodFor(MyComponent.class, "withValidation");
+         mockery.checking(new Expectations() {
+             {
+                 one(provider).getParametersFor(method); will(returnValue(new Object[0]));
+                 one(stack).next(method, resourceInstance);
+                one(errors).size(); will(returnValue(0));
+             }
+         });
+         validator.intercept(stack, method, resourceInstance);
+         mockery.assertIsSatisfied();
+     }
+ 
+ }

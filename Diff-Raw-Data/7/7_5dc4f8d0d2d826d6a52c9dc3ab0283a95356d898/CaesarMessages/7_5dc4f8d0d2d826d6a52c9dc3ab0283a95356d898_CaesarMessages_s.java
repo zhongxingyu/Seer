@@ -1,0 +1,23 @@
+ package org.caesarj.compiler.constants;
+ 
+ import org.caesarj.util.MessageDescription;
+ 
+ public interface CaesarMessages extends org.caesarj.util.Messages {
+   MessageDescription	WEAVING_FAILED = new MessageDescription("weaving failed", null, 0);
+   MessageDescription	PROCEED_OUTSIDE_AROUND_ADVICE = new MessageDescription("proceed() can only be used inside an around-advice", null, 0);
+   MessageDescription	ADVICE_FLAGS = new MessageDescription("only strictfp modifier allowed for Advices", null, 0);
+   MessageDescription	WEAVER_ERROR = new MessageDescription("{0}", null, 0);
+   MessageDescription	ASPECTJ_ERROR = new MessageDescription("{0}", null, 0);
+   MessageDescription	ASPECTJ_WARNING = new MessageDescription("{0}", null, 2);
+   MessageDescription	POINTCUTS_OR_ADVICES_IN_NON_CROSSCUTTING_CLASS = new MessageDescription("pointcuts and advices may be declared in crosscutting or statically deployed classes only", null, 0);
+   MessageDescription	DEPLOYED_CLASS_CONSTRUCTOR_NON_PRIVATE_OR_WITH_PARAMETER = new MessageDescription("the constructor of a statically deployed class must be private and must not have any parameters", null, 0);
+   MessageDescription	DEPLOYED_FIELD_NOT_FINAL_AND_STATIC = new MessageDescription("statically deployed fields must be declared final and static", null, 0);
+   MessageDescription	DEPLOYED_CLASS_NOT_CROSSCUTTING = new MessageDescription("only instances of crosscutting classes can be deployed", null, 0);
+   MessageDescription	DESCENDANT_OF_CROSSCUTTING_CLASS_NOT_DECLARED_CROSSCUTTING = new MessageDescription("descendants of crosscutting classes must be declared crosscutting", null, 0);
+  MessageDescription	ONLY_PUBLIC_CCLASS = new MessageDescription("Current Caesar version allows only a public cclass. Class modifier automatically set to public.", null, 1);
+   MessageDescription	ONLY_DEF_CTOR_ALLOWED = new MessageDescription("A virtual class may have only a default constructor.", null, 0);
+   MessageDescription	NAME_CLASH = new MessageDescription("Name clash for member \"{0}\" detected.", null, 0);
+   MessageDescription	CLASS_GENERATOR = new MessageDescription("Class Generator failed on \"{0}\": {1}.", null, 0);
+   MessageDescription	CCLASS_ARRAYS_NOT_ALLOWED = new MessageDescription("Currently arrays of Caesar classes are not supported.", null, 0);
+   MessageDescription	FATAL_ERROR = new MessageDescription("Fatal error! Everything is going to explode. Panic! Women and children first!", null, 0);
+ }

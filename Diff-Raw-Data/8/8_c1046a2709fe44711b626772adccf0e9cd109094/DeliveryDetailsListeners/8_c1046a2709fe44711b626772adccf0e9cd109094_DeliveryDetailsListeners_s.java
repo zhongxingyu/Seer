@@ -1,0 +1,262 @@
+ /**
+  * ***************************************************************************
+  * Copyright (c) 2010 Qcadoo Limited
+  * Project: Qcadoo MES
+  * Version: 1.2.0
+  *
+  * This file is part of Qcadoo.
+  *
+  * Qcadoo is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU Affero General Public License as published
+  * by the Free Software Foundation; either version 3 of the License,
+  * or (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty
+  * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  * See the GNU Affero General Public License for more details.
+  *
+  * You should have received a copy of the GNU Affero General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  * ***************************************************************************
+  */
+ package com.qcadoo.mes.deliveries.listeners;
+ 
+ import static com.qcadoo.mes.deliveries.constants.DeliveredProductFields.DAMAGED_QUANTITY;
+ import static com.qcadoo.mes.deliveries.constants.DeliveredProductFields.DELIVERED_QUANTITY;
+ import static com.qcadoo.mes.deliveries.constants.DeliveredProductFields.PRODUCT;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.DELIVERED_PRODUCTS;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.DELIVERY_DATE;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.EXTERNAL_SYNCHRONIZED;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.ORDERED_PRODUCTS;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.RELATED_DELIVERY;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.STATE;
+ import static com.qcadoo.mes.deliveries.constants.DeliveryFields.SUPPLIER;
+ import static com.qcadoo.mes.deliveries.constants.OrderedProductFields.ORDERED_QUANTITY;
+ import static com.qcadoo.mes.deliveries.states.constants.DeliveryStateStringValues.RECEIVED;
+ 
+ import java.math.BigDecimal;
+ import java.util.Date;
+ import java.util.List;
+ import java.util.Map;
+ 
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Component;
+ 
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import com.qcadoo.mes.deliveries.DeliveriesService;
+ import com.qcadoo.mes.deliveries.constants.DeliveriesConstants;
+ import com.qcadoo.mes.deliveries.constants.DeliveryFields;
+ import com.qcadoo.mes.deliveries.hooks.DeliveryDetailsHooks;
+ import com.qcadoo.model.api.Entity;
+ import com.qcadoo.model.api.NumberService;
+ import com.qcadoo.view.api.ComponentState;
+ import com.qcadoo.view.api.ComponentState.MessageType;
+ import com.qcadoo.view.api.ViewDefinitionState;
+ import com.qcadoo.view.api.components.FormComponent;
+ import com.qcadoo.view.api.utils.NumberGeneratorService;
+ 
+ @Component
+ public class DeliveryDetailsListeners {
+ 
+     private static final String L_FORM = "form";
+ 
+     private static final String L_WINDOW_ACTIVE_MENU = "window.activeMenu";
+ 
+     @Autowired
+     private DeliveriesService deliveriesService;
+ 
+     @Autowired
+     private DeliveryDetailsHooks deliveryDetailsHooks;
+ 
+     @Autowired
+     private NumberService numberService;
+ 
+     @Autowired
+     private NumberGeneratorService numberGeneratorService;
+ 
+     public void fillBufferForSupplier(final ViewDefinitionState view, final ComponentState state, final String[] args) {
+         deliveryDetailsHooks.fillBufferForSupplier(view);
+     }
+ 
+     public final void printDeliveryReport(final ViewDefinitionState view, final ComponentState state, final String[] args) {
+         if (state instanceof FormComponent) {
+             state.performEvent(view, "save", args);
+ 
+             if (!state.isHasError()) {
+                 view.redirectTo("/deliveries/deliveryReport." + args[0] + "?id=" + state.getFieldValue(), true, false);
+             }
+         } else {
+             state.addMessage("deliveries.delivery.report.componentFormError", MessageType.FAILURE);
+         }
+     }
+ 
+     public final void printOrderReport(final ViewDefinitionState view, final ComponentState state, final String[] args) {
+         if (state instanceof FormComponent) {
+             state.performEvent(view, "save", args);
+ 
+             if (!state.isHasError()) {
+                 view.redirectTo("/deliveries/orderReport." + args[0] + "?id=" + state.getFieldValue(), true, false);
+             }
+         } else {
+             state.addMessage("deliveries.order.report.componentFormError", MessageType.FAILURE);
+         }
+     }
+ 
+     public final void copyOrderedProductToDelivered(final ViewDefinitionState view, final ComponentState state,
+             final String[] args) {
+         FormComponent deliveryForm = (FormComponent) view.getComponentByReference(L_FORM);
+         Long deliveryId = deliveryForm.getEntityId();
+ 
+         if (deliveryId == null) {
+             return;
+         }
+ 
+         Entity delivery = deliveriesService.getDelivery(deliveryId);
+ 
+         List<Entity> orderedProducts = delivery.getHasManyField(ORDERED_PRODUCTS);
+ 
+         copyOrderedProductToDelivered(delivery, orderedProducts);
+     }
+ 
+     private void copyOrderedProductToDelivered(final Entity delivery, final List<Entity> orderedProducts) {
+         // ALBR deliveredProduct has a validation so we have to delete all
+         // entities before save HM field in delivery
+         delivery.setField(DELIVERED_PRODUCTS, Lists.newArrayList());
+         delivery.getDataDefinition().save(delivery);
+         delivery.setField(DELIVERED_PRODUCTS, Lists.newArrayList(createDeliveredProducts(orderedProducts)));
+ 
+         delivery.getDataDefinition().save(delivery);
+     }
+ 
+     private List<Entity> createDeliveredProducts(final List<Entity> orderedProducts) {
+         List<Entity> deliveredProducts = Lists.newArrayList();
+ 
+         for (Entity orderedProduct : orderedProducts) {
+             deliveredProducts.add(createDeliveredProduct(orderedProduct));
+         }
+ 
+         return deliveredProducts;
+     }
+ 
+     private Entity createDeliveredProduct(final Entity orderedProduct) {
+         Entity deliveredProduct = deliveriesService.getDeliveredProductDD().create();
+ 
+         deliveredProduct.setField(PRODUCT, orderedProduct.getBelongsToField(PRODUCT));
+ 
+         return deliveredProduct;
+     }
+ 
+     public final void createPartialDelivery(final ViewDefinitionState view, final ComponentState state, final String[] args) {
+         FormComponent deliveryForm = (FormComponent) view.getComponentByReference(L_FORM);
+         Long deliveryId = deliveryForm.getEntityId();
+ 
+         if (deliveryId == null) {
+             return;
+         }
+ 
+         Entity delivery = deliveriesService.getDelivery(deliveryId);
+ 
+         if (RECEIVED.equals(delivery.getStringField(STATE))) {
+             Entity partialDelivery = createPartialDelivery(delivery);
+ 
+             if (partialDelivery == null) {
+                 deliveryForm.addMessage("deliveries.delivery.partialDelivery.thereAreNoLacksToCover", MessageType.INFO);
+ 
+                 return;
+             }
+ 
+             Long partialDeliveryId = partialDelivery.getId();
+ 
+             Map<String, Object> parameters = Maps.newHashMap();
+             parameters.put("form.id", partialDeliveryId);
+ 
+             parameters.put(L_WINDOW_ACTIVE_MENU, "deliveries.deliveryDetails");
+ 
+             String url = "../page/deliveries/deliveryDetails.html";
+             view.redirectTo(url, false, true, parameters);
+         }
+     }
+ 
+     private Entity createPartialDelivery(final Entity delivery) {
+         Entity partialDelivery = null;
+ 
+         List<Entity> orderedProducts = createOrderedProducts(delivery);
+ 
+         if (!orderedProducts.isEmpty()) {
+             partialDelivery = deliveriesService.getDeliveryDD().create();
+ 
+             partialDelivery.setField(DeliveryFields.NUMBER, numberGeneratorService.generateNumber(
+                     DeliveriesConstants.PLUGIN_IDENTIFIER, DeliveriesConstants.MODEL_DELIVERY));
+             partialDelivery.setField(SUPPLIER, delivery.getBelongsToField(SUPPLIER));
+             partialDelivery.setField(DELIVERY_DATE, new Date());
+             partialDelivery.setField(RELATED_DELIVERY, delivery);
+             partialDelivery.setField(ORDERED_PRODUCTS, orderedProducts);
+             partialDelivery.setField(EXTERNAL_SYNCHRONIZED, true);
+ 
+             partialDelivery = partialDelivery.getDataDefinition().save(partialDelivery);
+         }
+ 
+         return partialDelivery;
+     }
+ 
+     private List<Entity> createOrderedProducts(final Entity delivery) {
+         List<Entity> newOrderedProducts = Lists.newArrayList();
+ 
+         List<Entity> orderedProducts = delivery.getHasManyField(ORDERED_PRODUCTS);
+         List<Entity> deliveredProducts = delivery.getHasManyField(DELIVERED_PRODUCTS);
+ 
+         for (Entity orderedProduct : orderedProducts) {
+             Entity deliveredProduct = getDeliveredProduct(deliveredProducts, orderedProduct);
+ 
+             if (deliveredProduct == null) {
+                 BigDecimal orderedQuantity = orderedProduct.getDecimalField(ORDERED_QUANTITY);
+ 
+                 newOrderedProducts.add(createOrderedProduct(orderedProduct, orderedQuantity));
+             } else {
+                 BigDecimal orderedQuantity = getLackQuantity(orderedProduct, deliveredProduct);
+ 
+                 if (BigDecimal.ZERO.compareTo(orderedQuantity) < 0) {
+                     newOrderedProducts.add(createOrderedProduct(orderedProduct, orderedQuantity));
+                 }
+             }
+         }
+ 
+         return newOrderedProducts;
+     }
+ 
+     private Entity getDeliveredProduct(final List<Entity> deliveredProducts, final Entity orderedProduct) {
+         for (Entity deliveredProduct : deliveredProducts) {
+             if (checkIfProductsAreSame(orderedProduct, deliveredProduct)) {
+                 return deliveredProduct;
+             }
+         }
+ 
+         return null;
+     }
+ 
+     private boolean checkIfProductsAreSame(final Entity orderedProduct, final Entity deliveredProduct) {
+         return (orderedProduct.getBelongsToField(PRODUCT).getId().equals(deliveredProduct.getBelongsToField(PRODUCT).getId()));
+     }
+ 
+     private Entity createOrderedProduct(final Entity orderedProduct, final BigDecimal orderedQuantity) {
+         Entity newOrderedProduct = deliveriesService.getOrderedProductDD().create();
+ 
+         newOrderedProduct.setField(PRODUCT, orderedProduct.getBelongsToField(PRODUCT));
+         newOrderedProduct.setField(ORDERED_QUANTITY, numberService.setScale(orderedQuantity));
+ 
+         return newOrderedProduct;
+     }
+ 
+     private BigDecimal getLackQuantity(final Entity orderedProduct, final Entity deliveredProduct) {
+         BigDecimal orderedQuantity = orderedProduct.getDecimalField(ORDERED_QUANTITY);
+         BigDecimal deliveredQuantity = deliveredProduct.getDecimalField(DELIVERED_QUANTITY);
+         BigDecimal damagedQuantity = deliveredProduct.getDecimalField(DAMAGED_QUANTITY);
+ 
+        return orderedQuantity.subtract(deliveredQuantity, numberService.getMathContext()).add(damagedQuantity,
+                numberService.getMathContext());
+     }
+ 
+ }

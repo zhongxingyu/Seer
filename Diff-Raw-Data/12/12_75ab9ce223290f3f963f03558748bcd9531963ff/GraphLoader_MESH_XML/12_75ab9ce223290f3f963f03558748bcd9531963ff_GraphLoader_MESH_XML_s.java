@@ -1,0 +1,234 @@
+ /*
+  * 
+  * Copyright or © or Copr. Ecole des Mines d'Alès (2012) 
+  * LGI2P research center
+  * This software is governed by the CeCILL  license under French law and
+  * abiding by the rules of distribution of free software.  You can  use, 
+  * modify and/ or redistribute the software under the terms of the CeCILL
+  * license as circulated by CEA, CNRS and INRIA at the following URL
+  * "http://www.cecill.info". 
+  * 
+  * As a counterpart to the access to the source code and  rights to copy,
+  * modify and redistribute granted by the license, users are provided only
+  * with a limited warranty  and the software's author,  the holder of the
+  * economic rights,  and the successive licensors  have only  limited
+  * liability. 
+  * 
+  * In this respect, the user's attention is drawn to the risks associated
+  * with loading,  using,  modifying and/or developing or reproducing the
+  * software by the user in light of its specific status of free software,
+  * that may mean  that it is complicated to manipulate,  and  that  also
+  * therefore means  that it is reserved for developers  and  experienced
+  * professionals having in-depth computer knowledge. Users are therefore
+  * encouraged to load and test the software's suitability as regards their
+  * requirements in conditions enabling the security of their systems and/or 
+  * data to be ensured and,  more generally, to use and operate it in the 
+  * same conditions as regards security. 
+  * 
+  * The fact that you are presently reading this means that you have had
+  * knowledge of the CeCILL license and that you accept its terms.
+  * 
+  */
+ package slib.sglib.io.loader.bio.mesh;
+ 
+ /**
+  *
+  * @author Harispe Sébastien <harispe.sebastien@gmail.com>
+  */
+ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.Map;
+ import java.util.Map.Entry;
+ import java.util.Set;
+ import javax.xml.parsers.SAXParser;
+ import javax.xml.parsers.SAXParserFactory;
+ import org.openrdf.model.URI;
+ import org.openrdf.model.vocabulary.OWL;
+ import org.openrdf.model.vocabulary.RDFS;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import slib.sglib.io.conf.GDataConf;
+ import slib.sglib.io.conf.GraphConf;
+ import slib.sglib.io.loader.GraphLoader;
+ import slib.sglib.io.loader.GraphLoaderGeneric;
+ import slib.sglib.model.graph.G;
+ import slib.sglib.model.graph.elements.E;
+ import slib.sglib.model.graph.elements.V;
+ import slib.sglib.model.graph.elements.type.VType;
+ import slib.sglib.model.impl.graph.elements.Edge;
+ import slib.sglib.model.impl.graph.elements.Vertex;
+ import slib.sglib.model.impl.repo.DataFactoryMemory;
+ import slib.sglib.model.voc.SLIBVOC;
+ import slib.sglib.model.repo.DataFactory;
+ import slib.utils.ex.SLIB_Ex_Critic;
+ import slib.utils.ex.SLIB_Exception;
+ 
+ /**
+  * MeSH Loader. This class permits to load the MeSH trees into a Directed
+  * Acyclic Graph http://www.nlm.nih.gov/mesh/trees.html
+  *
+  * The loader was designed for the 2013 XML version of the MeSH, coherency with
+  * prior or older version hasn't been tested.
+  *
+  * @author Harispe Sébastien
+  */
+ public class GraphLoader_MESH_XML implements GraphLoader {
+ 
+     Logger logger = LoggerFactory.getLogger(this.getClass());
+     Map<String, MeshConcept> idToConcepts = new HashMap<String, MeshConcept>();
+     Set<MeshConcept> concepts = new HashSet<MeshConcept>();
+     G graph;
+     DataFactory factory = DataFactoryMemory.getSingleton();
+     /**
+      *
+      */
+     public static final String ARG_PREFIX = "prefix";
+     String default_namespace;
+ 
+     /**
+      * Return parent ID i.e. giving C10.228.140.300.275.500 will return
+      * C10.228.140.300.275
+      *
+      * @return
+      */
+     private String getParentId(String id) {
+ 
+         String[] data = id.split("\\.");
+         String idParent = null;
+ 
+         for (int i = data.length - 2; i >= 0; i--) {
+             if (idParent == null) {
+                 idParent = data[i];
+             } else {
+                 idParent = data[i] + "." + idParent;
+             }
+         }
+         return idParent;
+     }
+ 
+     void addConcept(MeshConcept concept) {
+         for (String s : concept.treeNumberList) {
+             idToConcepts.put(s, concept);
+         }
+         concepts.add(concept);
+     }
+ 
+     @Override
+     public G load(GraphConf conf) throws SLIB_Exception {
+         return GraphLoaderGeneric.load(conf);
+     }
+ 
+     @Override
+     public void populate(GDataConf conf, G g) throws SLIB_Exception {
+ 
+         this.graph = g;
+ 
+ 
+         default_namespace = (String) conf.getParameter(ARG_PREFIX);
+ 
+         if (default_namespace == null) {
+             default_namespace = graph.getURI().getNamespace();
+         }
+         try {
+             logger.info("Loading Mesh XML");
+             idToConcepts = new HashMap<String, MeshConcept>();
+             SAXParserFactory parserfactory = SAXParserFactory.newInstance();
+             SAXParser saxParser;
+ 
+             saxParser = parserfactory.newSAXParser();
+             saxParser.parse(conf.getLoc(), new MeshXMLHandler(this));
+ 
+ 
+             logger.info("Number of descriptor loaded " + concepts.size());
+             logger.info("Loading relationships ");
+ 
+             // Create universal root if required
+             V universalRoot = graph.getV(SLIBVOC.THING_OWL);
+ 
+             if (universalRoot == null) {
+                 URI universalRootURI = factory.createURI(SLIBVOC.THING_OWL.stringValue());
+                 universalRoot = graph.addV(new Vertex(universalRootURI, VType.CLASS));
+             }
+ 
+             // create relationships and roots of each tree
+             for (Entry<String, MeshConcept> e : idToConcepts.entrySet()) {
+ 
+                 MeshConcept c = e.getValue();
+ 
+                 V vConcept = getOrCreateVertex(c.descriptorUI);
+ 
+ 
+                 for (String treeNumber : c.treeNumberList) {
+ 
+                     String parentId = getParentId(treeNumber);
+ 
+                     if (parentId != null) {
+ 
+                         MeshConcept parent = idToConcepts.get(parentId);
+ 
+                         if (parent == null) {
+                             throw new SLIB_Ex_Critic("Cannot locate parent identified by TreeNumber " + treeNumber);
+                         } else {
+ 
+                             //System.out.println("\t" + parentId + "\t" + parent.descriptorUI);
+                             V vParent = getOrCreateVertex(parent.descriptorUI);
+                             E edge = new Edge(vConcept, vParent, RDFS.SUBCLASSOF);
+ 
+                             g.addE(edge);
+                         }
+                     } else {
+                         /* Those vertices are the inner roots of each trees, 
+                          * i.e. Psychiatry and Psychology [F] tree has for inner roots:
+                          *  - Behavior and Behavior Mechanisms [F01] 
+                          *  - Psychological Phenomena and Processes [F02] 
+                          *  - Mental Disorders [F03] 
+                          *  - Behavioral Disciplines and Activities [F04] 
+                          * A vertex has already been created for each inner root (e.g. F01, F02, F03, F04) 
+                          * , we therefore create a vertex for the tree root (e.g. F).
+                          * Finally all the tree roots are rooted by a global root which do not 
+                          * correspond to a concept specified into the mesh.
+                          * 
+                          * More information about MeSH trees at http://www.nlm.nih.gov/mesh/trees.html
+                          */
+ 
+                        // we link the concept to the corresponding tree inner root
+                        V innerRootTree = getOrCreateVertex(treeNumber); // e.g. F01
+                        E edgeConceptToTreeInnerRoot = new Edge(vConcept, innerRootTree, RDFS.SUBCLASSOF);
+                        g.addE(edgeConceptToTreeInnerRoot);
+                        logger.debug("Creating Edge : " + edgeConceptToTreeInnerRoot);
+
+                         // we link the tree inner root to the root tree
+                         char localNameTreeRoot = treeNumber.charAt(0); // id of the tree root
+                         V rootTree = getOrCreateVertex(localNameTreeRoot + ""); // e.g. F
+                        E treeInnerRootToTreeRoot = new Edge(innerRootTree, rootTree, RDFS.SUBCLASSOF);
+                         g.addE(treeInnerRootToTreeRoot);
+                         logger.debug("Creating Edge : " + treeInnerRootToTreeRoot);
+ 
+                         // we link the tree root to the universal root
+                         E treeRootToUniversalRoot = new Edge(rootTree, universalRoot, RDFS.SUBCLASSOF);
+                         g.addE(treeRootToUniversalRoot);
+                         logger.debug("Creating Edge : " + treeRootToUniversalRoot);
+                     }
+                 }
+             }
+ 
+        } catch (Exception ex) { // sorry
+             throw new SLIB_Ex_Critic(ex.getMessage());
+         }
+ 
+         logger.info("MESH loader - process performed");
+     }
+ 
+     private V getOrCreateVertex(String descriptorUI) {
+ 
+         String uriConceptAsString = default_namespace + descriptorUI;
+ 
+         URI uriConcept = factory.createURI(uriConceptAsString);
+         V vConcept = graph.getV(uriConcept);
+ 
+         if (vConcept == null) {
+             vConcept = graph.addV(new Vertex(uriConcept, VType.CLASS));
+         }
+         return vConcept;
+     }
+ }

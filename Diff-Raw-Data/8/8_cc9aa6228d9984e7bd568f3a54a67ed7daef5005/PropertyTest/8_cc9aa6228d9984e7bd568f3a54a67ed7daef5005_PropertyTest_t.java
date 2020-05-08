@@ -1,0 +1,244 @@
+ package org.tessell.tests.model.properties;
+ 
+ import static org.hamcrest.CoreMatchers.nullValue;
+ import static org.hamcrest.MatcherAssert.assertThat;
+ import static org.hamcrest.Matchers.is;
+ import static org.tessell.model.properties.NewProperty.booleanProperty;
+ import static org.tessell.model.properties.NewProperty.integerProperty;
+ import static org.tessell.model.properties.NewProperty.stringProperty;
+ 
+ import org.junit.Test;
+ import org.tessell.model.events.PropertyChangedEvent;
+ import org.tessell.model.events.PropertyChangedHandler;
+ import org.tessell.model.properties.BooleanProperty;
+ import org.tessell.model.properties.IntegerProperty;
+ import org.tessell.model.properties.Property;
+ import org.tessell.model.properties.StringProperty;
+ import org.tessell.model.validation.Valid;
+ import org.tessell.model.validation.rules.Custom;
+ import org.tessell.model.values.DerivedValue;
+ import org.tessell.model.values.SetValue;
+ import org.tessell.tests.model.validation.rules.AbstractRuleTest;
+ 
+ public class PropertyTest extends AbstractRuleTest {
+ 
+   @Test
+   public void twoWayDerived() {
+     final IntegerProperty a = integerProperty("a", 3);
+     final IntegerProperty b = integerProperty("b", 2);
+     listenTo(a);
+     listenTo(b);
+     a.touch();
+     b.touch();
+ 
+     a.addRule(new Custom("a must be greater than b", new DerivedValue<Boolean>() {
+       public Boolean get() {
+         return a.get() > b.get();
+       }
+     }));
+ 
+     b.addRule(new Custom("b must be within 5 of a", new DerivedValue<Boolean>() {
+       public Boolean get() {
+         return Math.abs(a.get() - b.get()) <= 5;
+       }
+     }));
+ 
+     assertMessages("");
+ 
+     a.set(-10);
+     assertMessages("a must be greater than b", "b must be within 5 of a");
+   }
+ 
+   @Test
+   public void validationHappensBeforeChange() {
+     final IntegerProperty a = integerProperty("a", 10);
+     a.addRule(new Custom("a must be greater than 5", new DerivedValue<Boolean>() {
+       public Boolean get() {
+         return a.get() != null && a.get() > 5;
+       }
+     }));
+ 
+     final Boolean[] wasInvalidOnChange = { null };
+     a.addPropertyChangedHandler(new PropertyChangedHandler<Integer>() {
+       public void onPropertyChanged(PropertyChangedEvent<Integer> event) {
+         wasInvalidOnChange[0] = a.wasValid() == Valid.NO;
+       }
+     });
+ 
+     a.set(1);
+     assertThat(wasInvalidOnChange[0], is(true));
+   }
+ 
+   @Test
+   public void validationOfDerivedValuesHappensBeforeChange() {
+     final IntegerProperty a = integerProperty("a");
+     final IntegerProperty b = integerProperty("b");
+     b.addRule(new Custom("b must be greater than a", new DerivedValue<Boolean>() {
+       public Boolean get() {
+         return b.get() == null || a.get() == null || b.get() > a.get();
+       }
+     }));
+ 
+     // set with good values
+     a.set(1);
+     b.set(2);
+ 
+     final Boolean[] asWasInvalid = { null };
+     a.addPropertyChangedHandler(new PropertyChangedHandler<Integer>() {
+       public void onPropertyChanged(PropertyChangedEvent<Integer> event) {
+         asWasInvalid[0] = b.wasValid() == Valid.NO;
+       }
+     });
+ 
+     a.set(3);
+     assertThat(asWasInvalid[0], is(true));
+   }
+ 
+   @Test
+   public void derivedWatchesGetValueMethod() {
+     final IntegerProperty a = integerProperty("a");
+     final BooleanProperty b = booleanProperty(new DerivedValue<Boolean>("not null") {
+       public Boolean get() {
+         return a.getValue() != null;
+       }
+     });
+     CountChanges c = new CountChanges();
+     b.addPropertyChangedHandler(c);
+     a.set(1);
+     assertThat(c.changes, is(1));
+   }
+ 
+   @Test
+   public void derivedWatchesWasValid() {
+     final IntegerProperty a = integerProperty("a");
+     final BooleanProperty b = booleanProperty(new DerivedValue<Boolean>("was valid") {
+       public Boolean get() {
+         return a.wasValid() == Valid.YES;
+       }
+     });
+     CountChanges c = new CountChanges();
+     b.addPropertyChangedHandler(c);
+     a.set(1);
+     assertThat(c.changes, is(1));
+   }
+ 
+   @Test
+   public void derivedWatchesIsTouched() {
+     final IntegerProperty a = integerProperty("a");
+     final BooleanProperty b = booleanProperty(new DerivedValue<Boolean>("not null") {
+       public Boolean get() {
+         return a.isTouched();
+       }
+     });
+     CountChanges c = new CountChanges();
+     b.addPropertyChangedHandler(c);
+     a.set(1);
+     assertThat(c.changes, is(1));
+   }
+ 
+   @Test
+   public void setInitialLeavesPropertiesUnTouched() {
+     final IntegerProperty a = integerProperty("a");
+     a.setInitialValue(1);
+     assertThat(a.isTouched(), is(false));
+   }
+ 
+   @Test
+   public void setIfNullLeavesPropertiesUnTouched() {
+     final IntegerProperty a = integerProperty("a");
+     a.setIfNull(1);
+     assertThat(a.isTouched(), is(false));
+   }
+ 
+   @Test
+   public void setDefaultValueChangesValueRightAwayIfNull() {
+     final IntegerProperty a = integerProperty("a");
+     a.setDefaultValue(1);
+     assertThat(a.get(), is(1));
+     assertThat(a.isTouched(), is(false));
+   }
+ 
+   @Test
+   public void setDefaultValueDoesNotChangeValueRightAwayIfNotNull() {
+     final IntegerProperty a = integerProperty("a", 0);
+     a.setDefaultValue(1);
+     assertThat(a.get(), is(0));
+     assertThat(a.isTouched(), is(false));
+   }
+ 
+   @Test
+   public void setDefaultValueChangesNullWhenSetLater() {
+     final IntegerProperty a = integerProperty("a", 0);
+     a.setDefaultValue(1);
+     a.set(null);
+     assertThat(a.get(), is(1));
+   }
+ 
+   @Test
+   public void setDefaultValueChangesNullWhenSetInitialLater() {
+     final IntegerProperty a = integerProperty("a");
+     a.setDefaultValue(1);
+     a.setInitialValue(null);
+     assertThat(a.get(), is(1));
+   }
+ 
+   @Test
+   public void setDefaultValueFiresChange() {
+     final BooleanProperty a = booleanProperty("a");
+     CountChanges c = new CountChanges();
+     a.addPropertyChangedHandler(c);
+     a.setDefaultValue(true);
+     assertThat(c.changes, is(1));
+     a.set(null);
+     assertThat(c.changes, is(1));
+   }
+ 
+   @Test
+   public void setDefaultValueWatchesForOutOfBandSets() {
+     final SetValue<Boolean> b = new SetValue<Boolean>("b");
+     final BooleanProperty p = booleanProperty(b);
+     p.setDefaultValue(true);
+     assertThat(b.get(), is(true));
+     // now have b get changed out of band
+     b.set(null);
+     p.reassess();
+     assertThat(p.get(), is(true));
+     assertThat(b.get(), is(true));
+   }
+ 
+   @Test
+   public void testIsValue() {
+     final StringProperty s = stringProperty("s");
+     final Property<Boolean> b = s.is("foo");
+     CountChanges c = new CountChanges();
+     b.addPropertyChangedHandler(c);
+ 
+     assertThat(b.getValue(), is(false));
+    assertThat(b.isTouched(), is(false));
+ 
+     s.set("foo");
+     assertThat(b.getValue(), is(true));
+     assertThat(c.changes, is(1));
+ 
+     s.set("bar");
+     assertThat(b.getValue(), is(false));
+     assertThat(c.changes, is(2));
+ 
+     b.setValue(true);
+     assertThat(s.get(), is("foo"));
+     assertThat(c.changes, is(3));
+ 
+     b.setValue(false);
+     assertThat(s.get(), is(nullValue()));
+     assertThat(c.changes, is(4));
+   }
+ 
+   private class CountChanges implements PropertyChangedHandler<Boolean> {
+     private int changes;
+ 
+     public void onPropertyChanged(PropertyChangedEvent<Boolean> event) {
+       changes++;
+     }
+   }
+ 
+ }
