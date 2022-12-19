@@ -1,13 +1,13 @@
 # Structural Code Transform Prediction on AST Nodes
 
-This repository contains the code and data set for our approach to structurally predicting code transforms at the level of AST nodes using conditional random fields (CRFs). Our approach first learns offline a probabilistic model that captures how certain code transforms are applied to certain AST nodes, and then uses the learned model to predict transforms for new, unseen code. The approach is instantiated in the context of repair transform prediction for Java programs and a large-scale experimental evaluation has shown that the accuracy of the approach is promising.  
+This repository contains the code and data set for our approach to structurally predicting code transforms at the level of AST nodes using conditional random fields (CRFs). Our approach first learns offline a probabilistic model that captures how certain code transforms are applied to certain AST nodes, and then uses the learned model to predict transforms for new, unseen code. The approach is instantiated in the context of repair transform prediction for Java programs and a large-scale experimental evaluation has shown that the accuracy of the approach is promising. In addition, a proof-of-concept synthesizer is implemented to concretize some repair transforms to get the final patches. 
 
 ## Structure of the repository 
 
 - [CRF-Transform-Prediction](./CRF-Transform-Prediction) contains the code for CRF model setup, CRF model learning and prediction.
 - [Test-Data](./Test-Data) contains the data set used for testing the performance of the learned CRF models.
 - [Training-Data](./Training-Data) contains the data set used for training CRF models. 
-- [Transform-Extraction](./Transform-Extraction) contains the code for extracting repair transforms on AST nodes from raw patch diffs and code for analyzing the characteristics of input nodes (to establish observation-based feature functions).
+- [Transform-Extraction](./Transform-Extraction) contains the code for extracting repair transforms on AST nodes from raw patch diffs, code for analyzing the characteristics of input nodes (to establish observation-based feature functions, and code for concretizing the repair transforms into the final patches).
 - [Diff-Raw-Data](./Diff-Raw-Data) contains the raw patch diffs from which we extract training and test data sets, and the whole patch diffs are distributed in 35 folders. 
 - [Seq2Seq-Prediction](./Seq2Seq-Prediction) contains the data and scripts used to build the baseline based on the Seq2Seq translation model, and the Seq2Seq baseline is built on top of OpenNMT and the scripts are run on HPC2N (https://www.hpc2n.umu.se/). 
 
@@ -28,7 +28,7 @@ cd Seer
 ```
 Note as the repository contains a lot of data, it will take quite a while to clone the repository.
 
-After the clone process, package the programs. First, package the program for extracting repair transforms on AST nodes.
+After the clone process, package the programs. First, package the program for extracting repair transforms on AST nodes and concretizing repair transforms into the final patches.
 ```
 cd Transform-Extraction
 mvn package -DskipTests=true
@@ -42,7 +42,7 @@ mvn package -DskipTests=true
 ```
 The JAR file `CRF-Transform-Prediction-0.1-SNAPSHOT.jar` will be created and (for simplicity) it will be referenced as `CRF.jar` for the rest of this guide. 
 
-### Step 1: Extracting transforms on AST nodes and analysis of characteristics of AST nodes 
+### Step 1: Extracting transforms on AST nodes, analysis of characteristics of AST nodes
 
 To train the CRF model, our approach needs training data with repair transforms attached to AST nodes. In addition, to establish the observation-based feature functions in CRF, our approach needs to analyze the characteristics of AST nodes. To achieve this, use the following command:  
 ```
@@ -96,3 +96,11 @@ The detailed prediction result for each test instance will be in the folder `out
 ```
 Method_RW_Var total:412 correct by CRF model:124 correct by history probability baseline:0
 ```
+
+### Step 5: Concretization of repair transforms into the final patches
+
+To evaluate the proof-of-concept synthesizer, run the following command:
+```
+java -cp Extraction.jar synthesis.SynthesisRunner
+```
+The concretization of the 8 considered repair transforms will start, and it in particular will output the synthesis result for the 16 successfully synthesized Defects4j bugs. For successfully synthesized bugs, the command will output “A plausible patch has been found for `projectname_bug_id`: `patch_summary`”. For unsuccessfully repaired bugs, the command will output “No plausible patch has been found for `projectname_bug_id`”. 

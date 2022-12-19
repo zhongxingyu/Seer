@@ -19,4 +19,5 @@ public class ExperimentRunnerMain {
 		ExtractorProperties.properties.setProperty("difffolder", input);
 		analyzer.run(ExtractorProperties.getProperty("difffolder"));
 	}
+	
 }

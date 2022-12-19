@@ -132,8 +132,7 @@ public class DiffContextAnalyzer {
 			if (fileModif.getName().toLowerCase().indexOf("test")!=-1)
 				continue;
 
-			String pathname = fileModif.getAbsolutePath() + File.separator + difffile.getName() + "_"
-					+ fileModif.getName();
+			String pathname = fileModif.getAbsolutePath() + File.separator 	+ fileModif.getName();
 
 			File previousVersion = new File(pathname + "_s.java");
 			if (!previousVersion.exists()) {
@@ -202,8 +201,7 @@ public class DiffContextAnalyzer {
 			log.error("timeout");
 		}
 
-		executorService.shutdown();
-		
+		executorService.shutdown();		
 		try {
 		    if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
 		        executorService.shutdownNow();
@@ -213,7 +211,6 @@ public class DiffContextAnalyzer {
 		}
 		
 		return resukltDiff;
-
 	}
 
 	protected boolean acceptFile(File fileModif) {

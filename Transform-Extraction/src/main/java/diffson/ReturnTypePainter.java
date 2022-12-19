@@ -81,6 +81,5 @@ public class ReturnTypePainter implements NodePainter {
 				}
 			}
 		}
-
 	}
 }

@@ -1,6 +1,7 @@
 package add.features.detector.spoon;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,6 +54,23 @@ public class LogicalExpressionAnalyzer {
 				.map(CtBinaryOperator.class::cast).collect(Collectors.toList());
 		
 		return binaryOperatorsFromFaultyLine;
+	}
+   
+   List<BinaryOperatorKind> logicalOperator = Arrays.asList(BinaryOperatorKind.OR, BinaryOperatorKind.AND);
+
+   
+   public static List<CtBinaryOperator> getAllLogicalOperators (CtElement parentline) {
+
+		List<CtBinaryOperator> binaryOperatorsFromFaultyLine = getAllBinaryOperators(parentline);
+		List<CtBinaryOperator> logicalOperatorsFromFaultyLine = new ArrayList();
+
+		for(int index=0; index<binaryOperatorsFromFaultyLine.size(); index++) {
+			if(binaryOperatorsFromFaultyLine.get(index).getKind() == BinaryOperatorKind.OR ||
+					binaryOperatorsFromFaultyLine.get(index).getKind() == BinaryOperatorKind.AND)
+				logicalOperatorsFromFaultyLine.add(binaryOperatorsFromFaultyLine.get(index));
+		}
+		
+		return logicalOperatorsFromFaultyLine;
 	}
 	
     public static List<CtExpression> getAllExpressions (CtElement parentline) {

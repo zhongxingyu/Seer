@@ -43,5 +43,4 @@ public class PatternPainter implements NodePainter {
 			jsontree.add(this.label, arr);
 		}
 	}
-
 }

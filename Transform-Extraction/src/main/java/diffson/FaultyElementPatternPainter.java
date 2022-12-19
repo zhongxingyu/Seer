@@ -35,7 +35,6 @@ public class FaultyElementPatternPainter implements NodePainter {
 						|| !nodesAffectedByPattern.get(key).contains(patternLabel)) {
 					nodesAffectedByPattern.add(key, patternLabel);
 					nodesAffectedByPatternInstances.add(key, patternInstance);
-
 				}
 			}
 		}
@@ -68,7 +67,6 @@ public class FaultyElementPatternPainter implements NodePainter {
 	public void paint(ITree tree, JsonObject jsontree) {
 
 		CtElement ctelement = (CtElement) tree.getMetadata(SpoonGumTreeBuilder.SPOON_OBJECT);
-
 		// Workaround
 		if (jsontree.get("type").getAsString().equals("Modifiers")||jsontree.get("type").getAsString().equals("Modifier"))
 			return;
@@ -85,18 +83,15 @@ public class FaultyElementPatternPainter implements NodePainter {
 	private boolean paint(JsonObject jsontree, CtElement ctelement) {
 		boolean found = false;
 		if (nodesAffectedByPattern.containsKey(getKey(ctelement))) {
-
 			JsonArray labels = new JsonArray();
 			List<String> patternsOfElement = nodesAffectedByPattern.get(getKey(ctelement));
 			for (String pattern : patternsOfElement) {
 				JsonPrimitive prim = new JsonPrimitive(pattern);
 				labels.add(prim);
-
 			}
 			jsontree.add(this.label, labels);
 			found = true;
 		}
 		return found;
 	}
-
 }

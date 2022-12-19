@@ -21,6 +21,7 @@ import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.code.CtWhile;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
@@ -644,11 +645,20 @@ public class VariableResolver {
 
 		// We find the parent method and we extract the parameters
 		CtMethod method = element.getParent(CtMethod.class);
+		
 		if (method != null) {
 			List<CtParameter> pars = method.getParameters();
 			for (CtParameter ctParameter : pars) {
 				variables.add(ctParameter);
 			}
+		} else {
+			CtConstructor ctconstructor = element.getParent(CtConstructor.class);
+            if(ctconstructor!=null) {
+            	List<CtParameter> pars = ctconstructor.getParameters();
+    			for (CtParameter ctParameter : pars) {
+    				variables.add(ctParameter);
+    			}
+            }
 		}
 
 		// We find the parent block and we extract the local variables before

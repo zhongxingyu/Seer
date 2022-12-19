@@ -569,12 +569,10 @@ public abstract class AbstractCodeAnalyzer {
 		expressionvalue[3]=hasPrimitiveSimilarTypeWithNullGuard;
 		
 		return expressionvalue;
-
 	}
 	
 	public static boolean compareTypes(CtTypeReference t1, CtTypeReference t2) {
-		try {
-			
+		try {		
 			return t1 != null && t2 != null && (t1.toString().equals(t2.toString()) || 
 					t1.toString().toLowerCase().endsWith(t2.toString().toLowerCase()) ||
 					t2.toString().toLowerCase().endsWith(t1.toString().toLowerCase()) ||
