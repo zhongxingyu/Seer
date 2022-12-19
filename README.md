@@ -7,7 +7,7 @@ This repository contains the code and data set for our approach to structurally 
 - [CRF-Transform-Prediction](./CRF-Transform-Prediction) contains the code for CRF model setup, CRF model learning and prediction.
 - [Test-Data](./Test-Data) contains the data set used for testing the performance of the learned CRF models.
 - [Training-Data](./Training-Data) contains the data set used for training CRF models. 
-- [Transform-Extraction](./Transform-Extraction) contains the code for extracting repair transforms on AST nodes from raw patch diffs, code for analyzing the characteristics of input nodes (to establish observation-based feature functions, and code for concretizing the repair transforms into the final patches).
+- [Transform-Extraction](./Transform-Extraction) contains the code for extracting repair transforms on AST nodes from raw patch diffs, code for analyzing the characteristics of input nodes (to establish observation-based feature functions), and code for concretizing the repair transforms into the final patches.
 - [Diff-Raw-Data](./Diff-Raw-Data) contains the raw patch diffs from which we extract training and test data sets, and the whole patch diffs are distributed in 35 folders. 
 - [Seq2Seq-Prediction](./Seq2Seq-Prediction) contains the data and scripts used to build the baseline based on the Seq2Seq translation model, and the Seq2Seq baseline is built on top of OpenNMT and the scripts are run on HPC2N (https://www.hpc2n.umu.se/). 
 
@@ -42,7 +42,7 @@ mvn package -DskipTests=true
 ```
 The JAR file `CRF-Transform-Prediction-0.1-SNAPSHOT.jar` will be created and (for simplicity) it will be referenced as `CRF.jar` for the rest of this guide. 
 
-### Step 1: Extracting transforms on AST nodes, analysis of characteristics of AST nodes
+### Step 1: Extracting transforms on AST nodes and analysis of characteristics of AST nodes
 
 To train the CRF model, our approach needs training data with repair transforms attached to AST nodes. In addition, to establish the observation-based feature functions in CRF, our approach needs to analyze the characteristics of AST nodes. To achieve this, use the following command:  
 ```
@@ -103,4 +103,4 @@ To evaluate the proof-of-concept synthesizer, run the following command:
 ```
 java -cp Extraction.jar synthesis.SynthesisRunner
 ```
-The concretization of the 8 considered repair transforms will start, and it in particular will output the synthesis result for the 16 successfully synthesized Defects4j bugs. For successfully synthesized bugs, the command will output “A plausible patch has been found for `projectname_bug_id`: `patch_summary`”. For unsuccessfully repaired bugs, the command will output “No plausible patch has been found for `projectname_bug_id`”. 
+The concretization of the 8 considered repair transforms will start, and it in particular will output the synthesis result for the 16 successfully synthesized Defects4j bugs. For successfully synthesized bugs, the command will output “*A plausible patch has been found for* `projectname_bug_id`: `patch_summary`”. For unsuccessfully repaired bugs, the command will output “*No plausible patch has been found for* `projectname_bug_id`”. 
