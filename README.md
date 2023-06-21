@@ -2,6 +2,18 @@
 
 This repository contains the code and data set for our approach to structurally predicting code transforms at the level of AST nodes using conditional random fields (CRFs). Our approach first learns offline a probabilistic model that captures how certain code transforms are applied to certain AST nodes, and then uses the learned model to predict transforms for new, unseen code. The approach is instantiated in the context of repair transform prediction for Java programs and a large-scale experimental evaluation has shown that the accuracy of the approach is promising. In addition, a proof-of-concept synthesizer is implemented to concretize some repair transforms to get the final patches. 
 
+Bibliographic data:
+
+```bibtex
+@article{1907.09282,
+ title = {Learning the Relation between Code Features and Code Transforms with Structured Prediction},
+ journal = {IEEE Transactions on Software Engineering},
+ year = {2023},
+ doi = {10.1109/TSE.2023.3275380},
+ author = {Zhongxing Yu and Matias Martinez and Zimin Chen and Tegawendé F. Bissyandé and Martin Monperrus},
+ url = {http://arxiv.org/pdf/1907.09282},
+}
+```
 ## Structure of the repository 
 
 - [CRF-Transform-Prediction](./CRF-Transform-Prediction) contains the code for CRF model setup, CRF model learning and prediction.
